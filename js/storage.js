@@ -81,3 +81,31 @@ window.clearHistory = function() {
     renderHistoryList();
   }
 };
+
+// PROFILE STORAGE MANAGEMENT
+
+const PROFILE_KEY = "certifly_profile_data";
+export function getProfileData() {
+  try {
+    const data = localStorage.getItem(PROFILE_KEY);
+    return data ? JSON.parse(data) : { name: "", licenceNo: "", url: "" };
+  } catch (err) {
+    console.error("Failed to read profile data from storage:", err);
+    return { name: "", licenceNo: "", url: "" };
+  }
+}
+export function saveProfileData(profile) {
+  try {
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  } catch (err) {
+    console.error("Failed to save profile data to storage:", err);
+  }
+}
+export function clearProfileData() {
+  try {
+    localStorage.removeItem(PROFILE_KEY);
+  } catch (err) {
+    console.error("Failed to clear profile data from storage:", err);
+  }
+}
+
