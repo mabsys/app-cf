@@ -95,6 +95,15 @@ if ('serviceWorker' in navigator) {
 
     <!-- SCANNER VIEW -->
     <div id="scanner-view" class="app-view bg-white shadow-md rounded-3xl p-6 border border-slate-100 flex flex-col gap-5">
+
+      <!-- Quick Check Saved Profile Button -->
+    <button id="verify-my-licence-btn" class="hidden w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-2xl transition duration-150 flex items-center justify-center gap-2 shadow-md">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span id="verify-my-licence-label">Verify My Licence</span>
+    </button>
+      
       <div class="text-center">
         <h2 class="text-lg font-bold text-slate-900">Instructions</h2>
         <p class="text-sm text-slate-500 mt-1">Point your camera at the QR code on the<br>pilot's licence card and hold steady.</p>
