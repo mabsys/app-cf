@@ -2,7 +2,7 @@
 
 import { PROXY_URL, DEFAULT_THRESHOLD, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/parser.js';
-import { saveToHistory, renderHistoryList, getScanHistory } from './js/storage.js';
+import { saveToHistory, renderHistoryList, getScanHistory, getProfileData, saveProfileData, clearProfileData } from './js/storage.js';
 import { startScanner, stopScanner } from './js/scanner.js';
 import { updateNetworkStatus, showScannerView, showLoading, showError, showView, initNavigationBars } from './js/ui.js';
 
@@ -10,8 +10,73 @@ let lastScannedUrl = "";
 
 document.addEventListener("DOMContentLoaded", () => {
   initApp();
-  initNavigationBars(); // Initializes both persistent top bar & bottom dock
+  initNavigationBars();
+  initProfileUI();
 });
+
+function initProfileUI() {
+  const profile = getProfileData();
+  const nameInput = document.getElementById("profile-name-input");
+  const licenceInput = document.getElementById("profile-licence-input");
+  const urlInput = document.getElementById("profile-url-input");
+  const saveBtn = document.getElementById("profile-save-btn");
+  const clearBtn = document.getElementById("profile-clear-btn");
+  const quickVerifyBtn = document.getElementById("verify-my-licence-btn");
+  const quickVerifyLabel = document.getElementById("verify-my-licence-label");
+
+  if (nameInput) nameInput.value = profile.name || "";
+  if (licenceInput) licenceInput.value = profile.licenceNo || "";
+  if (urlInput) urlInput.value = profile.url || "";
+
+  if (quickVerifyBtn && profile.url) {
+    quickVerifyBtn.classList.remove("hidden");
+    if (quickVerifyLabel) {
+      quickVerifyLabel.innerText = profile.name ? `Verify ${profile.name}'s Licence` : "Verify My Licence";
+    }
+  } else if (quickVerifyBtn) {
+    quickVerifyBtn.classList.add("hidden");
+  }
+
+  if (saveBtn) {
+    saveBtn.addEventListener("click", () => {
+      const nameVal = nameInput ? nameInput.value.trim() : "";
+      const licenceVal = licenceInput ? licenceInput.value.trim() : "";
+      const urlVal = urlInput ? urlInput.value.trim() : "";
+
+      if (urlVal && !urlVal.includes("eclipse.caam.gov.my")) {
+        alert("Please enter a valid CAAM eCLIPSE URL");
+        return;
+      }
+
+      saveProfileData({ name: nameVal, licenceNo: licenceVal, url: urlVal });
+      alert("Pilot profile saved successfully!");
+      initProfileUI();
+    });
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      if (confirm("Clear saved profile data from this device?")) {
+        clearProfileData();
+        if (nameInput) nameInput.value = "";
+        if (licenceInput) licenceInput.value = "";
+        if (urlInput) urlInput.value = "";
+        initProfileUI();
+      }
+    });
+  }
+
+  if (quickVerifyBtn) {
+    quickVerifyBtn.onclick = () => {
+      const currentProfile = getProfileData();
+      if (currentProfile.url) {
+        processLicenseUrl(currentProfile.url);
+      } else {
+        showError("No profile URL saved.");
+      }
+    };
+  }
+}
 
 function initApp() {
   const startScanBtn = document.getElementById("start-scan-btn");
@@ -51,6 +116,7 @@ function initApp() {
   document.addEventListener("click", (event) => {
     const historyDetails = document.getElementById("history-details");
     const historyWrapper = document.getElementById("history-card-wrapper");
+
     if (historyDetails && historyDetails.hasAttribute("open")) {
       if (historyWrapper && !historyWrapper.contains(event.target)) {
         historyDetails.removeAttribute("open");
@@ -63,6 +129,7 @@ function initApp() {
 
 function handleManualUrl() {
   const urlInput = document.getElementById("manual-url-input").value.trim();
+
   if (!urlInput) {
     showError("Please enter a valid licence page URL");
     return;
@@ -100,6 +167,7 @@ async function processLicenseUrl(url) {
 
   lastScannedUrl = url;
   await stopScanner();
+
   showLoading("Fetching digital licence...");
 
   const scanTime = new Date().toLocaleString('en-GB', {
@@ -128,7 +196,6 @@ async function processLicenseUrl(url) {
 
     saveToHistory(results, url);
     renderResults(results);
-
   } catch (error) {
     console.error("Processing error:", error);
     showError(`Error processing digital license: ${error.message}.`);
@@ -220,7 +287,6 @@ function renderResults(results) {
           ${statusHtml}
         </div>
       `;
-
       container.appendChild(qRow);
     });
   }
