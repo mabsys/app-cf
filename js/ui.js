@@ -16,9 +16,9 @@ const textSizeIcons = {
 };
 
 const textSizeScales = {
-  std: "100%",
-  lg: "115%",
-  xl: "130%"
+  std: 1.0,
+  lg: 1.15,
+  xl: 1.3
 };
 
 let currentTextSize = localStorage.getItem("app_text_size") || "std";
@@ -26,12 +26,12 @@ let currentTextSize = localStorage.getItem("app_text_size") || "std";
 export function applyTextSize(size = currentTextSize) {
   currentTextSize = size;
   localStorage.setItem("app_text_size", size);
+
   const topbarTextBtn = document.getElementById("topbar-text-btn");
   if (topbarTextBtn) {
     topbarTextBtn.innerHTML = textSizeIcons[size] || textSizeIcons.std;
   }
-//  document.documentElement.style.fontSize = textSizeScales[size] || "100%";
-//}
+
   const scale = textSizeScales[size] || 1.0;
 
   // 1. Scale document root font-size so main view & card content scale naturally
@@ -54,6 +54,7 @@ export function cycleTextSize() {
   const nextIndex = (sizes.indexOf(currentTextSize) + 1) % sizes.length;
   applyTextSize(sizes[nextIndex]);
 }
+
 
 // ----------------------------------------------------
 // 2. APPEARANCE 3-STATE CYCLER (Solid Mini Heroicons)
