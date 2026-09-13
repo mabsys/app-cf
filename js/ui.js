@@ -30,7 +30,16 @@ export function applyTextSize(size = currentTextSize) {
   if (topbarTextBtn) {
     topbarTextBtn.innerHTML = textSizeIcons[size] || textSizeIcons.std;
   }
-  document.documentElement.style.fontSize = textSizeScales[size] || "100%";
+//  document.documentElement.style.fontSize = textSizeScales[size] || "100%";
+//}
+  // Keep root font size locked at 100% (so topbar, dock, and menu stay fixed)
+  document.documentElement.style.fontSize = "100%";
+
+  // Apply dynamic scaling strictly to the main content container (<main>)
+  const mainContent = document.querySelector("main");
+  if (mainContent) {
+    mainContent.style.zoom = textSizeScales[size] || "1";
+  }
 }
 
 export function cycleTextSize() {
