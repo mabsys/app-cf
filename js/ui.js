@@ -30,7 +30,23 @@ export function applyTextSize(size = currentTextSize) {
   if (topbarTextBtn) {
     topbarTextBtn.innerHTML = textSizeIcons[size] || textSizeIcons.std;
   }
-  document.documentElement.style.fontSize = textSizeScales[size] || "100%";
+//  document.documentElement.style.fontSize = textSizeScales[size] || "100%";
+//}
+  const scale = textSizeScales[size] || 1.0;
+
+  // 1. Scale document root font-size so main view & card content scale naturally
+  document.documentElement.style.fontSize = `${scale * 100}%`;
+
+  // 2. Counter-scale fixed topbar, bottom dock, and menu sheet back to 100%
+  const invScale = (1.0 / scale).toFixed(4);
+
+  const topbar = document.getElementById("persistent-topbar");
+  const dock = document.getElementById("persistent-dock");
+  const menu = document.getElementById("bottom-sheet-menu");
+
+  if (topbar) topbar.style.zoom = invScale;
+  if (dock) dock.style.zoom = invScale;
+  if (menu) menu.style.zoom = invScale;
 }
 
 export function cycleTextSize() {
