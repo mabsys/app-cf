@@ -1,4 +1,4 @@
-// js/ui.js - View State, Navigation, Menu, and Network Controller
+// js/ui.js - View State, Navigation, Theme, and Text Scaling Controller
 
 import { stopScanner } from './scanner.js';
 import { renderHistoryList } from './storage.js';
@@ -9,16 +9,11 @@ import { menuHTML } from './components/menu.js';
 // ----------------------------------------------------
 // 1. TEXT SIZE 3-STATE CYCLER (Standard, Large, Extra Large)
 // ----------------------------------------------------
+
 const textSizeIcons = {
   std: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l3-7 3 7M5 15h4"/><path d="M13 18l4-11 4 11M14 14h6"/><path d="M11 7h2"/></svg>`,
   lg: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l3-7 3 7M5 15h4"/><path d="M13 18l4-11 4 11M14 14h6"/><path d="M11 6l1-1 1 1"/></svg>`,
   xl: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l3-7 3 7M5 15h4"/><path d="M13 18l4-11 4 11M14 14h6"/><path d="M11 6l1-1 1 1M11 3l1-1 1 1"/></svg>`
-};
-
-const textSizeScales = {
-  std: 1.0,
-  lg: 1.15,
-  xl: 1.3
 };
 
 let currentTextSize = localStorage.getItem("app_text_size") || "std";
@@ -32,14 +27,39 @@ export function applyTextSize(size = currentTextSize) {
     topbarTextBtn.innerHTML = textSizeIcons[size] || textSizeIcons.std;
   }
 
-  // Keep root font size locked at 100% (so topbar, dock, and menu stay fixed)
+  // Lock root font size at standard 100% so topbar, dock & submenus stay at standard scale
   document.documentElement.style.fontSize = "100%";
 
-  // Apply dynamic scaling strictly to the main content container (<main>)
-  const mainContent = document.querySelector("main");
-  if (mainContent) {
-    mainContent.style.zoom = textSizeScales[size] || "1";
+  let styleEl = document.getElementById("certifly-text-scale-style");
+  if (!styleEl) {
+    styleEl = document.createElement("style");
+    styleEl.id = "certifly-text-scale-style";
+    document.head.appendChild(styleEl);
   }
+
+  if (size === "std") {
+    styleEl.textContent = "";
+    return;
+  }
+
+  const mult = size === "lg" ? 1.15 : 1.30;
+
+  styleEl.textContent = `
+    main { font-size: ${(mult * 100).toFixed(1)}% !important; }
+    main .text-\\[9px\\] { font-size: ${(9 * mult).toFixed(1)}px !important; }
+    main .text-\\[10px\\] { font-size: ${(10 * mult).toFixed(1)}px !important; }
+    main .text-\\[11px\\] { font-size: ${(11 * mult).toFixed(1)}px !important; }
+    main .text-\\[13px\\] { font-size: ${(13 * mult).toFixed(1)}px !important; }
+    main .text-xxs { font-size: ${(0.625 * mult).toFixed(4)}rem !important; }
+    main .text-xs { font-size: ${(0.75 * mult).toFixed(4)}rem !important; }
+    main .text-sm { font-size: ${(0.875 * mult).toFixed(4)}rem !important; }
+    main .text-base { font-size: ${(1.0 * mult).toFixed(4)}rem !important; }
+    main .text-lg { font-size: ${(1.125 * mult).toFixed(4)}rem !important; }
+    main .text-xl { font-size: ${(1.25 * mult).toFixed(4)}rem !important; }
+    main .text-2xl { font-size: ${(1.5 * mult).toFixed(4)}rem !important; }
+    main .text-3xl { font-size: ${(1.875 * mult).toFixed(4)}rem !important; }
+    main .text-4xl { font-size: ${(2.25 * mult).toFixed(4)}rem !important; }
+  `;
 }
 
 export function cycleTextSize() {
@@ -51,6 +71,7 @@ export function cycleTextSize() {
 // ----------------------------------------------------
 // 2. APPEARANCE 3-STATE CYCLER (Solid Mini Heroicons)
 // ----------------------------------------------------
+
 const themeSolidIcons = {
   system: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M6 3.5A1.5 1.5 0 0 1 7.5 2h5A1.5 1.5 0 0 1 14 3.5v13a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 6 16.5v-13ZM10 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd"/></svg>`,
   light: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path d="M10 2a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 2ZM10 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 15ZM10 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM15.657 5.404a.75.75 0 1 0-1.06-1.06l-1.061 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM6.464 14.596a.75.75 0 1 0-1.06-1.06l-1.06 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM18 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 18 10ZM4.25 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 4.25 10ZM14.596 15.657a.75.75 0 0 0 1.06-1.06l-1.06-1.061a.75.75 0 1 0-1.06 1.06l1.06 1.061ZM5.404 6.464a.75.75 0 0 0 1.06-1.06l-1.06-1.06a.75.75 0 1 0-1.06 1.06l1.06 1.06Z"/></svg>`,
@@ -62,10 +83,12 @@ let currentThemeMode = localStorage.getItem("app_theme_mode") || "system";
 export function applyThemeMode(mode = currentThemeMode) {
   currentThemeMode = mode;
   localStorage.setItem("app_theme_mode", mode);
+
   const topbarBtn = document.getElementById("topbar-theme-btn");
   if (topbarBtn) {
     topbarBtn.innerHTML = themeSolidIcons[mode] || themeSolidIcons.system;
   }
+
   const isDark = mode === "dark" || (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.classList.toggle("dark", isDark);
 }
@@ -77,119 +100,61 @@ export function cycleThemeMode() {
 }
 
 // ----------------------------------------------------
-// 3. SLIDING BOTTOM SHEET MENU CONTROLLER
+// 3. DUAL NAVIGATION BARS & MENU SHEET CONTROLLER
 // ----------------------------------------------------
+
 export function openMenu() {
+  const menu = document.getElementById("bottom-sheet-menu");
   const overlay = document.getElementById("bottom-sheet-overlay");
-  const sheet = document.getElementById("bottom-sheet-menu");
-  if (!overlay || !sheet) return;
+  if (!menu || !overlay) return;
 
   overlay.classList.remove("hidden");
-  sheet.classList.remove("hidden");
+  menu.classList.remove("hidden");
 
   requestAnimationFrame(() => {
     overlay.classList.remove("opacity-0");
-    overlay.classList.add("opacity-100");
-    sheet.classList.remove("translate-y-full");
-    sheet.classList.add("translate-y-0");
+    menu.classList.remove("translate-y-full");
   });
 }
 
 export function closeMenu() {
+  const menu = document.getElementById("bottom-sheet-menu");
   const overlay = document.getElementById("bottom-sheet-overlay");
-  const sheet = document.getElementById("bottom-sheet-menu");
-  if (!overlay || !sheet) return;
+  if (!menu || !overlay) return;
 
-  overlay.classList.remove("opacity-100");
   overlay.classList.add("opacity-0");
-  sheet.classList.remove("translate-y-0");
-  sheet.classList.add("translate-y-full");
+  menu.classList.add("translate-y-full");
 
   setTimeout(() => {
     overlay.classList.add("hidden");
-    sheet.classList.add("hidden");
-    resetMenuPanes();
+    menu.classList.add("hidden");
+
+    // Reset to main pane on close
+    const mainPane = document.getElementById("pane-main");
+    const subPanes = document.querySelectorAll(".sub-pane");
+    if (mainPane) mainPane.classList.remove("-translate-x-full");
+    subPanes.forEach(pane => {
+      pane.classList.add("translate-x-full", "hidden");
+    });
   }, 300);
 }
 
-function resetMenuPanes() {
-  const mainPane = document.getElementById("pane-main");
-  if (mainPane) {
-    mainPane.classList.remove("hidden", "-translate-x-full");
-    mainPane.classList.add("translate-x-0");
-  }
-  document.querySelectorAll(".sub-pane").forEach(pane => {
-    pane.classList.add("hidden", "translate-x-full");
-    pane.classList.remove("translate-x-0");
-  });
-}
-
-function initMenuEvents() {
-  const overlay = document.getElementById("bottom-sheet-overlay");
-  if (overlay) {
-    overlay.removeEventListener("click", closeMenu);
-    overlay.addEventListener("click", closeMenu);
-  }
-
-  // Navigation between main menu pane and sub-panes
-  document.querySelectorAll(".nav-item-btn").forEach(btn => {
-    btn.onclick = () => {
-      const targetId = btn.getAttribute("data-target");
-      const targetPane = document.getElementById(targetId);
-      const mainPane = document.getElementById("pane-main");
-
-      if (targetPane && mainPane) {
-        mainPane.classList.add("-translate-x-full");
-        setTimeout(() => {
-          mainPane.classList.add("hidden");
-          targetPane.classList.remove("hidden");
-          requestAnimationFrame(() => {
-            targetPane.classList.remove("translate-x-full");
-            targetPane.classList.add("translate-x-0");
-          });
-        }, 150);
-      }
-    };
-  });
-
-  // Back buttons inside sub-panes
-  document.querySelectorAll(".back-btn").forEach(btn => {
-    btn.onclick = () => {
-      const subPane = btn.closest(".sub-pane");
-      const mainPane = document.getElementById("pane-main");
-
-      if (subPane && mainPane) {
-        subPane.classList.remove("translate-x-0");
-        subPane.classList.add("translate-x-full");
-        setTimeout(() => {
-          subPane.classList.add("hidden");
-          mainPane.classList.remove("hidden");
-          requestAnimationFrame(() => {
-            mainPane.classList.remove("-translate-x-full");
-            mainPane.classList.add("translate-x-0");
-          });
-        }, 150);
-      }
-    };
-  });
-}
-
-// ----------------------------------------------------
-// 4. DUAL NAVIGATION BARS (Top Bar + Bottom Dock)
-// ----------------------------------------------------
 export function initNavigationBars() {
   if (!document.getElementById("persistent-topbar")) {
     document.body.insertAdjacentHTML('afterbegin', topbarHTML);
   }
+
   if (!document.getElementById("persistent-dock")) {
     document.body.insertAdjacentHTML('beforeend', dockHTML);
   }
+
   if (!document.getElementById("bottom-sheet-menu")) {
     document.body.insertAdjacentHTML('beforeend', menuHTML);
   }
 
   const topbar = document.getElementById("persistent-topbar");
   const dock = document.getElementById("persistent-dock");
+
   const topbarHeight = 48;
   const dockMaxTravel = 80;
   let currentTranslateY = 0;
@@ -214,6 +179,7 @@ export function initNavigationBars() {
     if (dock) {
       dock.style.transform = `translateY(${progress * dockMaxTravel}px)`;
     }
+
     if (topbar) {
       const topbarTranslate = (1 - progress) * -100;
       topbar.style.transform = `translateY(${topbarTranslate}%)`;
@@ -224,55 +190,61 @@ export function initNavigationBars() {
   }, { passive: true });
 
   // Connect Top Bar toggle buttons
-  document.getElementById("topbar-text-btn")?.addEventListener("click", () => {
-    cycleTextSize();
-  });
+  document.getElementById("topbar-text-btn")?.addEventListener("click", cycleTextSize);
+  document.getElementById("topbar-theme-btn")?.addEventListener("click", cycleThemeMode);
 
-  document.getElementById("topbar-theme-btn")?.addEventListener("click", () => {
-    cycleThemeMode();
-  });
+  // Connect Dock buttons
+  document.getElementById("dock-menu-btn")?.addEventListener("click", openMenu);
+  document.getElementById("bottom-sheet-overlay")?.addEventListener("click", closeMenu);
+  document.getElementById("dock-scan-btn")?.addEventListener("click", showScannerView);
 
-  // Connect Bottom Dock buttons
   document.getElementById("dock-dashboard-btn")?.addEventListener("click", () => {
-    const resultView = document.getElementById("result-view");
-    if (resultView && !resultView.classList.contains("hidden")) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } else {
-      showScannerView();
-    }
+    showScannerView();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
   document.getElementById("dock-history-btn")?.addEventListener("click", () => {
     showScannerView();
     const historyDetails = document.getElementById("history-details");
     if (historyDetails) {
-      if (historyDetails.hasAttribute("open")) {
-        historyDetails.removeAttribute("open");
-      } else {
+      if (!historyDetails.hasAttribute("open")) {
         historyDetails.setAttribute("open", "true");
-        historyDetails.scrollIntoView({ behavior: "smooth" });
+      }
+      historyDetails.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  });
+
+  // Handle menu sheet category navigation buttons
+  document.addEventListener("click", (e) => {
+    const navBtn = e.target.closest(".nav-item-btn");
+    if (navBtn) {
+      const targetId = navBtn.getAttribute("data-target");
+      const targetPane = document.getElementById(targetId);
+      const mainPane = document.getElementById("pane-main");
+
+      if (targetPane && mainPane) {
+        mainPane.classList.add("-translate-x-full");
+        targetPane.classList.remove("hidden");
+        requestAnimationFrame(() => {
+          targetPane.classList.remove("translate-x-full");
+        });
+      }
+    }
+
+    const backBtn = e.target.closest(".back-btn");
+    if (backBtn) {
+      const subPane = backBtn.closest(".sub-pane");
+      const mainPane = document.getElementById("pane-main");
+
+      if (subPane && mainPane) {
+        subPane.classList.add("translate-x-full");
+        mainPane.classList.remove("-translate-x-full");
+        setTimeout(() => {
+          subPane.classList.add("hidden");
+        }, 300);
       }
     }
   });
-
-  document.getElementById("dock-scan-btn")?.addEventListener("click", () => {
-    showScannerView();
-  });
-
-  document.getElementById("dock-tools-btn")?.addEventListener("click", () => {
-    showScannerView();
-    const custDiv = document.getElementById("cust_div");
-    if (custDiv) {
-      custDiv.scrollIntoView({ behavior: "smooth" });
-    }
-  });
-
-  document.getElementById("dock-menu-btn")?.addEventListener("click", () => {
-    openMenu();
-  });
-
-  // Initialize menu event handlers
-  initMenuEvents();
 
   // Apply initial preference states and icons on load
   applyTextSize(currentTextSize);
@@ -280,8 +252,9 @@ export function initNavigationBars() {
 }
 
 // ----------------------------------------------------
-// 5. NETWORK STATUS CONTROLLER
+// 4. NETWORK STATUS CONTROLLER
 // ----------------------------------------------------
+
 export function updateNetworkStatus() {
   const isOnline = navigator.onLine;
   const overlay = document.getElementById("offline-overlay");
@@ -334,8 +307,9 @@ export function updateNetworkStatus() {
 }
 
 // ----------------------------------------------------
-// 6. VIEW STATE CONTROLLER
+// 5. VIEW STATE CONTROLLER
 // ----------------------------------------------------
+
 export function showView(viewId) {
   document.querySelectorAll(".app-view").forEach(view => {
     view.classList.add("hidden");
