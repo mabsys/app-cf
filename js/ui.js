@@ -32,21 +32,14 @@ export function applyTextSize(size = currentTextSize) {
     topbarTextBtn.innerHTML = textSizeIcons[size] || textSizeIcons.std;
   }
 
-  const scale = textSizeScales[size] || 1.0;
+  // Keep root font size locked at 100% (so topbar, dock, and menu stay fixed)
+  document.documentElement.style.fontSize = "100%";
 
-  // 1. Scale document root font-size so main view & card content scale naturally
-  document.documentElement.style.fontSize = `${scale * 100}%`;
-
-  // 2. Counter-scale fixed topbar, bottom dock, and menu sheet back to 100%
-  const invScale = (1.0 / scale).toFixed(4);
-
-  const topbar = document.getElementById("persistent-topbar");
-  const dock = document.getElementById("persistent-dock");
-  const menu = document.getElementById("bottom-sheet-menu");
-
-  if (topbar) topbar.style.zoom = invScale;
-  if (dock) dock.style.zoom = invScale;
-  if (menu) menu.style.zoom = invScale;
+  // Apply dynamic scaling strictly to the main content container (<main>)
+  const mainContent = document.querySelector("main");
+  if (mainContent) {
+    mainContent.style.zoom = textSizeScales[size] || "1";
+  }
 }
 
 export function cycleTextSize() {
@@ -54,7 +47,6 @@ export function cycleTextSize() {
   const nextIndex = (sizes.indexOf(currentTextSize) + 1) % sizes.length;
   applyTextSize(sizes[nextIndex]);
 }
-
 
 // ----------------------------------------------------
 // 2. APPEARANCE 3-STATE CYCLER (Solid Mini Heroicons)
