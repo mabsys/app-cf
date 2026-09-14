@@ -4,9 +4,10 @@ import { PROXY_URL, DEFAULT_THRESHOLD, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/parser.js';
 import { saveToHistory, renderHistoryList, getScanHistory, getProfileData, saveProfileData, clearProfileData } from './js/storage.js';
 import { startScanner, stopScanner } from './js/scanner.js';
-import { updateNetworkStatus, showScannerView, showLoading, showError, showView, initNavigationBars } from './js/ui.js';
+import { updateNetworkStatus, showScannerView, showLoading, showError, showView, initNavigationBars, closeMenu } from './js/ui.js';
 
 let lastScannedUrl = "";
+let selectedAttestationFile = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   initApp();
@@ -16,56 +17,117 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function initProfileUI() {
   const profile = getProfileData();
-  const nameInput = document.getElementById("profile-name-input");
-  const licenceInput = document.getElementById("profile-licence-input");
+  const nicknameInput = document.getElementById("profile-nickname-input");
   const urlInput = document.getElementById("profile-url-input");
+  const pdfFileInput = document.getElementById("profile-pdf-file");
+  const pdfLabel = document.getElementById("profile-pdf-label");
+  
+  const modeQrBtn = document.getElementById("profile-mode-qr-btn");
+  const modeUrlBtn = document.getElementById("profile-mode-url-btn");
+  const qrBox = document.getElementById("profile-qr-box");
+  const urlBox = document.getElementById("profile-url-box");
+  const triggerScanBtn = document.getElementById("profile-scan-trigger-btn");
+
   const saveBtn = document.getElementById("profile-save-btn");
   const clearBtn = document.getElementById("profile-clear-btn");
   const quickVerifyBtn = document.getElementById("verify-my-licence-btn");
   const quickVerifyLabel = document.getElementById("verify-my-licence-label");
 
-  if (nameInput) nameInput.value = profile.name || "";
-  if (licenceInput) licenceInput.value = profile.licenceNo || "";
+  // Populate fields
+  if (nicknameInput) nicknameInput.value = profile.nickname || "";
   if (urlInput) urlInput.value = profile.url || "";
+  if (pdfLabel) pdfLabel.innerText = profile.attestationFileName || "Select PDF attestation file...";
 
+  // Quick Verify Button on Home Screen
   if (quickVerifyBtn && profile.url) {
     quickVerifyBtn.classList.remove("hidden");
     if (quickVerifyLabel) {
-      quickVerifyLabel.innerText = profile.name ? `Verify ${profile.name}'s Licence` : "Verify My Licence";
+      quickVerifyLabel.innerText = profile.nickname ? `Verify ${profile.nickname}'s Licence` : "Verify My Licence";
     }
   } else if (quickVerifyBtn) {
     quickVerifyBtn.classList.add("hidden");
   }
 
+  // Toggle Mode: Scan QR vs Paste URL
+  if (modeQrBtn && modeUrlBtn && qrBox && urlBox) {
+    modeQrBtn.addEventListener("click", () => {
+      qrBox.classList.remove("hidden");
+      urlBox.classList.add("hidden");
+      modeQrBtn.className = "py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm";
+      modeUrlBtn.className = "py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200";
+    });
+
+    modeUrlBtn.addEventListener("click", () => {
+      urlBox.classList.remove("hidden");
+      qrBox.classList.add("hidden");
+      modeUrlBtn.className = "py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm";
+      modeQrBtn.className = "py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200";
+    });
+  }
+
+  // Launch Camera Scanner from Profile Pane
+  if (triggerScanBtn) {
+    triggerScanBtn.onclick = () => {
+      closeMenu();
+      showScannerView();
+      startScanner(processLicenseUrl, showError);
+    };
+  }
+
+  // Handle PDF file selection
+  if (pdfFileInput) {
+    pdfFileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        if (file.type !== "application/pdf") {
+          alert("Please select a valid PDF file.");
+          return;
+        }
+        selectedAttestationFile = file;
+        if (pdfLabel) pdfLabel.innerText = file.name;
+      }
+    });
+  }
+
+  // Save Profile Data
   if (saveBtn) {
-    saveBtn.addEventListener("click", () => {
-      const nameVal = nameInput ? nameInput.value.trim() : "";
-      const licenceVal = licenceInput ? licenceInput.value.trim() : "";
+    saveBtn.onclick = () => {
+      const nickVal = nicknameInput ? nicknameInput.value.trim() : "";
       const urlVal = urlInput ? urlInput.value.trim() : "";
+      const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (profile.attestationFileName || "");
 
       if (urlVal && !urlVal.includes("eclipse.caam.gov.my")) {
         alert("Please enter a valid CAAM eCLIPSE URL");
         return;
       }
 
-      saveProfileData({ name: nameVal, licenceNo: licenceVal, url: urlVal });
+      saveProfileData({
+        nickname: nickVal,
+        url: urlVal,
+        attestationFileName: attestationName
+      });
+
       alert("Pilot profile saved successfully!");
+      closeMenu();
       initProfileUI();
-    });
+    };
   }
 
+  // Clear Profile Data
   if (clearBtn) {
-    clearBtn.addEventListener("click", () => {
-      if (confirm("Clear saved profile data from this device?")) {
+    clearBtn.onclick = () => {
+      if (confirm("Clear saved pilot profile data from this device?")) {
         clearProfileData();
-        if (nameInput) nameInput.value = "";
-        if (licenceInput) licenceInput.value = "";
+        selectedAttestationFile = null;
+        if (nicknameInput) nicknameInput.value = "";
         if (urlInput) urlInput.value = "";
+        if (pdfLabel) pdfLabel.innerText = "Select PDF attestation file...";
         initProfileUI();
       }
-    });
+    };
   }
 
+  // Quick Verify Button Action
   if (quickVerifyBtn) {
     quickVerifyBtn.onclick = () => {
       const currentProfile = getProfileData();
@@ -91,7 +153,6 @@ function initApp() {
   if (scanNewBtn) scanNewBtn.addEventListener("click", showScannerView);
   if (openOriginalBtn) openOriginalBtn.addEventListener("click", openOriginalLicense);
 
-  // Prevent default contextual actions on app shell
   document.addEventListener('contextmenu', (event) => {
     if (event.target.id === "manual-url-input") return;
     event.preventDefault();
@@ -107,12 +168,10 @@ function initApp() {
     event.preventDefault();
   });
 
-  // Set up network listeners
   window.addEventListener("online", updateNetworkStatus);
   window.addEventListener("offline", updateNetworkStatus);
   updateNetworkStatus();
 
-  // Handle history card outside clicks
   document.addEventListener("click", (event) => {
     const historyDetails = document.getElementById("history-details");
     const historyWrapper = document.getElementById("history-card-wrapper");
@@ -208,7 +267,10 @@ function renderResults(results) {
     timeEl.innerText = results.scanTime ? `${results.scanTime} LT` : "N/A";
   }
 
-  document.getElementById("pilot-name").innerText = results.pilotDetails.name || "N/A";
+  const profile = getProfileData();
+  const displayName = profile.nickname || results.pilotDetails.name || "N/A";
+
+  document.getElementById("pilot-name").innerText = displayName;
   document.getElementById("licence-type").innerText = results.pilotDetails.licenseType || "N/A";
   document.getElementById("licence-number").innerText = results.pilotDetails.licenseNo || "N/A";
 
