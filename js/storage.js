@@ -134,7 +134,8 @@ export function renderHistoryList() {
   }).join('');
 }
 
-window.clearHistory = function() {
+export function clearHistory() {
+
   if (confirm("Are you sure you want to clear all recent compliance checks from this device?")) {
     scanHistory = [];
     try {
@@ -188,3 +189,5 @@ export function hasProfileData() {
   const profile = getProfileData();
   return Boolean(profile && profile.url);
 }
+
+window.clearHistory = clearHistory;
