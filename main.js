@@ -46,11 +46,6 @@ function initProfileUI() {
   if (urlInput) urlInput.value = profile.url || "";
   if (pdfLabel) pdfLabel.innerText = profile.attestationFileName || "Select PDF attestation file...";
 
-  // Ensure camera scanner is stopped and box hidden on menu setup
-  stopScanner();
-  if (qrBox) qrBox.classList.add("hidden");
-  if (urlBox) urlBox.classList.add("hidden");
-
   // Quick Verify Button on Home Screen
   if (quickVerifyBtn && profile.url) {
     quickVerifyBtn.classList.remove("hidden");
@@ -69,14 +64,14 @@ function initProfileUI() {
       modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm";
       modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200";
       
-      // Start live camera stream on profile-qr-video element
+      // Immediately start live camera feed on profile-qr-video element
       startScanner(handleProfileQrScanned, showError, "profile-qr-video");
     }
   };
 
   const activateUrlMode = () => {
     if (qrBox && urlBox && modeQrBtn && modeUrlBtn) {
-      stopScanner(); // Stop camera stream
+      stopScanner(); // Stop inline camera stream
       urlBox.classList.remove("hidden");
       qrBox.classList.add("hidden");
       modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm";
