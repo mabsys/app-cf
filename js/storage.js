@@ -25,7 +25,6 @@ export function getHistoryLimit() {
 
 export function setHistoryLimit(limit) {
   localStorage.setItem(HISTORY_LIMIT_KEY, limit.toString());
-  // Prune history to new limit immediately
   if (scanHistory.length > limit) {
     scanHistory = scanHistory.slice(0, limit);
     localStorage.setItem("scan_history", JSON.stringify(scanHistory));
