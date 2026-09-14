@@ -1,6 +1,13 @@
 // js/storage.js - Scan History and Local Storage Management
 
-let scanHistory = JSON.parse(localStorage.getItem("scan_history")) || [];
+let scanHistory = [];
+try {
+  const raw = localStorage.getItem("scan_history");
+  scanHistory = raw ? JSON.parse(raw) : [];
+  if (!Array.isArray(scanHistory)) scanHistory = [];
+} catch (e) {
+  scanHistory = [];
+}
 
 export const PROFILE_KEY = "certifly_profile_data";
 export const THRESHOLD_KEY = "certifly_threshold_days";
@@ -10,25 +17,41 @@ export const HISTORY_LIMIT_KEY = "certifly_history_limit";
 // THRESHOLD & HISTORY SETTINGS HELPERS
 // ----------------------------------------------------
 export function getThresholdDays() {
-  const val = localStorage.getItem(THRESHOLD_KEY);
-  return val ? parseInt(val, 10) : 30;
+  try {
+    const val = localStorage.getItem(THRESHOLD_KEY);
+    return val ? parseInt(val, 10) : 30;
+  } catch (e) {
+    return 30;
+  }
 }
 
 export function setThresholdDays(days) {
-  localStorage.setItem(THRESHOLD_KEY, days.toString());
+  try {
+    localStorage.setItem(THRESHOLD_KEY, days.toString());
+  } catch (e) {
+    console.error("Failed to save threshold days:", e);
+  }
 }
 
 export function getHistoryLimit() {
-  const val = localStorage.getItem(HISTORY_LIMIT_KEY);
-  return val ? parseInt(val, 10) : 10;
+  try {
+    const val = localStorage.getItem(HISTORY_LIMIT_KEY);
+    return val ? parseInt(val, 10) : 10;
+  } catch (e) {
+    return 10;
+  }
 }
 
 export function setHistoryLimit(limit) {
-  localStorage.setItem(HISTORY_LIMIT_KEY, limit.toString());
-  if (scanHistory.length > limit) {
-    scanHistory = scanHistory.slice(0, limit);
-    localStorage.setItem("scan_history", JSON.stringify(scanHistory));
-    renderHistoryList();
+  try {
+    localStorage.setItem(HISTORY_LIMIT_KEY, limit.toString());
+    if (scanHistory.length > limit) {
+      scanHistory = scanHistory.slice(0, limit);
+      localStorage.setItem("scan_history", JSON.stringify(scanHistory));
+      renderHistoryList();
+    }
+  } catch (e) {
+    console.error("Failed to save history limit:", e);
   }
 }
 
@@ -48,22 +71,26 @@ export function saveToHistory(results, originalUrl) {
         .replace(',', ', ');
 
   const record = {
-    id: results.pilotDetails.licenseNo || Date.now().toString(),
-    name: results.pilotDetails.name,
-    licenseType: results.pilotDetails.licenseType,
-    overallStatus: results.overallStatus,
-    url: originalUrl,
+    id: String((results.pilotDetails && results.pilotDetails.licenseNo) || Date.now()),
+    name: (results.pilotDetails && results.pilotDetails.name) || "Unknown",
+    licenseType: (results.pilotDetails && results.pilotDetails.licenseType) || "",
+    overallStatus: results.overallStatus || "VALID",
+    url: originalUrl || "",
     resultsData: results,
     timestamp: fullDateTime
   };
 
-  scanHistory = scanHistory.filter(item => item.id !== record.id);
+  scanHistory = scanHistory.filter(item => item && String(item.id) !== record.id);
   scanHistory.unshift(record);
 
   const limit = getHistoryLimit();
   if (scanHistory.length > limit) scanHistory = scanHistory.slice(0, limit);
 
-  localStorage.setItem("scan_history", JSON.stringify(scanHistory));
+  try {
+    localStorage.setItem("scan_history", JSON.stringify(scanHistory));
+  } catch (e) {
+    console.error("Failed to save scan history:", e);
+  }
   renderHistoryList();
 }
 
@@ -92,13 +119,14 @@ export function renderHistoryList() {
   }
 
   container.innerHTML = scanHistory.map(item => {
+    if (!item) return '';
     const dotColor = item.overallStatus === "EXPIRED" ? "bg-red-500" : (item.overallStatus === "EXPIRING_SOON" ? "bg-amber-500" : "bg-green-600");
-    const safeId = item.id.replace(/'/g, "\'");
+    const safeId = String(item.id || '').replace(/'/g, "\\'");
     return `
       <div onclick="loadHistoricalRecord('${safeId}')" class="py-1.5 px-2 flex items-center justify-between cursor-pointer hover:bg-sky-100 transition-colors">
         <div class="flex flex-col text-left">
-          <span class="text-[11px] font-semibold text-slate-800 leading-tight">${item.name}</span>
-          <span class="text-[9px] text-slate-500 font-semibold uppercase tracking-normal mt-0.5">${item.licenseType}  -  ${item.timestamp} LT</span>
+          <span class="text-[11px] font-semibold text-slate-800 leading-tight">${item.name || 'Unknown'}</span>
+          <span class="text-[9px] text-slate-500 font-semibold uppercase tracking-normal mt-0.5">${item.licenseType || ''}  -  ${item.timestamp || ''} LT</span>
         </div>
         <span class="w-2 h-2 rounded-full ${dotColor} shrink-0 ml-2"></span>
       </div>
@@ -109,7 +137,9 @@ export function renderHistoryList() {
 window.clearHistory = function() {
   if (confirm("Are you sure you want to clear all recent compliance checks from this device?")) {
     scanHistory = [];
-    localStorage.removeItem("scan_history");
+    try {
+      localStorage.removeItem("scan_history");
+    } catch (e) {}
     renderHistoryList();
   }
 };
