@@ -81,32 +81,32 @@ window.clearHistory = function() {
 };
 
 // ----------------------------------------------------
-// PROFILE STORAGE MANAGEMENT (Phase 1 - Step 1)
+// PROFILE STORAGE MANAGEMENT (Refined)
 // ----------------------------------------------------
 export const PROFILE_KEY = "certifly_profile_data";
 
 export function getProfileData() {
   try {
     const data = localStorage.getItem(PROFILE_KEY);
-    if (!data) return { name: "", licenceNo: "", url: "" };
+    if (!data) return { nickname: "", url: "", attestationFileName: "" };
     const parsed = JSON.parse(data);
     return {
-      name: (parsed.name || "").trim(),
-      licenceNo: (parsed.licenceNo || "").trim(),
-      url: (parsed.url || "").trim()
+      nickname: (parsed.nickname || parsed.name || "").trim(),
+      url: (parsed.url || "").trim(),
+      attestationFileName: (parsed.attestationFileName || "").trim()
     };
   } catch (err) {
     console.error("Failed to read profile data from storage:", err);
-    return { name: "", licenceNo: "", url: "" };
+    return { nickname: "", url: "", attestationFileName: "" };
   }
 }
 
 export function saveProfileData(profile = {}) {
   try {
     const sanitized = {
-      name: (profile.name || "").trim(),
-      licenceNo: (profile.licenceNo || "").trim(),
-      url: (profile.url || "").trim()
+      nickname: (profile.nickname || profile.name || "").trim(),
+      url: (profile.url || "").trim(),
+      attestationFileName: (profile.attestationFileName || "").trim()
     };
     localStorage.setItem(PROFILE_KEY, JSON.stringify(sanitized));
   } catch (err) {
