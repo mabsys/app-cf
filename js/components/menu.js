@@ -251,16 +251,6 @@ export const menuHTML = `
           <p class="text-[9px] text-slate-400 mt-1.5">Maximum scan records retained on this local device storage.</p>
         </div>
 
-        <!-- Attestation Freshness Limit Pills -->
-        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
-          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Attestation Freshness Limit (MAB PDF)</label>
-          <div class="grid grid-cols-2 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
-            <button id="freshness-limit-14" type="button" class="freshness-limit-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">14 Days</button>
-            <button id="freshness-limit-30" type="button" class="freshness-limit-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow-xs">30 Days (Default)</button>
-          </div>
-          <p class="text-[9px] text-slate-400 mt-1.5">Maximum age of published MAB attestation before requiring re-upload.</p>
-        </div>
-
         <!-- Storage Status Overview -->
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs flex flex-col gap-2">
           <div class="flex items-center justify-between text-xs">
