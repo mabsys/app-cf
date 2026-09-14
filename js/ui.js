@@ -1,7 +1,7 @@
 // js/ui.js - View State, Navigation, and Network Controller
 
 import { stopScanner } from './scanner.js';
-import { renderHistoryList } from './storage.js';
+import { renderHistoryList, getThresholdDays, setThresholdDays, getHistoryLimit, setHistoryLimit } from './storage.js';
 import { topbarHTML } from './components/topbar.js';
 import { dockHTML } from './components/dock.js';
 import { menuHTML } from './components/menu.js';
@@ -25,6 +25,22 @@ export function applyTextSize(size = currentTextSize) {
   if (topbarTextBtn) {
     topbarTextBtn.innerHTML = textSizeIcons[size] || textSizeIcons.std;
   }
+
+  // Update pill buttons in Settings pane
+  const pStd = document.getElementById("text-pill-std");
+  const pLg = document.getElementById("text-pill-lg");
+  const pXl = document.getElementById("text-pill-xl");
+
+  const activeClass = "bg-blue-600 text-white shadow-xs";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900";
+
+  [pStd, pLg, pXl].forEach(btn => {
+    if (btn) btn.className = `py-2 px-2 text-xs font-bold rounded-lg transition-all ${inactiveClass}`;
+  });
+
+  if (size === "std" && pStd) pStd.className = `py-2 px-2 text-xs font-bold rounded-lg transition-all ${activeClass}`;
+  if (size === "lg" && pLg) pLg.className = `py-2 px-2 text-xs font-bold rounded-lg transition-all ${activeClass}`;
+  if (size === "xl" && pXl) pXl.className = `py-2 px-2 text-xs font-bold rounded-lg transition-all ${activeClass}`;
 
   document.documentElement.style.fontSize = "100%";
 
@@ -80,10 +96,28 @@ let currentThemeMode = localStorage.getItem("app_theme_mode") || "system";
 export function applyThemeMode(mode = currentThemeMode) {
   currentThemeMode = mode;
   localStorage.setItem("app_theme_mode", mode);
+
   const topbarBtn = document.getElementById("topbar-theme-btn");
   if (topbarBtn) {
     topbarBtn.innerHTML = themeSolidIcons[mode] || themeSolidIcons.system;
   }
+
+  // Update pill buttons in Settings pane
+  const pLight = document.getElementById("theme-pill-light");
+  const pDark = document.getElementById("theme-pill-dark");
+  const pSys = document.getElementById("theme-pill-system");
+
+  const activeClass = "bg-blue-600 text-white shadow-xs";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900";
+
+  [pLight, pDark, pSys].forEach(btn => {
+    if (btn) btn.className = `py-2 px-2 text-xs font-bold rounded-lg transition-all ${inactiveClass}`;
+  });
+
+  if (mode === "light" && pLight) pLight.className = `py-2 px-2 text-xs font-bold rounded-lg transition-all ${activeClass}`;
+  if (mode === "dark" && pDark) pDark.className = `py-2 px-2 text-xs font-bold rounded-lg transition-all ${activeClass}`;
+  if (mode === "system" && pSys) pSys.className = `py-2 px-2 text-xs font-bold rounded-lg transition-all ${activeClass}`;
+
   const isDark = mode === "dark" || (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.classList.toggle("dark", isDark);
 }
@@ -95,7 +129,44 @@ export function cycleThemeMode() {
 }
 
 // ----------------------------------------------------
-// 3. FLOATING MENU & GESTURE SWIPE-TO-DISMISS
+// 3. THRESHOLD & HISTORY LIMIT PILL CONTROLLERS
+// ----------------------------------------------------
+export function updateThresholdPills(days = getThresholdDays()) {
+  const t30 = document.getElementById("threshold-pill-30");
+  const t60 = document.getElementById("threshold-pill-60");
+  const t90 = document.getElementById("threshold-pill-90");
+
+  const activeClass = "bg-blue-600 text-white shadow-xs";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900";
+
+  [t30, t60, t90].forEach(btn => {
+    if (btn) btn.className = `py-2 px-2 text-xs font-bold rounded-lg transition-all ${inactiveClass}`;
+  });
+
+  if (days === 30 && t30) t30.className = `py-2 px-2 text-xs font-bold rounded-lg transition-all ${activeClass}`;
+  if (days === 60 && t60) t60.className = `py-2 px-2 text-xs font-bold rounded-lg transition-all ${activeClass}`;
+  if (days === 90 && t90) t90.className = `py-2 px-2 text-xs font-bold rounded-lg transition-all ${activeClass}`;
+}
+
+export function updateHistoryLimitPills(limit = getHistoryLimit()) {
+  const h10 = document.getElementById("history-limit-10");
+  const h20 = document.getElementById("history-limit-20");
+  const h30 = document.getElementById("history-limit-30");
+
+  const activeClass = "bg-blue-600 text-white shadow-xs";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900";
+
+  [h10, h20, h30].forEach(btn => {
+    if (btn) btn.className = `py-2 px-2 text-xs font-bold rounded-lg transition-all ${inactiveClass}`;
+  });
+
+  if (limit === 10 && h10) h10.className = `py-2 px-2 text-xs font-bold rounded-lg transition-all ${activeClass}`;
+  if (limit === 20 && h20) h20.className = `py-2 px-2 text-xs font-bold rounded-lg transition-all ${activeClass}`;
+  if (limit === 30 && h30) h30.className = `py-2 px-2 text-xs font-bold rounded-lg transition-all ${activeClass}`;
+}
+
+// ----------------------------------------------------
+// 4. FLOATING MENU & GESTURE SWIPE-TO-DISMISS
 // ----------------------------------------------------
 let startY = 0;
 let currentY = 0;
@@ -209,7 +280,7 @@ function initGrabberGesture() {
 }
 
 // ----------------------------------------------------
-// 4. DUAL NAVIGATION BARS (Top Bar + Bottom Dock)
+// 5. DUAL NAVIGATION BARS (Top Bar + Bottom Dock)
 // ----------------------------------------------------
 export function initNavigationBars() {
   if (!document.getElementById("persistent-topbar")) {
@@ -226,42 +297,30 @@ export function initNavigationBars() {
   const dock = document.getElementById("persistent-dock");
   const topbarHeight = 48; // 48px height
   const dockMaxTravel = 80;
-  let currentTranslateY = 0;
 
-  const getMaxScrollY = () => Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-  let lastClampedScrollY = Math.max(0, Math.min(window.scrollY, getMaxScrollY()));
-
-  window.addEventListener("scroll", () => {
+  const updateBarPositions = () => {
     const menu = document.getElementById("bottom-sheet-menu");
     if (menu && !menu.classList.contains("hidden")) return;
 
-    const maxScrollY = getMaxScrollY();
+    const maxScrollY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
     const clampedScrollY = Math.max(0, Math.min(window.scrollY, maxScrollY));
-    const delta = clampedScrollY - lastClampedScrollY;
-
-    if (clampedScrollY <= 2) {
-      currentTranslateY = 0;
-    } else if (delta !== 0) {
-      currentTranslateY += delta;
-      currentTranslateY = Math.max(0, Math.min(currentTranslateY, topbarHeight));
-    }
-
-    const progress = currentTranslateY / topbarHeight;
+    const progress = Math.min(1, clampedScrollY / topbarHeight);
 
     // Inverse Movement:
-    // Topbar: hidden up (-100%) at top of page (progress=0), slides DOWN into view (0%) as user scrolls down (progress=1)
-    // Dock: visible (0px) at top of page (progress=0), slides DOWN out of view (80px) as user scrolls down (progress=1)
+    // At scroll = 0: topbar is visible (translateY 0%), dock is visible (translateY 0px)
+    // As user scrolls down: topbar slides up (-100%), dock slides down (80px)
     if (dock) {
       dock.style.transform = `translateY(${progress * dockMaxTravel}px)`;
     }
     if (topbar) {
-      const topbarTranslate = -100 + (progress * 100); // -100% at top -> 0% when scrolled
+      const topbarTranslate = progress * -100;
       topbar.style.transform = `translateY(${topbarTranslate}%)`;
-      topbar.style.opacity = progress.toFixed(2);
+      topbar.style.opacity = (1 - progress).toFixed(2);
     }
+  };
 
-    lastClampedScrollY = clampedScrollY;
-  }, { passive: true });
+  window.addEventListener("scroll", updateBarPositions, { passive: true });
+  updateBarPositions(); // Initialize on load
 
   // Connect Top Bar toggle buttons
   document.getElementById("topbar-text-btn")?.addEventListener("click", cycleTextSize);
@@ -326,10 +385,12 @@ export function initNavigationBars() {
   initGrabberGesture();
   applyTextSize(currentTextSize);
   applyThemeMode(currentThemeMode);
+  updateThresholdPills();
+  updateHistoryLimitPills();
 }
 
 // ----------------------------------------------------
-// 5. NETWORK STATUS CONTROLLER
+// 6. NETWORK STATUS CONTROLLER
 // ----------------------------------------------------
 export function updateNetworkStatus() {
   const isOnline = navigator.onLine;
@@ -383,7 +444,7 @@ export function updateNetworkStatus() {
 }
 
 // ----------------------------------------------------
-// 6. VIEW STATE CONTROLLER
+// 7. VIEW STATE CONTROLLER
 // ----------------------------------------------------
 export function showView(viewId) {
   document.querySelectorAll(".app-view").forEach(view => {
