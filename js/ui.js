@@ -1,7 +1,7 @@
 // js/ui.js - View State, Navigation, and Network Controller
 
 import { stopScanner } from './scanner.js';
-import { renderHistoryList } from './storage.js';
+import { renderHistoryList, getThresholdDays, getHistoryLimit } from './storage.js';
 import { topbarHTML } from './components/topbar.js';
 import { dockHTML } from './components/dock.js';
 import { menuHTML } from './components/menu.js';
@@ -24,6 +24,20 @@ export function applyTextSize(size = currentTextSize) {
   const topbarTextBtn = document.getElementById("topbar-text-btn");
   if (topbarTextBtn) {
     topbarTextBtn.innerHTML = textSizeIcons[size] || textSizeIcons.std;
+  }
+
+  // Highlight Text Scale Pill Buttons
+  const tStd = document.getElementById("text-pill-std");
+  const tLg = document.getElementById("text-pill-lg");
+  const tXl = document.getElementById("text-pill-xl");
+
+  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold";
+
+  if (tStd && tLg && tXl) {
+    tStd.className = `text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center ${size === "std" ? activeClass : inactiveClass}`;
+    tLg.className = `text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center ${size === "lg" ? activeClass : inactiveClass}`;
+    tXl.className = `text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center ${size === "xl" ? activeClass : inactiveClass}`;
   }
 
   document.documentElement.style.fontSize = "100%";
@@ -80,10 +94,26 @@ let currentThemeMode = localStorage.getItem("app_theme_mode") || "system";
 export function applyThemeMode(mode = currentThemeMode) {
   currentThemeMode = mode;
   localStorage.setItem("app_theme_mode", mode);
+
   const topbarBtn = document.getElementById("topbar-theme-btn");
   if (topbarBtn) {
     topbarBtn.innerHTML = themeSolidIcons[mode] || themeSolidIcons.system;
   }
+
+  // Highlight Theme Mode Pill Buttons
+  const tLight = document.getElementById("theme-pill-light");
+  const tDark = document.getElementById("theme-pill-dark");
+  const tSys = document.getElementById("theme-pill-system");
+
+  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold";
+
+  if (tLight && tDark && tSys) {
+    tLight.className = `theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${mode === "light" ? activeClass : inactiveClass}`;
+    tDark.className = `theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${mode === "dark" ? activeClass : inactiveClass}`;
+    tSys.className = `theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${mode === "system" ? activeClass : inactiveClass}`;
+  }
+
   const isDark = mode === "dark" || (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.classList.toggle("dark", isDark);
 }
@@ -95,7 +125,40 @@ export function cycleThemeMode() {
 }
 
 // ----------------------------------------------------
-// 3. FLOATING MENU & GESTURE SWIPE-TO-DISMISS
+// 3. THRESHOLD & HISTORY LIMIT PILL CONTROLLERS
+// ----------------------------------------------------
+export function updateThresholdPills(days = getThresholdDays()) {
+  const t30 = document.getElementById("threshold-pill-30");
+  const t60 = document.getElementById("threshold-pill-60");
+  const t90 = document.getElementById("threshold-pill-90");
+
+  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold";
+
+  if (t30 && t60 && t90) {
+    t30.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${days === 30 ? activeClass : inactiveClass}`;
+    t60.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${days === 60 ? activeClass : inactiveClass}`;
+    t90.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${days === 90 ? activeClass : inactiveClass}`;
+  }
+}
+
+export function updateHistoryLimitPills(limit = getHistoryLimit()) {
+  const h10 = document.getElementById("history-limit-10");
+  const h20 = document.getElementById("history-limit-20");
+  const h30 = document.getElementById("history-limit-30");
+
+  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold";
+
+  if (h10 && h20 && h30) {
+    h10.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 10 ? activeClass : inactiveClass}`;
+    h20.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 20 ? activeClass : inactiveClass}`;
+    h30.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 30 ? activeClass : inactiveClass}`;
+  }
+}
+
+// ----------------------------------------------------
+// 4. FLOATING MENU & GESTURE SWIPE-TO-DISMISS
 // ----------------------------------------------------
 let startY = 0;
 let currentY = 0;
@@ -115,6 +178,12 @@ export function openMenu() {
 
   overlay.classList.remove("hidden");
   menu.classList.remove("hidden");
+
+  // Sync all preference pill selections
+  applyTextSize(currentTextSize);
+  applyThemeMode(currentThemeMode);
+  updateThresholdPills();
+  updateHistoryLimitPills();
 
   requestAnimationFrame(() => {
     overlay.classList.remove("opacity-0");
@@ -157,11 +226,11 @@ export function closeMenu() {
     const paneMain = document.getElementById("pane-main");
     const subPanes = document.querySelectorAll(".sub-pane");
     if (paneMain) {
-      paneMain.classList.remove("-translate-x-full", "opacity-0", "pointer-events-none");
-      paneMain.classList.add("translate-x-0", "opacity-100");
+      paneMain.classList.remove("opacity-0", "pointer-events-none");
+      paneMain.classList.add("opacity-100", "pointer-events-auto");
     }
     subPanes.forEach(pane => {
-      pane.classList.remove("translate-x-0", "opacity-100");
+      pane.classList.remove("translate-x-0", "opacity-100", "pointer-events-auto");
       pane.classList.add("translate-x-full", "opacity-0", "pointer-events-none", "hidden");
     });
   }, 300);
@@ -209,7 +278,7 @@ function initGrabberGesture() {
 }
 
 // ----------------------------------------------------
-// 4. DUAL NAVIGATION BARS (Top Bar + Bottom Dock)
+// 5. DUAL NAVIGATION BARS (Top Bar + Bottom Dock)
 // ----------------------------------------------------
 export function initNavigationBars() {
   if (!document.getElementById("persistent-topbar")) {
@@ -248,14 +317,11 @@ export function initNavigationBars() {
 
     const progress = currentTranslateY / topbarHeight;
 
-    // Inverse Movement:
-    // Topbar: hidden up (-100%) at top of page (progress=0), slides DOWN into view (0%) as user scrolls down (progress=1)
-    // Dock: visible (0px) at top of page (progress=0), slides DOWN out of view (80px) as user scrolls down (progress=1)
     if (dock) {
       dock.style.transform = `translateY(${progress * dockMaxTravel}px)`;
     }
     if (topbar) {
-      const topbarTranslate = -100 + (progress * 100); // -100% at top -> 0% when scrolled
+      const topbarTranslate = -100 + (progress * 100);
       topbar.style.transform = `translateY(${topbarTranslate}%)`;
       topbar.style.opacity = progress.toFixed(2);
     }
@@ -285,7 +351,7 @@ export function initNavigationBars() {
   // Attach overlay close listener
   document.getElementById("bottom-sheet-overlay")?.addEventListener("click", closeMenu);
 
-  // Subpane Navigation logic inside menu sheet
+  // Subpane Navigation logic inside menu sheet (FADE MAIN PANE IN PLACE - NO LEFT SLIDING ARTIFACTS!)
   document.addEventListener("click", (e) => {
     const navBtn = e.target.closest(".nav-item-btn");
     if (navBtn) {
@@ -294,11 +360,13 @@ export function initNavigationBars() {
       const paneMain = document.getElementById("pane-main");
 
       if (targetPane && paneMain) {
-        paneMain.classList.add("-translate-x-full", "opacity-0", "pointer-events-none");
-        paneMain.classList.remove("translate-x-0", "opacity-100");
+        // Fade main pane in place smoothly
+        paneMain.classList.add("opacity-0", "pointer-events-none");
+        paneMain.classList.remove("opacity-100", "pointer-events-auto");
 
+        // Slide target subpane in cleanly from right
         targetPane.classList.remove("hidden", "translate-x-full", "opacity-0", "pointer-events-none");
-        targetPane.classList.add("translate-x-0", "opacity-100");
+        targetPane.classList.add("translate-x-0", "opacity-100", "pointer-events-auto");
       }
     }
 
@@ -310,11 +378,13 @@ export function initNavigationBars() {
       if (subPane && paneMain) {
         stopScanner(); // Stop inline camera scanner when backing out
 
-        subPane.classList.remove("translate-x-0", "opacity-100");
+        // Slide subpane back out to right
+        subPane.classList.remove("translate-x-0", "opacity-100", "pointer-events-auto");
         subPane.classList.add("translate-x-full", "opacity-0", "pointer-events-none");
 
-        paneMain.classList.remove("-translate-x-full", "opacity-0", "pointer-events-none");
-        paneMain.classList.add("translate-x-0", "opacity-100");
+        // Fade main pane back in
+        paneMain.classList.remove("opacity-0", "pointer-events-none");
+        paneMain.classList.add("opacity-100", "pointer-events-auto");
 
         setTimeout(() => {
           subPane.classList.add("hidden");
@@ -326,10 +396,12 @@ export function initNavigationBars() {
   initGrabberGesture();
   applyTextSize(currentTextSize);
   applyThemeMode(currentThemeMode);
+  updateThresholdPills();
+  updateHistoryLimitPills();
 }
 
 // ----------------------------------------------------
-// 5. NETWORK STATUS CONTROLLER
+// 6. NETWORK STATUS CONTROLLER
 // ----------------------------------------------------
 export function updateNetworkStatus() {
   const isOnline = navigator.onLine;
@@ -383,7 +455,7 @@ export function updateNetworkStatus() {
 }
 
 // ----------------------------------------------------
-// 6. VIEW STATE CONTROLLER
+// 7. VIEW STATE CONTROLLER
 // ----------------------------------------------------
 export function showView(viewId) {
   document.querySelectorAll(".app-view").forEach(view => {
