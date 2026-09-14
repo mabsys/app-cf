@@ -4,20 +4,15 @@ import { stopScanner } from './scanner.js';
 import { renderHistoryList } from './storage.js';
 import { topbarHTML } from './components/topbar.js';
 import { dockHTML } from './components/dock.js';
+import { menuHTML } from './components/menu.js';
 
 // ----------------------------------------------------
-// 1. TEXT SIZE 3-STATE CYCLER (Standard, Large, Extra Large)
+// 1. DYNAMIC TEXT SCALING (Scoped to <main>)
 // ----------------------------------------------------
 const textSizeIcons = {
   std: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l3-7 3 7M5 15h4"/><path d="M13 18l4-11 4 11M14 14h6"/><path d="M11 7h2"/></svg>`,
   lg: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l3-7 3 7M5 15h4"/><path d="M13 18l4-11 4 11M14 14h6"/><path d="M11 6l1-1 1 1"/></svg>`,
   xl: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l3-7 3 7M5 15h4"/><path d="M13 18l4-11 4 11M14 14h6"/><path d="M11 6l1-1 1 1M11 3l1-1 1 1"/></svg>`
-};
-
-const textSizeScales = {
-  std: "100%",
-  lg: "115%",
-  xl: "130%"
 };
 
 let currentTextSize = localStorage.getItem("app_text_size") || "std";
@@ -31,7 +26,38 @@ export function applyTextSize(size = currentTextSize) {
     topbarTextBtn.innerHTML = textSizeIcons[size] || textSizeIcons.std;
   }
 
-  document.documentElement.style.fontSize = textSizeScales[size] || "100%";
+  document.documentElement.style.fontSize = "100%";
+
+  let styleEl = document.getElementById("certifly-text-scale-style");
+  if (!styleEl) {
+    styleEl = document.createElement("style");
+    styleEl.id = "certifly-text-scale-style";
+    document.head.appendChild(styleEl);
+  }
+
+  if (size === "std") {
+    styleEl.textContent = "";
+    return;
+  }
+
+  const mult = size === "lg" ? 1.15 : 1.30;
+
+  styleEl.textContent = `
+    main { font-size: ${(mult * 100).toFixed(1)}% !important; }
+    main .text-\[9px\] { font-size: ${(9 * mult).toFixed(1)}px !important; }
+    main .text-\[10px\] { font-size: ${(10 * mult).toFixed(1)}px !important; }
+    main .text-\[11px\] { font-size: ${(11 * mult).toFixed(1)}px !important; }
+    main .text-\[13px\] { font-size: ${(13 * mult).toFixed(1)}px !important; }
+    main .text-xxs { font-size: ${(0.625 * mult).toFixed(4)}rem !important; }
+    main .text-xs { font-size: ${(0.75 * mult).toFixed(4)}rem !important; }
+    main .text-sm { font-size: ${(0.875 * mult).toFixed(4)}rem !important; }
+    main .text-base { font-size: ${(1.0 * mult).toFixed(4)}rem !important; }
+    main .text-lg { font-size: ${(1.125 * mult).toFixed(4)}rem !important; }
+    main .text-xl { font-size: ${(1.25 * mult).toFixed(4)}rem !important; }
+    main .text-2xl { font-size: ${(1.5 * mult).toFixed(4)}rem !important; }
+    main .text-3xl { font-size: ${(1.875 * mult).toFixed(4)}rem !important; }
+    main .text-4xl { font-size: ${(2.25 * mult).toFixed(4)}rem !important; }
+  `;
 }
 
 export function cycleTextSize() {
@@ -41,7 +67,7 @@ export function cycleTextSize() {
 }
 
 // ----------------------------------------------------
-// 2. APPEARANCE 3-STATE CYCLER (Solid Mini Heroicons)
+// 2. APPEARANCE THEME CYCLER
 // ----------------------------------------------------
 const themeSolidIcons = {
   system: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M6 3.5A1.5 1.5 0 0 1 7.5 2h5A1.5 1.5 0 0 1 14 3.5v13a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 6 16.5v-13ZM10 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd"/></svg>`,
@@ -54,12 +80,10 @@ let currentThemeMode = localStorage.getItem("app_theme_mode") || "system";
 export function applyThemeMode(mode = currentThemeMode) {
   currentThemeMode = mode;
   localStorage.setItem("app_theme_mode", mode);
-
   const topbarBtn = document.getElementById("topbar-theme-btn");
   if (topbarBtn) {
     topbarBtn.innerHTML = themeSolidIcons[mode] || themeSolidIcons.system;
   }
-
   const isDark = mode === "dark" || (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.classList.toggle("dark", isDark);
 }
@@ -71,28 +95,146 @@ export function cycleThemeMode() {
 }
 
 // ----------------------------------------------------
-// 3. DUAL NAVIGATION BARS (Top Bar + Bottom Dock)
+// 3. FLOATING MENU & GESTURE SWIPE-TO-DISMISS
+// ----------------------------------------------------
+let startY = 0;
+let currentY = 0;
+let isDragging = false;
+
+export function openMenu() {
+  const menu = document.getElementById("bottom-sheet-menu");
+  const overlay = document.getElementById("bottom-sheet-overlay");
+  const dock = document.getElementById("persistent-dock");
+
+  if (!menu || !overlay) return;
+
+  // Hide persistent dock while menu pane is active
+  if (dock) {
+    dock.style.transform = "translateY(120%)";
+  }
+
+  overlay.classList.remove("hidden");
+  menu.classList.remove("hidden");
+
+  requestAnimationFrame(() => {
+    overlay.classList.remove("opacity-0");
+    overlay.classList.add("opacity-100");
+    menu.classList.remove("translate-y-[120%]");
+    menu.classList.add("translate-y-0");
+  });
+}
+
+export function closeMenu() {
+  const menu = document.getElementById("bottom-sheet-menu");
+  const overlay = document.getElementById("bottom-sheet-overlay");
+  const dock = document.getElementById("persistent-dock");
+
+  if (!menu || !overlay) return;
+
+  stopScanner(); // Stop inline camera stream if running
+
+  overlay.classList.remove("opacity-100");
+  overlay.classList.add("opacity-0");
+  menu.classList.remove("translate-y-0");
+  menu.classList.add("translate-y-[120%]");
+
+  setTimeout(() => {
+    overlay.classList.add("hidden");
+    menu.classList.add("hidden");
+    menu.style.transform = "";
+
+    // Restore persistent bottom dock position based on current scroll
+    if (dock) {
+      const topbarHeight = 48;
+      const dockMaxTravel = 80;
+      const maxScrollY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      const clampedScrollY = Math.max(0, Math.min(window.scrollY, maxScrollY));
+      const progress = Math.min(1, clampedScrollY / topbarHeight);
+      dock.style.transform = `translateY(${progress * dockMaxTravel}px)`;
+    }
+
+    // Reset sub-panes to main
+    const paneMain = document.getElementById("pane-main");
+    const subPanes = document.querySelectorAll(".sub-pane");
+    if (paneMain) {
+      paneMain.classList.remove("-translate-x-full", "opacity-0", "pointer-events-none");
+      paneMain.classList.add("translate-x-0", "opacity-100");
+    }
+    subPanes.forEach(pane => {
+      pane.classList.remove("translate-x-0", "opacity-100");
+      pane.classList.add("translate-x-full", "opacity-0", "pointer-events-none", "hidden");
+    });
+  }, 300);
+}
+
+function initGrabberGesture() {
+  const menu = document.getElementById("bottom-sheet-menu");
+  const dragHandle = document.getElementById("sheet-drag-handle");
+  if (!menu || !dragHandle) return;
+
+  const handleTouchStart = (e) => {
+    startY = e.touches ? e.touches[0].clientY : e.clientY;
+    isDragging = true;
+    menu.style.transition = 'none';
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging) return;
+    currentY = e.touches ? e.touches[0].clientY : e.clientY;
+    const deltaY = currentY - startY;
+    if (deltaY > 0) {
+      menu.style.transform = `translateY(${deltaY}px)`;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDragging) return;
+    isDragging = false;
+    menu.style.transition = '';
+    const deltaY = currentY - startY;
+    if (deltaY > 80) {
+      closeMenu();
+    } else {
+      menu.style.transform = 'translateY(0)';
+    }
+  };
+
+  dragHandle.addEventListener("touchstart", handleTouchStart, { passive: true });
+  dragHandle.addEventListener("touchmove", handleTouchMove, { passive: true });
+  dragHandle.addEventListener("touchend", handleTouchEnd);
+
+  dragHandle.addEventListener("mousedown", handleTouchStart);
+  window.addEventListener("mousemove", handleTouchMove);
+  window.addEventListener("mouseup", handleTouchEnd);
+}
+
+// ----------------------------------------------------
+// 4. DUAL NAVIGATION BARS (Top Bar + Bottom Dock)
 // ----------------------------------------------------
 export function initNavigationBars() {
   if (!document.getElementById("persistent-topbar")) {
     document.body.insertAdjacentHTML('afterbegin', topbarHTML);
   }
-
   if (!document.getElementById("persistent-dock")) {
     document.body.insertAdjacentHTML('beforeend', dockHTML);
+  }
+  if (!document.getElementById("bottom-sheet-menu")) {
+    document.body.insertAdjacentHTML('beforeend', menuHTML);
   }
 
   const topbar = document.getElementById("persistent-topbar");
   const dock = document.getElementById("persistent-dock");
-
-  const topbarHeight = 48; // 48px height (h-12)
+  const topbarHeight = 48; // 48px height
   const dockMaxTravel = 80;
-
   let currentTranslateY = 0;
+
   const getMaxScrollY = () => Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
   let lastClampedScrollY = Math.max(0, Math.min(window.scrollY, getMaxScrollY()));
 
   window.addEventListener("scroll", () => {
+    const menu = document.getElementById("bottom-sheet-menu");
+    if (menu && !menu.classList.contains("hidden")) return;
+
     const maxScrollY = getMaxScrollY();
     const clampedScrollY = Math.max(0, Math.min(window.scrollY, maxScrollY));
     const delta = clampedScrollY - lastClampedScrollY;
@@ -106,35 +248,88 @@ export function initNavigationBars() {
 
     const progress = currentTranslateY / topbarHeight;
 
+    // Inverse Movement:
+    // Topbar: hidden up (-100%) at top of page (progress=0), slides DOWN into view (0%) as user scrolls down (progress=1)
+    // Dock: visible (0px) at top of page (progress=0), slides DOWN out of view (80px) as user scrolls down (progress=1)
     if (dock) {
       dock.style.transform = `translateY(${progress * dockMaxTravel}px)`;
     }
-
     if (topbar) {
-      const topbarTranslate = (1 - progress) * -100;
+      const topbarTranslate = -100 + (progress * 100); // -100% at top -> 0% when scrolled
       topbar.style.transform = `translateY(${topbarTranslate}%)`;
-      topbar.style.opacity = progress > 0.05 ? "1" : "0";
+      topbar.style.opacity = progress.toFixed(2);
     }
 
     lastClampedScrollY = clampedScrollY;
   }, { passive: true });
 
   // Connect Top Bar toggle buttons
-  document.getElementById("topbar-text-btn")?.addEventListener("click", () => {
-    cycleTextSize();
+  document.getElementById("topbar-text-btn")?.addEventListener("click", cycleTextSize);
+  document.getElementById("topbar-theme-btn")?.addEventListener("click", cycleThemeMode);
+
+  // Connect Dock buttons
+  document.getElementById("dock-menu-btn")?.addEventListener("click", openMenu);
+  document.getElementById("dock-scan-btn")?.addEventListener("click", showScannerView);
+  document.getElementById("dock-dashboard-btn")?.addEventListener("click", () => showView("result-view"));
+  document.getElementById("dock-history-btn")?.addEventListener("click", () => {
+    const historyDetails = document.getElementById("history-details");
+    if (historyDetails) {
+      if (historyDetails.hasAttribute("open")) {
+        historyDetails.removeAttribute("open");
+      } else {
+        historyDetails.setAttribute("open", "");
+      }
+    }
   });
 
-  document.getElementById("topbar-theme-btn")?.addEventListener("click", () => {
-    cycleThemeMode();
+  // Attach overlay close listener
+  document.getElementById("bottom-sheet-overlay")?.addEventListener("click", closeMenu);
+
+  // Subpane Navigation logic inside menu sheet
+  document.addEventListener("click", (e) => {
+    const navBtn = e.target.closest(".nav-item-btn");
+    if (navBtn) {
+      const targetId = navBtn.getAttribute("data-target");
+      const targetPane = document.getElementById(targetId);
+      const paneMain = document.getElementById("pane-main");
+
+      if (targetPane && paneMain) {
+        paneMain.classList.add("-translate-x-full", "opacity-0", "pointer-events-none");
+        paneMain.classList.remove("translate-x-0", "opacity-100");
+
+        targetPane.classList.remove("hidden", "translate-x-full", "opacity-0", "pointer-events-none");
+        targetPane.classList.add("translate-x-0", "opacity-100");
+      }
+    }
+
+    const backBtn = e.target.closest(".back-btn");
+    if (backBtn) {
+      const subPane = backBtn.closest(".sub-pane");
+      const paneMain = document.getElementById("pane-main");
+
+      if (subPane && paneMain) {
+        stopScanner(); // Stop inline camera scanner when backing out
+
+        subPane.classList.remove("translate-x-0", "opacity-100");
+        subPane.classList.add("translate-x-full", "opacity-0", "pointer-events-none");
+
+        paneMain.classList.remove("-translate-x-full", "opacity-0", "pointer-events-none");
+        paneMain.classList.add("translate-x-0", "opacity-100");
+
+        setTimeout(() => {
+          subPane.classList.add("hidden");
+        }, 300);
+      }
+    }
   });
 
-  // Apply initial preference states and icons on load
+  initGrabberGesture();
   applyTextSize(currentTextSize);
   applyThemeMode(currentThemeMode);
 }
 
 // ----------------------------------------------------
-// 4. NETWORK STATUS CONTROLLER
+// 5. NETWORK STATUS CONTROLLER
 // ----------------------------------------------------
 export function updateNetworkStatus() {
   const isOnline = navigator.onLine;
@@ -188,7 +383,7 @@ export function updateNetworkStatus() {
 }
 
 // ----------------------------------------------------
-// 5. VIEW STATE CONTROLLER
+// 6. VIEW STATE CONTROLLER
 // ----------------------------------------------------
 export function showView(viewId) {
   document.querySelectorAll(".app-view").forEach(view => {
