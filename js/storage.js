@@ -134,7 +134,7 @@ export function renderHistoryList() {
   }).join('');
 }
 
-window.clearHistory = function() {
+export function clearHistory() {
   if (confirm("Are you sure you want to clear all recent compliance checks from this device?")) {
     scanHistory = [];
     try {
@@ -142,7 +142,8 @@ window.clearHistory = function() {
     } catch (e) {}
     renderHistoryList();
   }
-};
+}
+window.clearHistory = clearHistory;
 
 // ----------------------------------------------------
 // PROFILE STORAGE MANAGEMENT
