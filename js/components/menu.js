@@ -1,11 +1,11 @@
-// js/components/menu.js - Sliding Floating Menu Component (Complete Menu Ecosystem)
+// js/components/menu.js - Sliding Floating Menu Component
 
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
 <div id="bottom-sheet-overlay"
      class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden opacity-0 transition-opacity duration-300"></div>
 
-<!-- FLOATING MENU CONTAINER (Inset width, rounded corners, stretches up to 82vh) -->
+<!-- FLOATING MENU CONTAINER (Stretches out/up to 82vh to fit sub-panes without cramping) -->
 <div id="bottom-sheet-menu"
      class="fixed bottom-3 left-2.5 right-2.5 z-50 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl transform translate-y-[120%] transition-transform duration-300 ease-out max-w-md mx-auto border border-slate-100 dark:border-slate-800 flex flex-col hidden h-[82vh] max-h-[85vh] touch-none overflow-hidden">
   
@@ -17,11 +17,11 @@ export const menuHTML = `
   <!-- CONTAINER CONTENT AREA -->
   <div id="sheet-content" class="relative w-full flex-1 overflow-y-auto overflow-x-hidden pb-6 px-3">
 
-    <!-- PANE 1: MAIN MENU CATEGORIES -->
+    <!-- PANE 1: MAIN CATEGORIES -->
     <div id="pane-main" class="w-full transition-all duration-300 ease-in-out">
-      <div class="flex flex-col gap-2.5 px-1 pt-1">
+      <div class="flex flex-col gap-2.5 px-1">
 
-        <!-- Category 1: My Profile -->
+        <!-- Category 0: My Profile -->
         <button class="nav-item-btn w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 active:scale-[0.98] transition-all"
                 data-target="pane-profile">
           <div class="flex items-center gap-3.5">
@@ -38,53 +38,52 @@ export const menuHTML = `
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
         </button>
 
-        <!-- Category 2: App Settings & Display -->
+        <!-- Category 1: App Settings & Display -->
         <button class="nav-item-btn w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 active:scale-[0.98] transition-all"
                 data-target="pane-settings">
           <div class="flex items-center gap-3.5">
-            <div class="p-2.5 bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 rounded-xl">
+            <div class="p-2.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded-xl">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.349.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z"></path>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 18H7.5M3.75 12h16.5"></path>
               </svg>
             </div>
             <div class="text-left">
               <div class="text-xs font-bold text-slate-800 dark:text-slate-100">App Settings</div>
-              <div class="text-[10px] text-slate-400">Theme mode, text scaling & checker threshold</div>
+              <div class="text-[10px] text-slate-400">Theme mode, text size & warning thresholds</div>
             </div>
           </div>
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
         </button>
 
-        <!-- Category 3: Data & Storage -->
+        <!-- Category 2: Data & Storage Management -->
         <button class="nav-item-btn w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 active:scale-[0.98] transition-all"
                 data-target="pane-storage">
           <div class="flex items-center gap-3.5">
-            <div class="p-2.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-xl">
+            <div class="p-2.5 bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 rounded-xl">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 5.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125"></path>
               </svg>
             </div>
             <div class="text-left">
               <div class="text-xs font-bold text-slate-800 dark:text-slate-100">Data & Storage</div>
-              <div class="text-[10px] text-slate-400">Scan history limit, offline cache & data reset</div>
+              <div class="text-[10px] text-slate-400">History limits & cache reset</div>
             </div>
           </div>
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
         </button>
 
-        <!-- Category 4: About & System Info -->
+        <!-- Category 3: About CertiFly -->
         <button class="nav-item-btn w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 active:scale-[0.98] transition-all"
                 data-target="pane-about">
           <div class="flex items-center gap-3.5">
-            <div class="p-2.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded-xl">
+            <div class="p-2.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-xl">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"></path>
               </svg>
             </div>
             <div class="text-left">
               <div class="text-xs font-bold text-slate-800 dark:text-slate-100">About CertiFly</div>
-              <div class="text-[10px] text-slate-400">Version 2.8, CAAM proxy status & usage notes</div>
+              <div class="text-[10px] text-slate-400">Version details & CAAM proxy info</div>
             </div>
           </div>
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
@@ -93,7 +92,7 @@ export const menuHTML = `
       </div>
     </div>
 
-    <!-- SUB-PANE 1: MY PROFILE -->
+    <!-- SUB-PANE 0: MY PROFILE -->
     <div id="pane-profile" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
       
       <!-- Back Button -->
@@ -119,7 +118,7 @@ export const menuHTML = `
           <!-- Side-by-Side Mode Selector Buttons -->
           <div class="grid grid-cols-2 gap-2 mb-3">
             <button id="profile-mode-qr-btn" type="button" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c0 .621.504 1.125 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z"/></svg>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c0 .621.504 1.125 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c0 .621.504 1.125 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z"/></svg>
               Scan Licence QR
             </button>
             <button id="profile-mode-url-btn" type="button" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
@@ -131,7 +130,7 @@ export const menuHTML = `
           <!-- Shared Interchangeable Dynamic Area -->
           <div id="profile-source-container" class="w-full">
             
-            <!-- Mode A: Live Inline Camera Scanner Container (Hidden by default) -->
+            <!-- Mode A: Live Inline Camera Scanner Container (Hidden by default until Scan Licence QR is tapped) -->
             <div id="profile-qr-box" class="hidden flex flex-col gap-2">
               <div id="profile-qr-reader-container" class="w-full overflow-hidden rounded-2xl bg-slate-900 aspect-square flex items-center justify-center relative shadow-inner">
                 <video id="profile-qr-video" class="w-full h-full object-cover" playsinline webkit-playsinline muted></video>
@@ -142,7 +141,7 @@ export const menuHTML = `
               <p class="text-[9px] text-slate-400 text-center">Camera active — scanning automatically extracts & updates licence validities.</p>
             </div>
 
-            <!-- Mode B: Manual Paste URL Input (Hidden by default) -->
+            <!-- Mode B: Manual Paste URL Input -->
             <div id="profile-url-box" class="hidden flex flex-col gap-2">
               <input type="url" id="profile-url-input" placeholder="https://eclipse.caam.gov.my/ELICENSING/..." class="w-full p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
               <p class="text-[9px] text-slate-400">Paste your official eCLIPSE URL directly if QR camera scanning is unavailable.</p>
@@ -178,165 +177,126 @@ export const menuHTML = `
       </div>
     </div>
 
-    <!-- SUB-PANE 2: APP SETTINGS & DISPLAY -->
+    <!-- SUB-PANE 1: APP SETTINGS -->
     <div id="pane-settings" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
       
-      <!-- Back Button -->
       <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
 
-      <h3 class="text-xs font-black text-slate-800 dark:text-slate-100 mb-3.5 px-1 uppercase tracking-wider">App Settings & Appearance</h3>
+      <h3 class="text-xs font-black text-slate-800 dark:text-slate-100 mb-3.5 px-1 uppercase tracking-wider">App Display & Preferences</h3>
 
-      <div class="flex flex-col gap-4">
-
-        <!-- CONTROL 1: THEME MODE (3 Connected-Pill Buttons) -->
+      <div class="flex flex-col gap-3.5">
+        
+        <!-- THEME MODE 3-CONNECTED PILL -->
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
-          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Theme Mode</label>
-          <div class="grid grid-cols-3 p-1 bg-slate-200/80 dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
-            <button id="theme-pill-light" type="button" class="theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 text-slate-600 dark:text-slate-300">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m0 13.5V21m8.966-8.966h-2.25m-13.5 0H3m15.364-6.364l-1.591 1.591M6.758 17.242l-1.591 1.591M19.364 19.364l-1.591-1.591M6.758 6.758L5.167 5.167M12 8.25a3.75 3.75 0 100 7.5 3.75 3.75 0 000-7.5z"/></svg>
-              Light
-            </button>
-            <button id="theme-pill-dark" type="button" class="theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 text-slate-600 dark:text-slate-300">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
-              Dark
-            </button>
-            <button id="theme-pill-system" type="button" class="theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 text-slate-600 dark:text-slate-300">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3"/></svg>
-              System
-            </button>
+          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Appearance Theme</label>
+          <div class="grid grid-cols-3 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
+            <button id="theme-pill-light" type="button" class="theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">Light</button>
+            <button id="theme-pill-dark" type="button" class="theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">Dark</button>
+            <button id="theme-pill-system" type="button" class="theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">System</button>
           </div>
-          <p class="text-[9px] text-slate-400 mt-2">Adjust visual theme mode to Light, Dark, or System auto preference.</p>
+          <p class="text-[9px] text-slate-400 mt-2">Adjust visual theme for low-light cockpit or day operations.</p>
         </div>
 
-        <!-- CONTROL 2: TEXT SIZE ADJUSTMENT (3 Connected-Pill Buttons) -->
+        <!-- TEXT SCALE 3-CONNECTED PILL -->
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
-          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Text Scale Adjustment</label>
-          <div class="grid grid-cols-3 p-1 bg-slate-200/80 dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
-            <button id="text-pill-std" type="button" class="text-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300">
-              A (Std)
-            </button>
-            <button id="text-pill-lg" type="button" class="text-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300">
-              A (Large)
-            </button>
-            <button id="text-pill-xl" type="button" class="text-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300">
-              A (XL)
-            </button>
+          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Text Font Scaling</label>
+          <div class="grid grid-cols-3 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
+            <button id="text-pill-std" type="button" class="text-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">A (Std)</button>
+            <button id="text-pill-lg" type="button" class="text-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">A (Large)</button>
+            <button id="text-pill-xl" type="button" class="text-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">A (XL)</button>
           </div>
-          <p class="text-[9px] text-slate-400 mt-2">Scales content typography size without distorting header & dock navigation bars.</p>
+          <p class="text-[9px] text-slate-400 mt-2">Scale view text without enlarging top or bottom navigation bars.</p>
         </div>
 
-        <!-- CONTROL 3: CHECKER THRESHOLD DAYS (3 Connected-Pill Buttons) -->
+        <!-- WARNING THRESHOLD 3-CONNECTED PILL -->
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
-          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Checker Expiry Warning Threshold</label>
-          <div class="grid grid-cols-3 p-1 bg-slate-200/80 dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
-            <button id="threshold-pill-30" type="button" class="threshold-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300">
-              30 Days
-            </button>
-            <button id="threshold-pill-60" type="button" class="threshold-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300">
-              60 Days
-            </button>
-            <button id="threshold-pill-90" type="button" class="threshold-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300">
-              90 Days
-            </button>
+          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Expiration Warning Threshold</label>
+          <div class="grid grid-cols-3 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
+            <button id="threshold-pill-30" type="button" class="threshold-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">30 Days</button>
+            <button id="threshold-pill-60" type="button" class="threshold-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">60 Days</button>
+            <button id="threshold-pill-90" type="button" class="threshold-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">90 Days</button>
           </div>
-          <p class="text-[9px] text-slate-400 mt-2">Sets the advance warning buffer before qualification expiry turns "Expiring Soon".</p>
+          <p class="text-[9px] text-slate-400 mt-2">Sets how far in advance 'FLY WITH CAUTION' warnings trigger.</p>
         </div>
 
       </div>
     </div>
 
-    <!-- SUB-PANE 3: DATA & STORAGE -->
+    <!-- SUB-PANE 2: DATA & STORAGE -->
     <div id="pane-storage" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
       
-      <!-- Back Button -->
       <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
 
       <h3 class="text-xs font-black text-slate-800 dark:text-slate-100 mb-3.5 px-1 uppercase tracking-wider">Data & Storage Management</h3>
 
-      <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-3.5">
 
-        <!-- CONTROL 1: SCAN HISTORY LENGTH (3 Connected-Pill Buttons) -->
+        <!-- HISTORY LIMIT 3-CONNECTED PILL -->
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
-          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Scan History Records to Keep</label>
-          <div class="grid grid-cols-3 p-1 bg-slate-200/80 dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
-            <button id="history-limit-10" type="button" class="history-limit-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300">
-              10 Items
-            </button>
-            <button id="history-limit-20" type="button" class="history-limit-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300">
-              20 Items
-            </button>
-            <button id="history-limit-30" type="button" class="history-limit-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300">
-              30 Items
-            </button>
+          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Scan History Retention Limit</label>
+          <div class="grid grid-cols-3 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
+            <button id="history-limit-10" type="button" class="history-limit-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">10 Items</button>
+            <button id="history-limit-20" type="button" class="history-limit-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">20 Items</button>
+            <button id="history-limit-30" type="button" class="history-limit-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">30 Items</button>
           </div>
-          <p class="text-[9px] text-slate-400 mt-2">Limits maximum local historical compliance checks saved on this device.</p>
+          <p class="text-[9px] text-slate-400 mt-2">Max number of recent compliance checks preserved on this device.</p>
         </div>
 
-        <!-- STORAGE METRICS & ACTIONS -->
-        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs flex flex-col gap-3">
+        <!-- STORAGE METRICS SUMMARY -->
+        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs flex flex-col gap-2">
           <div class="flex items-center justify-between text-xs">
-            <span class="font-bold text-slate-700 dark:text-slate-300">Saved History Scans:</span>
-            <span id="storage-scans-count" class="font-black text-blue-600 dark:text-blue-400">0</span>
+            <span class="font-bold text-slate-600 dark:text-slate-300">Scans Saved:</span>
+            <span id="storage-scans-count" class="font-extrabold text-slate-800 dark:text-slate-100">0 / 10</span>
           </div>
-
           <div class="flex items-center justify-between text-xs">
-            <span class="font-bold text-slate-700 dark:text-slate-300">Saved Pilot Profile:</span>
-            <span id="storage-profile-status" class="font-bold text-slate-500">None</span>
+            <span class="font-bold text-slate-600 dark:text-slate-300">Saved Profile:</span>
+            <span id="storage-profile-status" class="font-bold text-slate-400">None</span>
           </div>
+        </div>
 
-          <div class="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex flex-col gap-2">
-            <button id="storage-clear-history-btn" type="button" class="w-full p-2.5 text-xs font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-900/50 hover:bg-amber-100 transition-all flex items-center justify-center gap-1.5">
-              Clear Compliance History
-            </button>
+        <!-- STORAGE ACTIONS -->
+        <div class="px-1 flex flex-col gap-2.5 pt-1 pb-3">
+          <button id="storage-clear-history-btn" type="button" class="w-full p-3.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl transition-all shadow-sm">
+            Clear Scan History Logs
+          </button>
 
-            <button id="storage-reset-all-btn" type="button" class="w-full p-2.5 text-xs font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-100 dark:border-rose-900/50 hover:bg-rose-100 transition-all flex items-center justify-center gap-1.5">
-              Reset All App Data
-            </button>
-          </div>
+          <button id="storage-reset-all-btn" type="button" class="w-full p-3 text-xs font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-100 dark:border-rose-900/50 hover:bg-rose-100 transition-all">
+            Reset All Application Storage
+          </button>
         </div>
 
       </div>
     </div>
 
-    <!-- SUB-PANE 4: ABOUT & SYSTEM INFO -->
+    <!-- SUB-PANE 3: ABOUT -->
     <div id="pane-about" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
       
-      <!-- Back Button -->
       <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
 
       <h3 class="text-xs font-black text-slate-800 dark:text-slate-100 mb-3.5 px-1 uppercase tracking-wider">About CertiFly</h3>
 
-      <div class="flex flex-col gap-3.5">
-        
-        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs flex flex-col items-center text-center">
-          <div class="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center font-black text-xl mb-2 shadow-md">
+      <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs flex flex-col gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black text-sm shadow-sm">
             CF
           </div>
-          <div class="font-extrabold text-sm text-slate-800 dark:text-slate-100">CertiFly™ Flight Compliance</div>
-          <div class="text-[10px] text-slate-400 font-bold mt-0.5">Version 2.8 (Build 2026.09)</div>
-          <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-            Mobile digital licence verification & credentials checker designed for flight crew operating under CAAM & MAB standards.
-          </p>
-        </div>
-
-        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs flex flex-col gap-2">
-          <div class="text-[10px] font-extrabold text-slate-400 uppercase">System Status</div>
-          <div class="flex items-center justify-between text-xs">
-            <span class="font-semibold text-slate-700 dark:text-slate-300">CAAM eCLIPSE Proxy:</span>
-            <span class="text-emerald-600 font-bold">Connected (Online)</span>
-          </div>
-          <div class="flex items-center justify-between text-xs">
-            <span class="font-semibold text-slate-700 dark:text-slate-300">PWA Service Worker:</span>
-            <span class="text-blue-600 font-bold">Active (v2.8)</span>
+          <div>
+            <div class="text-xs font-black text-slate-800 dark:text-slate-100">CertiFly Compliance Checker</div>
+            <div class="text-[10px] text-slate-400 font-semibold">Version 2.8 (PWA Enabled)</div>
           </div>
         </div>
 
+        <div class="border-t border-slate-200 dark:border-slate-700 pt-3 text-[10px] text-slate-500 leading-relaxed flex flex-col gap-1.5">
+          <p><strong>Purpose:</strong> Offline-ready compliance parser for CAAM eCLIPSE digital pilot licences and MAB company attestations.</p>
+          <p><strong>Proxy Connection:</strong> Cloudflare Worker CORS Proxy Active</p>
+          <p class="text-slate-400 italic mt-1">Cross-check official physical credentials prior to flight dispatch.</p>
+        </div>
       </div>
     </div>
 
