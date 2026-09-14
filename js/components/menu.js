@@ -5,7 +5,7 @@ export const menuHTML = `
 <div id="bottom-sheet-overlay"
      class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden opacity-0 transition-opacity duration-300"></div>
 
-<!-- FLOATING MENU CONTAINER (Stretches out/up to 82vh to fit sub-pane without cramping) -->
+<!-- FLOATING MENU CONTAINER -->
 <div id="bottom-sheet-menu"
      class="fixed bottom-3 left-2.5 right-2.5 z-50 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl transform translate-y-[120%] transition-transform duration-300 ease-out max-w-md mx-auto border border-slate-100 dark:border-slate-800 flex flex-col hidden h-[82vh] max-h-[85vh] touch-none overflow-hidden">
   
@@ -18,7 +18,7 @@ export const menuHTML = `
   <div id="sheet-content" class="relative w-full flex-1 overflow-y-auto overflow-x-hidden pb-6 px-3">
 
     <!-- PANE 1: MAIN CATEGORIES -->
-    <div id="pane-main" class="w-full transition-all duration-300 ease-in-out">
+    <div id="pane-main" class="w-full transition-opacity duration-300 ease-in-out">
       <div class="flex flex-col gap-2.5 px-1">
 
         <!-- Category 0: My Profile -->
@@ -199,13 +199,19 @@ export const menuHTML = `
           <p class="text-[9px] text-slate-400 mt-1.5">Select light mode, dark mode, or follow system default.</p>
         </div>
 
-        <!-- Text Scale Connected Pills -->
+        <!-- Text Scale Connected Pills (LABELLED WITH 'A' IN DIFFERENT FONT SIZES) -->
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
           <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Text Font Scaling</label>
           <div class="grid grid-cols-3 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
-            <button id="text-pill-std" type="button" class="text-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow-xs">A (Std)</button>
-            <button id="text-pill-lg" type="button" class="text-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">A (Large)</button>
-            <button id="text-pill-xl" type="button" class="text-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">A (XL)</button>
+            <button id="text-pill-std" type="button" class="text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center bg-blue-600 text-white shadow-xs">
+              <span class="text-[10px] font-bold">A</span>
+            </button>
+            <button id="text-pill-lg" type="button" class="text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-slate-900">
+              <span class="text-xs font-bold">A</span>
+            </button>
+            <button id="text-pill-xl" type="button" class="text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-slate-900">
+              <span class="text-sm font-extrabold">A</span>
+            </button>
           </div>
           <p class="text-[9px] text-slate-400 mt-1.5">Adjust text size dynamically across main app views.</p>
         </div>
