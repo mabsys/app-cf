@@ -185,11 +185,13 @@ export function openMenu() {
   updateThresholdPills();
   updateHistoryLimitPills();
 
+  menu.style.transition = "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
+  menu.style.transform = "translateY(120%)";
+
   requestAnimationFrame(() => {
     overlay.classList.remove("opacity-0");
     overlay.classList.add("opacity-100");
-    menu.classList.remove("translate-y-[120%]");
-    menu.classList.add("translate-y-0");
+    menu.style.transform = "translateY(0px)";
   });
 }
 
@@ -204,13 +206,15 @@ export function closeMenu() {
 
   overlay.classList.remove("opacity-100");
   overlay.classList.add("opacity-0");
-  menu.classList.remove("translate-y-0");
-  menu.classList.add("translate-y-[120%]");
+
+  menu.style.transition = "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
+  menu.style.transform = "translateY(120%)";
 
   setTimeout(() => {
     overlay.classList.add("hidden");
     menu.classList.add("hidden");
     menu.style.transform = "";
+    menu.style.transition = "";
 
     // Restore persistent bottom dock position based on current scroll
     if (dock) {
@@ -243,6 +247,7 @@ function initGrabberGesture() {
 
   const handleTouchStart = (e) => {
     startY = e.touches ? e.touches[0].clientY : e.clientY;
+    currentY = startY;
     isDragging = true;
     menu.style.transition = 'none';
   };
@@ -251,20 +256,32 @@ function initGrabberGesture() {
     if (!isDragging) return;
     currentY = e.touches ? e.touches[0].clientY : e.clientY;
     const deltaY = currentY - startY;
-    if (deltaY > 0) {
+
+    if (deltaY >= 0) {
       menu.style.transform = `translateY(${deltaY}px)`;
+    } else {
+      menu.style.transform = `translateY(${deltaY * 0.2}px)`;
     }
   };
 
   const handleTouchEnd = () => {
     if (!isDragging) return;
     isDragging = false;
-    menu.style.transition = '';
+
     const deltaY = currentY - startY;
-    if (deltaY > 80) {
+    const menuHeight = menu.offsetHeight || (window.innerHeight * 0.8);
+    const halfwayThreshold = menuHeight * 0.4;
+
+    if (deltaY > halfwayThreshold) {
       closeMenu();
     } else {
-      menu.style.transform = 'translateY(0)';
+      menu.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+      menu.style.transform = 'translateY(0px)';
+      setTimeout(() => {
+        if (!isDragging) {
+          menu.style.transition = '';
+        }
+      }, 300);
     }
   };
 
