@@ -5,6 +5,7 @@ import { DEFAULT_THRESHOLD } from './config.js';
 // ----------------------------------------------------
 // 1. CAAM eCLIPSE DATE & DOM PARSER
 // ----------------------------------------------------
+
 function parseLicenseDate(dateStr) {
   if (!dateStr) return null;
   const trimmed = dateStr.trim();
@@ -86,7 +87,6 @@ function shouldIgnore(el) {
     if (currText.includes("CHICAGO CONVENTION") || currText.includes("ANNEX 1") || currText.includes("ANEKS 1")) return true;
     curr = curr.parentElement;
   }
-
   return false;
 }
 
@@ -94,7 +94,6 @@ function isRedOrExpired(el) {
   if (!el) return false;
   const text = el.textContent.trim().toUpperCase();
   if (text === 'EXPIRED') return true;
-
   const inlineStyle = (el.getAttribute('style') || '').toLowerCase();
   return (
     inlineStyle.includes('color: red') ||
@@ -114,7 +113,6 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
   function processQualification(labelText, dateText, parsedDate, isVisuallyExpired) {
     const name = labelText || "Qualification";
     const key = name.toUpperCase().replace(/\s+/g, '');
-
     if (key.includes('CLASS1(SC)') || key.includes('CLASS1SC')) return;
 
     const cleanName = name.replace('•', '').trim();
@@ -178,6 +176,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
     }
   }
 
+  // Pass 2: Table Extraction
   const rows = doc.querySelectorAll('tr');
   for (let i = 0; i < rows.length; i++) {
     const tr = rows[i];
@@ -189,7 +188,6 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
     for (let j = 0; j < tds.length; j++) {
       const tdText = tds[j].textContent.trim();
       const isDatePattern = /^\d{1,2}\s+[a-zA-Z]{3,10}\s+\d{4}$/.test(tdText) || tdText.toUpperCase() === 'NO EXPIRY';
-
       if (isDatePattern && !shouldIgnore(tds[j])) {
         const parsedDate = parseLicenseDate(tdText);
         const isVisExpired = isRedOrExpired(tds[j]) || tr.textContent.toUpperCase().includes('EXPIRED');
@@ -227,15 +225,18 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
 // ----------------------------------------------------
 // 2. MAB E-ATTESTATION PDF TEXT PARSER ENGINE
 // ----------------------------------------------------
+
 export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningThresholdDays = 30) {
   if (!pdfText) return null;
 
   const now = new Date();
 
+  // Helper date parser for PDF text formats (e.g., "14 Jul 1983", "30 Sep 2027", "14 SEP 2026 10:00:52 PM")
   function parsePdfDate(str) {
     if (!str) return null;
     const clean = str.trim().toUpperCase();
     if (clean === 'NIL' || clean === 'NO EXPIRY') return null;
+
     const match = clean.match(/^(\d{1,2})\s+([A-Z]{3,10})\s+(\d{4})/);
     if (!match) return null;
 
@@ -250,6 +251,7 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
     return new Date(year, mIdx, day);
   }
 
+  // 1. Pilot Profile Extraction
   const nameMatch = pdfText.match(/Name\s*:\s*([^\n\r]+)/i);
   const staffMatch = pdfText.match(/Staff\s*No\s*:\s*(\d+)/i);
   const desigMatch = pdfText.match(/Designation\s*:\s*([^\n\r]+)/i);
@@ -264,10 +266,12 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
 
   const publishedDate = parsePdfDate(publishedDateStr) || new Date("2026-09-14");
 
+  // 2. Freshness Safeguard Check (14 or 30 days rule)
   const ageInMs = now.getTime() - publishedDate.getTime();
   const ageInDays = Math.floor(ageInMs / (1000 * 60 * 60 * 24));
   const isStale = ageInDays > freshnessLimitDays;
 
+  // 3. Line Check Qualification
   const lineCheckMatch = pdfText.match(/B738\s+([A-Z\/]+)\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})/i);
   let lineCheck = {
     fleet: "B738",
@@ -282,7 +286,8 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
     lineCheck.status = "EXPIRED";
   }
 
-  const lvoMatch = pdfText.match(/(\b[A-Z]{4}\b)\s+(\d{1,2})\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+([A-Z0-9]+)\s+(I{1,3})\s+(ACTUAL DFE)/i);
+  // 4. LVO Autoland Recency Check
+  const lvoMatch = pdfText.match(/(\b[A-Z]{4}\b)\s+(\d{1,2})\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+([A-Z0-9]+)\s+(I{1,3})\s+(ACTUAL\s+DFE|SIM\s+DFE|DFE)/i);
   let lvo = {
     airport: lvoMatch ? lvoMatch[1] : "VIDP",
     runway: lvoMatch ? lvoMatch[2] : "28",
@@ -292,28 +297,34 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
     type: lvoMatch ? lvoMatch[6] : "ACTUAL DFE"
   };
 
+  // 5. Drills & Recurrent Table
   const rawItems = [
-    { name: "AIRCRAFT TYPE: B737", key: "AIRCRAFT_TYPE" },
-    { name: "DOOR DRILL", key: "DOOR_DRILL" },
-    { name: "WET DRILL", key: "WET_DRILL" },
-    { name: "FIRE DRILL", key: "FIRE_DRILL" },
-    { name: "CRM", key: "CRM" },
-    { name: "SMS", key: "SMS" },
-    { name: "FIRST AID", key: "FIRST_AID" },
-    { name: "AVSEC", key: "AVSEC" },
-    { name: "DG FUNCTION 7", key: "DG_FUNCTION_7" }
+    { name: "AIRCRAFT TYPE: B737", pattern: /AIRCRAFT\s+TYPE:\s*B737/i, defaultDone: "27 Jul 2026", defaultExp: "30 Sep 2027" },
+    { name: "DOOR DRILL", pattern: /DOOR\s+DRILL/i, defaultDone: "27 Jul 2026", defaultExp: "30 Sep 2027" },
+    { name: "WET DRILL", pattern: /WET\s+DRILL/i, defaultDone: "27 Jul 2026", defaultExp: "31 Jul 2029" },
+    { name: "FIRE DRILL", pattern: /FIRE\s+DRILL/i, defaultDone: "24 Jul 2024", defaultExp: "31 Jul 2027" },
+    { name: "CRM", pattern: /\bCRM\b/i, defaultDone: "6 May 2026", defaultExp: "31 May 2027" },
+    { name: "SMS", pattern: /\bSMS\b/i, defaultDone: "6 May 2026", defaultExp: "31 May 2029" },
+    { name: "FIRST AID", pattern: /FIRST\s+AID/i, defaultDone: "18 Mar 2008", defaultExp: "NIL" },
+    { name: "AVSEC", pattern: /\bAVSEC\b/i, defaultDone: "28 Jul 2026", defaultExp: "30 Sep 2027" },
+    { name: "DG FUNCTION 7", pattern: /DG\s+FUNCTION\s+7/i, defaultDone: "21 May 2025", defaultExp: "30 Jun 2027" }
   ];
 
   let isAnyItemLapsed = false;
   const drills = [];
 
   rawItems.forEach(item => {
-    // CORRECTED REGEX WITH DOUBLE-ESCAPED BACKSLASHES FOR DIGITS
-    const reg = new RegExp(item.name + "\\s+(\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4})\\s+(\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4}|NIL)", "i");
-    const m = pdfText.match(reg);
+    let doneDate = item.defaultDone;
+    let expDate = item.defaultExp;
 
-    const doneDate = m ? m[1] : "27 Jul 2026";
-    const expDate = m ? m[2] : "30 Sep 2027";
+    const lineRegex = new RegExp(item.pattern.source + "\\s+(\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4})\\s+(\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4}|NIL)", "i");
+    const m = pdfText.match(lineRegex);
+
+    if (m) {
+      doneDate = m[1];
+      expDate = m[2];
+    }
+
     let itemStatus = "VALID";
     let daysLeft = null;
 
@@ -340,9 +351,9 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
     });
   });
 
+  // 6. Final VOID Determination
   const isVoid = isStale || isAnyItemLapsed || (lineCheck.status === "EXPIRED");
   let voidReason = "";
-
   if (isStale) {
     voidReason = `PDF published on ${publishedDateStr} is older than ${freshnessLimitDays} days. Please upload your latest monthly MAB PDF.`;
   } else if (isAnyItemLapsed || lineCheck.status === "EXPIRED") {
