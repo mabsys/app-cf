@@ -7,7 +7,7 @@ import { dockHTML } from './components/dock.js';
 import { menuHTML } from './components/menu.js';
 
 // ----------------------------------------------------
-// 1. DYNAMIC TEXT SCALING
+// 1. DYNAMIC TEXT SCALING (Scoped to <main>)
 // ----------------------------------------------------
 const textSizeIcons = {
   std: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l3-7 3 7M5 15h4"/><path d="M13 18l4-11 4 11M14 14h6"/><path d="M11 7h2"/></svg>`,
@@ -95,7 +95,7 @@ export function cycleThemeMode() {
 }
 
 // ----------------------------------------------------
-// 3. FLOATING MENU & GRABBER SWIPE-TO-DISMISS
+// 3. FLOATING MENU & GESTURE SWIPE-TO-DISMISS
 // ----------------------------------------------------
 let startY = 0;
 let currentY = 0;
@@ -110,7 +110,7 @@ export function openMenu() {
 
   // Hide persistent dock while menu pane is active
   if (dock) {
-    dock.classList.add("translate-y-full", "pointer-events-none");
+    dock.style.transform = "translateY(120%)";
   }
 
   overlay.classList.remove("hidden");
@@ -131,6 +131,8 @@ export function closeMenu() {
 
   if (!menu || !overlay) return;
 
+  stopScanner(); // Stop inline camera stream if running
+
   overlay.classList.remove("opacity-100");
   overlay.classList.add("opacity-0");
   menu.classList.remove("translate-y-0");
@@ -141,17 +143,26 @@ export function closeMenu() {
     menu.classList.add("hidden");
     menu.style.transform = "";
 
-    // Restore persistent bottom dock
+    // Restore persistent bottom dock position based on current scroll
     if (dock) {
-      dock.classList.remove("translate-y-full", "pointer-events-none");
+      const topbarHeight = 48;
+      const dockMaxTravel = 80;
+      const maxScrollY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      const clampedScrollY = Math.max(0, Math.min(window.scrollY, maxScrollY));
+      const progress = Math.min(1, clampedScrollY / topbarHeight);
+      dock.style.transform = `translateY(${progress * dockMaxTravel}px)`;
     }
 
     // Reset sub-panes to main
     const paneMain = document.getElementById("pane-main");
     const subPanes = document.querySelectorAll(".sub-pane");
-    if (paneMain) paneMain.classList.remove("-translate-x-full");
+    if (paneMain) {
+      paneMain.classList.remove("-translate-x-full", "opacity-0", "pointer-events-none");
+      paneMain.classList.add("translate-x-0", "opacity-100");
+    }
     subPanes.forEach(pane => {
-      pane.classList.add("translate-x-full", "hidden");
+      pane.classList.remove("translate-x-0", "opacity-100");
+      pane.classList.add("translate-x-full", "opacity-0", "pointer-events-none", "hidden");
     });
   }, 300);
 }
@@ -198,7 +209,7 @@ function initGrabberGesture() {
 }
 
 // ----------------------------------------------------
-// 4. DUAL NAVIGATION BARS + MENU INJECTION
+// 4. DUAL NAVIGATION BARS (Top Bar + Bottom Dock)
 // ----------------------------------------------------
 export function initNavigationBars() {
   if (!document.getElementById("persistent-topbar")) {
@@ -213,7 +224,7 @@ export function initNavigationBars() {
 
   const topbar = document.getElementById("persistent-topbar");
   const dock = document.getElementById("persistent-dock");
-  const topbarHeight = 48;
+  const topbarHeight = 48; // 48px height
   const dockMaxTravel = 80;
   let currentTranslateY = 0;
 
@@ -237,13 +248,16 @@ export function initNavigationBars() {
 
     const progress = currentTranslateY / topbarHeight;
 
+    // Inverse Movement:
+    // Topbar: hidden up (-100%) at top of page (progress=0), slides DOWN into view (0%) as user scrolls down (progress=1)
+    // Dock: visible (0px) at top of page (progress=0), slides DOWN out of view (80px) as user scrolls down (progress=1)
     if (dock) {
       dock.style.transform = `translateY(${progress * dockMaxTravel}px)`;
     }
     if (topbar) {
-      const topbarTranslate = -1 * progress * 100;
+      const topbarTranslate = -100 + (progress * 100); // -100% at top -> 0% when scrolled
       topbar.style.transform = `translateY(${topbarTranslate}%)`;
-      topbar.style.opacity = progress < 0.95 ? "1" : "0";
+      topbar.style.opacity = progress.toFixed(2);
     }
 
     lastClampedScrollY = clampedScrollY;
@@ -271,7 +285,7 @@ export function initNavigationBars() {
   // Attach overlay close listener
   document.getElementById("bottom-sheet-overlay")?.addEventListener("click", closeMenu);
 
-  // Nav item clicks inside menu sheet
+  // Subpane Navigation logic inside menu sheet
   document.addEventListener("click", (e) => {
     const navBtn = e.target.closest(".nav-item-btn");
     if (navBtn) {
@@ -280,8 +294,11 @@ export function initNavigationBars() {
       const paneMain = document.getElementById("pane-main");
 
       if (targetPane && paneMain) {
-        paneMain.classList.add("-translate-x-full");
-        targetPane.classList.remove("hidden", "translate-x-full");
+        paneMain.classList.add("-translate-x-full", "opacity-0", "pointer-events-none");
+        paneMain.classList.remove("translate-x-0", "opacity-100");
+
+        targetPane.classList.remove("hidden", "translate-x-full", "opacity-0", "pointer-events-none");
+        targetPane.classList.add("translate-x-0", "opacity-100");
       }
     }
 
@@ -291,8 +308,14 @@ export function initNavigationBars() {
       const paneMain = document.getElementById("pane-main");
 
       if (subPane && paneMain) {
-        subPane.classList.add("translate-x-full");
-        paneMain.classList.remove("-translate-x-full");
+        stopScanner(); // Stop inline camera scanner when backing out
+
+        subPane.classList.remove("translate-x-0", "opacity-100");
+        subPane.classList.add("translate-x-full", "opacity-0", "pointer-events-none");
+
+        paneMain.classList.remove("-translate-x-full", "opacity-0", "pointer-events-none");
+        paneMain.classList.add("translate-x-0", "opacity-100");
+
         setTimeout(() => {
           subPane.classList.add("hidden");
         }, 300);
