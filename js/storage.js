@@ -2,40 +2,6 @@
 
 let scanHistory = JSON.parse(localStorage.getItem("scan_history")) || [];
 
-export const PROFILE_KEY = "certifly_profile_data";
-export const THRESHOLD_KEY = "certifly_threshold_days";
-export const HISTORY_LIMIT_KEY = "certifly_history_limit";
-
-// ----------------------------------------------------
-// THRESHOLD & HISTORY SETTINGS HELPERS
-// ----------------------------------------------------
-export function getThresholdDays() {
-  const val = localStorage.getItem(THRESHOLD_KEY);
-  return val ? parseInt(val, 10) : 30;
-}
-
-export function setThresholdDays(days) {
-  localStorage.setItem(THRESHOLD_KEY, days.toString());
-}
-
-export function getHistoryLimit() {
-  const val = localStorage.getItem(HISTORY_LIMIT_KEY);
-  return val ? parseInt(val, 10) : 10;
-}
-
-export function setHistoryLimit(limit) {
-  localStorage.setItem(HISTORY_LIMIT_KEY, limit.toString());
-  // Prune history to new limit immediately
-  if (scanHistory.length > limit) {
-    scanHistory = scanHistory.slice(0, limit);
-    localStorage.setItem("scan_history", JSON.stringify(scanHistory));
-    renderHistoryList();
-  }
-}
-
-// ----------------------------------------------------
-// SCAN HISTORY MANAGEMENT
-// ----------------------------------------------------
 export function getScanHistory() {
   return scanHistory;
 }
@@ -61,8 +27,7 @@ export function saveToHistory(results, originalUrl) {
   scanHistory = scanHistory.filter(item => item.id !== record.id);
   scanHistory.unshift(record);
 
-  const limit = getHistoryLimit();
-  if (scanHistory.length > limit) scanHistory = scanHistory.slice(0, limit);
+  if (scanHistory.length > 10) scanHistory.pop();
 
   localStorage.setItem("scan_history", JSON.stringify(scanHistory));
   renderHistoryList();
@@ -116,8 +81,10 @@ window.clearHistory = function() {
 };
 
 // ----------------------------------------------------
-// PROFILE STORAGE MANAGEMENT
+// PROFILE STORAGE MANAGEMENT (Phase 1 Refined)
 // ----------------------------------------------------
+export const PROFILE_KEY = "certifly_profile_data";
+
 export function getProfileData() {
   try {
     const data = localStorage.getItem(PROFILE_KEY);
