@@ -1,7 +1,7 @@
 // js/ui.js - View State, Navigation, and Network Controller
 
 import { stopScanner } from './scanner.js';
-import { renderHistoryList, getThresholdDays, getHistoryLimit } from './storage.js';
+import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit } from './storage.js';
 import { topbarHTML } from './components/topbar.js';
 import { dockHTML } from './components/dock.js';
 import { menuHTML } from './components/menu.js';
@@ -142,6 +142,19 @@ export function updateThresholdPills(days = getThresholdDays()) {
   }
 }
 
+export function updateFreshnessLimitPills(limit = getFreshnessLimit()) {
+  const f14 = document.getElementById("freshness-limit-14");
+  const f30 = document.getElementById("freshness-limit-30");
+
+  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent";
+
+  if (f14 && f30) {
+    f14.className = `freshness-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 14 ? activeClass : inactiveClass}`;
+    f30.className = `freshness-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 30 ? activeClass : inactiveClass}`;
+  }
+}
+
 export function updateHistoryLimitPills(limit = getHistoryLimit()) {
   const h10 = document.getElementById("history-limit-10");
   const h20 = document.getElementById("history-limit-20");
@@ -184,6 +197,7 @@ export function openMenu() {
   applyThemeMode(currentThemeMode);
   updateThresholdPills();
   updateHistoryLimitPills();
+  updateFreshnessLimitPills();
 
   menu.style.transition = "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
   menu.style.transform = "translateY(120%)";
@@ -350,6 +364,16 @@ export function initNavigationBars() {
   document.getElementById("topbar-text-btn")?.addEventListener("click", cycleTextSize);
   document.getElementById("topbar-theme-btn")?.addEventListener("click", cycleThemeMode);
 
+  // Connect Attestation Freshness Limit Pills
+  document.getElementById("freshness-limit-14")?.addEventListener("click", () => {
+    setFreshnessLimit(14);
+    updateFreshnessLimitPills(14);
+  });
+  document.getElementById("freshness-limit-30")?.addEventListener("click", () => {
+    setFreshnessLimit(30);
+    updateFreshnessLimitPills(30);
+  });
+
   // Connect Dock buttons
   document.getElementById("dock-menu-btn")?.addEventListener("click", openMenu);
   document.getElementById("dock-scan-btn")?.addEventListener("click", showScannerView);
@@ -415,6 +439,7 @@ export function initNavigationBars() {
   applyThemeMode(currentThemeMode);
   updateThresholdPills();
   updateHistoryLimitPills();
+  updateFreshnessLimitPills();
 }
 
 // ----------------------------------------------------
