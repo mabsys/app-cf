@@ -5,7 +5,7 @@ export const menuHTML = `
 <div id="bottom-sheet-overlay"
      class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden opacity-0 transition-opacity duration-300"></div>
 
-<!-- FLOATING MENU CONTAINER (Stretches out/up to 82vh to fit sub-pane without cramping) -->
+<!-- FLOATING MENU CONTAINER -->
 <div id="bottom-sheet-menu"
      class="fixed bottom-3 left-2.5 right-2.5 z-50 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl transform translate-y-[120%] transition-transform duration-300 ease-out max-w-md mx-auto border border-slate-100 dark:border-slate-800 flex flex-col hidden h-[82vh] max-h-[85vh] touch-none overflow-hidden">
   
@@ -41,7 +41,7 @@ export const menuHTML = `
       </div>
     </div>
 
-    <!-- SUB-PANE 0: MY PROFILE (Well-spaced with margins & inner padding) -->
+    <!-- SUB-PANE 0: MY PROFILE -->
     <div id="pane-profile" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
       
       <!-- Back Button -->
@@ -53,20 +53,20 @@ export const menuHTML = `
 
       <div class="flex flex-col gap-3.5">
         
-        <!-- ROW 1: NICKNAME (Short name instead of full official name) -->
+        <!-- ROW 1: NICKNAME -->
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
           <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-1">Nickname (Short Name)</label>
           <input type="text" id="profile-nickname-input" placeholder="e.g. Salleh" class="w-full p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
           <p class="text-[9px] text-slate-400 mt-1">Short call sign or preferred name used for quick verifications.</p>
         </div>
 
-        <!-- ROW 2: DIGITAL LICENCE SOURCE (Inline QR Scanner vs Manual Paste URL) -->
+        <!-- ROW 2: DIGITAL LICENCE SOURCE -->
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
           <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2.5">Digital Licence Source</label>
           
-          <!-- Side-by-Side Mode Selector Buttons -->
+          <!-- Mode Selector Buttons -->
           <div class="grid grid-cols-2 gap-2 mb-3">
-            <button id="profile-mode-qr-btn" type="button" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm">
+            <button id="profile-mode-qr-btn" type="button" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c0 .621.504 1.125 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z"/></svg>
               Scan Licence QR
             </button>
@@ -76,11 +76,11 @@ export const menuHTML = `
             </button>
           </div>
 
-          <!-- Shared Interchangeable Dynamic Area -->
+          <!-- Shared Dynamic Container (BOTH HIDDEN INITIALLY) -->
           <div id="profile-source-container" class="w-full">
             
-            <!-- Mode A: Live Inline Camera Scanner Container -->
-            <div id="profile-qr-box" class="flex flex-col gap-2">
+            <!-- Mode A: Live Inline Camera Scanner Container (STRICTLY HIDDEN BY DEFAULT) -->
+            <div id="profile-qr-box" class="hidden flex flex-col gap-2">
               <div id="profile-qr-reader-container" class="w-full overflow-hidden rounded-2xl bg-slate-900 aspect-square flex items-center justify-center relative shadow-inner">
                 <video id="profile-qr-video" class="w-full h-full object-cover" playsinline webkit-playsinline muted></video>
                 <div class="absolute bottom-3 left-0 right-0 text-center pointer-events-none z-10">
@@ -90,7 +90,7 @@ export const menuHTML = `
               <p class="text-[9px] text-slate-400 text-center">Camera active — scanning automatically extracts & updates licence validities.</p>
             </div>
 
-            <!-- Mode B: Manual Paste URL Input -->
+            <!-- Mode B: Manual Paste URL Input Container -->
             <div id="profile-url-box" class="hidden flex flex-col gap-2">
               <input type="url" id="profile-url-input" placeholder="https://eclipse.caam.gov.my/ELICENSING/..." class="w-full p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
               <p class="text-[9px] text-slate-400">Paste your official eCLIPSE URL directly if QR camera scanning is unavailable.</p>
@@ -99,7 +99,7 @@ export const menuHTML = `
           </div>
         </div>
 
-        <!-- ROW 3: COMPANY ATTESTATION PDF FILE UPLOAD -->
+        <!-- ROW 3: ATTESTATION PDF FILE UPLOAD -->
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
           <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-1">Company Attestation Document (PDF)</label>
           <div class="flex items-center gap-2 mt-1">
@@ -112,7 +112,7 @@ export const menuHTML = `
           <p class="text-[9px] text-slate-400 mt-1">Upload MAB company attestations PDF for compliance checks on Dashboard.</p>
         </div>
 
-        <!-- ACTION BUTTONS (Padded wrapper) -->
+        <!-- ACTION BUTTONS -->
         <div class="px-1 flex flex-col gap-2.5 pt-1 pb-3">
           <button id="profile-save-btn" type="button" class="w-full p-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5">
             Save Pilot Profile
