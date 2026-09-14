@@ -482,6 +482,11 @@ export function showView(viewId) {
   const targetView = document.getElementById(viewId);
   if (targetView) targetView.classList.remove("hidden");
 
+  if (viewId === "result-view") {
+    const savedTab = localStorage.getItem("certifly_active_tab") || "overview";
+    switchResultTab(savedTab);
+  }
+
   const historyWrapper = document.getElementById("history-card-wrapper");
   if (historyWrapper) {
     if (viewId === "scanner-view") {
@@ -533,3 +538,33 @@ export function showError(msg) {
 }
 
 window.showScannerView = showScannerView;
+
+
+// ----------------------------------------------------
+// RESULT VIEW TAB SWITCHER (Overview | CAAM | MAB)
+// ----------------------------------------------------
+export function switchResultTab(tabName = 'overview') {
+  const tabs = ['overview', 'caam', 'mab'];
+  const activeTab = tabs.includes(tabName) ? tabName : 'overview';
+  localStorage.setItem('certifly_active_tab', activeTab);
+
+  const activeClass = 'bg-blue-600 text-white shadow-xs font-extrabold';
+  const inactiveClass = 'text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent';
+
+  tabs.forEach(t => {
+    const btn = document.getElementById();
+    const pane = document.getElementById();
+
+    if (btn) {
+      btn.className = ;
+    }
+    if (pane) {
+      if (t === activeTab) {
+        pane.classList.remove('hidden');
+      } else {
+        pane.classList.add('hidden');
+      }
+    }
+  });
+}
+window.switchResultTab = switchResultTab;
