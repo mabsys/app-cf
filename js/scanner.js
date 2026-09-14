@@ -6,32 +6,41 @@ if (typeof QrScanner !== 'undefined') {
   QrScanner.WORKER_PATH = 'js/vendor/qr-scanner-worker.min.js';
 }
 
-export function startScanner(onDecodeCallback, onErrorCallback) {
+export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemId = "qr-video") {
   const errorMsg = document.getElementById("error-message");
   if (errorMsg) errorMsg.innerText = "";
 
-  const qrContainer = document.getElementById("qr-reader-container");
-  if (qrContainer) qrContainer.classList.remove("hidden");
-
-  const historyWrapper = document.getElementById("history-card-wrapper");
-  if (historyWrapper) historyWrapper.classList.add("hidden");
-
-  const customDivider = document.getElementById("cust_div");
-  if (customDivider) customDivider.classList.add("hidden");
-
-  const manForm = document.getElementById("manual_form");
-  if (manForm) manForm.classList.add("hidden");
-
-  const startBtn = document.getElementById("start-scan-btn");
-  if (startBtn) startBtn.classList.add("hidden");
-
-  const stopBtn = document.getElementById("stop-scan-btn");
-  if (stopBtn) stopBtn.classList.remove("hidden");
-
-  const videoElem = document.getElementById("qr-video");
+  const videoElem = document.getElementById(customVideoElemId);
   if (!videoElem) {
     if (onErrorCallback) onErrorCallback("Camera feed element not found.");
     return;
+  }
+
+  // If scanner view elements exist, adjust UI state for main scanner view
+  if (customVideoElemId === "qr-video") {
+    const qrContainer = document.getElementById("qr-reader-container");
+    if (qrContainer) qrContainer.classList.remove("hidden");
+
+    const historyWrapper = document.getElementById("history-card-wrapper");
+    if (historyWrapper) historyWrapper.classList.add("hidden");
+
+    const customDivider = document.getElementById("cust_div");
+    if (customDivider) customDivider.classList.add("hidden");
+
+    const manForm = document.getElementById("manual_form");
+    if (manForm) manForm.classList.add("hidden");
+
+    const startBtn = document.getElementById("start-scan-btn");
+    if (startBtn) startBtn.classList.add("hidden");
+
+    const stopBtn = document.getElementById("stop-scan-btn");
+    if (stopBtn) stopBtn.classList.remove("hidden");
+  }
+
+  // Destroy existing active instance if running
+  if (qrScanner) {
+    qrScanner.destroy();
+    qrScanner = null;
   }
 
   qrScanner = new QrScanner(
