@@ -16,25 +16,6 @@ export const HISTORY_LIMIT_KEY = "certifly_history_limit";
 // ----------------------------------------------------
 // THRESHOLD & HISTORY SETTINGS HELPERS
 // ----------------------------------------------------
-export const FRESHNESS_LIMIT_KEY = "certifly_freshness_limit";
-
-export function getFreshnessLimit() {
-  try {
-    const val = localStorage.getItem(FRESHNESS_LIMIT_KEY);
-    return val ? parseInt(val, 10) : 30;
-  } catch (e) {
-    return 30;
-  }
-}
-
-export function setFreshnessLimit(days) {
-  try {
-    localStorage.setItem(FRESHNESS_LIMIT_KEY, days.toString());
-  } catch (e) {
-    console.error("Failed to save freshness limit:", e);
-  }
-}
-
 export function getThresholdDays() {
   try {
     const val = localStorage.getItem(THRESHOLD_KEY);
