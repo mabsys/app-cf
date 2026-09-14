@@ -548,15 +548,16 @@ export function switchResultTab(tabName = 'overview') {
   const activeTab = tabs.includes(tabName) ? tabName : 'overview';
   localStorage.setItem('certifly_active_tab', activeTab);
 
-  const activeClass = 'bg-blue-600 text-white shadow-xs font-extrabold';
-  const inactiveClass = 'text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent';
+  const baseBtnClass = 'res-tab-btn py-2 px-1 rounded-xl text-[11px] transition-all flex items-center justify-center gap-1.5 cursor-pointer';
+  const activeClass = baseBtnClass + ' bg-blue-600 text-white shadow-xs font-extrabold';
+  const inactiveClass = baseBtnClass + ' text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent';
 
   tabs.forEach(t => {
-    const btn = document.getElementById();
-    const pane = document.getElementById();
+    const btn = document.getElementById('res-tab-btn-' + t);
+    const pane = document.getElementById('tab-' + t + '-content');
 
     if (btn) {
-      btn.className = ;
+      btn.className = (t === activeTab) ? activeClass : inactiveClass;
     }
     if (pane) {
       if (t === activeTab) {
