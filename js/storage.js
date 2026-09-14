@@ -10,9 +10,9 @@ export function saveToHistory(results, originalUrl) {
   const fullDateTime = results.scanTime
     ? results.scanTime
     : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
-      .replace(', ', ', ')
-      .replace(' at ', ', ')
-      .replace(',', ', ');
+        .replace(', ', ', ')
+        .replace(' at ', ', ')
+        .replace(',', ', ');
 
   const record = {
     id: results.pilotDetails.licenseNo || Date.now().toString(),
@@ -43,7 +43,6 @@ export function renderHistoryList() {
   if (clockIcon && countBadge) {
     const totalScans = scanHistory.length;
     countBadge.innerText = totalScans;
-
     if (totalScans > 0) {
       countBadge.classList.remove("hidden");
       clockIcon.classList.add("hidden");
@@ -60,8 +59,7 @@ export function renderHistoryList() {
 
   container.innerHTML = scanHistory.map(item => {
     const dotColor = item.overallStatus === "EXPIRED" ? "bg-red-500" : (item.overallStatus === "EXPIRING_SOON" ? "bg-amber-500" : "bg-green-600");
-    const safeId = item.id.replace(/'/g, "\\'");
-
+    const safeId = item.id.replace(/'/g, "\'");
     return `
       <div onclick="loadHistoricalRecord('${safeId}')" class="py-1.5 px-2 flex items-center justify-between cursor-pointer hover:bg-sky-100 transition-colors">
         <div class="flex flex-col text-left">
@@ -82,25 +80,40 @@ window.clearHistory = function() {
   }
 };
 
-// PROFILE STORAGE MANAGEMENT
+// ----------------------------------------------------
+// PROFILE STORAGE MANAGEMENT (Phase 1 - Step 1)
+// ----------------------------------------------------
+export const PROFILE_KEY = "certifly_profile_data";
 
-const PROFILE_KEY = "certifly_profile_data";
 export function getProfileData() {
   try {
     const data = localStorage.getItem(PROFILE_KEY);
-    return data ? JSON.parse(data) : { name: "", licenceNo: "", url: "" };
+    if (!data) return { name: "", licenceNo: "", url: "" };
+    const parsed = JSON.parse(data);
+    return {
+      name: (parsed.name || "").trim(),
+      licenceNo: (parsed.licenceNo || "").trim(),
+      url: (parsed.url || "").trim()
+    };
   } catch (err) {
     console.error("Failed to read profile data from storage:", err);
     return { name: "", licenceNo: "", url: "" };
   }
 }
-export function saveProfileData(profile) {
+
+export function saveProfileData(profile = {}) {
   try {
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+    const sanitized = {
+      name: (profile.name || "").trim(),
+      licenceNo: (profile.licenceNo || "").trim(),
+      url: (profile.url || "").trim()
+    };
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(sanitized));
   } catch (err) {
     console.error("Failed to save profile data to storage:", err);
   }
 }
+
 export function clearProfileData() {
   try {
     localStorage.removeItem(PROFILE_KEY);
@@ -109,3 +122,7 @@ export function clearProfileData() {
   }
 }
 
+export function hasProfileData() {
+  const profile = getProfileData();
+  return Boolean(profile && profile.url);
+}
