@@ -1,17 +1,10 @@
 // main.js - Main Application Entry Orchestrator
 
-import { PROXY_URL, APP_VERSION } from './js/config.js';
+import { PROXY_URL, DEFAULT_THRESHOLD, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/parser.js';
-import { 
-  saveToHistory, renderHistoryList, getScanHistory, getProfileData, 
-  saveProfileData, clearProfileData, clearHistory, getThresholdDays, setThresholdDays,
-  getHistoryLimit, setHistoryLimit
-} from './js/storage.js';
+import { saveToHistory, renderHistoryList, getScanHistory, getProfileData, saveProfileData, clearProfileData } from './js/storage.js';
 import { startScanner, stopScanner } from './js/scanner.js';
-import { 
-  updateNetworkStatus, showScannerView, showLoading, showError, showView, 
-  initNavigationBars, closeMenu, applyThemeMode, applyTextSize, updateThresholdPills, updateHistoryLimitPills
-} from './js/ui.js';
+import { updateNetworkStatus, showScannerView, showLoading, showError, showView, initNavigationBars, closeMenu } from './js/ui.js';
 
 let lastScannedUrl = "";
 let selectedAttestationFile = null;
@@ -20,8 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initApp();
   initNavigationBars();
   initProfileUI();
-  initSettingsUI();
-  initStorageUI();
 });
 
 function initProfileUI() {
@@ -46,6 +37,23 @@ function initProfileUI() {
   if (urlInput) urlInput.value = profile.url || "";
   if (pdfLabel) pdfLabel.innerText = profile.attestationFileName || "Select PDF attestation file...";
 
+  // Ensure camera scanner is strictly stopped when opening profile UI
+  stopScanner();
+
+  // Ensure QR scanner container is completely hidden by default
+  if (qrBox) qrBox.classList.add("hidden");
+
+  // If a profile URL already exists, display the URL box in active state; otherwise keep both neutral
+  if (profile.url && urlBox && modeUrlBtn && modeQrBtn) {
+    urlBox.classList.remove("hidden");
+    modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm";
+    modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200";
+  } else if (urlBox && modeUrlBtn && modeQrBtn) {
+    urlBox.classList.add("hidden");
+    modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200";
+    modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200";
+  }
+
   // Quick Verify Button on Home Screen
   if (quickVerifyBtn && profile.url) {
     quickVerifyBtn.classList.remove("hidden");
@@ -56,7 +64,7 @@ function initProfileUI() {
     quickVerifyBtn.classList.add("hidden");
   }
 
-  // Active Mode Selector: Scan QR vs Paste URL
+  // Mode Action: Click "Scan Licence QR" (Blue Button) -> Show Camera Container & Start Live Camera
   const activateQrMode = () => {
     if (qrBox && urlBox && modeQrBtn && modeUrlBtn) {
       qrBox.classList.remove("hidden");
@@ -69,6 +77,7 @@ function initProfileUI() {
     }
   };
 
+  // Mode Action: Click "Paste URL" -> Stop Camera & Show Manual Input Container
   const activateUrlMode = () => {
     if (qrBox && urlBox && modeQrBtn && modeUrlBtn) {
       stopScanner(); // Stop inline camera stream
@@ -107,7 +116,7 @@ function initProfileUI() {
 
     alert("Licence QR scanned & saved to profile!");
     
-    // Process licence URL directly without leaving view
+    // Process licence URL directly
     processLicenseUrl(scannedUrl);
   }
 
@@ -148,7 +157,6 @@ function initProfileUI() {
       alert("Pilot profile saved successfully!");
       closeMenu();
       initProfileUI();
-      initStorageUI();
     };
   }
 
@@ -163,7 +171,6 @@ function initProfileUI() {
         if (urlInput) urlInput.value = "";
         if (pdfLabel) pdfLabel.innerText = "Select PDF attestation file...";
         initProfileUI();
-        initStorageUI();
       }
     };
   }
@@ -178,85 +185,6 @@ function initProfileUI() {
         showError("No profile URL saved.");
       }
     };
-  }
-}
-
-function initSettingsUI() {
-  // Theme Mode Connected Pills
-  document.getElementById("theme-pill-light")?.addEventListener("click", () => applyThemeMode("light"));
-  document.getElementById("theme-pill-dark")?.addEventListener("click", () => applyThemeMode("dark"));
-  document.getElementById("theme-pill-system")?.addEventListener("click", () => applyThemeMode("system"));
-
-  // Text Scale Connected Pills
-  document.getElementById("text-pill-std")?.addEventListener("click", () => applyTextSize("std"));
-  document.getElementById("text-pill-lg")?.addEventListener("click", () => applyTextSize("lg"));
-  document.getElementById("text-pill-xl")?.addEventListener("click", () => applyTextSize("xl"));
-
-  // Checker Threshold Connected Pills (30, 60, 90 Days)
-  document.getElementById("threshold-pill-30")?.addEventListener("click", () => {
-    setThresholdDays(30);
-    updateThresholdPills(30);
-  });
-  document.getElementById("threshold-pill-60")?.addEventListener("click", () => {
-    setThresholdDays(60);
-    updateThresholdPills(60);
-  });
-  document.getElementById("threshold-pill-90")?.addEventListener("click", () => {
-    setThresholdDays(90);
-    updateThresholdPills(90);
-  });
-}
-
-function initStorageUI() {
-  // History Limit Connected Pills (10, 20, 30 Items)
-  document.getElementById("history-limit-10")?.addEventListener("click", () => {
-    setHistoryLimit(10);
-    updateHistoryLimitPills(10);
-    updateStorageMetrics();
-  });
-  document.getElementById("history-limit-20")?.addEventListener("click", () => {
-    setHistoryLimit(20);
-    updateHistoryLimitPills(20);
-    updateStorageMetrics();
-  });
-  document.getElementById("history-limit-30")?.addEventListener("click", () => {
-    setHistoryLimit(30);
-    updateHistoryLimitPills(30);
-    updateStorageMetrics();
-  });
-
-  // Storage Actions
-  document.getElementById("storage-clear-history-btn")?.addEventListener("click", () => {
-    clearHistory();
-    updateStorageMetrics();
-  });
-
-  document.getElementById("storage-reset-all-btn")?.addEventListener("click", () => {
-    if (confirm("Reset ALL application data (saved profile, history & custom settings)?")) {
-      localStorage.clear();
-      location.reload();
-    }
-  });
-
-  updateStorageMetrics();
-}
-
-function updateStorageMetrics() {
-  const scansCount = document.getElementById("storage-scans-count");
-  const profileStatus = document.getElementById("storage-profile-status");
-
-  const history = getScanHistory();
-  if (scansCount) scansCount.innerText = `${history.length} / ${getHistoryLimit()}`;
-
-  const profile = getProfileData();
-  if (profileStatus) {
-    if (profile && profile.url) {
-      profileStatus.innerText = profile.nickname ? `Saved (${profile.nickname})` : "Saved (Active)";
-      profileStatus.className = "font-extrabold text-emerald-600 dark:text-emerald-400";
-    } else {
-      profileStatus.innerText = "No Profile Saved";
-      profileStatus.className = "font-bold text-slate-400";
-    }
   }
 }
 
@@ -370,8 +298,7 @@ async function processLicenseUrl(url) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlText, "text/html");
 
-    const threshold = getThresholdDays();
-    const results = parseLicenseDOM(doc, threshold);
+    const results = parseLicenseDOM(doc, DEFAULT_THRESHOLD);
     results.scanTime = scanTime;
 
     saveToHistory(results, url);
