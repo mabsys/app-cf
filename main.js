@@ -37,6 +37,23 @@ function initProfileUI() {
   if (urlInput) urlInput.value = profile.url || "";
   if (pdfLabel) pdfLabel.innerText = profile.attestationFileName || "Select PDF attestation file...";
 
+  // Ensure camera scanner is strictly stopped when opening profile UI
+  stopScanner();
+
+  // Ensure QR scanner container is completely hidden by default
+  if (qrBox) qrBox.classList.add("hidden");
+
+  // If a profile URL already exists, display the URL box in active state; otherwise keep both neutral
+  if (profile.url && urlBox && modeUrlBtn && modeQrBtn) {
+    urlBox.classList.remove("hidden");
+    modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm";
+    modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200";
+  } else if (urlBox && modeUrlBtn && modeQrBtn) {
+    urlBox.classList.add("hidden");
+    modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200";
+    modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200";
+  }
+
   // Quick Verify Button on Home Screen
   if (quickVerifyBtn && profile.url) {
     quickVerifyBtn.classList.remove("hidden");
@@ -47,7 +64,7 @@ function initProfileUI() {
     quickVerifyBtn.classList.add("hidden");
   }
 
-  // Active Mode Selector: Scan QR vs Paste URL
+  // Mode Action: Click "Scan Licence QR" (Blue Button) -> Show Camera Container & Start Live Camera
   const activateQrMode = () => {
     if (qrBox && urlBox && modeQrBtn && modeUrlBtn) {
       qrBox.classList.remove("hidden");
@@ -60,6 +77,7 @@ function initProfileUI() {
     }
   };
 
+  // Mode Action: Click "Paste URL" -> Stop Camera & Show Manual Input Container
   const activateUrlMode = () => {
     if (qrBox && urlBox && modeQrBtn && modeUrlBtn) {
       stopScanner(); // Stop inline camera stream
@@ -98,7 +116,7 @@ function initProfileUI() {
 
     alert("Licence QR scanned & saved to profile!");
     
-    // Process licence URL directly without leaving view
+    // Process licence URL directly
     processLicenseUrl(scannedUrl);
   }
 
