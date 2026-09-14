@@ -26,11 +26,19 @@ export function applyTextSize(size = currentTextSize) {
     topbarTextBtn.innerHTML = textSizeIcons[size] || textSizeIcons.std;
   }
 
-  // Update Connected-Pill Buttons inside pane-settings
+  document.documentElement.style.fontSize = "100%";
+
+  let styleEl = document.getElementById("certifly-text-scale-style");
+  if (!styleEl) {
+    styleEl = document.createElement("style");
+    styleEl.id = "certifly-text-scale-style";
+    document.head.appendChild(styleEl);
+  }
+
+  // Update pill buttons in Settings pane
   const stdBtn = document.getElementById("text-pill-std");
   const lgBtn = document.getElementById("text-pill-lg");
   const xlBtn = document.getElementById("text-pill-xl");
-
   const activeClass = "bg-blue-600 text-white shadow-xs";
   const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900";
 
@@ -41,15 +49,6 @@ export function applyTextSize(size = currentTextSize) {
   if (size === "std" && stdBtn) stdBtn.className = `text-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all ${activeClass}`;
   if (size === "lg" && lgBtn) lgBtn.className = `text-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all ${activeClass}`;
   if (size === "xl" && xlBtn) xlBtn.className = `text-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all ${activeClass}`;
-
-  document.documentElement.style.fontSize = "100%";
-
-  let styleEl = document.getElementById("certifly-text-scale-style");
-  if (!styleEl) {
-    styleEl = document.createElement("style");
-    styleEl.id = "certifly-text-scale-style";
-    document.head.appendChild(styleEl);
-  }
 
   if (size === "std") {
     styleEl.textContent = "";
@@ -102,24 +101,23 @@ export function applyThemeMode(mode = currentThemeMode) {
     topbarBtn.innerHTML = themeSolidIcons[mode] || themeSolidIcons.system;
   }
 
-  // Update Connected-Pill Buttons inside pane-settings
+  const isDark = mode === "dark" || (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  document.documentElement.classList.toggle("dark", isDark);
+
+  // Update pill buttons in Settings pane
   const lightBtn = document.getElementById("theme-pill-light");
   const darkBtn = document.getElementById("theme-pill-dark");
   const sysBtn = document.getElementById("theme-pill-system");
-
   const activeClass = "bg-blue-600 text-white shadow-xs";
   const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900";
 
   [lightBtn, darkBtn, sysBtn].forEach(btn => {
-    if (btn) btn.className = `theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${inactiveClass}`;
+    if (btn) btn.className = `theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all ${inactiveClass}`;
   });
 
-  if (mode === "light" && lightBtn) lightBtn.className = `theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${activeClass}`;
-  if (mode === "dark" && darkBtn) darkBtn.className = `theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${activeClass}`;
-  if (mode === "system" && sysBtn) sysBtn.className = `theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${activeClass}`;
-
-  const isDark = mode === "dark" || (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-  document.documentElement.classList.toggle("dark", isDark);
+  if (mode === "light" && lightBtn) lightBtn.className = `theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all ${activeClass}`;
+  if (mode === "dark" && darkBtn) darkBtn.className = `theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all ${activeClass}`;
+  if (mode === "system" && sysBtn) sysBtn.className = `theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all ${activeClass}`;
 }
 
 export function cycleThemeMode() {
