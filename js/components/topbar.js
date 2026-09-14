@@ -2,16 +2,15 @@
 
 export const topbarHTML = `
 <!-- REDESIGNED MINI TOP BAR -->
-<div id="persistent-topbar" 
-     class="fixed top-0 left-0 right-0 h-12 bg-blue-950 text-white border-b border-blue-900 shadow-lg z-50 transform -translate-y-full opacity-0 will-change-transform transition-all duration-300">
-  
+<div id="persistent-topbar"
+     class="fixed top-0 left-0 right-0 h-12 bg-blue-950 text-white border-b border-blue-900 shadow-lg z-50 transform translate-y-0 opacity-100 will-change-transform transition-all duration-300">
   <div class="max-w-md mx-auto h-full flex items-center justify-between px-3">
-    
+
     <!-- Left Group: Mini Home + Thin Vertical Separator + Left-Aligned Compact Logo -->
     <div class="flex items-center gap-2.5">
       <!-- Mini Home Button -->
-      <button onclick="if(window.showScannerView) window.showScannerView();" 
-              class="p-1.5 hover:bg-white/10 active:scale-95 rounded-md transition-all text-white flex items-center justify-center cursor-pointer" 
+      <button onclick="if(window.showScannerView) window.showScannerView();"
+              class="p-1.5 hover:bg-white/10 active:scale-95 rounded-md transition-all text-white flex items-center justify-center cursor-pointer"
               aria-label="Home">
         <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
           <path fill-rule="evenodd" d="M9.293 2.293a1 1 0 0 1 1.414 0l7 7A1 1 0 0 1 17 11h-1v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6H3a1 1 0 0 1-.707-1.707l7-7Z" clip-rule="evenodd" />
@@ -36,14 +35,14 @@ export const topbarHTML = `
     <!-- Right: Preference Toggles Box -->
     <div class="flex items-stretch border border-white/20 rounded-lg overflow-hidden h-8">
       <!-- Dynamic Text Size Toggle -->
-      <button id="topbar-text-btn" 
-              class="h-full px-3.5 hover:bg-white/10 active:bg-white/20 transition-colors border-r border-white/20 flex items-center justify-center cursor-pointer" 
+      <button id="topbar-text-btn"
+              class="h-full px-3.5 hover:bg-white/10 active:bg-white/20 transition-colors border-r border-white/20 flex items-center justify-center cursor-pointer"
               aria-label="Toggle Text Size">
       </button>
 
       <!-- Dynamic Theme / Appearance Toggle -->
-      <button id="topbar-theme-btn" 
-              class="h-full px-3.5 hover:bg-white/10 active:bg-white/20 transition-colors flex items-center justify-center cursor-pointer" 
+      <button id="topbar-theme-btn"
+              class="h-full px-3.5 hover:bg-white/10 active:bg-white/20 transition-colors flex items-center justify-center cursor-pointer"
               aria-label="Toggle Appearance">
       </button>
     </div>
