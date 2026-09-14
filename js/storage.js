@@ -81,7 +81,7 @@ window.clearHistory = function() {
 };
 
 // ----------------------------------------------------
-// PROFILE STORAGE MANAGEMENT (Refined)
+// PROFILE STORAGE MANAGEMENT (Phase 1 Refined)
 // ----------------------------------------------------
 export const PROFILE_KEY = "certifly_profile_data";
 
