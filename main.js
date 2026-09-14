@@ -26,14 +26,13 @@ function initProfileUI() {
   const modeUrlBtn = document.getElementById("profile-mode-url-btn");
   const qrBox = document.getElementById("profile-qr-box");
   const urlBox = document.getElementById("profile-url-box");
-  const triggerScanBtn = document.getElementById("profile-scan-trigger-btn");
 
   const saveBtn = document.getElementById("profile-save-btn");
   const clearBtn = document.getElementById("profile-clear-btn");
   const quickVerifyBtn = document.getElementById("verify-my-licence-btn");
   const quickVerifyLabel = document.getElementById("verify-my-licence-label");
 
-  // Populate fields
+  // Populate form fields
   if (nicknameInput) nicknameInput.value = profile.nickname || "";
   if (urlInput) urlInput.value = profile.url || "";
   if (pdfLabel) pdfLabel.innerText = profile.attestationFileName || "Select PDF attestation file...";
@@ -48,35 +47,64 @@ function initProfileUI() {
     quickVerifyBtn.classList.add("hidden");
   }
 
-  // Toggle Mode: Scan QR vs Paste URL
-  if (modeQrBtn && modeUrlBtn && qrBox && urlBox) {
-    modeQrBtn.addEventListener("click", () => {
+  // Active Mode Selector: Scan QR vs Paste URL
+  const activateQrMode = () => {
+    if (qrBox && urlBox && modeQrBtn && modeUrlBtn) {
       qrBox.classList.remove("hidden");
       urlBox.classList.add("hidden");
-      modeQrBtn.className = "py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm";
-      modeUrlBtn.className = "py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200";
-    });
+      modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm";
+      modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200";
+      
+      // Immediately start live camera feed on profile-qr-video element
+      startScanner(handleProfileQrScanned, showError, "profile-qr-video");
+    }
+  };
 
-    modeUrlBtn.addEventListener("click", () => {
+  const activateUrlMode = () => {
+    if (qrBox && urlBox && modeQrBtn && modeUrlBtn) {
+      stopScanner(); // Stop inline camera stream
       urlBox.classList.remove("hidden");
       qrBox.classList.add("hidden");
-      modeUrlBtn.className = "py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm";
-      modeQrBtn.className = "py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200";
+      modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm";
+      modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200";
+    }
+  };
+
+  if (modeQrBtn) modeQrBtn.onclick = activateQrMode;
+  if (modeUrlBtn) modeUrlBtn.onclick = activateUrlMode;
+
+  // Handle scanned QR result inside Profile Sub-Pane
+  function handleProfileQrScanned(scannedUrl) {
+    if (!scannedUrl) return;
+    
+    stopScanner(); // Stop camera once decoded
+
+    if (!scannedUrl.includes("eclipse.caam.gov.my")) {
+      alert("Invalid QR Code: Must be an official CAAM eCLIPSE QR.");
+      return;
+    }
+
+    if (urlInput) urlInput.value = scannedUrl;
+
+    const nickVal = nicknameInput ? nicknameInput.value.trim() : "";
+    const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (profile.attestationFileName || "");
+
+    // Save profile data with newly scanned URL
+    saveProfileData({
+      nickname: nickVal,
+      url: scannedUrl,
+      attestationFileName: attestationName
     });
+
+    alert("Licence QR scanned & saved to profile!");
+    
+    // Process licence URL directly without leaving view
+    processLicenseUrl(scannedUrl);
   }
 
-  // Launch Camera Scanner from Profile Pane
-  if (triggerScanBtn) {
-    triggerScanBtn.onclick = () => {
-      closeMenu();
-      showScannerView();
-      startScanner(processLicenseUrl, showError);
-    };
-  }
-
-  // Handle PDF file selection
+  // PDF File Selection Handler
   if (pdfFileInput) {
-    pdfFileInput.addEventListener("change", (e) => {
+    pdfFileInput.onchange = (e) => {
       const file = e.target.files[0];
       if (file) {
         if (file.type !== "application/pdf") {
@@ -86,12 +114,13 @@ function initProfileUI() {
         selectedAttestationFile = file;
         if (pdfLabel) pdfLabel.innerText = file.name;
       }
-    });
+    };
   }
 
-  // Save Profile Data
+  // Save Profile Data Button Action
   if (saveBtn) {
     saveBtn.onclick = () => {
+      stopScanner();
       const nickVal = nicknameInput ? nicknameInput.value.trim() : "";
       const urlVal = urlInput ? urlInput.value.trim() : "";
       const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (profile.attestationFileName || "");
@@ -113,9 +142,10 @@ function initProfileUI() {
     };
   }
 
-  // Clear Profile Data
+  // Clear Profile Data Button Action
   if (clearBtn) {
     clearBtn.onclick = () => {
+      stopScanner();
       if (confirm("Clear saved pilot profile data from this device?")) {
         clearProfileData();
         selectedAttestationFile = null;
@@ -127,7 +157,7 @@ function initProfileUI() {
     };
   }
 
-  // Quick Verify Button Action
+  // Quick Verify Button Action (Home Screen)
   if (quickVerifyBtn) {
     quickVerifyBtn.onclick = () => {
       const currentProfile = getProfileData();
