@@ -1,132 +1,99 @@
-// js/storage.js - Scan History and Local Storage Management
+// js/storage.js - Local Storage & Data Controller
 
-let scanHistory = [];
-try {
-  const raw = localStorage.getItem("scan_history");
-  scanHistory = raw ? JSON.parse(raw) : [];
-  if (!Array.isArray(scanHistory)) scanHistory = [];
-} catch (e) {
-  scanHistory = [];
-}
-
-export const PROFILE_KEY = "certifly_profile_data";
+export const PROFILE_KEY = "certifly_crew_profile";
 export const THRESHOLD_KEY = "certifly_threshold_days";
 export const HISTORY_LIMIT_KEY = "certifly_history_limit";
+export const FRESHNESS_LIMIT_KEY = "certifly_freshness_limit";
 
-// ----------------------------------------------------
-// THRESHOLD & HISTORY SETTINGS HELPERS
-// ----------------------------------------------------
+export function getFreshnessLimit() {
+  const saved = localStorage.getItem(FRESHNESS_LIMIT_KEY);
+  return saved ? parseInt(saved, 10) : 30;
+}
+
+export function setFreshnessLimit(days) {
+  localStorage.setItem(FRESHNESS_LIMIT_KEY, String(days));
+}
+
 export function getThresholdDays() {
-  try {
-    const val = localStorage.getItem(THRESHOLD_KEY);
-    return val ? parseInt(val, 10) : 30;
-  } catch (e) {
-    return 30;
-  }
+  const saved = localStorage.getItem(THRESHOLD_KEY);
+  return saved ? parseInt(saved, 10) : 30;
 }
 
 export function setThresholdDays(days) {
-  try {
-    localStorage.setItem(THRESHOLD_KEY, days.toString());
-  } catch (e) {
-    console.error("Failed to save threshold days:", e);
-  }
+  localStorage.setItem(THRESHOLD_KEY, String(days));
 }
 
 export function getHistoryLimit() {
-  try {
-    const val = localStorage.getItem(HISTORY_LIMIT_KEY);
-    return val ? parseInt(val, 10) : 10;
-  } catch (e) {
-    return 10;
-  }
+  const saved = localStorage.getItem(HISTORY_LIMIT_KEY);
+  return saved ? parseInt(saved, 10) : 10;
 }
 
 export function setHistoryLimit(limit) {
+  localStorage.setItem(HISTORY_LIMIT_KEY, String(limit));
+}
+
+export function getScanHistory() {
   try {
-    localStorage.setItem(HISTORY_LIMIT_KEY, limit.toString());
-    if (scanHistory.length > limit) {
-      scanHistory = scanHistory.slice(0, limit);
-      localStorage.setItem("scan_history", JSON.stringify(scanHistory));
-      renderHistoryList();
-    }
+    const raw = localStorage.getItem("scan_history");
+    return raw ? JSON.parse(raw) : [];
   } catch (e) {
-    console.error("Failed to save history limit:", e);
+    return [];
   }
 }
 
-// ----------------------------------------------------
-// SCAN HISTORY MANAGEMENT
-// ----------------------------------------------------
-export function getScanHistory() {
-  return scanHistory;
-}
+export function saveToHistory(resultsData, url) {
+  let history = getScanHistory();
+  const maxLimit = getHistoryLimit();
 
-export function saveToHistory(results, originalUrl) {
-  const fullDateTime = results.scanTime
-    ? results.scanTime
-    : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
-        .replace(', ', ', ')
-        .replace(' at ', ', ')
-        .replace(',', ', ');
-
-  const record = {
-    id: String((results.pilotDetails && results.pilotDetails.licenseNo) || Date.now()),
-    name: (results.pilotDetails && results.pilotDetails.name) || "Unknown",
-    licenseType: (results.pilotDetails && results.pilotDetails.licenseType) || "",
-    overallStatus: results.overallStatus || "VALID",
-    url: originalUrl || "",
-    resultsData: results,
-    timestamp: fullDateTime
+  const newEntry = {
+    id: String((resultsData.pilotDetails && resultsData.pilotDetails.licenseNo) || Date.now()),
+    url: url || "",
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    name: (resultsData.pilotDetails && resultsData.pilotDetails.name) || "Crew Member",
+    licenseType: (resultsData.pilotDetails && resultsData.pilotDetails.licenseType) || "ATPL(A)",
+    overallStatus: resultsData.overallStatus || "VALID",
+    resultsData: resultsData
   };
 
-  scanHistory = scanHistory.filter(item => item && String(item.id) !== record.id);
-  scanHistory.unshift(record);
+  history = history.filter(item => item.id !== newEntry.id && item.url !== newEntry.url);
+  history.unshift(newEntry);
 
-  const limit = getHistoryLimit();
-  if (scanHistory.length > limit) scanHistory = scanHistory.slice(0, limit);
+  if (history.length > maxLimit) {
+    history = history.slice(0, maxLimit);
+  }
 
   try {
-    localStorage.setItem("scan_history", JSON.stringify(scanHistory));
-  } catch (e) {
-    console.error("Failed to save scan history:", e);
-  }
+    localStorage.setItem("scan_history", JSON.stringify(history));
+  } catch (e) {}
+
   renderHistoryList();
 }
 
 export function renderHistoryList() {
-  const container = document.getElementById("history-list");
-  const countBadge = document.getElementById("history-count-badge");
-  const clockIcon = document.getElementById("history-clock-icon");
+  const history = getScanHistory();
+  const container = document.getElementById("history-list-container");
+  const countEl = document.getElementById("history-count-badge");
+
+  if (countEl) countEl.innerText = `${history.length} Saved`;
 
   if (!container) return;
 
-  if (clockIcon && countBadge) {
-    const totalScans = scanHistory.length;
-    countBadge.innerText = totalScans;
-    if (totalScans > 0) {
-      countBadge.classList.remove("hidden");
-      clockIcon.classList.add("hidden");
-    } else {
-      clockIcon.classList.remove("hidden");
-      countBadge.classList.add("hidden");
-    }
-  }
-
-  if (scanHistory.length === 0) {
-    container.innerHTML = `<div class="text-[10px] text-slate-400 italic py-4 text-center">No recent scans on this device.</div>`;
+  if (history.length === 0) {
+    container.innerHTML = `<div class="p-4 text-center text-xs text-slate-400 dark:text-slate-500 italic">No recent compliance scans found.</div>`;
     return;
   }
 
-  container.innerHTML = scanHistory.map(item => {
-    if (!item) return '';
-    const dotColor = item.overallStatus === "EXPIRED" ? "bg-red-500" : (item.overallStatus === "EXPIRING_SOON" ? "bg-amber-500" : "bg-green-600");
-    const safeId = String(item.id || '').replace(/'/g, "\\'");
+  container.innerHTML = history.map(item => {
+    let dotColor = "bg-emerald-500";
+    if (item.overallStatus === "EXPIRED") dotColor = "bg-rose-500";
+    if (item.overallStatus === "EXPIRING_SOON") dotColor = "bg-amber-500";
+
     return `
-      <div onclick="loadHistoricalRecord('${safeId}')" class="py-1.5 px-2 flex items-center justify-between cursor-pointer hover:bg-sky-100 transition-colors">
-        <div class="flex flex-col text-left">
-          <span class="text-[11px] font-semibold text-slate-800 leading-tight">${item.name || 'Unknown'}</span>
-          <span class="text-[9px] text-slate-500 font-semibold uppercase tracking-normal mt-0.5">${item.licenseType || ''}  -  ${item.timestamp || ''} LT</span>
+      <div onclick="window.loadHistoricalRecord('${item.id}')" 
+           class="p-3 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700/60 cursor-pointer transition-all flex items-center justify-between">
+        <div class="truncate pr-2">
+          <div class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">${item.name} (${item.licenseType})</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">${item.timestamp} &bull; Tap to load</div>
         </div>
         <span class="w-2 h-2 rounded-full ${dotColor} shrink-0 ml-2"></span>
       </div>
@@ -135,76 +102,37 @@ export function renderHistoryList() {
 }
 
 export function clearHistory() {
-
   if (confirm("Are you sure you want to clear all recent compliance checks from this device?")) {
-    scanHistory = [];
     try {
       localStorage.removeItem("scan_history");
     } catch (e) {}
     renderHistoryList();
   }
-};
+}
+window.clearHistory = clearHistory;
 
-// ----------------------------------------------------
-// PROFILE STORAGE MANAGEMENT
-// ----------------------------------------------------
 export function getProfileData() {
   try {
-    const data = localStorage.getItem(PROFILE_KEY);
-    if (!data) return { nickname: "", url: "", attestationFileName: "" };
-    const parsed = JSON.parse(data);
-    return {
-      nickname: (parsed.nickname || parsed.name || "").trim(),
-      url: (parsed.url || "").trim(),
-      attestationFileName: (parsed.attestationFileName || "").trim()
-    };
-  } catch (err) {
-    console.error("Failed to read profile data from storage:", err);
+    const raw = localStorage.getItem(PROFILE_KEY);
+    return raw ? JSON.parse(raw) : { nickname: "", url: "", attestationFileName: "" };
+  } catch (e) {
     return { nickname: "", url: "", attestationFileName: "" };
   }
 }
 
-export function saveProfileData(profile = {}) {
+export function saveProfileData(data) {
   try {
-    const sanitized = {
-      nickname: (profile.nickname || profile.name || "").trim(),
-      url: (profile.url || "").trim(),
-      attestationFileName: (profile.attestationFileName || "").trim()
-    };
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(sanitized));
-  } catch (err) {
-    console.error("Failed to save profile data to storage:", err);
-  }
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
+  } catch (e) {}
 }
 
 export function clearProfileData() {
   try {
     localStorage.removeItem(PROFILE_KEY);
-  } catch (err) {
-    console.error("Failed to clear profile data from storage:", err);
-  }
+  } catch (e) {}
 }
 
 export function hasProfileData() {
-  const profile = getProfileData();
-  return Boolean(profile && profile.url);
-}
-
-window.clearHistory = clearHistory;
-
-export function getFreshnessLimit() {
-  try {
-    const val = localStorage.getItem("certifly_freshness_limit");
-    return val ? parseInt(val, 10) : 30;
-  } catch (e) {
-    return 30;
-  }
-}
-
-export function setFreshnessLimit(limit) {
-  try {
-    localStorage.setItem("certifly_freshness_limit", limit.toString());
-  } catch (e) {
-    console.error("Failed to save freshness limit:", e);
-  }
+  const data = getProfileData();
+  return Boolean(data.url || data.nickname || data.attestationFileName);
 }
