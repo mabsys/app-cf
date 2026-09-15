@@ -1,5 +1,4 @@
-// js/parser.js - CAAM eCLIPSE Digital Licence & MAB E-Attestation Parser
-
+// js/parser.js - Combined CAAM eCLIPSE & MAB Attestation Parsing Engine
 import { DEFAULT_THRESHOLD } from './config.js';
 
 // js/caamParser.js - Core CAAM eCLIPSE Parsing Engine
@@ -630,3 +629,4 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
     drills
   };
 }
+
