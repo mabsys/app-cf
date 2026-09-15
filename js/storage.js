@@ -12,10 +12,9 @@ try {
 export const PROFILE_KEY = "certifly_profile_data";
 export const THRESHOLD_KEY = "certifly_threshold_days";
 export const HISTORY_LIMIT_KEY = "certifly_history_limit";
-export const FRESHNESS_LIMIT_KEY = "certifly_freshness_limit";
 
 // ----------------------------------------------------
-// THRESHOLD, FRESHNESS & HISTORY SETTINGS HELPERS
+// THRESHOLD & HISTORY SETTINGS HELPERS
 // ----------------------------------------------------
 export function getThresholdDays() {
   try {
@@ -31,23 +30,6 @@ export function setThresholdDays(days) {
     localStorage.setItem(THRESHOLD_KEY, days.toString());
   } catch (e) {
     console.error("Failed to save threshold days:", e);
-  }
-}
-
-export function getFreshnessLimit() {
-  try {
-    const val = localStorage.getItem(FRESHNESS_LIMIT_KEY);
-    return val ? parseInt(val, 10) : 30;
-  } catch (e) {
-    return 30;
-  }
-}
-
-export function setFreshnessLimit(days) {
-  try {
-    localStorage.setItem(FRESHNESS_LIMIT_KEY, days.toString());
-  } catch (e) {
-    console.error("Failed to save freshness limit:", e);
   }
 }
 
@@ -153,6 +135,7 @@ export function renderHistoryList() {
 }
 
 export function clearHistory() {
+
   if (confirm("Are you sure you want to clear all recent compliance checks from this device?")) {
     scanHistory = [];
     try {
@@ -160,8 +143,7 @@ export function clearHistory() {
     } catch (e) {}
     renderHistoryList();
   }
-}
-window.clearHistory = clearHistory;
+};
 
 // ----------------------------------------------------
 // PROFILE STORAGE MANAGEMENT
@@ -206,4 +188,23 @@ export function clearProfileData() {
 export function hasProfileData() {
   const profile = getProfileData();
   return Boolean(profile && profile.url);
+}
+
+window.clearHistory = clearHistory;
+
+export function getFreshnessLimit() {
+  try {
+    const val = localStorage.getItem("certifly_freshness_limit");
+    return val ? parseInt(val, 10) : 30;
+  } catch (e) {
+    return 30;
+  }
+}
+
+export function setFreshnessLimit(limit) {
+  try {
+    localStorage.setItem("certifly_freshness_limit", limit.toString());
+  } catch (e) {
+    console.error("Failed to save freshness limit:", e);
+  }
 }
