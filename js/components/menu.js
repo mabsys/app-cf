@@ -68,13 +68,13 @@ export const menuHTML = `
             </div>
             <div class="text-left">
               <div class="text-xs font-extrabold text-slate-800 dark:text-slate-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">Data & Storage</div>
-              <div class="text-[10px] text-slate-400 font-medium">History limits & local data cleanup</div>
+              <div class="text-[10px] text-slate-400 font-medium">History limits & attestation freshness</div>
             </div>
           </div>
           <svg class="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
         </button>
 
-        <!-- ITEM 4: ABOUT & SYSTEM STATUS -->
+        <!-- ITEM 4: ABOUT -->
         <button type="button" 
                 class="nav-item-btn w-full p-3.5 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/60 flex items-center justify-between transition-all group shadow-xs cursor-pointer"
                 data-target="pane-about">
@@ -83,8 +83,8 @@ export const menuHTML = `
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/></svg>
             </div>
             <div class="text-left">
-              <div class="text-xs font-extrabold text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">About & System Status</div>
-              <div class="text-[10px] text-slate-400 font-medium">System architecture & proxy health</div>
+              <div class="text-xs font-extrabold text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">About CertiFly</div>
+              <div class="text-[10px] text-slate-400 font-medium">eCLIPSE integration notice & system status</div>
             </div>
           </div>
           <svg class="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
@@ -93,7 +93,7 @@ export const menuHTML = `
       </div>
     </div>
 
-    <!-- SUB-PANE 1: MY PILOT PROFILE -->
+    <!-- SUB-PANE 0: MY PILOT PROFILE -->
     <div id="pane-profile" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
       
       <!-- Back Button -->
@@ -102,6 +102,12 @@ export const menuHTML = `
       </button>
 
       <h3 class="text-xs font-black text-slate-800 dark:text-slate-100 mb-3.5 px-1 uppercase tracking-wider">Pilot Profile Settings</h3>
+
+      <!-- Custom Toast Banner (Replaces alert) -->
+      <div id="profile-toast" class="hidden mb-3 p-3 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center gap-2 transition-all shadow-xs">
+        <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+        <span id="profile-toast-msg" class="text-xs font-bold text-emerald-800 dark:text-emerald-200">Profile saved successfully!</span>
+      </div>
 
       <div class="flex flex-col gap-3.5">
         
@@ -116,7 +122,7 @@ export const menuHTML = `
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
           <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2.5">Digital Licence Source</label>
           
-          <!-- Side-by-Side Mode Selector Buttons -->
+          <!-- Mode Selector Buttons -->
           <div class="grid grid-cols-2 gap-2 mb-3">
             <button id="profile-mode-qr-btn" type="button" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c0 .621.504 1.125 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z"/></svg>
@@ -128,76 +134,68 @@ export const menuHTML = `
             </button>
           </div>
 
-          <!-- Shared Interchangeable Dynamic Area -->
+          <!-- Shared Interchangeable Area -->
           <div id="profile-source-container" class="w-full">
             
-            <!-- Mode A: Live Inline Camera Scanner Container (STRICTLY HIDDEN BY DEFAULT) -->
-            <div id="profile-qr-box" class="hidden flex flex-col gap-2.5">
+            <!-- Mode A: Live Inline Camera Scanner Container -->
+            <div id="profile-qr-box" class="hidden flex flex-col gap-2">
               <div id="profile-qr-reader-container" class="w-full overflow-hidden rounded-2xl bg-slate-900 aspect-square flex items-center justify-center relative shadow-inner">
                 <video id="profile-qr-video" class="w-full h-full object-cover" playsinline webkit-playsinline muted></video>
                 <div class="absolute bottom-3 left-0 right-0 text-center pointer-events-none z-10">
                   <span class="text-white text-[9px] font-bold uppercase tracking-wider drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.85)]">Point camera at CAAM QR card</span>
                 </div>
               </div>
-              
-              <!-- STOP SCAN BUTTON INSIDE PROFILE QR SCANNER -->
-              <button id="profile-stop-scan-btn" type="button" class="w-full py-2.5 px-3 text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-900/50 hover:bg-rose-100 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                Stop Scan
+              <!-- Added STOP SCAN Button under Camera View -->
+              <button id="profile-stop-scan-btn" type="button" class="w-full py-2 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 rounded-xl text-xs font-bold hover:bg-rose-100 transition-colors cursor-pointer flex items-center justify-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z"/></svg>
+                Stop Scanner
               </button>
             </div>
 
-            <!-- Mode B: URL Input Field Container -->
-            <div id="profile-url-box" class="flex flex-col gap-1.5">
-              <input type="url" id="profile-url-input" placeholder="https://eclipse.caam.gov.my/..." class="w-full p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-mono text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <!-- Mode B: Manual URL Text Input Container -->
+            <div id="profile-url-box" class="flex flex-col gap-1">
+              <input type="text" id="profile-url-input" placeholder="https://eclipse.caam.gov.my/public/..." class="w-full p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
+              <p class="text-[9px] text-slate-400 mt-1">Official CAAM eCLIPSE digital licence link.</p>
             </div>
 
           </div>
-          <p class="text-[9px] text-slate-400 mt-2">Saved URL auto-verifies when you tap "Verify My Licence".</p>
         </div>
 
         <!-- ROW 3: COMPANY ATTESTATION PDF FILE UPLOAD -->
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
           <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-1">Company Attestation Document (PDF)</label>
-          <div class="flex flex-col gap-2 mt-1">
-            <label for="profile-pdf-file" class="cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-blue-500 transition-colors">
+          <div class="flex items-center gap-2 mt-1">
+            <label for="profile-pdf-file" class="flex-1 cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-blue-500 transition-colors">
               <span id="profile-pdf-label" class="truncate">Select PDF attestation file...</span>
               <svg class="w-4 h-4 text-blue-600 shrink-0 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
             </label>
             <input type="file" id="profile-pdf-file" accept=".pdf" class="hidden">
-
-            <!-- Success Status Indication Badge -->
-            <div id="profile-pdf-status-badge" class="hidden p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 flex items-center gap-2 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold">
-              <svg class="w-3.5 h-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              <span id="profile-pdf-status-text">PDF loaded successfully</span>
-            </div>
           </div>
-          <p class="text-[9px] text-slate-400 mt-1.5">Upload MAB company attestations PDF for compliance checks on Dashboard.</p>
+          <!-- Success Status Indication Badge -->
+          <div id="profile-pdf-status-badge" class="hidden mt-2 p-2 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 rounded-xl flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+            <span id="profile-pdf-status-text" class="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 truncate">PDF uploaded & ready to save</span>
+          </div>
+          <p class="text-[9px] text-slate-400 mt-1">Upload MAB company attestations PDF for compliance checks on Dashboard.</p>
         </div>
 
         <!-- ACTION BUTTONS -->
         <div class="px-1 flex flex-col gap-2.5 pt-1 pb-3">
-          
-          <!-- In-App Toast Notification (Eliminates Browser Alert Popups) -->
-          <div id="profile-toast" class="hidden p-3 rounded-xl bg-emerald-600 text-white text-xs font-extrabold text-center shadow-lg transition-all duration-300 flex items-center justify-center gap-2">
-            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-            <span id="profile-toast-msg">Profile saved successfully!</span>
-          </div>
-
-          <button id="profile-save-btn" type="button" class="w-full p-3 text-xs font-bold text-white bg-blue-600 rounded-xl shadow-xs hover:bg-blue-700 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+          <button id="profile-save-btn" type="button" class="w-full p-3 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs transition-all cursor-pointer">
             Save Profile
           </button>
 
-          <button id="profile-clear-btn" type="button" class="w-full p-3 text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-100 dark:border-rose-900/50 hover:bg-rose-100 transition-all cursor-pointer">
-            Clear Saved Profile
+          <button id="profile-clear-btn" type="button" class="w-full p-3 text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer">
+            Clear Profile
           </button>
         </div>
 
       </div>
     </div>
 
-    <!-- SUB-PANE 2: APP PREFERENCES -->
+    <!-- SUB-PANE 1: APP SETTINGS -->
     <div id="pane-settings" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
+      
       <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1 cursor-pointer">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
@@ -206,9 +204,9 @@ export const menuHTML = `
 
       <div class="flex flex-col gap-3.5">
         
-        <!-- Theme Switcher Connected Pills -->
+        <!-- ROW 1: APPEARANCE THEME MODE -->
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
-          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Appearance Theme Mode</label>
+          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Appearance Theme</label>
           <div class="grid grid-cols-3 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
             <button id="theme-pill-light" type="button" class="theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer">Light</button>
             <button id="theme-pill-dark" type="button" class="theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer">Dark</button>
@@ -216,31 +214,37 @@ export const menuHTML = `
           </div>
         </div>
 
-        <!-- Text Scaling Connected Pills -->
+        <!-- ROW 2: FONT SIZE / TEXT SCALE -->
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
-          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Display Text Scale</label>
+          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Text Scale</label>
           <div class="grid grid-cols-3 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
-            <button id="text-pill-std" type="button" class="text-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow-xs cursor-pointer">Standard</button>
-            <button id="text-pill-lg" type="button" class="text-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer">Large (+15%)</button>
-            <button id="text-pill-xl" type="button" class="text-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer">XL (+30%)</button>
+            <button id="text-pill-std" type="button" class="text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center bg-blue-600 text-white shadow-xs font-extrabold cursor-pointer">
+              <span class="text-xs">Standard</span>
+            </button>
+            <button id="text-pill-lg" type="button" class="text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold cursor-pointer">
+              <span class="text-xs">Large</span>
+            </button>
+            <button id="text-pill-xl" type="button" class="text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold cursor-pointer">
+              <span class="text-xs">X-Large</span>
+            </button>
           </div>
         </div>
 
-        <!-- Checker Threshold Connected Pills (30, 60, 90 Days) -->
+        <!-- ROW 3: CHECKER WARNING THRESHOLD -->
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
-          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Licence Expiry Alert Threshold</label>
+          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Expiry Warning Threshold</label>
           <div class="grid grid-cols-3 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
             <button id="threshold-pill-30" type="button" class="threshold-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow-xs cursor-pointer">30 Days</button>
             <button id="threshold-pill-60" type="button" class="threshold-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer">60 Days</button>
             <button id="threshold-pill-90" type="button" class="threshold-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer">90 Days</button>
           </div>
-          <p class="text-[9px] text-slate-400 mt-1.5">Qualifications within this window trigger "Expiring Soon" warnings.</p>
+          <p class="text-[9px] text-slate-400 mt-1.5">Triggers "Expiring Soon" status warnings for qualifications nearing expiry.</p>
         </div>
 
       </div>
     </div>
 
-    <!-- SUB-PANE 3: DATA & STORAGE MANAGEMENT -->
+    <!-- SUB-PANE 2: DATA & STORAGE -->
     <div id="pane-storage" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
       <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1 cursor-pointer">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
@@ -261,7 +265,7 @@ export const menuHTML = `
           <p class="text-[9px] text-slate-400 mt-1.5">Maximum scan records retained on this local device storage.</p>
         </div>
 
-        <!-- Attestation Freshness Limit Connected Pills (14 Days vs 30 Days Toggle) -->
+        <!-- Attestation Freshness Limit Pills -->
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
           <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Attestation Freshness Limit (MAB PDF)</label>
           <div class="grid grid-cols-2 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
@@ -297,7 +301,7 @@ export const menuHTML = `
       </div>
     </div>
 
-    <!-- SUB-PANE 4: ABOUT CERTIFLY -->
+    <!-- SUB-PANE 3: ABOUT CERTIFLY -->
     <div id="pane-about" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
       <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1 cursor-pointer">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
@@ -307,10 +311,17 @@ export const menuHTML = `
 
       <div class="flex flex-col gap-3.5">
         
-        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs flex flex-col gap-1">
-          <div class="text-xs font-black text-slate-800 dark:text-slate-100">CertiFly Compliance Checker</div>
-          <div class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">CAAM eCLIPSE & MAB E-Attestation Verification Engine</div>
-          <div class="text-[9px] text-slate-400 mt-1">App Version 1.2.0 (Phase 2 Build) &bull; Offline-First PWA</div>
+        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs flex flex-col gap-2">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black text-sm shadow-md shrink-0">CF</div>
+            <div>
+              <div class="text-xs font-black text-slate-800 dark:text-slate-100">CertiFly Web Application</div>
+              <div class="text-[10px] text-slate-400">Flight Crew Licence & Attestation Checker</div>
+            </div>
+          </div>
+          <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+            Personal utility tool for real-time verification of CAAM eCLIPSE digital pilot licences and MAB company training attestations.
+          </div>
         </div>
 
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs flex flex-col gap-1.5">
@@ -323,7 +334,7 @@ export const menuHTML = `
 
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
           <strong class="text-slate-700 dark:text-slate-200 block mb-1">Flight Crew Compliance Notice:</strong>
-          CertiFly parses official CAAM eCLIPSE digital license QR structures for quick pre-flight verification. Always cross-check official physical or portal documents for mandatory regulatory audits.
+          CertiFly parses official CAAM eCLIPSE digital licence QR structures for quick pre-flight verification. Always cross-check official physical or portal documents for mandatory regulatory audits.
         </div>
 
       </div>
@@ -331,4 +342,4 @@ export const menuHTML = `
 
   </div>
 </div>
-\`;
+`;
