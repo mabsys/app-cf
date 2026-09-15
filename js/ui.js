@@ -32,12 +32,12 @@ export function applyTextSize(size = currentTextSize) {
   const tXl = document.getElementById("text-pill-xl");
 
   const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
-  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold";
 
   if (tStd && tLg && tXl) {
-    tStd.className = `text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center cursor-pointer ${size === "std" ? activeClass : inactiveClass}`;
-    tLg.className = `text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center cursor-pointer ${size === "lg" ? activeClass : inactiveClass}`;
-    tXl.className = `text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center cursor-pointer ${size === "xl" ? activeClass : inactiveClass}`;
+    tStd.className = `text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center ${size === "std" ? activeClass : inactiveClass}`;
+    tLg.className = `text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center ${size === "lg" ? activeClass : inactiveClass}`;
+    tXl.className = `text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center ${size === "xl" ? activeClass : inactiveClass}`;
   }
 
   document.documentElement.style.fontSize = "100%";
@@ -106,12 +106,12 @@ export function applyThemeMode(mode = currentThemeMode) {
   const tSys = document.getElementById("theme-pill-system");
 
   const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
-  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold";
 
   if (tLight && tDark && tSys) {
-    tLight.className = `theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${mode === "light" ? activeClass : inactiveClass}`;
-    tDark.className = `theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${mode === "dark" ? activeClass : inactiveClass}`;
-    tSys.className = `theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${mode === "system" ? activeClass : inactiveClass}`;
+    tLight.className = `theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${mode === "light" ? activeClass : inactiveClass}`;
+    tDark.className = `theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${mode === "dark" ? activeClass : inactiveClass}`;
+    tSys.className = `theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${mode === "system" ? activeClass : inactiveClass}`;
   }
 
   const isDark = mode === "dark" || (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
@@ -133,12 +133,12 @@ export function updateThresholdPills(days = getThresholdDays()) {
   const t90 = document.getElementById("threshold-pill-90");
 
   const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
-  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold";
 
   if (t30 && t60 && t90) {
-    t30.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${days === 30 ? activeClass : inactiveClass}`;
-    t60.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${days === 60 ? activeClass : inactiveClass}`;
-    t90.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${days === 90 ? activeClass : inactiveClass}`;
+    t30.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${days === 30 ? activeClass : inactiveClass}`;
+    t60.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${days === 60 ? activeClass : inactiveClass}`;
+    t90.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${days === 90 ? activeClass : inactiveClass}`;
   }
 }
 
@@ -150,8 +150,8 @@ export function updateFreshnessLimitPills(limit = getFreshnessLimit()) {
   const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent";
 
   if (f14 && f30) {
-    f14.className = `freshness-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${limit === 14 ? activeClass : inactiveClass}`;
-    f30.className = `freshness-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${limit === 30 ? activeClass : inactiveClass}`;
+    f14.className = `freshness-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 14 ? activeClass : inactiveClass}`;
+    f30.className = `freshness-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 30 ? activeClass : inactiveClass}`;
   }
 }
 
@@ -161,12 +161,12 @@ export function updateHistoryLimitPills(limit = getHistoryLimit()) {
   const h30 = document.getElementById("history-limit-30");
 
   const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
-  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold";
 
   if (h10 && h20 && h30) {
-    h10.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${limit === 10 ? activeClass : inactiveClass}`;
-    h20.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${limit === 20 ? activeClass : inactiveClass}`;
-    h30.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${limit === 30 ? activeClass : inactiveClass}`;
+    h10.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 10 ? activeClass : inactiveClass}`;
+    h20.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 20 ? activeClass : inactiveClass}`;
+    h30.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 30 ? activeClass : inactiveClass}`;
   }
 }
 
@@ -360,6 +360,16 @@ export function initNavigationBars() {
   // Connect Top Bar toggle buttons
   document.getElementById("topbar-text-btn")?.addEventListener("click", cycleTextSize);
   document.getElementById("topbar-theme-btn")?.addEventListener("click", cycleThemeMode);
+
+  // Connect Attestation Freshness Limit Pills
+  document.getElementById("freshness-limit-14")?.addEventListener("click", () => {
+    setFreshnessLimit(14);
+    updateFreshnessLimitPills(14);
+  });
+  document.getElementById("freshness-limit-30")?.addEventListener("click", () => {
+    setFreshnessLimit(30);
+    updateFreshnessLimitPills(30);
+  });
 
   // Connect Dock buttons
   document.getElementById("dock-menu-btn")?.addEventListener("click", openMenu);
