@@ -311,11 +311,10 @@ export const menuHTML = `
         <!-- CARD 1: APP INFO -->
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs flex flex-col gap-1">
           <div class="flex items-center justify-between">
-            <div class="text-xs font-black text-slate-800 dark:text-slate-100">CertiFly Compliance Checker</div>
-            <span class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-full border border-blue-100 dark:border-blue-900/40">v1.2.0</span>
+            <div class="text-sm font-bold text-slate-800 dark:text-slate-100">CertiFly</div>
+            <span class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-full border border-blue-100 dark:border-blue-900/40">v2.0</span>
           </div>
           <div class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5">CAAM eCLIPSE & MAB E-Attestation Verification Engine</div>
-          <div class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">App Version v1.2.0 &bull; Offline-First PWA</div>
         </div>
 
         <!-- CARD 2: SYSTEM STATUS -->
