@@ -1,4 +1,3 @@
-
 // js/storage.js - Scan History and Local Storage Management
 
 let scanHistory = [];
@@ -76,12 +75,13 @@ export function getScanHistory() {
 }
 
 export function saveToHistory(results, originalUrl) {
+  if (!results) return;
   const fullDateTime = results.scanTime
     ? results.scanTime
     : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
-      .replace(', ', ', ')
-      .replace(' at ', ', ')
-      .replace(',', ', ');
+        .replace(', ', ', ')
+        .replace(' at ', ', ')
+        .replace(',', ', ');
 
   const record = {
     id: String((results.pilotDetails && results.pilotDetails.licenseNo) || Date.now()),
@@ -105,6 +105,14 @@ export function saveToHistory(results, originalUrl) {
     console.error("Failed to save scan history:", e);
   }
 
+  renderHistoryList();
+}
+
+export function clearHistory() {
+  scanHistory = [];
+  try {
+    localStorage.removeItem("scan_history");
+  } catch (e) {}
   renderHistoryList();
 }
 
@@ -134,30 +142,19 @@ export function renderHistoryList() {
 
   container.innerHTML = scanHistory.map(item => {
     if (!item) return '';
-    const dotColor = item.overallStatus === "EXPIRED" ? "bg-red-500" : (item.overallStatus === "EXPIRING_SOON" ? "bg-amber-500" : "bg-green-600");
+    const dotColor = item.overallStatus === "EXPIRED" ? "bg-rose-500" : (item.overallStatus === "EXPIRING_SOON" ? "bg-amber-500" : "bg-emerald-600");
     const safeId = String(item.id || '').replace(/'/g, "\'");
     return `
       <div onclick="loadHistoricalRecord('${safeId}')" class="py-1.5 px-2 flex items-center justify-between cursor-pointer hover:bg-sky-100 transition-colors">
         <div class="flex flex-col text-left">
           <span class="text-[11px] font-semibold text-slate-800 leading-tight">${item.name || 'Unknown'}</span>
-          <span class="text-[9px] text-slate-500 font-semibold uppercase tracking-normal mt-0.5">${item.licenseType || ''} - ${item.timestamp || ''} LT</span>
+          <span class="text-[9px] text-slate-500 font-semibold uppercase tracking-normal mt-0.5">${item.licenseType || ''}  -  ${item.timestamp || ''} LT</span>
         </div>
         <span class="w-2 h-2 rounded-full ${dotColor} shrink-0 ml-2"></span>
       </div>
     `;
   }).join('');
 }
-
-export function clearHistory() {
-  if (confirm("Are you sure you want to clear all recent compliance checks from this device?")) {
-    scanHistory = [];
-    try {
-      localStorage.removeItem("scan_history");
-    } catch (e) {}
-    renderHistoryList();
-  }
-}
-window.clearHistory = clearHistory;
 
 export function getProfileData() {
   try {
