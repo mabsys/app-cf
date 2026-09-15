@@ -1,7 +1,7 @@
 // js/ui.js - View State, Navigation, and Network Controller
 
 import { stopScanner } from './scanner.js';
-import { renderHistoryList, getThresholdDays, getHistoryLimit } from './storage.js';
+import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit } from './storage.js';
 import { topbarHTML } from './components/topbar.js';
 import { dockHTML } from './components/dock.js';
 import { menuHTML } from './components/menu.js';
@@ -570,3 +570,15 @@ export function switchResultTab(tabName = 'overview') {
 }
 window.switchResultTab = switchResultTab;
 
+export function updateFreshnessLimitPills(limit = getFreshnessLimit()) {
+  const f14 = document.getElementById("freshness-limit-14");
+  const f30 = document.getElementById("freshness-limit-30");
+
+  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent";
+
+  if (f14 && f30) {
+    f14.className = ;
+    f30.className = ;
+  }
+}
