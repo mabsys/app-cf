@@ -191,3 +191,20 @@ export function hasProfileData() {
 }
 
 window.clearHistory = clearHistory;
+
+export function getFreshnessLimit() {
+  try {
+    const val = localStorage.getItem("certifly_freshness_limit");
+    return val ? parseInt(val, 10) : 30;
+  } catch (e) {
+    return 30;
+  }
+}
+
+export function setFreshnessLimit(limit) {
+  try {
+    localStorage.setItem("certifly_freshness_limit", limit.toString());
+  } catch (e) {
+    console.error("Failed to save freshness limit:", e);
+  }
+}
