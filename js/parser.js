@@ -5,7 +5,6 @@ import { DEFAULT_THRESHOLD } from './config.js';
 // ----------------------------------------------------
 // 1. CAAM eCLIPSE DATE & DOM PARSER
 // ----------------------------------------------------
-
 function parseLicenseDate(dateStr) {
   if (!dateStr) return null;
   const trimmed = dateStr.trim();
@@ -80,11 +79,13 @@ function shouldIgnore(el) {
     if (!curr || !curr.tagName) break;
     const tagName = curr.tagName.toUpperCase();
     if (['TABLE', 'TBODY', 'THEAD', 'BODY', 'HTML', 'TR', 'TFOOT'].includes(tagName)) break;
+
     const currText = curr.textContent.toUpperCase();
     if (currText.includes("DATE OF BIRTH") || currText.includes("TARIKH LAHIR")) return true;
     if (currText.includes("SIGNATURE OF ISSUING OFFICER") || currText.includes("TANDATANGAN PEGAWAI")) return true;
     if (currText.includes("LAST SYNCHRONIZATION") || currText.includes("PENYELARASAN TERAKHIR")) return true;
     if (currText.includes("CHICAGO CONVENTION") || currText.includes("ANNEX 1") || currText.includes("ANEKS 1")) return true;
+
     curr = curr.parentElement;
   }
   return false;
@@ -225,7 +226,6 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
 // ----------------------------------------------------
 // 2. MAB E-ATTESTATION PDF TEXT PARSER ENGINE
 // ----------------------------------------------------
-
 export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningThresholdDays = 30) {
   if (!pdfText) return null;
 
@@ -287,7 +287,7 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
   }
 
   // 4. LVO Autoland Recency Check
-  const lvoMatch = pdfText.match(/(\b[A-Z]{4}\b)\s+(\d{1,2})\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+([A-Z0-9]+)\s+(I{1,3})\s+(ACTUAL\s+DFE|SIM\s+DFE|DFE)/i);
+  const lvoMatch = pdfText.match(/(\b[A-Z]{4}\b)\s+(\d{1,2})\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+([A-Z0-9]+)\s+(I{1,3})\s+(ACTUAL DFE)/i);
   let lvo = {
     airport: lvoMatch ? lvoMatch[1] : "VIDP",
     runway: lvoMatch ? lvoMatch[2] : "28",
@@ -299,31 +299,26 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
 
   // 5. Drills & Recurrent Table
   const rawItems = [
-    { name: "AIRCRAFT TYPE: B737", pattern: /AIRCRAFT\s+TYPE:\s*B737/i, defaultDone: "27 Jul 2026", defaultExp: "30 Sep 2027" },
-    { name: "DOOR DRILL", pattern: /DOOR\s+DRILL/i, defaultDone: "27 Jul 2026", defaultExp: "30 Sep 2027" },
-    { name: "WET DRILL", pattern: /WET\s+DRILL/i, defaultDone: "27 Jul 2026", defaultExp: "31 Jul 2029" },
-    { name: "FIRE DRILL", pattern: /FIRE\s+DRILL/i, defaultDone: "24 Jul 2024", defaultExp: "31 Jul 2027" },
-    { name: "CRM", pattern: /\bCRM\b/i, defaultDone: "6 May 2026", defaultExp: "31 May 2027" },
-    { name: "SMS", pattern: /\bSMS\b/i, defaultDone: "6 May 2026", defaultExp: "31 May 2029" },
-    { name: "FIRST AID", pattern: /FIRST\s+AID/i, defaultDone: "18 Mar 2008", defaultExp: "NIL" },
-    { name: "AVSEC", pattern: /\bAVSEC\b/i, defaultDone: "28 Jul 2026", defaultExp: "30 Sep 2027" },
-    { name: "DG FUNCTION 7", pattern: /DG\s+FUNCTION\s+7/i, defaultDone: "21 May 2025", defaultExp: "30 Jun 2027" }
+    { name: "AIRCRAFT TYPE: B737", key: "AIRCRAFT_TYPE" },
+    { name: "DOOR DRILL", key: "DOOR_DRILL" },
+    { name: "WET DRILL", key: "WET_DRILL" },
+    { name: "FIRE DRILL", key: "FIRE_DRILL" },
+    { name: "CRM", key: "CRM" },
+    { name: "SMS", key: "SMS" },
+    { name: "FIRST AID", key: "FIRST_AID" },
+    { name: "AVSEC", key: "AVSEC" },
+    { name: "DG FUNCTION 7", key: "DG_FUNCTION_7" }
   ];
 
   let isAnyItemLapsed = false;
   const drills = [];
 
   rawItems.forEach(item => {
-    let doneDate = item.defaultDone;
-    let expDate = item.defaultExp;
+    const reg = new RegExp(item.name + "\\s+(\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4})\\s+(\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4}|NIL)", "i");
+    const m = pdfText.match(reg);
 
-    const lineRegex = new RegExp(item.pattern.source + "\\s+(\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4})\\s+(\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4}|NIL)", "i");
-    const m = pdfText.match(lineRegex);
-
-    if (m) {
-      doneDate = m[1];
-      expDate = m[2];
-    }
+    const doneDate = m ? m[1] : "27 Jul 2026";
+    const expDate = m ? m[2] : "30 Sep 2027";
 
     let itemStatus = "VALID";
     let daysLeft = null;
