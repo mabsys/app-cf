@@ -75,13 +75,9 @@ export function getScanHistory() {
 }
 
 export function saveToHistory(results, originalUrl) {
-  if (!results) return;
   const fullDateTime = results.scanTime
     ? results.scanTime
-    : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
-        .replace(', ', ', ')
-        .replace(' at ', ', ')
-        .replace(',', ', ');
+    : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
 
   const record = {
     id: String((results.pilotDetails && results.pilotDetails.licenseNo) || Date.now()),
@@ -95,24 +91,13 @@ export function saveToHistory(results, originalUrl) {
 
   scanHistory = scanHistory.filter(item => item && String(item.id) !== record.id);
   scanHistory.unshift(record);
-
   const limit = getHistoryLimit();
   if (scanHistory.length > limit) scanHistory = scanHistory.slice(0, limit);
-
   try {
     localStorage.setItem("scan_history", JSON.stringify(scanHistory));
   } catch (e) {
     console.error("Failed to save scan history:", e);
   }
-
-  renderHistoryList();
-}
-
-export function clearHistory() {
-  scanHistory = [];
-  try {
-    localStorage.removeItem("scan_history");
-  } catch (e) {}
   renderHistoryList();
 }
 
@@ -120,7 +105,6 @@ export function renderHistoryList() {
   const container = document.getElementById("history-list");
   const countBadge = document.getElementById("history-count-badge");
   const clockIcon = document.getElementById("history-clock-icon");
-
   if (!container) return;
 
   if (clockIcon && countBadge) {
@@ -142,7 +126,7 @@ export function renderHistoryList() {
 
   container.innerHTML = scanHistory.map(item => {
     if (!item) return '';
-    const dotColor = item.overallStatus === "EXPIRED" ? "bg-rose-500" : (item.overallStatus === "EXPIRING_SOON" ? "bg-amber-500" : "bg-emerald-600");
+    const dotColor = item.overallStatus === "EXPIRED" ? "bg-red-500" : (item.overallStatus === "EXPIRING_SOON" ? "bg-amber-500" : "bg-green-600");
     const safeId = String(item.id || '').replace(/'/g, "\'");
     return `
       <div onclick="loadHistoricalRecord('${safeId}')" class="py-1.5 px-2 flex items-center justify-between cursor-pointer hover:bg-sky-100 transition-colors">
@@ -156,28 +140,46 @@ export function renderHistoryList() {
   }).join('');
 }
 
+export function clearHistory() {
+  if (confirm("Are you sure you want to clear all recent compliance checks from this device?")) {
+    scanHistory = [];
+    try {
+      localStorage.removeItem("scan_history");
+    } catch (e) {}
+    renderHistoryList();
+  }
+}
+window.clearHistory = clearHistory;
+
 export function getProfileData() {
   try {
     const data = localStorage.getItem(PROFILE_KEY);
-    if (!data) return { nickname: "", url: "", attestationFileName: "" };
+    if (!data) return { nickname: "", url: "", attestationFileName: "", cachedCaamResults: null, cachedMabResults: null, qrImageUrl: "" };
     const parsed = JSON.parse(data);
     return {
       nickname: (parsed.nickname || parsed.name || "").trim(),
       url: (parsed.url || "").trim(),
-      attestationFileName: (parsed.attestationFileName || "").trim()
+      attestationFileName: (parsed.attestationFileName || "").trim(),
+      cachedCaamResults: parsed.cachedCaamResults || null,
+      cachedMabResults: parsed.cachedMabResults || null,
+      qrImageUrl: parsed.qrImageUrl || ""
     };
   } catch (err) {
     console.error("Failed to read profile data from storage:", err);
-    return { nickname: "", url: "", attestationFileName: "" };
+    return { nickname: "", url: "", attestationFileName: "", cachedCaamResults: null, cachedMabResults: null, qrImageUrl: "" };
   }
 }
 
 export function saveProfileData(profile = {}) {
   try {
+    const existing = getProfileData();
     const sanitized = {
-      nickname: (profile.nickname || profile.name || "").trim(),
-      url: (profile.url || "").trim(),
-      attestationFileName: (profile.attestationFileName || "").trim()
+      nickname: (profile.nickname !== undefined ? profile.nickname : existing.nickname).trim(),
+      url: (profile.url !== undefined ? profile.url : existing.url).trim(),
+      attestationFileName: (profile.attestationFileName !== undefined ? profile.attestationFileName : existing.attestationFileName).trim(),
+      cachedCaamResults: profile.cachedCaamResults !== undefined ? profile.cachedCaamResults : existing.cachedCaamResults,
+      cachedMabResults: profile.cachedMabResults !== undefined ? profile.cachedMabResults : existing.cachedMabResults,
+      qrImageUrl: profile.qrImageUrl !== undefined ? profile.qrImageUrl : existing.qrImageUrl
     };
     localStorage.setItem(PROFILE_KEY, JSON.stringify(sanitized));
   } catch (err) {
@@ -195,5 +197,5 @@ export function clearProfileData() {
 
 export function hasProfileData() {
   const profile = getProfileData();
-  return Boolean(profile && profile.url);
+  return Boolean(profile && (profile.url || profile.cachedCaamResults || profile.cachedMabResults));
 }
