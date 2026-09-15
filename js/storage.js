@@ -1,4 +1,4 @@
-// js/storage.js - Scan History and Profile Storage Management
+// js/storage.js - Scan History and Local Storage Management
 
 let scanHistory = [];
 try {
@@ -78,7 +78,9 @@ export function saveToHistory(results, originalUrl) {
   const fullDateTime = results.scanTime
     ? results.scanTime
     : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
-        .replace(',', ', ');
+      .replace(', ', ', ')
+      .replace(' at ', ', ')
+      .replace(',', ', ');
 
   const record = {
     id: String((results.pilotDetails && results.pilotDetails.licenseNo) || Date.now()),
@@ -133,12 +135,11 @@ export function renderHistoryList() {
     if (!item) return '';
     const dotColor = item.overallStatus === "EXPIRED" ? "bg-red-500" : (item.overallStatus === "EXPIRING_SOON" ? "bg-amber-500" : "bg-green-600");
     const safeId = String(item.id || '').replace(/'/g, "\'");
-
     return `
-      <div onclick="loadHistoricalRecord('${safeId}')" class="py-1.5 px-2 flex items-center justify-between cursor-pointer hover:bg-sky-100 dark:hover:bg-slate-800 transition-colors">
+      <div onclick="loadHistoricalRecord('${safeId}')" class="py-1.5 px-2 flex items-center justify-between cursor-pointer hover:bg-sky-100 transition-colors">
         <div class="flex flex-col text-left">
-          <span class="text-[11px] font-semibold text-slate-800 dark:text-slate-100 leading-tight">${item.name || 'Unknown'}</span>
-          <span class="text-[9px] text-slate-500 font-semibold uppercase tracking-normal mt-0.5">${item.licenseType || ''}  -  ${item.timestamp || ''} LT</span>
+          <span class="text-[11px] font-semibold text-slate-800 leading-tight">${item.name || 'Unknown'}</span>
+          <span class="text-[9px] text-slate-500 font-semibold uppercase tracking-normal mt-0.5">${item.licenseType || ''} - ${item.timestamp || ''} LT</span>
         </div>
         <span class="w-2 h-2 rounded-full ${dotColor} shrink-0 ml-2"></span>
       </div>
@@ -154,39 +155,31 @@ export function clearHistory() {
     } catch (e) {}
     renderHistoryList();
   }
-};
+}
+window.clearHistory = clearHistory;
 
 export function getProfileData() {
   try {
     const data = localStorage.getItem(PROFILE_KEY);
-    if (!data) return { nickname: "", url: "", attestationFileName: "", attestationText: "", cachedCaamResults: null, cachedMabResults: null };
+    if (!data) return { nickname: "", url: "", attestationFileName: "" };
     const parsed = JSON.parse(data);
     return {
       nickname: (parsed.nickname || parsed.name || "").trim(),
       url: (parsed.url || "").trim(),
-      attestationFileName: (parsed.attestationFileName || "").trim(),
-      attestationText: parsed.attestationText || "",
-      cachedCaamResults: parsed.cachedCaamResults || null,
-      cachedMabResults: parsed.cachedMabResults || null,
-      qrImageUrl: parsed.qrImageUrl || ""
+      attestationFileName: (parsed.attestationFileName || "").trim()
     };
   } catch (err) {
     console.error("Failed to read profile data from storage:", err);
-    return { nickname: "", url: "", attestationFileName: "", attestationText: "", cachedCaamResults: null, cachedMabResults: null };
+    return { nickname: "", url: "", attestationFileName: "" };
   }
 }
 
 export function saveProfileData(profile = {}) {
   try {
-    const existing = getProfileData();
     const sanitized = {
-      nickname: (profile.nickname !== undefined ? profile.nickname : existing.nickname || "").trim(),
-      url: (profile.url !== undefined ? profile.url : existing.url || "").trim(),
-      attestationFileName: (profile.attestationFileName !== undefined ? profile.attestationFileName : existing.attestationFileName || "").trim(),
-      attestationText: profile.attestationText !== undefined ? profile.attestationText : existing.attestationText || "",
-      cachedCaamResults: profile.cachedCaamResults !== undefined ? profile.cachedCaamResults : existing.cachedCaamResults,
-      cachedMabResults: profile.cachedMabResults !== undefined ? profile.cachedMabResults : existing.cachedMabResults,
-      qrImageUrl: profile.qrImageUrl !== undefined ? profile.qrImageUrl : existing.qrImageUrl
+      nickname: (profile.nickname || profile.name || "").trim(),
+      url: (profile.url || "").trim(),
+      attestationFileName: (profile.attestationFileName || "").trim()
     };
     localStorage.setItem(PROFILE_KEY, JSON.stringify(sanitized));
   } catch (err) {
@@ -204,7 +197,5 @@ export function clearProfileData() {
 
 export function hasProfileData() {
   const profile = getProfileData();
-  return Boolean(profile && (profile.url || profile.attestationFileName || profile.cachedCaamResults || profile.cachedMabResults));
+  return Boolean(profile && profile.url);
 }
-
-window.clearHistory = clearHistory;
