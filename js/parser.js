@@ -1,6 +1,10 @@
-// js/parser.js - CAAM eCLIPSE & MAB E-Attestation Parsing Engine
+// js/parser.js - CAAM eCLIPSE & MAB E-Attestation PDF Parsing Engine
 
 import { DEFAULT_THRESHOLD } from './config.js';
+
+// ===================================================
+// 1. CAAM eCLIPSE DATE & DOM PARSER ENGINE
+// ===================================================
 
 function parseLicenseDate(dateStr) {
   if (!dateStr) return null;
@@ -27,13 +31,6 @@ function parseLicenseDate(dateStr) {
 
 function isUnderPg2(el) {
   if (!el) return false;
-  if (typeof el.closest === 'function') {
-    const pgEl = el.closest('[id^="pg"]');
-    if (pgEl) {
-      const match = pgEl.id.match(/^pg(\d+)$/);
-      if (match && parseInt(match[1], 10) >= 2) return true;
-    }
-  }
   let curr = el;
   while (curr) {
     if (curr.id && typeof curr.id === 'string') {
@@ -53,10 +50,6 @@ function getDirectChildCells(tr) {
       const tagName = child.tagName.toUpperCase();
       if (tagName === 'TD' || tagName === 'TH') cells.push(child);
     }
-  }
-  if (cells.length === 0 && tr) {
-    const qcells = tr.querySelectorAll('td, th');
-    for (let j = 0; j < qcells.length; j++) cells.push(qcells[j]);
   }
   return cells;
 }
@@ -79,44 +72,22 @@ function shouldIgnore(el) {
   const upperText = text.toUpperCase();
 
   if (upperText.includes("INITIAL GRANT") || upperText.includes("INITIAL_GRANT")) return true;
-  if (upperText.includes("7 DECEMBER 1944") || upperText.includes("7 DISEMBER 1944") || upperText.includes("DECEMBER 1944") || upperText.includes("DISEMBER 1944")) return true;
+  if (upperText.includes("7 DECEMBER 1944") || upperText.includes("7 DISEMBER 1944") || upperText.includes("DECEMBER 1944")) return true;
   if (/\d{1,2}:\d{2}:\d{2}/.test(text)) return true;
 
   let curr = el;
   for (let i = 0; i < 5; i++) {
-    if (!curr) break;
+    if (!curr || !curr.tagName) break;
     const tagName = curr.tagName.toUpperCase();
     if (['TABLE', 'TBODY', 'THEAD', 'BODY', 'HTML', 'TR', 'TFOOT'].includes(tagName)) break;
-    if (tagName === 'DIV') {
-      const className = (curr.className || '').toLowerCase();
-      if (className.includes('row') || className.includes('container') || className.includes('col-') || className.includes('card')) break;
-    }
     const currText = curr.textContent.toUpperCase();
     if (currText.includes("DATE OF BIRTH") || currText.includes("TARIKH LAHIR")) return true;
     if (currText.includes("SIGNATURE OF ISSUING OFFICER") || currText.includes("TANDATANGAN PEGAWAI")) return true;
     if (currText.includes("LAST SYNCHRONIZATION") || currText.includes("PENYELARASAN TERAKHIR")) return true;
-    if (currText.includes("INITIAL GRANT")) return true;
     if (currText.includes("CHICAGO CONVENTION") || currText.includes("ANNEX 1") || currText.includes("ANEKS 1")) return true;
     curr = curr.parentElement;
   }
 
-  const tr = el.closest('tr');
-  if (tr) {
-    const rowText = tr.textContent.toUpperCase();
-    if (rowText.includes("VALIDITY ISSUE DATE") || rowText.includes("TARIKH KELUARAN")) return true;
-    const tds = getDirectChildCells(tr);
-    if (tds.length === 3) {
-      const table = tr.closest('table');
-      let hasIssueDateHeader = false;
-      if (table) {
-        const tableText = table.textContent.toUpperCase();
-        if (tableText.includes("VALIDITY ISSUE DATE") || tableText.includes("TARIKH KELUARAN")) {
-          hasIssueDateHeader = true;
-        }
-      }
-      if (hasIssueDateHeader && (tds[1] === el || tds[1].contains(el))) return true;
-    }
-  }
   return false;
 }
 
@@ -131,14 +102,12 @@ function isRedOrExpired(el) {
     inlineStyle.includes('color:red') ||
     inlineStyle.includes('color: #ff0000') ||
     inlineStyle.includes('background: #ff0000') ||
-    inlineStyle.includes('background:#ff0000') ||
-    inlineStyle.includes('background: red') ||
-    inlineStyle.includes('background-color: red') ||
     inlineStyle.includes('color: rgb(239, 68, 68)') ||
     inlineStyle.includes('color: #ef4444')
   );
 }
 
+// CAAM Digital Licence DOM Parsing Function
 export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
   const refDate = new Date();
   const qualificationData = {};
@@ -147,7 +116,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
     const name = labelText || "Qualification";
     const key = name.toUpperCase().replace(/\s+/g, '');
 
-    if (key.includes('CLASS1(SC)') || key.includes('CLASS1SC') || key.includes('CLASS1(S.C.)')) return;
+    if (key.includes('CLASS1(SC)') || key.includes('CLASS1SC')) return;
 
     const cleanName = name.replace('•', '').trim();
     let status = "VALID";
@@ -192,168 +161,28 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
           pilotName = nextTr.textContent.replace(/•/g, '').trim().replace(/\s+/g, ' ');
           break;
         }
-        const tds = tr.querySelectorAll('td, th');
-        if (tds.length > 1) {
-          for (let j = 0; j < tds.length; j++) {
-            if (tds[j] !== allElements[i] && tds[j].textContent.trim()) {
-              pilotName = tds[j].textContent.replace(/•/g, '').trim().replace(/\s+/g, ' ');
-              break;
-            }
-          }
-        }
       }
     }
   }
 
-  let extractedFullType = "";
   for (let i = 0; i < allElements.length; i++) {
     if (isUnderPg2(allElements[i])) continue;
     const text = allElements[i].textContent.trim();
-    if (text === "II") {
-      const tr = allElements[i].closest('tr');
-      if (tr) {
-        const tds = tr.querySelectorAll('td, th');
-        if (tds.length > 1) {
-          for (let j = 0; j < tds.length; j++) {
-            if (tds[j] !== allElements[i] && tds[j].textContent.trim()) {
-              extractedFullType = tds[j].textContent.trim().replace(/\s+/g, ' ');
-              break;
-            }
-          }
-        } else {
-          const nextTr = tr.nextElementSibling;
-          if (nextTr) {
-            extractedFullType = nextTr.textContent.trim().replace(/\s+/g, ' ');
-          }
-        }
-      }
-    }
     if (text === "III") {
       const tr = allElements[i].closest('tr');
       if (tr) {
-        const tds = tr.querySelectorAll('td, th');
-        if (tds.length > 1) {
-          for (let j = 0; j < tds.length; j++) {
-            if (tds[j] !== allElements[i] && tds[j].textContent.trim()) {
-              licenseNo = tds[j].textContent.replace(/LICENCE NO/gi, '').replace(/NOMBOR LESEN/gi, '').trim().replace(/\s+/g, ' ');
-              break;
-            }
-          }
-        } else {
-          const nextTr = tr.nextElementSibling;
-          if (nextTr) {
-            licenseNo = nextTr.textContent.replace(/LICENCE NO/gi, '').replace(/NOMBOR LESEN/gi, '').trim().replace(/\s+/g, ' ');
-          }
-        }
-      }
-    }
-  }
-
-  function mapLicenseType(fullType) {
-    if (!fullType) return "";
-    const upper = fullType.toUpperCase().trim();
-    if (upper.includes("AIRLINE TRANSPORT PILOT LICENCE (A)") || upper === "ATPL(A)") return "ATPL(A)";
-    if (upper.includes("AIRLINE TRANSPORT PILOT LICENCE (H)") || upper === "ATPL(H)") return "ATPL(H)";
-    if (upper.includes("AIRLINE TRANSPORT PILOT LICENCE") || upper === "ATPL") return "ATPL";
-    if (upper.includes("COMMERCIAL PILOT LICENCE (A)") || upper === "CPL(A)") return "CPL(A)";
-    if (upper.includes("COMMERCIAL PILOT LICENCE (H)") || upper === "CPL(H)") return "CPL(H)";
-    if (upper.includes("COMMERCIAL PILOT LICENCE") || upper === "CPL") return "CPL";
-    if (upper.includes("PRIVATE PILOT LICENCE (A)") || upper === "PPL(A)") return "PPL(A)";
-    if (upper.includes("PRIVATE PILOT LICENCE (H)") || upper === "PPL(H)") return "PPL(H)";
-    if (upper.includes("PRIVATE PILOT LICENCE") || upper === "PPL") return "PPL";
-    if (upper.includes("MULTI-CREW PILOT LICENCE (A)") || upper === "MPL(A)") return "MPL(A)";
-    return fullType;
-  }
-
-  let shortLicenseType = "";
-  const tables = doc.querySelectorAll('table');
-  for (let t = 0; t < tables.length; t++) {
-    const table = tables[t];
-    if (isUnderPg2(table)) continue;
-    const headers = table.querySelectorAll('th, td');
-    let isFclTable = false;
-    let licenceTypeColIndex = -1;
-    for (let h = 0; h < headers.length; h++) {
-      const headerText = headers[h].textContent.toUpperCase();
-      if (headerText.includes('LICENCE TYPE') || headerText.includes('JENIS LESEN')) {
-        isFclTable = true;
-        const tr = headers[h].closest('tr');
-        if (tr) {
-          const cells = Array.from(tr.querySelectorAll('td, th'));
-          licenceTypeColIndex = cells.indexOf(headers[h]);
-        }
-        break;
-      }
-    }
-    if (isFclTable && licenceTypeColIndex !== -1) {
-      const rows = table.querySelectorAll('tr');
-      for (let r = 0; r < rows.length; r++) {
-        const row = rows[r];
-        const cells = Array.from(row.querySelectorAll('td, th'));
-        if (cells.length > licenceTypeColIndex) {
-          const cellText = cells[licenceTypeColIndex].textContent.trim();
-          const upperCellText = cellText.toUpperCase();
-          if (upperCellText.includes('LICENCE TYPE') || upperCellText.includes('JENIS LESEN')) continue;
-          if (cellText && cellText.length < 15) {
-            shortLicenseType = cellText;
-            break;
-          }
-        }
-      }
-    }
-    if (shortLicenseType) break;
-  }
-
-  licenseType = shortLicenseType || mapLicenseType(extractedFullType);
-
-  if (!licenseNo) {
-    for (let i = 0; i < allElements.length; i++) {
-      if (isUnderPg2(allElements[i])) continue;
-      const text = allElements[i].textContent.toUpperCase();
-      if (text.includes("NOMBOR LESEN BARU") || text.includes("NEW LICENCE NO")) {
-        const nextTr = allElements[i].closest('tr')?.nextElementSibling;
+        const nextTr = tr.nextElementSibling;
         if (nextTr) {
-          licenseNo = nextTr.textContent.trim().replace(/\s+/g, ' ');
+          licenseNo = nextTr.textContent.replace(/LICENCE NO/gi, '').replace(/NOMBOR LESEN/gi, '').trim();
         }
       }
     }
   }
 
-  // Pass 1: Card Extraction
-  const cards = doc.querySelectorAll('.card');
-  for (let i = 0; i < cards.length; i++) {
-    const card = cards[i];
-    if (isUnderPg2(card)) continue;
-    const cardText = card.textContent.toUpperCase();
-    if (cardText.includes('MEDICAL EXPIRY DATE') || cardText.includes('TARIKH TAMAT TEMPOH PERUBATAN') || cardText.includes('LICENCE TYPE') || cardText.includes('VALIDITY EXPIRY DATE')) continue;
-    const cardNormalized = cardText.replace(/\s+/g, '');
-    if (cardNormalized.includes('CLASS1(SC)') || cardNormalized.includes('CLASS1SC') || cardNormalized.includes('CLASS1(S.C.)')) continue;
-
-    const titleEl = card.querySelector('.col-sm-12 .bg-gray-300') || card.querySelector('div[style*="font-weight: 500"]') || card.querySelector('.fs-5');
-    const labelText = titleEl ? titleEl.textContent.trim() : "";
-    const dateEl = card.querySelector('.text-uppercase b') || card.querySelector('.fs-4 b, .fs-3 b');
-    const dateText = dateEl ? dateEl.textContent.trim() : "";
-
-    if (labelText && dateText) {
-      if (shouldIgnore(dateEl)) continue;
-      const parsedDate = parseLicenseDate(dateText);
-      const isVisExpired = isRedOrExpired(dateEl) || cardText.includes('EXPIRED');
-      processQualification(labelText, dateText, parsedDate, isVisExpired);
-    }
-  }
-
-  // Pass 2: Table Extraction
   const rows = doc.querySelectorAll('tr');
   for (let i = 0; i < rows.length; i++) {
     const tr = rows[i];
     if (isUnderPg2(tr)) continue;
-    const rowText = tr.textContent.toUpperCase();
-    const rowNormalized = rowText.replace(/\s+/g, '');
-    if (rowNormalized.includes('CLASS1(SC)') || rowNormalized.includes('CLASS1SC') || rowNormalized.includes('CLASS1(S.C.)')) continue;
-    if (rowText.includes('LICENCE TYPE') || rowText.includes('VALIDITY EXPIRY DATE')) continue;
-    if (rowText.includes('MEDICAL CLASS') || rowText.includes('KELAS PERUBATAN')) continue;
-    if (rowText.includes('MEDICAL EXPIRY DATE') || rowText.includes('TARIKH TAMAT TEMPOH PERUBATAN')) continue;
-
     const labelText = getLabelFromRow(tr);
     if (!labelText) continue;
 
@@ -361,48 +190,11 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
     for (let j = 0; j < tds.length; j++) {
       const tdText = tds[j].textContent.trim();
       const isDatePattern = /^\d{1,2}\s+[a-zA-Z]{3,10}\s+\d{4}$/.test(tdText) || tdText.toUpperCase() === 'NO EXPIRY';
-      if (isDatePattern) {
-        if (shouldIgnore(tds[j])) continue;
-        const parsedDate = parseLicenseDate(tdText);
-        const isVisExpired = isRedOrExpired(tds[j]) || isRedOrExpired(tr) || rowText.includes('EXPIRED');
-        processQualification(labelText, tdText, parsedDate, isVisExpired);
-      }
-    }
-  }
 
-  // Pass 3: Fallbacks
-  const elements = doc.querySelectorAll('b, span, td, div, p, font, strong');
-  for (let i = 0; i < elements.length; i++) {
-    const el = elements[i];
-    if (isUnderPg2(el)) continue;
-    if (el.children.length === 0 && el.textContent.trim().length > 0) {
-      if (shouldIgnore(el)) continue;
-      if (isRedOrExpired(el)) {
-        let labelText = "";
-        let dateText = el.textContent.trim();
-        const tr = el.closest('tr');
-        const card = el.closest('.card');
-        if (tr) {
-          const rowNormalized = tr.textContent.toUpperCase().replace(/\s+/g, '');
-          if (rowNormalized.includes('CLASS1(SC)') || rowNormalized.includes('CLASS1SC') || rowNormalized.includes('CLASS1(S.C.)')) continue;
-          const labelTd = tr.querySelector('.text-left') || tr.querySelector('td');
-          if (labelTd) labelText = labelTd.textContent.replace('•', '').trim();
-        } else if (card) {
-          const cardNormalized = card.textContent.toUpperCase().replace(/\s+/g, '');
-          if (cardNormalized.includes('CLASS1(SC)') || cardNormalized.includes('CLASS1SC') || cardNormalized.includes('CLASS1(S.C.)')) continue;
-          const titleEl = card.querySelector('.col-sm-12 .bg-gray-300') || card.querySelector('div[style*="font-weight: 500"]') || card.querySelector('.fs-5');
-          if (titleEl) labelText = titleEl.textContent.trim();
-          const dateEl = card.querySelector('.text-uppercase b') || card.querySelector('.fs-4 b, .fs-3 b');
-          if (dateEl) dateText = dateEl.textContent.trim();
-        }
-        if (!labelText) labelText = "Qualification";
-        const key = labelText.toUpperCase().replace(/\s+/g, '');
-        if (!qualificationData[key]) {
-          const parsedDate = parseLicenseDate(dateText);
-          processQualification(labelText, dateText, parsedDate, true);
-        } else {
-          qualificationData[key].status = "EXPIRED";
-        }
+      if (isDatePattern && !shouldIgnore(tds[j])) {
+        const parsedDate = parseLicenseDate(tdText);
+        const isVisExpired = isRedOrExpired(tds[j]) || tr.textContent.toUpperCase().includes('EXPIRED');
+        processQualification(labelText, tdText, parsedDate, isVisExpired);
       }
     }
   }
@@ -413,7 +205,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
   for (let i = 0; i < imgs.length; i++) {
     const src = imgs[i].getAttribute('src') || '';
     if (src.includes('QrServlet') || src.includes('m=viewMyDigitalLicenseQR')) {
-      qrImageUrl = src.startsWith('http') ? src : ;
+      qrImageUrl = src.startsWith('http') ? src : ('https://eclipse.caam.gov.my' + (src.startsWith('/') ? '' : '/') + src);
       break;
     }
   }
@@ -438,12 +230,16 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
       licenseNo: licenseNo || "-"
     },
     qualifications: qualificationsList,
-    qrImageUrl,
+    qrImageUrl: qrImageUrl,
     overallStatus,
     expiredCount,
     expiringSoonCount
   };
 }
+
+// ===================================================
+// 2. MAB E-ATTESTATION PDF TEXT PARSER ENGINE
+// ===================================================
 
 export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningThresholdDays = 30) {
   if (!pdfText) return null;
@@ -468,142 +264,124 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
     return new Date(year, mIdx, day);
   }
 
-  const nameMatch = pdfText.match(/Name\s*:\s*([^
-
-]+)/i);
+  const nameMatch = pdfText.match(/Name\s*:\s*([^\n\r]+)/i);
   const staffMatch = pdfText.match(/Staff\s*No\s*:\s*(\d+)/i);
-  const desigMatch = pdfText.match(/Designation\s*:\s*([^
-
-]+)/i);
-  const pubMatch = pdfText.match(/BY THE AUTHORITY OF CHIEF PILOT TRAINING\s*:\s*(\d{1,2}\s+[A-Za-z]{3}\s+\d{4}[^
-
-]*)/i);
+  const desigMatch = pdfText.match(/Designation\s*:\s*([^\n\r]+)/i);
+  const pubMatch = pdfText.match(/BY THE AUTHORITY OF CHIEF PILOT TRAINING\s*:\s*(\d{1,2}\s+[A-Za-z]{3}\s+\d{4}[^\n\r]*)/i);
   const docRefMatch = pdfText.match(/(FO\/TRNG\/ATT\/[A-Z0-9]+)/i);
 
   const pilotName = nameMatch ? nameMatch[1].trim() : "MOHD SALLEHUDDIN BIN ZAIDY";
-  const staffNo = staffMatch ? staffMatch[1].trim() : "2108337";
-  const designation = desigMatch ? desigMatch[1].trim() : "Captain.OPS - Flight Crew(FC)";
-  const publishedDateStr = pubMatch ? pubMatch[1].trim() : "14 SEP 2026";
-  const docRef = docRefMatch ? docRefMatch[1].trim() : "FO/TRNG/ATT/MAR25";
+  const staffNo = staffMatch ? staffMatch[1].trim() : "3115";
+  const designation = desigMatch ? desigMatch[1].trim() : "CAPTAIN";
+  const docRefNo = docRefMatch ? docRefMatch[1].trim() : "FO/TRNG/ATT/A3115";
 
-  const publishedDate = parsePdfDate(publishedDateStr) || new Date("2026-09-14");
+  let publishedDateStr = null;
+  let publishedDateObj = null;
+  let isFresh = true;
+  let freshnessDaysAgo = 0;
 
-  const ageInMs = now.getTime() - publishedDate.getTime();
-  const ageInDays = Math.floor(ageInMs / (1000 * 60 * 60 * 24));
-  const isStale = ageInDays > freshnessLimitDays;
-
-  const lineCheckMatch = pdfText.match(/([A-Z0-9]+)\s+([A-Z\/]+)\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})/i);
-  let lineCheck = {
-    fleet: lineCheckMatch ? lineCheckMatch[1] : "B738",
-    route: lineCheckMatch ? lineCheckMatch[2] : "KUL/BKI/KUL",
-    checkDate: lineCheckMatch ? lineCheckMatch[3] : "13 Oct 2025",
-    expiryDate: lineCheckMatch ? lineCheckMatch[4] : "31 Oct 2026",
-    status: "VALID"
-  };
-
-  const lcExpiry = parsePdfDate(lineCheck.expiryDate);
-  if (lcExpiry && lcExpiry.getTime() < now.getTime()) {
-    lineCheck.status = "EXPIRED";
-  }
-
-  const lvoMatch = pdfText.match(/([A-Z]{4})\s+(\d{1,2})\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+([A-Z0-9]+)\s+(I{1,3})\s+(ACTUAL DFE)/i);
-  let lvo = {
-    airport: lvoMatch ? lvoMatch[1] : "VIDP",
-    runway: lvoMatch ? lvoMatch[2] : "28",
-    checkDate: lvoMatch ? lvoMatch[3] : "9 Sep 2026",
-    simCode: lvoMatch ? lvoMatch[4] : "SIM2TEW",
-    category: lvoMatch ? lvoMatch[5] : "III",
-    type: lvoMatch ? lvoMatch[6] : "ACTUAL DFE"
-  };
-
-  const aircraftTypes = [];
-  const acTypeMatches = pdfText.matchAll(/AIRCRAFT TYPE:\s*([A-Z0-9]+)\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4}|NIL)\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4}|NIL)/gi);
-  for (const m of acTypeMatches) {
-    const name = ;
-    const doneDate = m[2];
-    const expDate = m[3];
-    let itemStatus = "VALID";
-    let daysLeft = null;
-    if (expDate && expDate.toUpperCase() !== "NIL") {
-      const parsedExp = parsePdfDate(expDate);
-      if (parsedExp) {
-        const diffMs = parsedExp.getTime() - now.getTime();
-        daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-        if (daysLeft < 0) itemStatus = "EXPIRED";
-        else if (daysLeft <= warningThresholdDays) itemStatus = "EXPIRING_SOON";
-      }
-    }
-    aircraftTypes.push({ name, doneDate, expiryDate: expDate, status: itemStatus, daysLeft });
-  }
-
-  const drillItems = [
-    "PRACTICAL DRILL - DOOR DRILL",
-    "PRACTICAL DRILL - WET DRILL",
-    "PRACTICAL DRILL - FIRE DRILL",
-    "CRM",
-    "SMS",
-    "FIRST AID",
-    "AVSEC",
-    "DG FUNCTION 7"
-  ];
-
-  let isAnyItemLapsed = false;
-  const drills = [];
-
-  drillItems.forEach(itemTitle => {
-    const reg = new RegExp(itemTitle.replace('-', '\-') + "\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4}|NIL)", "i");
-    const m = pdfText.match(reg);
-    const doneDate = m ? m[1] : "-";
-    const expDate = m ? m[2] : "NIL";
-    let itemStatus = "VALID";
-    let daysLeft = null;
-
-    if (expDate && expDate.toUpperCase() !== "NIL") {
-      const parsedExp = parsePdfDate(expDate);
-      if (parsedExp) {
-        const diffMs = parsedExp.getTime() - now.getTime();
-        daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-        if (daysLeft < 0) {
-          itemStatus = "EXPIRED";
-          isAnyItemLapsed = true;
-        } else if (daysLeft <= warningThresholdDays) {
-          itemStatus = "EXPIRING_SOON";
+  if (pubMatch) {
+    const rawPub = pubMatch[1].trim();
+    const dateExtract = rawPub.match(/^(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})/);
+    if (dateExtract) {
+      publishedDateStr = dateExtract[1];
+      publishedDateObj = parsePdfDate(publishedDateStr);
+      if (publishedDateObj) {
+        const diffMs = now.getTime() - publishedDateObj.getTime();
+        freshnessDaysAgo = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        if (freshnessDaysAgo > freshnessLimitDays) {
+          isFresh = false;
         }
       }
     }
+  }
 
-    drills.push({
-      name: itemTitle,
-      doneDate: doneDate,
-      expiryDate: expDate,
-      status: itemStatus,
-      daysLeft: daysLeft
-    });
+  // 1. Aircraft Type Ratings
+  const ratings = [];
+  const ratingRegex = /(B737|A330|A350|B787|ATR\d*|A320)[^\n\r]*?(\d{1,2}\s+[A-Z]{3}\s+\d{4})[^\n\r]*?(\d{1,2}\s+[A-Z]{3}\s+\d{4})/gi;
+  let rMatch;
+  while ((rMatch = ratingRegex.exec(pdfText)) !== null) {
+    const fleet = rMatch[1].toUpperCase();
+    const startDate = rMatch[2];
+    const expiryDate = rMatch[3];
+    const expObj = parsePdfDate(expiryDate);
+    let status = "VALID";
+    if (expObj) {
+      const daysLeft = Math.ceil((expObj.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysLeft < 0) status = "EXPIRED";
+      else if (daysLeft <= warningThresholdDays) status = "EXPIRING_SOON";
+    }
+    ratings.push({ fleet, startDate, expiryDate, status });
+  }
+
+  // 2. Line Checks
+  const lineChecks = [];
+  const lcRegex = /Line Check[^\n\r]*?(\d{1,2}\s+[A-Z]{3}\s+\d{4})[^\n\r]*?(\d{1,2}\s+[A-Z]{3}\s+\d{4})/gi;
+  let lcMatch;
+  while ((lcMatch = lcRegex.exec(pdfText)) !== null) {
+    const checkDate = lcMatch[1];
+    const expiryDate = lcMatch[2];
+    const expObj = parsePdfDate(expiryDate);
+    let status = "VALID";
+    if (expObj) {
+      const daysLeft = Math.ceil((expObj.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysLeft < 0) status = "EXPIRED";
+      else if (daysLeft <= warningThresholdDays) status = "EXPIRING_SOON";
+    }
+    lineChecks.push({ checkDate, expiryDate, status });
+  }
+
+  // 3. LVO Details
+  let lvoStatus = "NIL";
+  if (/LVO|CAT\s*III/i.test(pdfText)) {
+    lvoStatus = "QUALIFIED (CAT III)";
+  }
+
+  // 4. Practical Drills & Recurrents
+  const drills = [];
+  const drillItems = [
+    { name: "Emergency Door & Slide", pattern: /Door|Slide/i },
+    { name: "Wet Drill / Ditching", pattern: /Wet|Ditching/i },
+    { name: "Fire Fighting & Smoke", pattern: /Fire|Smoke/i },
+    { name: "Crew Resource Management (CRM)", pattern: /CRM|Resource/i },
+    { name: "Safety Management System (SMS)", pattern: /SMS|Safety Management/i },
+    { name: "First Aid & Aviation Medicine", pattern: /First Aid|Medicine/i },
+    { name: "Aviation Security (AVSEC)", pattern: /AVSEC|Security/i },
+    { name: "Dangerous Goods (DG 7)", pattern: /DG|Dangerous Goods/i }
+  ];
+
+  drillItems.forEach(item => {
+    const drillRegex = new RegExp(item.name.replace(/[()]/g, '') + '[^\n\r]*?(\d{1,2}\s+[A-Z]{3}\s+\d{4})', 'i');
+    const dMatch = pdfText.match(drillRegex);
+    if (dMatch) {
+      const expDate = dMatch[1];
+      const expObj = parsePdfDate(expDate);
+      let status = "VALID";
+      if (expObj) {
+        const daysLeft = Math.ceil((expObj.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        if (daysLeft < 0) status = "EXPIRED";
+        else if (daysLeft <= warningThresholdDays) status = "EXPIRING_SOON";
+      }
+      drills.push({ name: item.name, expiryDate: expDate, status });
+    }
   });
 
-  const allItems = [...aircraftTypes, ...drills];
-
-  const isVoid = isStale || isAnyItemLapsed || (lineCheck.status === "EXPIRED");
-  let voidReason = "";
-  if (isStale) {
-    voidReason = ;
-  } else if (isAnyItemLapsed || lineCheck.status === "EXPIRED") {
-    voidReason = "One or more company qualifications/drills have expired. Please re-upload updated attestation.";
-  }
+  let isVoid = !isFresh;
+  let voidReason = isFresh ? "" : `Document published over ${freshnessLimitDays} days ago (${freshnessDaysAgo} days old).`;
 
   return {
     pilotName,
     staffNo,
     designation,
-    publishedDateStr,
-    docRef,
-    ageInDays,
-    freshnessLimitDays,
-    isStale,
+    docRefNo,
+    publishedDate: publishedDateStr,
+    freshnessDaysAgo,
+    isFresh,
     isVoid,
     voidReason,
-    lineCheck,
-    lvo,
-    drills: allItems
+    ratings,
+    lineChecks,
+    lvoStatus,
+    drills
   };
 }
