@@ -1,10 +1,30 @@
 // js/ui.js - View State, Navigation, and Network Controller
 
 import { stopScanner } from './scanner.js';
-import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit } from './storage.js';
+import { renderHistoryList, getThresholdDays, getHistoryLimit } from './storage.js';
 import { topbarHTML } from './components/topbar.js';
 import { dockHTML } from './components/dock.js';
 import { menuHTML } from './components/menu.js';
+
+// ----------------------------------------------------
+// 0. ATTESTATION FRESHNESS LIMIT HELPERS (Standalone)
+// ----------------------------------------------------
+function getFreshnessLimitLocal() {
+  try {
+    const val = localStorage.getItem("certifly_freshness_limit");
+    return val ? parseInt(val, 10) : 30;
+  } catch (e) {
+    return 30;
+  }
+}
+
+function setFreshnessLimitLocal(limit) {
+  try {
+    localStorage.setItem("certifly_freshness_limit", limit.toString());
+  } catch (e) {
+    console.error("Failed to save freshness limit:", e);
+  }
+}
 
 // ----------------------------------------------------
 // 1. DYNAMIC TEXT SCALING (Scoped to <main>)
@@ -125,7 +145,7 @@ export function cycleThemeMode() {
 }
 
 // ----------------------------------------------------
-// 3. THRESHOLD & HISTORY LIMIT PILL CONTROLLERS
+// 3. THRESHOLD, FRESHNESS & HISTORY LIMIT PILL CONTROLLERS
 // ----------------------------------------------------
 export function updateThresholdPills(days = getThresholdDays()) {
   const t30 = document.getElementById("threshold-pill-30");
@@ -139,6 +159,19 @@ export function updateThresholdPills(days = getThresholdDays()) {
     t30.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${days === 30 ? activeClass : inactiveClass}`;
     t60.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${days === 60 ? activeClass : inactiveClass}`;
     t90.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${days === 90 ? activeClass : inactiveClass}`;
+  }
+}
+
+export function updateFreshnessLimitPills(limit = getFreshnessLimitLocal()) {
+  const f14 = document.getElementById("freshness-limit-14");
+  const f30 = document.getElementById("freshness-limit-30");
+
+  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent";
+
+  if (f14 && f30) {
+    f14.className = `freshness-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 14 ? activeClass : inactiveClass}`;
+    f30.className = `freshness-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 30 ? activeClass : inactiveClass}`;
   }
 }
 
@@ -171,7 +204,6 @@ export function openMenu() {
 
   if (!menu || !overlay) return;
 
-  // Hide persistent dock while menu pane is active
   if (dock) {
     dock.style.transform = "translateY(120%)";
   }
@@ -184,6 +216,7 @@ export function openMenu() {
   applyThemeMode(currentThemeMode);
   updateThresholdPills();
   updateHistoryLimitPills();
+  updateFreshnessLimitPills();
 
   menu.style.transition = "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
   menu.style.transform = "translateY(120%)";
@@ -216,7 +249,6 @@ export function closeMenu() {
     menu.style.transform = "";
     menu.style.transition = "";
 
-    // Restore persistent bottom dock position based on current scroll
     if (dock) {
       const topbarHeight = 48;
       const dockMaxTravel = 80;
@@ -226,7 +258,6 @@ export function closeMenu() {
       dock.style.transform = `translateY(${progress * dockMaxTravel}px)`;
     }
 
-    // Reset sub-panes to main
     const paneMain = document.getElementById("pane-main");
     const subPanes = document.querySelectorAll(".sub-pane");
     if (paneMain) {
@@ -350,6 +381,16 @@ export function initNavigationBars() {
   document.getElementById("topbar-text-btn")?.addEventListener("click", cycleTextSize);
   document.getElementById("topbar-theme-btn")?.addEventListener("click", cycleThemeMode);
 
+  // Connect Attestation Freshness Limit Pills
+  document.getElementById("freshness-limit-14")?.addEventListener("click", () => {
+    setFreshnessLimitLocal(14);
+    updateFreshnessLimitPills(14);
+  });
+  document.getElementById("freshness-limit-30")?.addEventListener("click", () => {
+    setFreshnessLimitLocal(30);
+    updateFreshnessLimitPills(30);
+  });
+
   // Connect Dock buttons
   document.getElementById("dock-menu-btn")?.addEventListener("click", openMenu);
   document.getElementById("dock-scan-btn")?.addEventListener("click", showScannerView);
@@ -368,7 +409,7 @@ export function initNavigationBars() {
   // Attach overlay close listener
   document.getElementById("bottom-sheet-overlay")?.addEventListener("click", closeMenu);
 
-  // Subpane Navigation logic inside menu sheet (FADE MAIN PANE IN PLACE - NO LEFT SLIDING ARTIFACTS!)
+  // Subpane Navigation logic inside menu sheet
   document.addEventListener("click", (e) => {
     const navBtn = e.target.closest(".nav-item-btn");
     if (navBtn) {
@@ -377,11 +418,9 @@ export function initNavigationBars() {
       const paneMain = document.getElementById("pane-main");
 
       if (targetPane && paneMain) {
-        // Fade main pane in place smoothly
         paneMain.classList.add("opacity-0", "pointer-events-none");
         paneMain.classList.remove("opacity-100", "pointer-events-auto");
 
-        // Slide target subpane in cleanly from right
         targetPane.classList.remove("hidden", "translate-x-full", "opacity-0", "pointer-events-none");
         targetPane.classList.add("translate-x-0", "opacity-100", "pointer-events-auto");
       }
@@ -393,13 +432,11 @@ export function initNavigationBars() {
       const paneMain = document.getElementById("pane-main");
 
       if (subPane && paneMain) {
-        stopScanner(); // Stop inline camera scanner when backing out
+        stopScanner();
 
-        // Slide subpane back out to right
         subPane.classList.remove("translate-x-0", "opacity-100", "pointer-events-auto");
         subPane.classList.add("translate-x-full", "opacity-0", "pointer-events-none");
 
-        // Fade main pane back in
         paneMain.classList.remove("opacity-0", "pointer-events-none");
         paneMain.classList.add("opacity-100", "pointer-events-auto");
 
@@ -415,6 +452,7 @@ export function initNavigationBars() {
   applyThemeMode(currentThemeMode);
   updateThresholdPills();
   updateHistoryLimitPills();
+  updateFreshnessLimitPills();
 }
 
 // ----------------------------------------------------
@@ -539,7 +577,6 @@ export function showError(msg) {
 
 window.showScannerView = showScannerView;
 
-
 // ----------------------------------------------------
 // RESULT VIEW TAB SWITCHER (Overview | CAAM | MAB)
 // ----------------------------------------------------
@@ -569,16 +606,3 @@ export function switchResultTab(tabName = 'overview') {
   });
 }
 window.switchResultTab = switchResultTab;
-
-export function updateFreshnessLimitPills(limit = getFreshnessLimit()) {
-  const f14 = document.getElementById("freshness-limit-14");
-  const f30 = document.getElementById("freshness-limit-30");
-
-  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
-  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent";
-
-  if (f14 && f30) {
-    f14.className = ;
-    f30.className = ;
-  }
-}
