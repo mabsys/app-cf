@@ -1,1 +1,404 @@
 
+// js/ui.js - View State, Navigation, and Network Controller
+
+import { stopScanner } from './scanner.js';
+import { renderHistoryList, getThresholdDays, getHistoryLimit } from './storage.js';
+import { topbarHTML } from './components/topbar.js';
+import { dockHTML } from './components/dock.js';
+import { menuHTML } from './components/menu.js';
+
+const textSizeIcons = {
+  std: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l3-7 3 7M5 15h4"/><path d="M13 18l4-11 4 11M14 14h6"/><path d="M11 7h2"/></svg>`,
+  lg: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l3-7 3 7M5 15h4"/><path d="M13 18l4-11 4 11M14 14h6"/><path d="M11 6l1-1 1 1"/></svg>`,
+  xl: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l3-7 3 7M5 15h4"/><path d="M13 18l4-11 4 11M14 14h6"/><path d="M11 6l1-1 1 1M11 3l1-1 1 1"/></svg>`
+};
+
+let currentTextSize = localStorage.getItem("app_text_size") || "std";
+
+export function applyTextSize(size = currentTextSize) {
+  currentTextSize = size;
+  localStorage.setItem("app_text_size", size);
+
+  const topbarTextBtn = document.getElementById("topbar-text-btn");
+  if (topbarTextBtn) {
+    topbarTextBtn.innerHTML = textSizeIcons[size] || textSizeIcons.std;
+  }
+
+  const tStd = document.getElementById("text-pill-std");
+  const tLg = document.getElementById("text-pill-lg");
+  const tXl = document.getElementById("text-pill-xl");
+
+  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold";
+
+  if (tStd && tLg && tXl) {
+    tStd.className = `text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center ${size === "std" ? activeClass : inactiveClass}`;
+    tLg.className = `text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center ${size === "lg" ? activeClass : inactiveClass}`;
+    tXl.className = `text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center ${size === "xl" ? activeClass : inactiveClass}`;
+  }
+
+  document.documentElement.style.fontSize = "100%";
+  let styleEl = document.getElementById("certifly-text-scale-style");
+  if (!styleEl) {
+    styleEl = document.createElement("style");
+    styleEl.id = "certifly-text-scale-style";
+    document.head.appendChild(styleEl);
+  }
+
+  if (size === "std") {
+    styleEl.textContent = "";
+    return;
+  }
+
+  const mult = size === "lg" ? 1.15 : 1.30;
+  styleEl.textContent = `
+    main { font-size: ${(mult * 100).toFixed(1)}% !important; }
+    main .text-\[9px\] { font-size: ${(9 * mult).toFixed(1)}px !important; }
+    main .text-\[10px\] { font-size: ${(10 * mult).toFixed(1)}px !important; }
+    main .text-\[11px\] { font-size: ${(11 * mult).toFixed(1)}px !important; }
+    main .text-xs { font-size: ${(0.75 * mult).toFixed(4)}rem !important; }
+    main .text-sm { font-size: ${(0.875 * mult).toFixed(4)}rem !important; }
+    main .text-base { font-size: ${(1.0 * mult).toFixed(4)}rem !important; }
+  `;
+}
+
+export function cycleTextSize() {
+  const sizes = ["std", "lg", "xl"];
+  const nextIndex = (sizes.indexOf(currentTextSize) + 1) % sizes.length;
+  applyTextSize(sizes[nextIndex]);
+}
+
+const themeSolidIcons = {
+  system: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M6 3.5A1.5 1.5 0 0 1 7.5 2h5A1.5 1.5 0 0 1 14 3.5v13a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 6 16.5v-13ZM10 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd"/></svg>`,
+  light: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path d="M10 2a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 2ZM10 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 15ZM10 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM15.657 5.404a.75.75 0 1 0-1.06-1.06l-1.061 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM6.464 14.596a.75.75 0 1 0-1.06-1.06l-1.06 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM18 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 18 10ZM4.25 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 4.25 10ZM14.596 15.657a.75.75 0 0 0 1.06-1.06l-1.06-1.061a.75.75 0 1 0-1.06 1.06l1.06 1.061ZM5.404 6.464a.75.75 0 0 0 1.06-1.06l-1.06-1.06a.75.75 0 1 0-1.06 1.06l1.06 1.06Z"/></svg>`,
+  dark: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 0 1 .868.397 6.5 6.5 0 1 0 9.277 9.277.75.75 0 0 1 1.266.697 8 8 0 1 1-11.808-10.102.75.75 0 0 1 .397-.269Z" clip-rule="evenodd"/></svg>`
+};
+
+let currentThemeMode = localStorage.getItem("app_theme_mode") || "system";
+
+export function applyThemeMode(mode = currentThemeMode) {
+  currentThemeMode = mode;
+  localStorage.setItem("app_theme_mode", mode);
+
+  const topbarBtn = document.getElementById("topbar-theme-btn");
+  if (topbarBtn) {
+    topbarBtn.innerHTML = themeSolidIcons[mode] || themeSolidIcons.system;
+  }
+
+  const tLight = document.getElementById("theme-pill-light");
+  const tDark = document.getElementById("theme-pill-dark");
+  const tSys = document.getElementById("theme-pill-system");
+
+  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold";
+
+  if (tLight && tDark && tSys) {
+    tLight.className = `theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${mode === "light" ? activeClass : inactiveClass}`;
+    tDark.className = `theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${mode === "dark" ? activeClass : inactiveClass}`;
+    tSys.className = `theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${mode === "system" ? activeClass : inactiveClass}`;
+  }
+
+  const isDark = mode === "dark" || (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  document.documentElement.classList.toggle("dark", isDark);
+}
+
+export function cycleThemeMode() {
+  const modes = ["system", "light", "dark"];
+  const nextIndex = (modes.indexOf(currentThemeMode) + 1) % modes.length;
+  applyThemeMode(modes[nextIndex]);
+}
+
+export function updateThresholdPills(days = getThresholdDays()) {
+  const t30 = document.getElementById("threshold-pill-30");
+  const t60 = document.getElementById("threshold-pill-60");
+  const t90 = document.getElementById("threshold-pill-90");
+
+  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold";
+
+  if (t30 && t60 && t90) {
+    t30.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${days === 30 ? activeClass : inactiveClass}`;
+    t60.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${days === 60 ? activeClass : inactiveClass}`;
+    t90.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${days === 90 ? activeClass : inactiveClass}`;
+  }
+}
+
+export function updateHistoryLimitPills(limit = getHistoryLimit()) {
+  const h10 = document.getElementById("history-limit-10");
+  const h20 = document.getElementById("history-limit-20");
+  const h30 = document.getElementById("history-limit-30");
+
+  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold";
+
+  if (h10 && h20 && h30) {
+    h10.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 10 ? activeClass : inactiveClass}`;
+    h20.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 20 ? activeClass : inactiveClass}`;
+    h30.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 30 ? activeClass : inactiveClass}`;
+  }
+}
+
+export function openMenu() {
+  const menu = document.getElementById("bottom-sheet-menu");
+  const overlay = document.getElementById("bottom-sheet-overlay");
+  const dock = document.getElementById("persistent-dock");
+
+  if (!menu || !overlay) return;
+
+  if (dock) {
+    dock.style.transform = "translateY(120%)";
+  }
+
+  overlay.classList.remove("hidden");
+  menu.classList.remove("hidden");
+
+  applyTextSize(currentTextSize);
+  applyThemeMode(currentThemeMode);
+  updateThresholdPills();
+  updateHistoryLimitPills();
+
+  menu.style.transition = "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
+  menu.style.transform = "translateY(120%)";
+
+  requestAnimationFrame(() => {
+    overlay.classList.remove("opacity-0");
+    overlay.classList.add("opacity-100");
+    menu.style.transform = "translateY(0px)";
+  });
+}
+
+export function closeMenu() {
+  const menu = document.getElementById("bottom-sheet-menu");
+  const overlay = document.getElementById("bottom-sheet-overlay");
+  const dock = document.getElementById("persistent-dock");
+
+  if (!menu || !overlay) return;
+
+  stopScanner();
+
+  overlay.classList.remove("opacity-100");
+  overlay.classList.add("opacity-0");
+
+  menu.style.transition = "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
+  menu.style.transform = "translateY(120%)";
+
+  setTimeout(() => {
+    overlay.classList.add("hidden");
+    menu.classList.add("hidden");
+    menu.style.transform = "";
+    menu.style.transition = "";
+
+    if (dock) {
+      dock.style.transform = `translateY(0px)`;
+    }
+
+    const paneMain = document.getElementById("pane-main");
+    const subPanes = document.querySelectorAll(".sub-pane");
+
+    if (paneMain) {
+      paneMain.classList.remove("opacity-0", "pointer-events-none");
+      paneMain.classList.add("opacity-100", "pointer-events-auto");
+    }
+
+    subPanes.forEach(pane => {
+      pane.classList.remove("translate-x-0", "opacity-100", "pointer-events-auto");
+      pane.classList.add("translate-x-full", "opacity-0", "pointer-events-none", "hidden");
+    });
+  }, 300);
+}
+
+export function initNavigationBars() {
+  if (!document.getElementById("persistent-topbar")) {
+    document.body.insertAdjacentHTML('afterbegin', topbarHTML);
+  }
+  if (!document.getElementById("persistent-dock")) {
+    document.body.insertAdjacentHTML('beforeend', dockHTML);
+  }
+  if (!document.getElementById("bottom-sheet-menu")) {
+    document.body.insertAdjacentHTML('beforeend', menuHTML);
+  }
+
+  document.getElementById("topbar-text-btn")?.addEventListener("click", cycleTextSize);
+  document.getElementById("topbar-theme-btn")?.addEventListener("click", cycleThemeMode);
+
+  document.getElementById("dock-menu-btn")?.addEventListener("click", openMenu);
+  document.getElementById("dock-scan-btn")?.addEventListener("click", showScannerView);
+  document.getElementById("dock-dashboard-btn")?.addEventListener("click", () => showView("result-view"));
+
+  document.getElementById("bottom-sheet-overlay")?.addEventListener("click", closeMenu);
+
+  document.addEventListener("click", (e) => {
+    const navBtn = e.target.closest(".nav-item-btn");
+    if (navBtn) {
+      const targetId = navBtn.getAttribute("data-target");
+      const targetPane = document.getElementById(targetId);
+      const paneMain = document.getElementById("pane-main");
+
+      if (targetPane && paneMain) {
+        paneMain.classList.add("opacity-0", "pointer-events-none");
+        paneMain.classList.remove("opacity-100", "pointer-events-auto");
+
+        targetPane.classList.remove("hidden", "translate-x-full", "opacity-0", "pointer-events-none");
+        targetPane.classList.add("translate-x-0", "opacity-100", "pointer-events-auto");
+      }
+    }
+
+    const backBtn = e.target.closest(".back-btn");
+    if (backBtn) {
+      const subPane = backBtn.closest(".sub-pane");
+      const paneMain = document.getElementById("pane-main");
+
+      if (subPane && paneMain) {
+        stopScanner();
+        subPane.classList.remove("translate-x-0", "opacity-100", "pointer-events-auto");
+        subPane.classList.add("translate-x-full", "opacity-0", "pointer-events-none");
+
+        paneMain.classList.remove("opacity-0", "pointer-events-none");
+        paneMain.classList.add("opacity-100", "pointer-events-auto");
+
+        setTimeout(() => {
+          subPane.classList.add("hidden");
+        }, 300);
+      }
+    }
+  });
+
+  applyTextSize(currentTextSize);
+  applyThemeMode(currentThemeMode);
+  updateThresholdPills();
+  updateHistoryLimitPills();
+}
+
+export function updateNetworkStatus() {
+  const isOnline = navigator.onLine;
+  const overlay = document.getElementById("offline-overlay");
+  const startScanBtn = document.getElementById("start-scan-btn");
+  const submitUrlBtn = document.getElementById("submit-url-btn");
+  const manualInput = document.getElementById("manual-url-input");
+  const openOriginalBtn = document.getElementById("open-original-btn");
+  const checkerBadge = document.getElementById("checker-status-badge");
+
+  if (overlay) {
+    if (isOnline) overlay.classList.add("hidden");
+    else {
+      overlay.classList.remove("hidden");
+      stopScanner();
+    }
+  }
+
+  if (checkerBadge) {
+    if (isOnline) {
+      checkerBadge.innerText = "Checker Active";
+      checkerBadge.className = "text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md font-bold uppercase transition-all";
+    } else {
+      checkerBadge.innerText = "Cached View";
+      checkerBadge.className = "text-[10px] text-gray-50 bg-gray-500 px-2 py-0.5 rounded-md font-bold uppercase transition-all";
+    }
+  }
+
+  if (startScanBtn) {
+    startScanBtn.disabled = !isOnline;
+    startScanBtn.classList.toggle("opacity-50", !isOnline);
+  }
+
+  if (submitUrlBtn) {
+    submitUrlBtn.disabled = !isOnline;
+    submitUrlBtn.classList.toggle("opacity-50", !isOnline);
+  }
+
+  if (manualInput) {
+    manualInput.disabled = !isOnline;
+  }
+
+  if (openOriginalBtn) {
+    openOriginalBtn.disabled = !isOnline;
+    openOriginalBtn.classList.toggle("opacity-50", !isOnline);
+  }
+}
+
+export function showView(viewId) {
+  document.querySelectorAll(".app-view").forEach(view => {
+    view.classList.add("hidden");
+  });
+
+  const targetView = document.getElementById(viewId);
+  if (targetView) targetView.classList.remove("hidden");
+
+  if (viewId === "result-view") {
+    const savedTab = localStorage.getItem("certifly_active_tab") || "overview";
+    switchResultTab(savedTab);
+  }
+
+  const historyWrapper = document.getElementById("history-card-wrapper");
+  if (historyWrapper) {
+    if (viewId === "scanner-view") {
+      historyWrapper.classList.remove("hidden");
+    } else {
+      historyWrapper.classList.add("hidden");
+    }
+  }
+}
+
+export function showScannerView() {
+  stopScanner();
+  const errorMsg = document.getElementById("error-message");
+  if (errorMsg) errorMsg.innerText = "";
+
+  const manualInput = document.getElementById("manual-url-input");
+  if (manualInput) manualInput.value = "";
+
+  document.body.classList.remove("bg-green-100", "bg-orange-100", "bg-red-100");
+  document.body.classList.add("bg-slate-50");
+
+  renderHistoryList();
+  showView("scanner-view");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+export function showLoading(msg = "Fetching digital licence...") {
+  const loadingText = document.getElementById("loading-text");
+  if (loadingText) loadingText.innerText = msg;
+  showView("loading-view");
+}
+
+export function showError(msg) {
+  stopScanner();
+  const errMsg = document.getElementById("error-message");
+  if (errMsg) {
+    errMsg.innerHTML = msg;
+  } else {
+    alert(msg);
+  }
+  showView("scanner-view");
+}
+
+window.showScannerView = showScannerView;
+
+export function switchResultTab(tabName = 'overview') {
+  const tabs = ['overview', 'caam', 'mab'];
+  const activeTab = tabs.includes(tabName) ? tabName : 'overview';
+  localStorage.setItem('certifly_active_tab', activeTab);
+
+  const baseBtnClass = 'res-tab-btn py-2 px-1 rounded-xl text-[11px] transition-all flex items-center justify-center gap-1.5 cursor-pointer';
+  const activeClass = baseBtnClass + ' bg-blue-600 text-white shadow-xs font-extrabold';
+  const inactiveClass = baseBtnClass + ' text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent';
+
+  tabs.forEach(t => {
+    const btn = document.getElementById('res-tab-btn-' + t);
+    const pane = document.getElementById('tab-' + t + '-content');
+
+    if (btn) {
+      btn.className = (t === activeTab) ? activeClass : inactiveClass;
+    }
+
+    if (pane) {
+      if (t === activeTab) {
+        pane.classList.remove('hidden');
+      } else {
+        pane.classList.add('hidden');
+      }
+    }
+  });
+}
+
+window.switchResultTab = switchResultTab;
