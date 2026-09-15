@@ -26,13 +26,12 @@ export function applyTextSize(size = currentTextSize) {
     topbarTextBtn.innerHTML = textSizeIcons[size] || textSizeIcons.std;
   }
 
-  // Highlight Text Scale Pill Buttons
   const tStd = document.getElementById("text-pill-std");
   const tLg = document.getElementById("text-pill-lg");
   const tXl = document.getElementById("text-pill-xl");
 
   const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
-  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent";
 
   if (tStd && tLg && tXl) {
     tStd.className = `text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center ${size === "std" ? activeClass : inactiveClass}`;
@@ -100,13 +99,12 @@ export function applyThemeMode(mode = currentThemeMode) {
     topbarBtn.innerHTML = themeSolidIcons[mode] || themeSolidIcons.system;
   }
 
-  // Highlight Theme Mode Pill Buttons
   const tLight = document.getElementById("theme-pill-light");
   const tDark = document.getElementById("theme-pill-dark");
   const tSys = document.getElementById("theme-pill-system");
 
   const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
-  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent";
 
   if (tLight && tDark && tSys) {
     tLight.className = `theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${mode === "light" ? activeClass : inactiveClass}`;
@@ -133,7 +131,7 @@ export function updateThresholdPills(days = getThresholdDays()) {
   const t90 = document.getElementById("threshold-pill-90");
 
   const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
-  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent";
 
   if (t30 && t60 && t90) {
     t30.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${days === 30 ? activeClass : inactiveClass}`;
@@ -161,7 +159,7 @@ export function updateHistoryLimitPills(limit = getHistoryLimit()) {
   const h30 = document.getElementById("history-limit-30");
 
   const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
-  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent";
 
   if (h10 && h20 && h30) {
     h10.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 10 ? activeClass : inactiveClass}`;
@@ -191,7 +189,6 @@ export function openMenu() {
   overlay.classList.remove("hidden");
   menu.classList.remove("hidden");
 
-  // Sync all preference pill selections
   applyTextSize(currentTextSize);
   applyThemeMode(currentThemeMode);
   updateThresholdPills();
@@ -357,11 +354,9 @@ export function initNavigationBars() {
     lastClampedScrollY = clampedScrollY;
   }, { passive: true });
 
-  // Connect Top Bar toggle buttons
   document.getElementById("topbar-text-btn")?.addEventListener("click", cycleTextSize);
   document.getElementById("topbar-theme-btn")?.addEventListener("click", cycleThemeMode);
 
-  // Connect Attestation Freshness Limit Pills
   document.getElementById("freshness-limit-14")?.addEventListener("click", () => {
     setFreshnessLimit(14);
     updateFreshnessLimitPills(14);
@@ -371,7 +366,6 @@ export function initNavigationBars() {
     updateFreshnessLimitPills(30);
   });
 
-  // Connect Dock buttons
   document.getElementById("dock-menu-btn")?.addEventListener("click", openMenu);
   document.getElementById("dock-scan-btn")?.addEventListener("click", showScannerView);
   document.getElementById("dock-dashboard-btn")?.addEventListener("click", () => showView("result-view"));
