@@ -1,14 +1,40 @@
-// js/storage.js - Local Storage & Data Persistence Controller
+// js/storage.js - Scan History and Local Storage Management
+
+let scanHistory = [];
+try {
+  const raw = localStorage.getItem("scan_history");
+  scanHistory = raw ? JSON.parse(raw) : [];
+  if (!Array.isArray(scanHistory)) scanHistory = [];
+} catch (e) {
+  scanHistory = [];
+}
 
 export const PROFILE_KEY = "certifly_profile_data";
 export const THRESHOLD_KEY = "certifly_threshold_days";
 export const HISTORY_LIMIT_KEY = "certifly_history_limit";
 export const FRESHNESS_LIMIT_KEY = "certifly_freshness_limit";
 
+export function getFreshnessLimit() {
+  try {
+    const val = localStorage.getItem(FRESHNESS_LIMIT_KEY);
+    return val ? parseInt(val, 10) : 30;
+  } catch (e) {
+    return 30;
+  }
+}
+
+export function setFreshnessLimit(days) {
+  try {
+    localStorage.setItem(FRESHNESS_LIMIT_KEY, days.toString());
+  } catch (e) {
+    console.error("Failed to save freshness limit:", e);
+  }
+}
+
 export function getThresholdDays() {
   try {
-    const saved = localStorage.getItem(THRESHOLD_KEY);
-    return saved ? parseInt(saved, 10) : 30;
+    const val = localStorage.getItem(THRESHOLD_KEY);
+    return val ? parseInt(val, 10) : 30;
   } catch (e) {
     return 30;
   }
@@ -22,27 +48,10 @@ export function setThresholdDays(days) {
   }
 }
 
-export function getFreshnessLimit() {
-  try {
-    const saved = localStorage.getItem(FRESHNESS_LIMIT_KEY);
-    return saved ? parseInt(saved, 10) : 30;
-  } catch (e) {
-    return 30;
-  }
-}
-
-export function setFreshnessLimit(limit) {
-  try {
-    localStorage.setItem(FRESHNESS_LIMIT_KEY, limit.toString());
-  } catch (e) {
-    console.error("Failed to save freshness limit:", e);
-  }
-}
-
 export function getHistoryLimit() {
   try {
-    const saved = localStorage.getItem(HISTORY_LIMIT_KEY);
-    return saved ? parseInt(saved, 10) : 10;
+    const val = localStorage.getItem(HISTORY_LIMIT_KEY);
+    return val ? parseInt(val, 10) : 10;
   } catch (e) {
     return 10;
   }
@@ -51,110 +60,142 @@ export function getHistoryLimit() {
 export function setHistoryLimit(limit) {
   try {
     localStorage.setItem(HISTORY_LIMIT_KEY, limit.toString());
+    if (scanHistory.length > limit) {
+      scanHistory = scanHistory.slice(0, limit);
+      localStorage.setItem("scan_history", JSON.stringify(scanHistory));
+      renderHistoryList();
+    }
   } catch (e) {
     console.error("Failed to save history limit:", e);
   }
 }
 
 export function getScanHistory() {
-  try {
-    const raw = localStorage.getItem("scan_history");
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    return [];
-  }
+  return scanHistory;
 }
 
-export function saveToHistory(results, originalUrl = "") {
+export function saveToHistory(results, originalUrl) {
+  const fullDateTime = results.scanTime
+    ? results.scanTime
+    : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+
+  const record = {
+    id: String((results.pilotDetails && results.pilotDetails.licenseNo) || Date.now()),
+    name: (results.pilotDetails && results.pilotDetails.name) || "Unknown",
+    licenseType: (results.pilotDetails && results.pilotDetails.licenseType) || "",
+    overallStatus: results.overallStatus || "VALID",
+    url: originalUrl || "",
+    resultsData: results,
+    timestamp: fullDateTime
+  };
+
+  scanHistory = scanHistory.filter(item => item && String(item.id) !== record.id);
+  scanHistory.unshift(record);
+  const limit = getHistoryLimit();
+  if (scanHistory.length > limit) scanHistory = scanHistory.slice(0, limit);
   try {
-    const history = getScanHistory();
-    const limit = getHistoryLimit();
-    const entry = {
-      id: Date.now().toString(),
-      timestamp: new Date().toISOString(),
-      url: originalUrl,
-      resultsData: results
-    };
-    history.unshift(entry);
-    const trimmed = history.slice(0, limit);
-    localStorage.setItem("scan_history", JSON.stringify(trimmed));
+    localStorage.setItem("scan_history", JSON.stringify(scanHistory));
   } catch (e) {
     console.error("Failed to save scan history:", e);
   }
-}
-
-export function clearHistory() {
-  try {
-    localStorage.removeItem("scan_history");
-  } catch (e) {
-    console.error("Failed to clear scan history:", e);
-  }
+  renderHistoryList();
 }
 
 export function renderHistoryList() {
-  const container = document.getElementById("history-list-container");
-  const countEl = document.getElementById("storage-scans-count");
+  const container = document.getElementById("history-list");
+  const countBadge = document.getElementById("history-count-badge");
+  const clockIcon = document.getElementById("history-clock-icon");
   if (!container) return;
 
-  const history = getScanHistory();
-  const limit = getHistoryLimit();
-
-  if (countEl) {
-    countEl.innerText = `${history.length} / ${limit}`;
+  if (clockIcon && countBadge) {
+    const totalScans = scanHistory.length;
+    countBadge.innerText = totalScans;
+    if (totalScans > 0) {
+      countBadge.classList.remove("hidden");
+      clockIcon.classList.add("hidden");
+    } else {
+      clockIcon.classList.remove("hidden");
+      countBadge.classList.add("hidden");
+    }
   }
 
-  if (history.length === 0) {
+  if (scanHistory.length === 0) {
     container.innerHTML = `<div class="text-[10px] text-slate-400 italic py-4 text-center">No recent scans on this device.</div>`;
     return;
   }
 
-  let html = `<div class="space-y-2">`;
-  history.forEach(item => {
-    const dateStr = new Date(item.timestamp).toLocaleString();
-    const name = item.resultsData?.pilotDetails?.name || "CREW MEMBER";
-    const status = item.resultsData?.overallStatus || "VALID";
-    const badgeColor = status === "VALID" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" : "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300";
-
-    html += `
-      <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between gap-2">
-        <div class="min-w-0">
-          <div class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">${name}</div>
-          <div class="text-[10px] text-slate-400">${dateStr}</div>
+  container.innerHTML = scanHistory.map(item => {
+    if (!item) return '';
+    const dotColor = item.overallStatus === "EXPIRED" ? "bg-red-500" : (item.overallStatus === "EXPIRING_SOON" ? "bg-amber-500" : "bg-green-600");
+    const safeId = String(item.id || '').replace(/'/g, "\'");
+    return `
+      <div onclick="loadHistoricalRecord('${safeId}')" class="py-1.5 px-2 flex items-center justify-between cursor-pointer hover:bg-sky-100 transition-colors">
+        <div class="flex flex-col text-left">
+          <span class="text-[11px] font-semibold text-slate-800 leading-tight">${item.name || 'Unknown'}</span>
+          <span class="text-[9px] text-slate-500 font-semibold uppercase tracking-normal mt-0.5">${item.licenseType || ''}  -  ${item.timestamp || ''} LT</span>
         </div>
-        <span class="px-2 py-0.5 text-[9px] font-extrabold rounded-md uppercase shrink-0 ${badgeColor}">${status}</span>
+        <span class="w-2 h-2 rounded-full ${dotColor} shrink-0 ml-2"></span>
       </div>
     `;
-  });
-  html += `</div>`;
-  container.innerHTML = html;
+  }).join('');
 }
+
+export function clearHistory() {
+  if (confirm("Are you sure you want to clear all recent compliance checks from this device?")) {
+    scanHistory = [];
+    try {
+      localStorage.removeItem("scan_history");
+    } catch (e) {}
+    renderHistoryList();
+  }
+}
+window.clearHistory = clearHistory;
 
 export function getProfileData() {
   try {
-    const raw = localStorage.getItem(PROFILE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch (e) {
-    return null;
+    const data = localStorage.getItem(PROFILE_KEY);
+    if (!data) return { nickname: "", url: "", attestationFileName: "", cachedCaamResults: null, cachedMabResults: null, qrImageUrl: "" };
+    const parsed = JSON.parse(data);
+    return {
+      nickname: (parsed.nickname || parsed.name || "").trim(),
+      url: (parsed.url || "").trim(),
+      attestationFileName: (parsed.attestationFileName || "").trim(),
+      cachedCaamResults: parsed.cachedCaamResults || null,
+      cachedMabResults: parsed.cachedMabResults || null,
+      qrImageUrl: parsed.qrImageUrl || ""
+    };
+  } catch (err) {
+    console.error("Failed to read profile data from storage:", err);
+    return { nickname: "", url: "", attestationFileName: "", cachedCaamResults: null, cachedMabResults: null, qrImageUrl: "" };
   }
 }
 
-export function saveProfileData(profile) {
+export function saveProfileData(profile = {}) {
   try {
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-  } catch (e) {
-    console.error("Failed to save profile data:", e);
+    const existing = getProfileData();
+    const sanitized = {
+      nickname: (profile.nickname !== undefined ? profile.nickname : existing.nickname).trim(),
+      url: (profile.url !== undefined ? profile.url : existing.url).trim(),
+      attestationFileName: (profile.attestationFileName !== undefined ? profile.attestationFileName : existing.attestationFileName).trim(),
+      cachedCaamResults: profile.cachedCaamResults !== undefined ? profile.cachedCaamResults : existing.cachedCaamResults,
+      cachedMabResults: profile.cachedMabResults !== undefined ? profile.cachedMabResults : existing.cachedMabResults,
+      qrImageUrl: profile.qrImageUrl !== undefined ? profile.qrImageUrl : existing.qrImageUrl
+    };
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(sanitized));
+  } catch (err) {
+    console.error("Failed to save profile data to storage:", err);
   }
 }
 
 export function clearProfileData() {
   try {
     localStorage.removeItem(PROFILE_KEY);
-  } catch (e) {
-    console.error("Failed to clear profile data:", e);
+  } catch (err) {
+    console.error("Failed to clear profile data from storage:", err);
   }
 }
 
 export function hasProfileData() {
-  const data = getProfileData();
-  return !!(data && (data.url || data.attestationPdfText || data.cachedCaamResults));
+  const profile = getProfileData();
+  return Boolean(profile && (profile.url || profile.cachedCaamResults || profile.cachedMabResults));
 }
