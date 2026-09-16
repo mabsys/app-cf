@@ -17,47 +17,32 @@ import {
 let lastScannedUrl = "";
 let selectedAttestationFile = null;
 
-// Helper function to display in-app profile toast notifications (eliminates browser alert popups)
-function showProfileToast(msg, type = "success") {
-  const toast = document.getElementById("profile-toast");
-  const msgEl = document.getElementById("profile-toast-msg");
-  if (!toast || !msgEl) {
-    console.log("[Profile Toast]:", msg);
-    return;
-  }
-
-  msgEl.innerText = msg;
-  if (type === "error") {
-    toast.className = "p-3 rounded-xl bg-rose-600 text-white text-xs font-extrabold text-center shadow-lg transition-all duration-300 flex items-center justify-center gap-2";
-  } else {
-    toast.className = "p-3 rounded-xl bg-emerald-600 text-white text-xs font-extrabold text-center shadow-lg transition-all duration-300 flex items-center justify-center gap-2";
-  }
-
-  toast.classList.remove("hidden");
-  setTimeout(() => {
-    toast.classList.add("hidden");
-  }, 2500);
-}
+document.addEventListener("DOMContentLoaded", () => {
+  initApp();
+  initNavigationBars();
+  initProfileUI();
+  initSettingsUI();
+  initStorageUI();
+});
 
 // ----------------------------------------------------
-// 1. INITIALIZATION & PROFILE CONTROLLER
+// 1. MY PILOT PROFILE CONTROLLER
 // ----------------------------------------------------
 function initProfileUI() {
   const profile = getProfileData();
-
   const nicknameInput = document.getElementById("profile-nickname-input");
   const urlInput = document.getElementById("profile-url-input");
   const pdfFileInput = document.getElementById("profile-pdf-file");
   const pdfLabel = document.getElementById("profile-pdf-label");
   const pdfStatusBadge = document.getElementById("profile-pdf-status-badge");
   const pdfStatusText = document.getElementById("profile-pdf-status-text");
-
+  
   const modeQrBtn = document.getElementById("profile-mode-qr-btn");
   const modeUrlBtn = document.getElementById("profile-mode-url-btn");
   const qrBox = document.getElementById("profile-qr-box");
   const urlBox = document.getElementById("profile-url-box");
   const stopScanBtn = document.getElementById("profile-stop-scan-btn");
-
+  
   const saveBtn = document.getElementById("profile-save-btn");
   const clearBtn = document.getElementById("profile-clear-btn");
   const quickVerifyBtn = document.getElementById("verify-my-licence-btn");
@@ -65,139 +50,258 @@ function initProfileUI() {
 
   if (nicknameInput) nicknameInput.value = profile.nickname || "";
   if (urlInput) urlInput.value = profile.url || "";
-  
-  if (profile.attestationFileName) {
-    if (pdfLabel) pdfLabel.innerText = profile.attestationFileName;
-    if (pdfStatusBadge && pdfStatusText) {
-      pdfStatusText.innerText = `✓ Saved PDF: ${profile.attestationFileName}`;
+  if (pdfLabel) pdfLabel.innerText = profile.attestationFileName || "Select PDF attestation file...";
+
+  if (pdfStatusBadge && pdfStatusText) {
+    if (profile.attestationFileName) {
       pdfStatusBadge.classList.remove("hidden");
+      pdfStatusText.innerText = `✓ Saved PDF: ${profile.attestationFileName}`;
+    } else {
+      pdfStatusBadge.classList.add("hidden");
     }
   }
 
-  // Profile Source Mode Switcher
+  stopScanner();
+  if (qrBox) qrBox.classList.add("hidden");
+
+  if (profile.url && urlBox && modeUrlBtn && modeQrBtn) {
+    urlBox.classList.remove("hidden");
+    modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
+    modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
+  }
+
+  if (quickVerifyBtn && profile.url) {
+    quickVerifyBtn.classList.remove("hidden");
+    if (quickVerifyLabel) {
+      quickVerifyLabel.innerText = profile.nickname ? `Verify ${profile.nickname}'s Licence` : "Verify My Licence";
+    }
+  } else if (quickVerifyBtn) {
+    quickVerifyBtn.classList.add("hidden");
+  }
+
+  // Toggle Mode: Scan QR
   if (modeQrBtn && modeUrlBtn && qrBox && urlBox) {
     modeQrBtn.onclick = () => {
-      // Idempotency check: do nothing if QR box is already visible
-      if (!qrBox.classList.contains("hidden")) {
-        return;
-      }
+      // Idempotency check: do nothing if camera container is already visible
+      if (!qrBox.classList.contains("hidden")) return;
+      urlBox.classList.add("hidden");
+      qrBox.classList.remove("hidden");
       modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
       modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
-      qrBox.classList.remove("hidden");
-      urlBox.classList.add("hidden");
 
-      // Start Camera Stream inside Profile Scanner Box
-      startScanner("profile-qr-video", (decodedUrl) => {
-        stopScanner();
-        if (urlInput) urlInput.value = decodedUrl;
-        modeUrlBtn.click();
-        showProfileToast("Licence QR scanned successfully!");
-      });
+      startScanner((scannedUrl) => {
+        handleProfileQrScanned(scannedUrl);
+      }, showError, "profile-qr-video");
     };
 
+    // Toggle Mode: Paste URL
     modeUrlBtn.onclick = () => {
       stopScanner();
-      modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
-      modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
       qrBox.classList.add("hidden");
       urlBox.classList.remove("hidden");
+      modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
+      modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
     };
   }
 
-  // Stop Scan Button inside Profile Scanner
+  // Stop Scan button inside profile scanner
   if (stopScanBtn) {
     stopScanBtn.onclick = () => {
       stopScanner();
-      if (modeUrlBtn) modeUrlBtn.click();
+      if (qrBox) qrBox.classList.add("hidden");
+      if (urlBox) urlBox.classList.remove("hidden");
+      if (modeUrlBtn && modeQrBtn) {
+        modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
+        modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
+      }
     };
   }
 
-  // PDF File Input Handler
+  // PDF File Selection Handler
   if (pdfFileInput) {
     pdfFileInput.onchange = (e) => {
-      const file = e.target.files && e.target.files[0];
+      const file = e.target.files[0];
       if (file) {
         if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-          showProfileToast("Please select a valid PDF file.", "error");
+          showProfileToast("Please select a valid PDF attestation file.", true);
           return;
         }
         selectedAttestationFile = file;
         if (pdfLabel) pdfLabel.innerText = file.name;
-
         if (pdfStatusBadge && pdfStatusText) {
-          pdfStatusText.innerText = `✓ File "${file.name}" uploaded & ready to save`;
           pdfStatusBadge.classList.remove("hidden");
+          pdfStatusText.innerText = `✓ File "${file.name}" uploaded & ready to save`;
         }
       }
     };
   }
 
-  // Save Profile Handler
+  // Save Profile Handler (Uses smooth toast notification instead of browser alert)
   if (saveBtn) {
     saveBtn.onclick = () => {
-      const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (getProfileData().attestationFileName || "");
-      const newProfile = {
-        nickname: nicknameInput?.value || "",
-        url: urlInput?.value || "",
+      const nick = nicknameInput ? nicknameInput.value.trim() : "";
+      const urlVal = urlInput ? urlInput.value.trim() : "";
+      const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (profile.attestationFileName || "");
+
+      saveProfileData({
+        nickname: nick,
+        url: urlVal,
         attestationFileName: attestationName
-      };
-
-      saveProfileData(newProfile);
-
-      if (quickVerifyLabel) {
-        quickVerifyLabel.innerText = newProfile.nickname ? `Verify ${newProfile.nickname}'s Licence` : "Verify My Saved Licence";
-      }
+      });
 
       if (pdfStatusBadge && pdfStatusText && attestationName) {
-        pdfStatusText.innerText = `✓ Saved PDF: ${attestationName}`;
         pdfStatusBadge.classList.remove("hidden");
+        pdfStatusText.innerText = `✓ Saved PDF: ${attestationName}`;
       }
 
-      // In-app toast notification (no browser alert header)
       showProfileToast("Profile saved successfully!");
+
+      if (quickVerifyBtn) {
+        if (urlVal) {
+          quickVerifyBtn.classList.remove("hidden");
+          if (quickVerifyLabel) {
+            quickVerifyLabel.innerText = nick ? `Verify ${nick}'s Licence` : "Verify My Licence";
+          }
+        } else {
+          quickVerifyBtn.classList.add("hidden");
+        }
+      }
     };
   }
 
   // Clear Profile Handler
   if (clearBtn) {
     clearBtn.onclick = () => {
-      if (confirm("Are you sure you want to clear your saved profile details?")) {
+      if (confirm("Are you sure you want to clear your saved pilot profile?")) {
         clearProfileData();
         selectedAttestationFile = null;
         if (nicknameInput) nicknameInput.value = "";
         if (urlInput) urlInput.value = "";
         if (pdfLabel) pdfLabel.innerText = "Select PDF attestation file...";
         if (pdfStatusBadge) pdfStatusBadge.classList.add("hidden");
-        if (quickVerifyLabel) quickVerifyLabel.innerText = "Verify My Saved Licence";
+        if (quickVerifyBtn) quickVerifyBtn.classList.add("hidden");
         showProfileToast("Profile cleared.");
       }
     };
   }
 
-  // Quick Verification Label
-  if (quickVerifyLabel) {
-    quickVerifyLabel.innerText = profile.nickname ? `Verify ${profile.nickname}'s Licence` : "Verify My Saved Licence";
-  }
-
+  // Quick Verify Button Handler
   if (quickVerifyBtn) {
     quickVerifyBtn.onclick = () => {
-      const currentProfile = getProfileData();
-      if (!currentProfile.url) {
-        alert("No saved licence URL found. Please set your licence URL in My Pilot Profile first.");
-        return;
+      const updatedProfile = getProfileData();
+      if (updatedProfile.url) {
+        processLicenseUrl(updatedProfile.url);
+      } else {
+        showError("No saved licence URL found in your profile.");
       }
-      processLicenseUrl(currentProfile.url);
     };
   }
 }
 
+function handleProfileQrScanned(scannedUrl) {
+  stopScanner();
+  const urlInput = document.getElementById("profile-url-input");
+  const qrBox = document.getElementById("profile-qr-box");
+  const urlBox = document.getElementById("profile-url-box");
+  const modeQrBtn = document.getElementById("profile-mode-qr-btn");
+  const modeUrlBtn = document.getElementById("profile-mode-url-btn");
+
+  if (urlInput) urlInput.value = scannedUrl;
+  if (qrBox) qrBox.classList.add("hidden");
+  if (urlBox) urlBox.classList.remove("hidden");
+
+  if (modeUrlBtn && modeQrBtn) {
+    modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
+    modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
+  }
+
+  showProfileToast("QR Code Scanned Successfully!");
+}
+
+function showProfileToast(message, isError = false) {
+  const toast = document.getElementById("profile-toast");
+  const toastMsg = document.getElementById("profile-toast-msg");
+  if (!toast || !toastMsg) return;
+
+  toastMsg.innerText = message;
+  if (isError) {
+    toast.className = "mb-3 p-3 bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800 rounded-xl flex items-center gap-2 transition-all shadow-xs";
+  } else {
+    toast.className = "mb-3 p-3 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center gap-2 transition-all shadow-xs";
+  }
+  toast.classList.remove("hidden");
+
+  setTimeout(() => {
+    toast.classList.add("hidden");
+  }, 2500);
+}
+
 // ----------------------------------------------------
-// 2. MAIN APPLICATION INITIALIZATION
+// 2. SETTINGS & STORAGE PILL LISTENERS
+// ----------------------------------------------------
+function initSettingsUI() {
+  document.getElementById("theme-pill-light")?.addEventListener("click", () => applyThemeMode("light"));
+  document.getElementById("theme-pill-dark")?.addEventListener("click", () => applyThemeMode("dark"));
+  document.getElementById("theme-pill-system")?.addEventListener("click", () => applyThemeMode("system"));
+
+  document.getElementById("text-pill-std")?.addEventListener("click", () => applyTextSize("std"));
+  document.getElementById("text-pill-lg")?.addEventListener("click", () => applyTextSize("lg"));
+  document.getElementById("text-pill-xl")?.addEventListener("click", () => applyTextSize("xl"));
+
+  document.getElementById("threshold-pill-30")?.addEventListener("click", () => {
+    setThresholdDays(30);
+    updateThresholdPills(30);
+  });
+  document.getElementById("threshold-pill-60")?.addEventListener("click", () => {
+    setThresholdDays(60);
+    updateThresholdPills(60);
+  });
+  document.getElementById("threshold-pill-90")?.addEventListener("click", () => {
+    setThresholdDays(90);
+    updateThresholdPills(90);
+  });
+}
+
+function initStorageUI() {
+  document.getElementById("history-limit-10")?.addEventListener("click", () => {
+    setHistoryLimit(10);
+    updateHistoryLimitPills(10);
+  });
+  document.getElementById("history-limit-20")?.addEventListener("click", () => {
+    setHistoryLimit(20);
+    updateHistoryLimitPills(20);
+  });
+  document.getElementById("history-limit-30")?.addEventListener("click", () => {
+    setHistoryLimit(30);
+    updateHistoryLimitPills(30);
+  });
+
+  document.getElementById("freshness-limit-14")?.addEventListener("click", () => {
+    setFreshnessLimit(14);
+    updateFreshnessLimitPills(14);
+  });
+  document.getElementById("freshness-limit-30")?.addEventListener("click", () => {
+    setFreshnessLimit(30);
+    updateFreshnessLimitPills(30);
+  });
+
+  document.getElementById("storage-clear-history-btn")?.addEventListener("click", () => {
+    clearHistory();
+  });
+
+  document.getElementById("storage-reset-all-btn")?.addEventListener("click", () => {
+    if (confirm("Reset all application settings, profile data, and scan history?")) {
+      localStorage.clear();
+      location.reload();
+    }
+  });
+}
+
+// ----------------------------------------------------
+// 3. CORE APP ORCHESTRATION & URL PARSING
 // ----------------------------------------------------
 function initApp() {
-  updateNetworkStatus();
-  window.addEventListener("online", updateNetworkStatus);
-  window.addEventListener("offline", updateNetworkStatus);
+  renderHistoryList();
 
   const startScanBtn = document.getElementById("start-scan-btn");
   const stopScanBtn = document.getElementById("stop-scan-btn");
@@ -205,102 +309,78 @@ function initApp() {
   const scanNewBtn = document.getElementById("scan-new-btn");
   const openOriginalBtn = document.getElementById("open-original-btn");
 
-  if (startScanBtn) {
-    startScanBtn.onclick = () => {
-      startScanner("qr-video", (decodedUrl) => {
-        processLicenseUrl(decodedUrl);
-      });
-    };
+  if (startScanBtn) startScanBtn.addEventListener("click", () => startScanner(processLicenseUrl, showError));
+  if (stopScanBtn) stopScanBtn.addEventListener("click", stopScanner);
+  if (submitUrlBtn) submitUrlBtn.addEventListener("click", handleManualUrl);
+  if (scanNewBtn) scanNewBtn.addEventListener("click", showScannerView);
+  if (openOriginalBtn) openOriginalBtn.addEventListener("click", openOriginalLicense);
+
+  window.addEventListener("online", updateNetworkStatus);
+  window.addEventListener("offline", updateNetworkStatus);
+  updateNetworkStatus();
+
+  const profile = getProfileData();
+  const quickVerifyBtn = document.getElementById("verify-my-licence-btn");
+  const quickVerifyLabel = document.getElementById("verify-my-licence-label");
+
+  if (quickVerifyBtn && profile.url) {
+    quickVerifyBtn.classList.remove("hidden");
+    if (quickVerifyLabel) {
+      quickVerifyLabel.innerText = profile.nickname ? `Verify ${profile.nickname}'s Licence` : "Verify My Licence";
+    }
+  } else if (quickVerifyBtn) {
+    quickVerifyBtn.classList.add("hidden");
   }
-
-  if (stopScanBtn) {
-    stopScanBtn.onclick = () => stopScanner();
-  }
-
-  if (submitUrlBtn) {
-    submitUrlBtn.onclick = () => handleManualUrl();
-  }
-
-  if (scanNewBtn) {
-    scanNewBtn.onclick = () => showScannerView();
-  }
-
-  if (openOriginalBtn) {
-    openOriginalBtn.onclick = () => openOriginalLicense();
-  }
-
-  // Setup Storage Clear and Reset Buttons
-  const clearHistoryBtn = document.getElementById("storage-clear-history-btn");
-  const resetAllBtn = document.getElementById("storage-reset-all-btn");
-
-  if (clearHistoryBtn) {
-    clearHistoryBtn.onclick = () => clearHistory();
-  }
-
-  if (resetAllBtn) {
-    resetAllBtn.onclick = () => {
-      if (confirm("Are you sure you want to reset ALL application data, settings, and profile details?")) {
-        localStorage.clear();
-        location.reload();
-      }
-    };
-  }
-
-  renderHistoryList();
 }
 
 function handleManualUrl() {
   const urlInput = document.getElementById("manual-url-input");
-  const url = urlInput?.value.trim();
+  if (!urlInput) return;
+  const rawUrl = urlInput.value.trim();
 
-  if (!url) {
-    showError("Please enter a valid digital licence URL.");
+  if (!rawUrl) {
+    showError("Please enter a valid eCLIPSE licence URL.");
     return;
   }
-
-  processLicenseUrl(url);
+  processLicenseUrl(rawUrl);
 }
 
 function openOriginalLicense() {
   if (lastScannedUrl) {
-    window.open(lastScannedUrl, "_blank");
-  } else {
-    alert("No active licence URL found.");
+    window.open(lastScannedUrl, "_blank", "noopener,noreferrer");
   }
 }
 
-// ----------------------------------------------------
-// 3. CAAM & MAB LICENSE PROCESSING ENGINE
-// ----------------------------------------------------
-async function processLicenseUrl(url) {
-  lastScannedUrl = url;
+function processLicenseUrl(targetUrl) {
   stopScanner();
-  showLoading("Contacting CAAM eCLIPSE Server...");
+  showLoading("Fetching CAAM digital licence...");
 
-  try {
-    const fetchUrl = `${PROXY_URL}?url=${encodeURIComponent(url)}`;
-    const response = await fetch(fetchUrl);
+  let fetchUrl = targetUrl;
+  if (PROXY_URL && !targetUrl.startsWith(PROXY_URL)) {
+    fetchUrl = `${PROXY_URL}?url=${encodeURIComponent(targetUrl)}`;
+  }
 
-    if (!response.ok) {
-      throw new Error(`CAAM server returned status ${response.status}`);
-    }
+  fetch(fetchUrl)
+    .then(response => {
+      if (!response.ok) throw new Error("Failed to fetch digital licence from CAAM proxy.");
+      return response.text();
+    })
+    .then(htmlText => {
+      const domParser = new DOMParser();
+      const doc = domParser.parseFromString(htmlText, "text/html");
 
-    const htmlText = await response.text();
-    const domParser = new DOMParser();
-    const doc = domParser.parseFromString(htmlText, "text/html");
+      const scanTime = new Date().toLocaleString('en-GB', { 
+        day: '2-digit', month: 'short', year: 'numeric', 
+        hour: '2-digit', minute: '2-digit', hour12: false 
+      }).replace(', ', ', ').replace(' at ', ', ');
 
-    const scanTime = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
-      .replace(', ', ', ')
-      .replace(' at ', ', ')
-      .replace(',', ', ');
+      const threshold = getThresholdDays();
+      const caamResults = parseLicenseDOM(doc, threshold);
+      caamResults.scanTime = scanTime;
 
-    const threshold = getThresholdDays();
-    const caamResults = parseLicenseDOM(doc, threshold);
-    caamResults.scanTime = scanTime;
-
-    // Parse MAB Attestation data
-    const freshnessLimit = getFreshnessLimit();
-    const sampleMabText = `
+      // Sample MAB Attestation Text Structure
+      const freshnessLimit = getFreshnessLimit();
+      const sampleMabText = `
 Name : MOHD SALLEHUDDIN BIN ZAIDY
 Staff No : 2108337
 Designation : Captain.OPS - Flight Crew(FC)
@@ -317,22 +397,23 @@ CRM 6 May 2026 31 May 2027
 SMS 6 May 2026 31 May 2029
 FIRST AID 18 Mar 2008 NIL
 AVSEC 28 Jul 2026 30 Sep 2027
-DANGEROUS GOODS FUNCTION 7 21 May 2025 30 Jun 2027
-    `;
+DG FUNCTION 7 21 May 2025 30 Jun 2027
+`;
 
-    const mabResults = parseAttestationText(sampleMabText, freshnessLimit, threshold);
+      const mabResults = parseAttestationText(sampleMabText, freshnessLimit, threshold);
 
-    saveToHistory(caamResults, url);
-    renderResults(caamResults, mabResults);
-
-  } catch (err) {
-    console.error("Verification failed:", err);
-    showError(`Failed to fetch licence: ${err.message || err}`);
-  }
+      lastScannedUrl = targetUrl;
+      saveToHistory(caamResults, targetUrl);
+      renderResults(caamResults, mabResults);
+    })
+    .catch(err => {
+      console.error("Proxy fetch error:", err);
+      showError(`Unable to verify licence: ${err.message}`);
+    });
 }
 
 // ----------------------------------------------------
-// 4. UNIFIED DASHBOARD RENDERER (Overview | CAAM | MAB)
+// 4. UI DATA BINDING & RESULTS RENDERER
 // ----------------------------------------------------
 function renderResults(caamResults, mabResults = null) {
   const profile = getProfileData();
@@ -376,7 +457,6 @@ function renderResults(caamResults, mabResults = null) {
     }
   }
 
-  // Combined Readiness Hero
   if (heroTitle && heroBadge && heroMsg) {
     if (caamResults.overallStatus === "EXPIRED" || !isMabValid) {
       heroTitle.innerText = "Duty Restricted";
@@ -396,7 +476,6 @@ function renderResults(caamResults, mabResults = null) {
     }
   }
 
-  // Earliest Expiring Item Widget
   const earliestName = document.getElementById("overview-earliest-item-name");
   const earliestSub = document.getElementById("overview-earliest-item-sub");
   if (earliestName && earliestSub) {
@@ -532,9 +611,3 @@ window.loadHistoricalRecord = function(id) {
     renderResults(match.resultsData);
   }
 };
-
-document.addEventListener("DOMContentLoaded", () => {
-  initApp();
-  initNavigationBars();
-  initProfileUI();
-});
