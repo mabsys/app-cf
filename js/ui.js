@@ -322,6 +322,12 @@ export function initNavigationBars() {
   }
 
   const topbar = document.getElementById("persistent-topbar");
+  // Force topbar to start hidden on initial load/cache clear
+  if (topbar) {
+    topbar.style.transform = "translateY(-100%)";
+    topbar.style.opacity = "0";
+  }
+  
   const dock = document.getElementById("persistent-dock");
   const topbarHeight = 48;
   const dockMaxTravel = 80;
