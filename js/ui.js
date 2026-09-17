@@ -337,18 +337,16 @@ export function initNavigationBars() {
     lastClampedScrollY = clampedScrollY;
   }, { passive: true });
 
-  // Top bar
   document.getElementById("topbar-text-btn")?.addEventListener("click", cycleTextSize);
   document.getElementById("topbar-theme-btn")?.addEventListener("click", cycleThemeMode);
 
-  // Dock
   document.getElementById("dock-menu-btn")?.addEventListener("click", openMenu);
   document.getElementById("dock-scan-btn")?.addEventListener("click", showScannerView);
   document.getElementById("dock-dashboard-btn")?.addEventListener("click", () => {
     if (window.renderDashboardView) {
       window.renderDashboardView();
     } else {
-      showView("result-view");
+      showView("dashboard-view");
     }
   });
 
@@ -467,7 +465,10 @@ export function showView(viewId) {
   if (targetView) targetView.classList.remove("hidden");
 
   if (viewId === "result-view" || viewId === "dashboard-view") {
-    const savedTab = localStorage.getItem("certifly_active_tab") || "overview";
+    let savedTab = localStorage.getItem("certifly_active_tab") || "overview";
+    if (viewId === "dashboard-view" && typeof hasProfileData === "function" && !hasProfileData()) {
+      savedTab = "overview";
+    }
     switchResultTab(savedTab);
   }
 
@@ -531,20 +532,20 @@ export function switchResultTab(tabName = 'overview') {
   const inactiveClass = baseBtnClass + ' text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent';
 
   tabs.forEach(t => {
-    const btn = document.getElementById('res-tab-btn-' + t);
-    const pane = document.getElementById('tab-' + t + '-content');
+    const btns = document.querySelectorAll('#res-tab-btn-' + t);
+    const panes = document.querySelectorAll('#tab-' + t + '-content');
 
-    if (btn) {
+    btns.forEach(btn => {
       btn.className = (t === activeTab) ? activeClass : inactiveClass;
-    }
+    });
 
-    if (pane) {
+    panes.forEach(pane => {
       if (t === activeTab) {
         pane.classList.remove('hidden');
       } else {
         pane.classList.add('hidden');
       }
-    }
+    });
   });
 }
 
