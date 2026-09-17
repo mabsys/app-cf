@@ -1,7 +1,7 @@
 // js/ui.js - View State, Navigation, and Network Controller
 
 import { stopScanner } from './scanner.js';
-import { renderHistoryList, getThresholdDays, setThresholdDays, getHistoryLimit, setHistoryLimit, getFreshnessLimit, setFreshnessLimit } from './storage.js';
+import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit } from './storage.js';
 import { topbarHTML } from './components/topbar.js';
 import { dockHTML } from './components/dock.js';
 import { menuHTML } from './components/menu.js';
@@ -26,7 +26,6 @@ export function applyTextSize(size = currentTextSize) {
     topbarTextBtn.innerHTML = textSizeIcons[size] || textSizeIcons.std;
   }
 
-  // Highlight Text Scale Pill Buttons
   const tStd = document.getElementById("text-pill-std");
   const tLg = document.getElementById("text-pill-lg");
   const tXl = document.getElementById("text-pill-xl");
@@ -35,9 +34,9 @@ export function applyTextSize(size = currentTextSize) {
   const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent";
 
   if (tStd && tLg && tXl) {
-    tStd.className = `text-pill-btn py-2 px-2 text-xs rounded-lg transition-all flex items-center justify-center cursor-pointer ${size === "std" ? activeClass : inactiveClass}`;
-    tLg.className = `text-pill-btn py-2 px-2 text-xs rounded-lg transition-all flex items-center justify-center cursor-pointer ${size === "lg" ? activeClass : inactiveClass}`;
-    tXl.className = `text-pill-btn py-2 px-2 text-xs rounded-lg transition-all flex items-center justify-center cursor-pointer ${size === "xl" ? activeClass : inactiveClass}`;
+    tStd.className = `text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center ${size === "std" ? activeClass : inactiveClass}`;
+    tLg.className = `text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center ${size === "lg" ? activeClass : inactiveClass}`;
+    tXl.className = `text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center ${size === "xl" ? activeClass : inactiveClass}`;
   }
 
   document.documentElement.style.fontSize = "100%";
@@ -100,7 +99,6 @@ export function applyThemeMode(mode = currentThemeMode) {
     topbarBtn.innerHTML = themeSolidIcons[mode] || themeSolidIcons.system;
   }
 
-  // Highlight Theme Mode Pill Buttons
   const tLight = document.getElementById("theme-pill-light");
   const tDark = document.getElementById("theme-pill-dark");
   const tSys = document.getElementById("theme-pill-system");
@@ -109,9 +107,9 @@ export function applyThemeMode(mode = currentThemeMode) {
   const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent";
 
   if (tLight && tDark && tSys) {
-    tLight.className = `theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${mode === "light" ? activeClass : inactiveClass}`;
-    tDark.className = `theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${mode === "dark" ? activeClass : inactiveClass}`;
-    tSys.className = `theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${mode === "system" ? activeClass : inactiveClass}`;
+    tLight.className = `theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${mode === "light" ? activeClass : inactiveClass}`;
+    tDark.className = `theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${mode === "dark" ? activeClass : inactiveClass}`;
+    tSys.className = `theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${mode === "system" ? activeClass : inactiveClass}`;
   }
 
   const isDark = mode === "dark" || (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
@@ -136,9 +134,9 @@ export function updateThresholdPills(days = getThresholdDays()) {
   const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent";
 
   if (t30 && t60 && t90) {
-    t30.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${days === 30 ? activeClass : inactiveClass}`;
-    t60.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${days === 60 ? activeClass : inactiveClass}`;
-    t90.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${days === 90 ? activeClass : inactiveClass}`;
+    t30.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${days === 30 ? activeClass : inactiveClass}`;
+    t60.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${days === 60 ? activeClass : inactiveClass}`;
+    t90.className = `threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${days === 90 ? activeClass : inactiveClass}`;
   }
 }
 
@@ -150,8 +148,8 @@ export function updateFreshnessLimitPills(limit = getFreshnessLimit()) {
   const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent";
 
   if (f14 && f30) {
-    f14.className = `freshness-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${limit === 14 ? activeClass : inactiveClass}`;
-    f30.className = `freshness-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${limit === 30 ? activeClass : inactiveClass}`;
+    f14.className = `freshness-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 14 ? activeClass : inactiveClass}`;
+    f30.className = `freshness-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 30 ? activeClass : inactiveClass}`;
   }
 }
 
@@ -164,9 +162,9 @@ export function updateHistoryLimitPills(limit = getHistoryLimit()) {
   const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent";
 
   if (h10 && h20 && h30) {
-    h10.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${limit === 10 ? activeClass : inactiveClass}`;
-    h20.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${limit === 20 ? activeClass : inactiveClass}`;
-    h30.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all cursor-pointer ${limit === 30 ? activeClass : inactiveClass}`;
+    h10.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 10 ? activeClass : inactiveClass}`;
+    h20.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 20 ? activeClass : inactiveClass}`;
+    h30.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 30 ? activeClass : inactiveClass}`;
   }
 }
 
@@ -184,7 +182,6 @@ export function openMenu() {
 
   if (!menu || !overlay) return;
 
-  // Hide persistent dock while menu pane is active
   if (dock) {
     dock.style.transform = "translateY(120%)";
   }
@@ -192,7 +189,6 @@ export function openMenu() {
   overlay.classList.remove("hidden");
   menu.classList.remove("hidden");
 
-  // Sync all preference pill selections
   applyTextSize(currentTextSize);
   applyThemeMode(currentThemeMode);
   updateThresholdPills();
@@ -216,7 +212,7 @@ export function closeMenu() {
 
   if (!menu || !overlay) return;
 
-  stopScanner(); // Stop inline camera stream if running
+  stopScanner();
 
   overlay.classList.remove("opacity-100");
   overlay.classList.add("opacity-0");
@@ -239,7 +235,6 @@ export function closeMenu() {
       dock.style.transform = `translateY(${progress * dockMaxTravel}px)`;
     }
 
-    // Reset sub-panes to main
     const paneMain = document.getElementById("pane-main");
     const subPanes = document.querySelectorAll(".sub-pane");
     if (paneMain) {
@@ -322,12 +317,6 @@ export function initNavigationBars() {
   }
 
   const topbar = document.getElementById("persistent-topbar");
-  // Force topbar to start hidden on initial load/cache clear
-  if (topbar) {
-    topbar.style.transform = "translateY(-100%)";
-    topbar.style.opacity = "0";
-  }
-  
   const dock = document.getElementById("persistent-dock");
   const topbarHeight = 48;
   const dockMaxTravel = 80;
@@ -365,44 +354,8 @@ export function initNavigationBars() {
     lastClampedScrollY = clampedScrollY;
   }, { passive: true });
 
-  // Connect Top Bar toggle buttons
   document.getElementById("topbar-text-btn")?.addEventListener("click", cycleTextSize);
   document.getElementById("topbar-theme-btn")?.addEventListener("click", cycleThemeMode);
-
-  // Connect Menu Preference Pill Buttons DIRECTLY
-  document.getElementById("theme-pill-light")?.addEventListener("click", () => applyThemeMode("light"));
-  document.getElementById("theme-pill-dark")?.addEventListener("click", () => applyThemeMode("dark"));
-  document.getElementById("theme-pill-system")?.addEventListener("click", () => applyThemeMode("system"));
-
-  document.getElementById("text-pill-std")?.addEventListener("click", () => applyTextSize("std"));
-  document.getElementById("text-pill-lg")?.addEventListener("click", () => applyTextSize("lg"));
-  document.getElementById("text-pill-xl")?.addEventListener("click", () => applyTextSize("xl"));
-
-  document.getElementById("threshold-pill-30")?.addEventListener("click", () => {
-    setThresholdDays(30);
-    updateThresholdPills(30);
-  });
-  document.getElementById("threshold-pill-60")?.addEventListener("click", () => {
-    setThresholdDays(60);
-    updateThresholdPills(60);
-  });
-  document.getElementById("threshold-pill-90")?.addEventListener("click", () => {
-    setThresholdDays(90);
-    updateThresholdPills(90);
-  });
-
-  document.getElementById("history-limit-10")?.addEventListener("click", () => {
-    setHistoryLimit(10);
-    updateHistoryLimitPills(10);
-  });
-  document.getElementById("history-limit-20")?.addEventListener("click", () => {
-    setHistoryLimit(20);
-    updateHistoryLimitPills(20);
-  });
-  document.getElementById("history-limit-30")?.addEventListener("click", () => {
-    setHistoryLimit(30);
-    updateHistoryLimitPills(30);
-  });
 
   document.getElementById("freshness-limit-14")?.addEventListener("click", () => {
     setFreshnessLimit(14);
@@ -413,10 +366,15 @@ export function initNavigationBars() {
     updateFreshnessLimitPills(30);
   });
 
-  // Connect Dock buttons
   document.getElementById("dock-menu-btn")?.addEventListener("click", openMenu);
   document.getElementById("dock-scan-btn")?.addEventListener("click", showScannerView);
-  document.getElementById("dock-dashboard-btn")?.addEventListener("click", () => showView("result-view"));
+  document.getElementById("dock-dashboard-btn")?.addEventListener("click", () => {
+    if (typeof window.renderDashboardView === "function") {
+      window.renderDashboardView();
+    } else {
+      showView("result-view");
+    }
+  });
   document.getElementById("dock-history-btn")?.addEventListener("click", () => {
     const historyDetails = document.getElementById("history-details");
     if (historyDetails) {
@@ -428,10 +386,8 @@ export function initNavigationBars() {
     }
   });
 
-  // Attach overlay close listener
   document.getElementById("bottom-sheet-overlay")?.addEventListener("click", closeMenu);
 
-  // Subpane Navigation logic inside menu sheet
   document.addEventListener("click", (e) => {
     const navBtn = e.target.closest(".nav-item-btn");
     if (navBtn) {
