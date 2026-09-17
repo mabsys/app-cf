@@ -151,7 +151,7 @@ if ('serviceWorker' in navigator) {
     </div>
 
     <!-- RESULT VIEW (Unified Summary Dashboard + Dual Tabs) -->
-<div id="result-view" class="app-view hidden flex flex-col gap-4">
+<div id="dashboard-view" class="app-view hidden flex flex-col gap-4">
 
   <!-- 1. MANDATORY OPERATIONAL DISCLAIMER BANNER -->
   <div class="bg-amber-500/10 border-l-4 border-amber-500 p-3.5 rounded-r-2xl shadow-xs text-amber-950 dark:text-amber-200">
@@ -443,16 +443,83 @@ if ('serviceWorker' in navigator) {
 
   </div>
 
-  <!-- 4. BOTTOM ACTION BUTTON (Scan Another QR) -->
-  <div class="mt-1">
-    <button id="scan-new-btn" type="button" class="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-extrabold py-3.5 rounded-2xl transition duration-150 text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
-      Scan Another QR Code
-    </button>
-  </div>
-
 </div>
 
+  <!-- RESULT VIEW -->
+    <div id="result-view" class="app-view hidden flex flex-col gap-4">
+      <div class="bg-red-50 rounded-2xl p-4 text-center border border-red-400 shadow-sm">
+        <div class="text-xs font-black text-red-600 uppercase tracking-wide">REMINDER: ALWAYS RE-CHECK AND VERIFY!<br>MANUAL CROSS-CHECKING IS <span class="underline">MANDATORY</span></div>
+      </div>
+
+      <div class="bg-white shadow-lg rounded-3xl p-6 border border-slate-100 text-center flex flex-col items-center">
+        <div id="result-header" class="text-lg font-black tracking-normal uppercase">-</div>
+        <div id="overall-status-badge" class="status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-xs tracking-wider mt-4 shadow-md">
+          -
+        </div>
+        <p id="overall-message" class="text-[13px] text-slate-500 mt-4 max-w-xs mx-auto leading-relaxed hidden">-</p>
+        <p class="text-[11px] text-slate-500 uppercase tracking-wide pt-4 rounded-md">Last Checked: <span id="scan-timestamp" class="text-slate-800 font-extrabold text-[11px]">--:--</span></p>
+      </div>
+
+      <div class="bg-white shadow-lg rounded-3xl p-5 border border-slate-100 flex flex-col gap-4">
+        <div class="border-b border-slate-100 pb-2">
+          <span class="text-slate-500 text-xxs uppercase tracking-wider font-extrabold flex items-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5 text-slate-400 shrink-0">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z" />
+            </svg>
+            PILOT CREDENTIALS
+          </span>
+        </div>
+
+        <div class="flex flex-col gap-3">
+          <div>
+            <span class="text-[10px] text-slate-400 uppercase tracking-wide font-semibold block">Full Name</span>
+            <span id="pilot-name" class="font-bold text-slate-900 text-base">-</span>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <span class="text-[10px] text-slate-400 uppercase tracking-wide font-semibold block">Licence Type</span>
+              <span id="licence-type" class="font-bold text-slate-900 text-sm">-</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 uppercase tracking-wide font-semibold block">Licence Number</span>
+              <span id="licence-number" class="font-bold text-slate-900 text-sm">-</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white shadow-lg rounded-3xl p-5 border border-slate-100 flex flex-col gap-4">
+        <div class="border-b border-slate-100 pb-2 flex justify-between items-center">
+          <span class="text-slate-500 text-xxs uppercase tracking-wider font-extrabold flex items-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5 text-slate-400 shrink-0">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+            </svg>
+            VALIDITIES & CERTIFICATIONS
+          </span>
+          <span id="checker-status-badge" class="text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md font-bold uppercase transition-all duration-300 ease-in-out">Checker Active</span>
+        </div>
+
+        <div id="qualifications-list" class="flex flex-col divide-y divide-slate-100">
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2 mt-2">
+        <button id="open-original-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl transition duration-150 text-xs uppercase tracking-wider shadow-md flex items-center justify-center gap-2">
+          Proceed to Licence Page
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 animate-horizontal-bounce shrink-0">
+            <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm4.28 10.28a.75.75 0 0 0 0-1.06l-3-3a.75.75 0 1 0-1.06 1.06l1.72 1.72H8.25a.75.75 0 0 0 0 1.5h5.69l-1.72 1.72a.75.75 0 1 0 1.06 1.06l3-3Z" clip-rule="evenodd" />
+          </svg>
+        </button>
+
+        <button id="scan-new-btn" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-bold py-4 rounded-2xl transition duration-150 text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+          Scan Another QR Code
+        </button>
+      </div>
+    </div>
+
+
+    
     
   </main>
 
