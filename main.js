@@ -45,13 +45,22 @@ function showProfileToast(msg = "Profile saved successfully!", isError = false) 
 }
 
 function updateProfileUrlBadge(urlStr) {
-  const urlBadge = document.getElementById("profile-url-status-badge");
-  const urlText = document.getElementById("profile-url-status-text");
+  const urlBadge = document.getElementById("profile-url-status-badge") || document.getElementById("profile-url-badge");
+  const urlText = document.getElementById("profile-url-status-text") || document.getElementById("profile-url-badge-text");
   if (!urlBadge) return;
 
-  if (urlStr && (urlStr.includes("caam") || urlStr.includes("eclipse") || urlStr.startsWith("http"))) {
+  const cleanUrl = urlStr ? urlStr.trim() : "";
+
+  if (cleanUrl) {
     urlBadge.classList.remove("hidden");
-    if (urlText) urlText.innerText = "✓ Valid CAAM Licence URL captured";
+    if (urlText) {
+      const storedProfile = getProfileData();
+      if (storedProfile && storedProfile.url && cleanUrl === storedProfile.url.trim()) {
+        urlText.innerText = "Stored licence URL";
+      } else {
+        urlText.innerText = "Valid CAAM licence URL captured";
+      }
+    }
   } else {
     urlBadge.classList.add("hidden");
   }
@@ -76,18 +85,21 @@ function initProfileUI() {
   const quickVerifyLabel = document.getElementById("verify-my-licence-label");
   const stopScanBtn = document.getElementById("profile-stop-qr-btn") || document.getElementById("profile-stop-scan-btn");
 
-  if (nicknameInput) nicknameInput.value = profile.nickname || "";
+  if (nicknameInput) {
+    nicknameInput.value = profile.nickname || "";
+    nicknameInput.placeholder = profile.nickname || "e.g Maverick";
+  }
   if (urlInput) urlInput.value = profile.url || "";
   if (pdfLabel) pdfLabel.innerText = profile.attestationFileName || "Select PDF attestation file...";
 
   updateProfileUrlBadge(profile.url || "");
 
-  const pdfBadge = document.getElementById("profile-pdf-status-badge");
-  const pdfStatusText = document.getElementById("profile-pdf-status-text");
+  const pdfBadge = document.getElementById("profile-pdf-status-badge") || document.getElementById("profile-pdf-badge");
+  const pdfStatusText = document.getElementById("profile-pdf-status-text") || document.getElementById("profile-pdf-badge-text");
   if (pdfBadge) {
     if (profile.attestationFileName) {
       pdfBadge.classList.remove("hidden");
-      if (pdfStatusText) pdfStatusText.innerText = `✓ Saved PDF: ${profile.attestationFileName}`;
+      if (pdfStatusText) pdfStatusText.innerText = "Stored attestation PDF file";
     } else {
       pdfBadge.classList.add("hidden");
     }
@@ -166,7 +178,7 @@ function initProfileUI() {
     pdfFileInput.onchange = (e) => {
       const file = e.target.files && e.target.files[0];
       if (file) {
-        if (file.type !== "application/pdf") {
+        if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
           showProfileToast("Please select a valid PDF file.", true);
           return;
         }
@@ -174,7 +186,7 @@ function initProfileUI() {
         if (pdfLabel) pdfLabel.innerText = file.name;
         if (pdfBadge) {
           pdfBadge.classList.remove("hidden");
-          if (pdfStatusText) pdfStatusText.innerText = `✓ File "${file.name}" uploaded & ready to save`;
+          if (pdfStatusText) pdfStatusText.innerText = "File uploaded and ready to save";
         }
       }
     };
@@ -191,6 +203,17 @@ function initProfileUI() {
         url: url,
         attestationFileName: attestationName
       });
+
+      if (nicknameInput) {
+        nicknameInput.placeholder = nickname || "e.g Maverick";
+      }
+
+      if (pdfBadge && attestationName) {
+        pdfBadge.classList.remove("hidden");
+        if (pdfStatusText) pdfStatusText.innerText = "Stored attestation PDF file";
+      }
+
+      updateProfileUrlBadge(url);
 
       if (quickVerifyBtn) {
         if (url) {
@@ -212,7 +235,10 @@ function initProfileUI() {
       if (confirm("Clear saved crew profile data from this device?")) {
         clearProfileData();
         selectedAttestationFile = null;
-        if (nicknameInput) nicknameInput.value = "";
+        if (nicknameInput) {
+          nicknameInput.value = "";
+          nicknameInput.placeholder = "e.g Maverick";
+        }
         if (urlInput) urlInput.value = "";
         if (pdfLabel) pdfLabel.innerText = "Select PDF attestation file...";
         if (quickVerifyBtn) quickVerifyBtn.classList.add("hidden");
