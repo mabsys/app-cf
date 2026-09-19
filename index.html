@@ -384,19 +384,20 @@ if ('serviceWorker' in navigator) {
 
         <!-- LVO Autoland Card -->
         <div id="mab-lvo-box" class="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-md flex flex-col gap-4">
+  <div id="mab-lvo-box" class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-md flex flex-col gap-3">
   
-  <!-- 1. FULL-WIDTH HEADER: Top Section -->
-  <div class="w-full bg-slate-50 dark:bg-slate-800/50 px-3 py-2 rounded-xl border border-slate-100 dark:border-slate-800 flex justify-between items-center">
+  <!-- 1. CORRECTED HEADER: Clean text with full-width bottom border line -->
+  <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
     <span class="text-slate-500 text-[10px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
       <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
       </svg>
       LVO AUTOLAND
     </span>
   </div>
 
   <!-- 2. CONTENT WRAPPER: Multi-column Metadata Grid + Right Badge -->
-  <div class="flex items-center justify-between gap-4">
+  <div class="flex items-center justify-between gap-4 pt-1">
     
     <!-- Left Column: Unified Metadata Grid Layout -->
     <div class="flex-1 flex flex-col gap-3">
@@ -413,6 +414,11 @@ if ('serviceWorker' in navigator) {
           <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">Type</span>
           <strong id="mab-lvo-badge" class="text-slate-900 dark:text-slate-100 font-bold text-xs">Actual</strong>
         </div>
+        <!-- Category Item -->
+        <div class="flex flex-col gap-0.5">
+          <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">CAT</span>
+          <strong id="mab-lvo-cat" class="text-slate-800 dark:text-slate-200 font-bold text-[11px]">III</strong>
+        </div>  
       </div>
       
       <!-- 2nd Row (Stacked Columns) -->
@@ -422,30 +428,26 @@ if ('serviceWorker' in navigator) {
           <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">Sim</span>
           <strong id="mab-lvo-sim" class="text-slate-800 dark:text-slate-200 font-bold text-[11px]">SIM2TEW</strong>
         </div>
-        <!-- Category Item -->
-        <div class="flex flex-col gap-0.5">
-          <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">Category</span>
-          <strong id="mab-lvo-cat" class="text-slate-800 dark:text-slate-200 font-bold text-[11px]">III</strong>
-        </div>
+      
         <!-- DFE No Item -->
         <div class="flex flex-col gap-0.5">
           <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">DFE No</span>
           <strong id="mab-lvo-dfe" class="text-slate-800 dark:text-slate-200 font-bold text-[11px]">DFE 11635</strong>
         </div>
       </div>
-
     </div>
 
     <!-- Right Column: Merged Rightmost Badge (Stacked Vertically) -->
     <div class="shrink-0 flex items-center justify-center">
       <div class="px-3 py-2 rounded-xl bg-blue-100 dark:bg-blue-950/70 uppercase shadow-xs flex flex-col items-center leading-none min-w-[70px]">
-        <span id="mab-lvo-airport" class="text-blue-700 dark:text-slate-100 font-black text-lg tracking-wide">VIDP</span>
-        <span id="mab-lvo-runway" class="text-blue-600 dark:text-blue-300 font-extrabold text-xs mt-1">28</span>
+        <span id="mab-lvo-airport" class="text-blue-700 dark:text-slate-100 font-semibold text-lg tracking-wide">VIDP</span>
+        <span id="mab-lvo-runway" class="text-blue-600 dark:text-blue-300 font-black text-3xl mt-1">28</span>
       </div>
     </div>
-
   </div>
 </div>
+
+          
        <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
         <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
           <span class="text-slate-500 text-[10px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
