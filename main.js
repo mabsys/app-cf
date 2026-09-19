@@ -12,7 +12,7 @@ import { startScanner, stopScanner } from './js/scanner.js';
 import {
   updateNetworkStatus, showScannerView, showLoading, showError, showView,
   initNavigationBars, closeMenu, applyThemeMode, applyTextSize, updateThresholdPills,
-  updateHistoryLimitPills, updateFreshnessLimitPills, switchResultTab, openMenu
+  updateHistoryLimitPills, updateFreshnessLimitPills, switchResultTab, openProfileMenu, openMenu
 } from './js/ui.js';
 
 let lastScannedUrl = "";
@@ -512,10 +512,10 @@ DG FUNCTION 7 21 May 2025 30 Jun 2027
 }
 
 function renderBlankDashboard() {
-  const dashView = document.getElementById("dashboard-view");
-  if (!dashView) return;
+  const dashboardView = document.getElementById("dashboard-view");
+  if (!dashboardView) return;
 
-  const overviewPane = dashView.querySelector("#tab-overview-content") || document.getElementById("tab-overview-content");
+  const overviewPane = dashboardView.querySelector("#tab-overview-content") || document.getElementById("tab-overview-content");
   if (overviewPane) {
     overviewPane.innerHTML = `
       <div class="bg-white dark:bg-slate-900 shadow-lg rounded-3xl p-8 border border-slate-100 dark:border-slate-800 text-center flex flex-col items-center gap-3">
@@ -526,27 +526,12 @@ function renderBlankDashboard() {
         <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-xs mx-auto">
           Please set up your digital licence URL and company attestation PDF in <strong>My Profile</strong> to activate your flight duty compliance dashboard.
         </p>
-        <button onclick="openMenu(); setTimeout(() => { const nav = document.querySelector('[data-target=pane-profile]'); if(nav) nav.click(); }, 150);" type="button" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase py-3 px-6 rounded-2xl transition-all shadow-md flex items-center gap-2 cursor-pointer">
+        <button onclick="if(window.openProfileMenu) window.openProfileMenu(); else if(window.openMenu) window.openMenu();" type="button" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase py-3 px-6 rounded-2xl transition-all shadow-md flex items-center gap-2 cursor-pointer">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
           <span>Set Up Profile</span>
         </button>
       </div>
     `;
-  }
-
-  const caamPane = dashView.querySelector("#tab-caam-content");
-  if (caamPane) {
-    caamPane.innerHTML = `<div class="text-center text-slate-400 py-8 text-xs font-semibold">Please configure your profile in <strong>My Profile</strong> settings to view CAAM Licence details.</div>`;
-  }
-
-  const mabPane = dashView.querySelector("#tab-mab-content");
-  if (mabPane) {
-    mabPane.innerHTML = `<div class="text-center text-slate-400 py-8 text-xs font-semibold">Please upload your attestation PDF in <strong>My Profile</strong> settings to view MAB Attestation details.</div>`;
-  }
-
-  localStorage.setItem('certifly_active_tab', 'overview');
-  if (typeof switchResultTab === 'function') {
-    switchResultTab('overview');
   }
 
   showView("dashboard-view");
