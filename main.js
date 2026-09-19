@@ -324,8 +324,7 @@ function initProfileUI() {
       }
 
       showProfileToast("Crew credentials saved successfully!");
-      alert("Crew credentials saved successfully!");
-
+      closeMenu();
       showLoading("Processing licence & attestation for Dashboard...");
 
       try {
@@ -338,8 +337,6 @@ function initProfileUI() {
       } catch (err) {
         console.error("Error processing profile data on save:", err);
         renderDashboardView();
-      } finally {
-        closeMenu();
       }
     };
   }
@@ -498,9 +495,12 @@ async function processAndCacheProfileData(url, pdfFile) {
   let mabResults = null;
 
   if (url && isValidCaamUrl(url)) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
     try {
       const fetchUrl = `${PROXY_URL}?url=${encodeURIComponent(url)}`;
-      const response = await fetch(fetchUrl);
+      const response = await fetch(fetchUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
       if (response.ok) {
         const htmlText = await response.text();
         const parser = new DOMParser();
@@ -509,6 +509,7 @@ async function processAndCacheProfileData(url, pdfFile) {
         caamResults.scanTime = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).replace(',', ', ');
       }
     } catch (e) {
+      clearTimeout(timeoutId);
       console.warn("Could not fetch CAAM profile URL live:", e);
     }
   }
@@ -564,9 +565,13 @@ async function processLicenseUrl(url) {
     hour: '2-digit', minute: '2-digit', hour12: false
   }).replace(',', ', ');
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 7000);
+
   try {
     const fetchUrl = `${PROXY_URL}?url=${encodeURIComponent(url)}`;
-    const response = await fetch(fetchUrl);
+    const response = await fetch(fetchUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
     if (!response.ok) {
       throw new Error(`Failed to fetch license page (Status: ${response.status})`);
     }
