@@ -119,7 +119,7 @@ export const menuHTML = `
             <div id="profile-url-box" class="flex flex-col gap-2">
               <input type="url" id="profile-url-input" placeholder="https://eclipse.caam.gov.my/ELICENSING/..." class="w-full p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
               <div id="profile-url-badge" class="hidden text-[10px] text-emerald-600 font-extrabold flex items-center gap-1 mt-0.5">
-                <span>✓ Valid CAAM Licence URL captured</span>
+                <span id="profile-url-status-text">✓ Valid CAAM Licence URL captured</span>
               </div>
               <p class="text-[9px] text-slate-400">Paste your official eCLIPSE URL directly if QR camera scanning is unavailable.</p>
             </div>
@@ -137,7 +137,7 @@ export const menuHTML = `
             <input type="file" id="profile-pdf-file" accept=".pdf" class="hidden">
           </div>
           <div id="profile-pdf-badge" class="hidden text-[10px] text-emerald-600 font-extrabold flex items-center gap-1 mt-1">
-            <span>✓ File uploaded & ready to save</span>
+            <span id="profile-pdf-status-text">✓ Valid Attestation PDF file</span>
           </div>
           <p class="text-[9px] text-slate-400 mt-1">Upload MAB company attestations PDF for compliance checks on Dashboard.</p>
         </div>
@@ -167,9 +167,9 @@ export const menuHTML = `
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
           <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Appearance Theme</label>
           <div class="grid grid-cols-3 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
-            <button id="theme-pill-light" type="button" class="theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">Light</button>
+            <button id="theme-pill-light" type="button" class="theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow-xs">Light</button>
             <button id="theme-pill-dark" type="button" class="theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">Dark</button>
-            <button id="theme-pill-system" type="button" class="theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow-xs">System</button>
+            <button id="theme-pill-system" type="button" class="theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">System</button>
           </div>
         </div>
 
