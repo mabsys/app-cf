@@ -24,7 +24,15 @@ async function extractTextFromPdfFile(file) {
   if (!file) return "";
   if (window.pdfjsLib) {
     try {
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
+        try {
+          const workerUrl = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+          const blob = new Blob([`importScripts("${workerUrl}");`], { type: "application/javascript" });
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
+        } catch (e) {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        }
+      }
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
       let fullText = "";
@@ -34,15 +42,22 @@ async function extractTextFromPdfFile(file) {
         const pageText = textContent.items.map(item => item.str).join(" ");
         fullText += pageText + "\n";
       }
-      if (fullText.trim()) return fullText;
+      if (fullText.trim().length > 20) return fullText;
     } catch (e) {
-      console.warn("pdfjsLib extraction failed, falling back to text stream:", e);
+      console.warn("pdfjsLib extraction failed, falling back to text stream scanner:", e);
     }
   }
   try {
     const arrayBuffer = await file.arrayBuffer();
-    const text = new TextDecoder("latin1").decode(arrayBuffer);
-    return text;
+    const rawText = new TextDecoder("latin1").decode(arrayBuffer);
+    const matches = rawText.match(/\(([^()]{2,100})\)/g);
+    if (matches && matches.length > 0) {
+      const extractedStr = matches.map(m => m.slice(1, -1)).join(" ");
+      if (extractedStr.trim().length > 20) {
+        return rawText + "\n" + extractedStr;
+      }
+    }
+    return rawText;
   } catch (err) {
     console.error("TextDecoder failed:", err);
     return "";
@@ -751,10 +766,12 @@ function renderDashboardResults(caamResults, mabResults = null) {
     }
   }
 
-  // Hide open-original-btn in CAAM tab if profile is stored/loaded
+  // Hide open-original-btn in CAAM tab if profile is stored/loaded, or if nil info / no credentials
   const openOriginalBtn = getDashEl("open-original-btn");
   if (openOriginalBtn) {
-    if (hasProfileData()) {
+    const hasStoredCredentials = hasProfileData();
+    const hasValidCaamData = caamResults && caamResults.pilotDetails && caamResults.pilotDetails.licenseNo && caamResults.pilotDetails.licenseNo !== "-";
+    if (hasStoredCredentials || !hasValidCaamData || !lastScannedUrl) {
       openOriginalBtn.classList.add("hidden");
     } else {
       openOriginalBtn.classList.remove("hidden");
