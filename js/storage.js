@@ -159,10 +159,9 @@ export function renderHistoryList() {
 export function getProfileData() {
   try {
     const data = localStorage.getItem(PROFILE_KEY);
-    if (!data) return { nickname: "", url: "", attestationFileName: "", cachedCaamResults: null, cachedMabResults: null, qrImageUrl: "" };
+    if (!data) return { url: "", attestationFileName: "", cachedCaamResults: null, cachedMabResults: null, qrImageUrl: "" };
     const parsed = JSON.parse(data);
     return {
-      nickname: (parsed.nickname || parsed.name || "").trim(),
       url: (parsed.url || "").trim(),
       attestationFileName: (parsed.attestationFileName || "").trim(),
       cachedCaamResults: parsed.cachedCaamResults || null,
@@ -171,7 +170,7 @@ export function getProfileData() {
     };
   } catch (err) {
     console.error("Failed to read profile data from storage:", err);
-    return { nickname: "", url: "", attestationFileName: "", cachedCaamResults: null, cachedMabResults: null, qrImageUrl: "" };
+    return { url: "", attestationFileName: "", cachedCaamResults: null, cachedMabResults: null, qrImageUrl: "" };
   }
 }
 
@@ -179,7 +178,7 @@ export function saveProfileData(profile = {}) {
   try {
     const existing = getProfileData();
     const sanitized = {
-      nickname: profile.nickname !== undefined ? (profile.nickname || profile.name || "").trim() : existing.nickname,
+      
       url: profile.url !== undefined ? (profile.url || "").trim() : existing.url,
       attestationFileName: profile.attestationFileName !== undefined ? (profile.attestationFileName || "").trim() : existing.attestationFileName,
       cachedCaamResults: profile.cachedCaamResults !== undefined ? profile.cachedCaamResults : existing.cachedCaamResults,
