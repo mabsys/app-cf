@@ -209,23 +209,44 @@ function initProfileUI() {
 
   if (pdfFileInput) {
     pdfFileInput.onchange = async (e) => {
+      selectedAttestationFile = null;
+      selectedAttestationText = "";
+
       const file = e.target.files && e.target.files[0];
-      if (!file) return;
+      const currentProfile = getProfileData();
+
+      const resetToStoredOrEmpty = () => {
+        pdfFileInput.value = "";
+        if (pdfLabel) {
+          pdfLabel.innerText = currentProfile.attestationFileName || "Select PDF attestation file...";
+        }
+        if (pdfStatusBadge && pdfStatusText) {
+          if (currentProfile.attestationFileName) {
+            pdfStatusBadge.classList.remove("hidden");
+            pdfStatusText.innerText = "✓ Stored Attestation PDF file";
+          } else {
+            pdfStatusBadge.classList.add("hidden");
+          }
+        }
+      };
+
+      if (!file) {
+        resetToStoredOrEmpty();
+        return;
+      }
 
       // Tier 1: Magic Bytes Check (%PDF-)
       try {
         const buffer = await file.slice(0, 5).arrayBuffer();
         const header = new TextDecoder().decode(buffer);
         if (header !== "%PDF-") {
-          alert("Invalid File Format: Please upload a valid PDF document.");
-          pdfFileInput.value = "";
-          if (pdfLabel) pdfLabel.innerText = "Select PDF attestation file...";
-          if (pdfStatusBadge) pdfStatusBadge.classList.add("hidden");
+          alert("Invalid File Format: Selected file is not a valid PDF document.");
+          resetToStoredOrEmpty();
           return;
         }
       } catch (err) {
         alert("Failed to read file header. Please try again.");
-        pdfFileInput.value = "";
+        resetToStoredOrEmpty();
         return;
       }
 
@@ -236,14 +257,13 @@ function initProfileUI() {
 
         if (!validation.isValid) {
           alert(`Validation Failed: ${validation.reason}`);
-          pdfFileInput.value = "";
-          if (pdfLabel) pdfLabel.innerText = "Select PDF attestation file...";
-          if (pdfStatusBadge) pdfStatusBadge.classList.add("hidden");
+          resetToStoredOrEmpty();
           return;
         }
 
         selectedAttestationFile = file;
         selectedAttestationText = extractedText;
+
         if (pdfLabel) pdfLabel.innerText = file.name;
         if (pdfStatusBadge && pdfStatusText) {
           pdfStatusBadge.classList.remove("hidden");
@@ -252,7 +272,7 @@ function initProfileUI() {
         showProfileToast("MAB Attestation PDF verified!");
       } catch (err) {
         alert("Could not process PDF contents. Please ensure the file is not corrupted or password-protected.");
-        pdfFileInput.value = "";
+        resetToStoredOrEmpty();
       }
     };
   }
@@ -291,13 +311,21 @@ function initProfileUI() {
       showProfileToast("Crew profile saved successfully!");
       alert("Crew profile saved successfully!");
 
-      if (urlVal || selectedAttestationFile || attestationName) {
-        showLoading("Processing licence & attestation for Dashboard...");
-        await processAndCacheProfileData(urlVal, selectedAttestationFile);
-      }
+      showLoading("Processing licence & attestation for Dashboard...");
 
-      closeMenu();
-      renderDashboardView();
+      try {
+        const res = await processAndCacheProfileData(urlVal, selectedAttestationFile);
+        if (res && (res.caamResults || res.mabResults)) {
+          renderDashboardResults(res.caamResults, res.mabResults);
+        } else {
+          renderDashboardView();
+        }
+      } catch (err) {
+        console.error("Error processing profile data on save:", err);
+        renderDashboardView();
+      } finally {
+        closeMenu();
+      }
     };
   }
 
