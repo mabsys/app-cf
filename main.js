@@ -119,7 +119,7 @@ function updateProfileUrlBadge(urlStr) {
   }
 }
 
-function showProfileToast(msg = "Crew profile saved successfully!") {
+function showProfileToast(msg = "Crew credentials saved successfully!") {
   const toast = document.getElementById("profile-toast");
   const toastMsg = document.getElementById("profile-toast-msg");
   if (toast) {
@@ -323,8 +323,8 @@ function initProfileUI() {
         pdfStatusText.innerText = "✓ Stored Attestation PDF file";
       }
 
-      showProfileToast("Crew profile saved successfully!");
-      alert("Crew profile saved successfully!");
+      showProfileToast("Crew credentials saved successfully!");
+      alert("Crew credentials saved successfully!");
 
       showLoading("Processing licence & attestation for Dashboard...");
 
@@ -356,7 +356,7 @@ function initProfileUI() {
         if (pdfLabel) pdfLabel.innerText = "Select PDF attestation file...";
         if (urlStatusBadge) urlStatusBadge.classList.add("hidden");
         if (pdfStatusBadge) pdfStatusBadge.classList.add("hidden");
-        showProfileToast("Profile cleared successfully.");
+        showProfileToast("Credentials cleared successfully.");
         renderDashboardView();
       }
     };
@@ -614,18 +614,31 @@ DG FUNCTION 7 21 May 2025 30 Jun 2027
 }
 
 let initialOverviewTemplateHTML = "";
+let initialCaamTemplateHTML = "";
+let initialMabTemplateHTML = "";
 
-function saveOverviewTemplate() {
-  if (initialOverviewTemplateHTML) return;
+function saveDashboardTemplates() {
   const dashView = document.getElementById("dashboard-view");
-  const overviewPane = dashView ? (dashView.querySelector("#tab-overview-content") || document.getElementById("tab-overview-content")) : null;
-  if (overviewPane && overviewPane.querySelector("#overview-status-title")) {
+  if (!dashView) return;
+
+  const overviewPane = dashView.querySelector("#tab-overview-content") || document.getElementById("tab-overview-content");
+  if (overviewPane && !initialOverviewTemplateHTML && overviewPane.querySelector("#overview-status-title")) {
     initialOverviewTemplateHTML = overviewPane.innerHTML;
+  }
+
+  const caamPane = dashView.querySelector("#tab-caam-content") || document.getElementById("tab-caam-content");
+  if (caamPane && !initialCaamTemplateHTML && caamPane.querySelector("#pilot-name")) {
+    initialCaamTemplateHTML = caamPane.innerHTML;
+  }
+
+  const mabPane = dashView.querySelector("#tab-mab-content") || document.getElementById("tab-mab-content");
+  if (mabPane && !initialMabTemplateHTML && mabPane.querySelector("#mab-pilot-name")) {
+    initialMabTemplateHTML = mabPane.innerHTML;
   }
 }
 
 function renderBlankDashboard() {
-  saveOverviewTemplate();
+  saveDashboardTemplates();
 
   const dashboardView = document.getElementById("dashboard-view");
   if (!dashboardView) return;
@@ -637,13 +650,51 @@ function renderBlankDashboard() {
         <div class="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mb-1">
           <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
         </div>
-        <h3 class="text-base font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">No Crew Profile Configured</h3>
+        <h3 class="text-base font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">No Duty Credentials Saved</h3>
         <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-xs mx-auto">
-          Please set up your digital licence URL and company attestation PDF in <strong>My Profile</strong> to activate your flight duty compliance dashboard.
+          Please set up your digital licence URL and company attestation PDF in <strong>My Credentials</strong> to activate your flight duty compliance dashboard.
         </p>
         <button onclick="if(window.openProfileMenu) window.openProfileMenu(); else if(window.openMenu) window.openMenu();" type="button" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase py-3 px-6 rounded-2xl transition-all shadow-md flex items-center gap-2 cursor-pointer">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-          <span>Set Up Profile</span>
+          <span>Set Up Credentials</span>
+        </button>
+      </div>
+    `;
+  }
+
+  const caamPane = dashboardView.querySelector("#tab-caam-content") || document.getElementById("tab-caam-content");
+  if (caamPane) {
+    caamPane.innerHTML = `
+      <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-8 border border-slate-100 dark:border-slate-800 text-center flex flex-col items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mb-1">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+        </div>
+        <h3 class="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">No CAAM Digital Licence</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-xs mx-auto">
+          Please set up your official CAAM eCLIPSE digital licence URL in <strong>My Credentials</strong> to view licence validities.
+        </p>
+        <button onclick="if(window.openProfileMenu) window.openProfileMenu(); else if(window.openMenu) window.openMenu();" type="button" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase py-2.5 px-5 rounded-2xl transition-all shadow-md flex items-center gap-2 cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          <span>Configure Licence Source</span>
+        </button>
+      </div>
+    `;
+  }
+
+  const mabPane = dashboardView.querySelector("#tab-mab-content") || document.getElementById("tab-mab-content");
+  if (mabPane) {
+    mabPane.innerHTML = `
+      <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-8 border border-slate-100 dark:border-slate-800 text-center flex flex-col items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mb-1">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+        </div>
+        <h3 class="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">No MAB Attestation PDF</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-xs mx-auto">
+          Please upload your MAB E-Attestation PDF document in <strong>My Credentials</strong> to view company qualifications.
+        </p>
+        <button onclick="if(window.openProfileMenu) window.openProfileMenu(); else if(window.openMenu) window.openMenu();" type="button" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase py-2.5 px-5 rounded-2xl transition-all shadow-md flex items-center gap-2 cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          <span>Upload Attestation PDF</span>
         </button>
       </div>
     `;
@@ -672,7 +723,7 @@ async function renderDashboardView() {
 window.renderDashboardView = renderDashboardView;
 
 function renderDashboardResults(caamResults, mabResults = null) {
-  saveOverviewTemplate();
+  saveDashboardTemplates();
   const profile = getProfileData();
 
   if (!caamResults && !mabResults) {
@@ -682,6 +733,8 @@ function renderDashboardResults(caamResults, mabResults = null) {
 
   const dashView = document.getElementById("dashboard-view");
   const overviewPane = dashView ? (dashView.querySelector("#tab-overview-content") || document.getElementById("tab-overview-content")) : null;
+  const caamPane = dashView ? (dashView.querySelector("#tab-caam-content") || document.getElementById("tab-caam-content")) : null;
+  const mabPane = dashView ? (dashView.querySelector("#tab-mab-content") || document.getElementById("tab-mab-content")) : null;
 
   if (overviewPane && initialOverviewTemplateHTML && !overviewPane.querySelector("#overview-status-title")) {
     overviewPane.innerHTML = initialOverviewTemplateHTML;
@@ -779,7 +832,10 @@ function renderDashboardResults(caamResults, mabResults = null) {
   }
 
   // 2. CAAM TAB
-  if (caamResults) {
+  if (caamResults && caamResults.pilotDetails) {
+    if (caamPane && initialCaamTemplateHTML && !caamPane.querySelector("#pilot-name")) {
+      caamPane.innerHTML = initialCaamTemplateHTML;
+    }
     const nameEl = getDashEl("pilot-name");
     const typeEl = getDashEl("licence-type");
     const noEl = getDashEl("licence-number");
@@ -820,8 +876,31 @@ function renderDashboardResults(caamResults, mabResults = null) {
     }
   }
 
+  else {
+    if (caamPane) {
+      caamPane.innerHTML = `
+        <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-8 border border-slate-100 dark:border-slate-800 text-center flex flex-col items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mb-1">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+          </div>
+          <h3 class="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">No CAAM Digital Licence</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-xs mx-auto">
+            Please set up your official CAAM eCLIPSE digital licence URL in <strong>My Credentials</strong> to view licence validities.
+          </p>
+          <button onclick="if(window.openProfileMenu) window.openProfileMenu(); else if(window.openMenu) window.openMenu();" type="button" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase py-2.5 px-5 rounded-2xl transition-all shadow-md flex items-center gap-2 cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            <span>Configure Licence Source</span>
+          </button>
+        </div>
+      `;
+    }
+  }
+
   // 3. MAB TAB
   if (mabResults) {
+    if (mabPane && initialMabTemplateHTML && !mabPane.querySelector("#mab-pilot-name")) {
+      mabPane.innerHTML = initialMabTemplateHTML;
+    }
     const voidBox = getDashEl("mab-void-warning-box");
     const voidReasonEl = getDashEl("mab-void-reason");
 
@@ -914,6 +993,24 @@ function renderDashboardResults(caamResults, mabResults = null) {
         `;
         drillsContainer.appendChild(row);
       });
+    }
+  } else {
+    if (mabPane) {
+      mabPane.innerHTML = `
+        <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-8 border border-slate-100 dark:border-slate-800 text-center flex flex-col items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mb-1">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+          </div>
+          <h3 class="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">No MAB Attestation PDF</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-xs mx-auto">
+            Please upload your MAB E-Attestation PDF document in <strong>My Credentials</strong> to view company qualifications.
+          </p>
+          <button onclick="if(window.openProfileMenu) window.openProfileMenu(); else if(window.openMenu) window.openMenu();" type="button" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase py-2.5 px-5 rounded-2xl transition-all shadow-md flex items-center gap-2 cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            <span>Upload Attestation PDF</span>
+          </button>
+        </div>
+      `;
     }
   }
 
