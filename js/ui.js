@@ -302,6 +302,11 @@ export function initNavigationBars() {
   const topbar = document.getElementById("persistent-topbar");
   const dock = document.getElementById("persistent-dock");
   const topbarHeight = 48;
+
+  if (topbar) {
+    topbar.style.transform = "translateY(-100%)";
+    topbar.style.opacity = "0";
+  }
   const dockMaxTravel = 80;
   let currentTranslateY = 0;
 
