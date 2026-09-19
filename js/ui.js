@@ -81,7 +81,7 @@ const themeSolidIcons = {
   dark: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 0 1 .868.397 6.5 6.5 0 1 0 9.277 9.277.75.75 0 0 1 1.266.697 8 8 0 1 1-11.808-10.102.75.75 0 0 1 .397-.269Z" clip-rule="evenodd"/></svg>`
 };
 
-let currentThemeMode = localStorage.getItem("app_theme_mode") || "system";
+let currentThemeMode = localStorage.getItem("app_theme_mode") || "light";
 
 export function applyThemeMode(mode = currentThemeMode) {
   currentThemeMode = mode;
