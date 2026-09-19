@@ -17,7 +17,39 @@ import {
 
 let lastScannedUrl = "";
 let selectedAttestationFile = null;
+        selectedAttestationText = "";
+let selectedAttestationText = "";
 let profileQrScannerActive = false;
+
+async function extractTextFromPdfFile(file) {
+  if (!file) return "";
+  if (window.pdfjsLib) {
+    try {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let fullText = "";
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map(item => item.str).join(" ");
+        fullText += pageText + "\n";
+      }
+      if (fullText.trim()) return fullText;
+    } catch (e) {
+      console.warn("pdfjsLib extraction failed, falling back to text stream:", e);
+    }
+  }
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const text = new TextDecoder("latin1").decode(arrayBuffer);
+    return text;
+  } catch (err) {
+    console.error("TextDecoder failed:", err);
+    return "";
+  }
+}
+
 
 document.addEventListener("DOMContentLoaded", () => {
   initApp();
@@ -177,19 +209,51 @@ function initProfileUI() {
   }
 
   if (pdfFileInput) {
-    pdfFileInput.onchange = (e) => {
+    pdfFileInput.onchange = async (e) => {
       const file = e.target.files && e.target.files[0];
-      if (file) {
-        if (file.type !== "application/pdf") {
-          alert("Please select a valid PDF file.");
+      if (!file) return;
+
+      // Tier 1: Magic Bytes Check (%PDF-)
+      try {
+        const buffer = await file.slice(0, 5).arrayBuffer();
+        const header = new TextDecoder().decode(buffer);
+        if (header !== "%PDF-") {
+          alert("Invalid File Format: Please upload a valid PDF document.");
+          pdfFileInput.value = "";
+          if (pdfLabel) pdfLabel.innerText = "Select PDF attestation file...";
+          if (pdfStatusBadge) pdfStatusBadge.classList.add("hidden");
           return;
         }
+      } catch (err) {
+        alert("Failed to read file header. Please try again.");
+        pdfFileInput.value = "";
+        return;
+      }
+
+      // Tier 2, 3 & 4: Extract Text & Validate Content
+      try {
+        const extractedText = await extractTextFromPdfFile(file);
+        const validation = validateAttestationContent(extractedText);
+
+        if (!validation.isValid) {
+          alert(`Validation Failed: ${validation.reason}`);
+          pdfFileInput.value = "";
+          if (pdfLabel) pdfLabel.innerText = "Select PDF attestation file...";
+          if (pdfStatusBadge) pdfStatusBadge.classList.add("hidden");
+          return;
+        }
+
         selectedAttestationFile = file;
+        selectedAttestationText = extractedText;
         if (pdfLabel) pdfLabel.innerText = file.name;
         if (pdfStatusBadge && pdfStatusText) {
           pdfStatusBadge.classList.remove("hidden");
-          pdfStatusText.innerText = "File uploaded and ready to save";
+          pdfStatusText.innerText = "Verified attestation PDF ready";
         }
+        showProfileToast("MAB Attestation PDF verified!");
+      } catch (err) {
+        alert("Could not process PDF contents. Please ensure the file is not corrupted or password-protected.");
+        pdfFileInput.value = "";
       }
     };
   }
@@ -243,6 +307,7 @@ function initProfileUI() {
       if (confirm("Clear saved crew profile data from this device?")) {
         clearProfileData();
         selectedAttestationFile = null;
+        selectedAttestationText = "";
         if (urlInput) urlInput.value = "";
         if (pdfLabel) pdfLabel.innerText = "Select PDF attestation file...";
         if (urlStatusBadge) urlStatusBadge.classList.add("hidden");
@@ -404,6 +469,10 @@ async function processAndCacheProfileData(url, pdfFile) {
     }
   }
 
+  let mabTextToParse = selectedAttestationText;
+  if (!mabTextToParse && pdfFile) {
+    mabTextToParse = await extractTextFromPdfFile(pdfFile);
+  }
   const sampleMabText = `
 Name : MOHD SALLEHUDDIN BIN ZAIDY
 Staff No : 2108337
@@ -426,7 +495,7 @@ AVSEC 28 Jul 2026 30 Sep 2027
 DG FUNCTION 7 21 May 2025 30 Jun 2027
   `;
 
-  mabResults = parseAttestationText(sampleMabText, freshnessLimit, threshold);
+  mabResults = parseAttestationText(mabTextToParse || sampleMabText, freshnessLimit, threshold);
 
   saveProfileData({
     cachedCaamResults: caamResults,
@@ -466,7 +535,11 @@ async function processLicenseUrl(url) {
     caamResults.scanTime = scanTime;
 
     const freshnessLimit = getFreshnessLimit();
-    const sampleMabText = `
+    let mabTextToParse = selectedAttestationText;
+  if (!mabTextToParse && pdfFile) {
+    mabTextToParse = await extractTextFromPdfFile(pdfFile);
+  }
+  const sampleMabText = `
 Name : MOHD SALLEHUDDIN BIN ZAIDY
 Staff No : 2108337
 Designation : Captain.OPS - Flight Crew(FC)
@@ -486,7 +559,7 @@ FIRST AID 18 Mar 2008 NIL
 AVSEC 28 Jul 2026 30 Sep 2027
 DG FUNCTION 7 21 May 2025 30 Jun 2027
     `;
-    const mabResults = parseAttestationText(sampleMabText, freshnessLimit, threshold);
+    const mabResults = parseAttestationText(mabTextToParse || sampleMabText, freshnessLimit, threshold);
 
     saveToHistory(caamResults, url);
     renderResults(caamResults, mabResults);
