@@ -2,7 +2,7 @@
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
-import { parseAttestationText } from './js/attestationParser.js';
+import { parseAttestationText, validateAttestationContent } from './js/attestationParser.js';
 import {
   saveToHistory, renderHistoryList, getScanHistory, getProfileData,
   saveProfileData, clearProfileData, clearHistory, getThresholdDays, setThresholdDays,
