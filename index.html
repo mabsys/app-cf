@@ -383,42 +383,69 @@ if ('serviceWorker' in navigator) {
         </div>
 
         <!-- LVO Autoland Card -->
-        <div id="mab-lvo-box" class="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-md flex items-center justify-between gap-3">
-          <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
-          <span class="text-slate-500 text-[10px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
+        <div id="mab-lvo-box" class="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-md flex flex-col gap-4">
+  
+  <!-- 1. FULL-WIDTH HEADER: Top Section -->
+  <div class="w-full bg-slate-50 dark:bg-slate-800/50 px-3 py-2 rounded-xl border border-slate-100 dark:border-slate-800 flex justify-between items-center">
+    <span class="text-slate-500 text-[10px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
       <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-       <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-            </svg>
-            LVO AUTOLAND
-          </span>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+      </svg>
+      LVO AUTOLAND
+    </span>
+  </div>
+
+  <!-- 2. CONTENT WRAPPER: Multi-column Metadata Grid + Right Badge -->
+  <div class="flex items-center justify-between gap-4">
+    
+    <!-- Left Column: Unified Metadata Grid Layout -->
+    <div class="flex-1 flex flex-col gap-3">
+      
+      <!-- 1st Row (Stacked Columns) -->
+      <div class="flex items-center gap-6 border-b border-slate-100 dark:border-slate-800/80 pb-2">
+        <!-- Check Date Item -->
+        <div class="flex flex-col gap-0.5">
+          <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">Check Date</span>
+          <strong id="mab-lvo-date" class="text-slate-800 dark:text-slate-200 font-bold text-xs">9 Sep 2026</strong>
         </div>
-          <div class="flex-1 flex flex-col gap-1.5 text-[10px]">
-            <!-- 1st Row -->
-            <div class="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800/80 pb-1.5">
-              <span class="text-slate-600 dark:text-slate-300">
-                Airport : <strong id="mab-lvo-airport" class="text-slate-900 dark:text-slate-100 font-bold">VIDP</strong>
-                &nbsp;&nbsp;
-                Runway : <strong id="mab-lvo-runway" class="text-slate-900 dark:text-slate-100 font-bold">28</strong>
-              </span>
-              <span class="text-slate-500">
-                Check Date : <strong id="mab-lvo-date" class="text-slate-800 dark:text-slate-200 font-bold">9 Sep 2026</strong>
-              </span>
-            </div>
-            <!-- 2nd Row -->
-            <div class="text-slate-600 dark:text-slate-300 text-[10px] flex items-center gap-2.5">
-              <span>Sim : <strong id="mab-lvo-sim" class="text-slate-800 dark:text-slate-200 font-bold">SIM2TEW</strong></span>
-              <span>Category : <strong id="mab-lvo-cat" class="text-slate-800 dark:text-slate-200 font-bold">III</strong></span>
-              <span>DFE No : <strong id="mab-lvo-dfe" class="text-slate-800 dark:text-slate-200 font-bold">DFE 11635</strong></span>
-            </div>
-          </div>
-          <!-- Merged rightmost column badge -->
-          <div class="shrink-0 flex items-center justify-center">
-            <span id="mab-lvo-badge" class="px-2.5 py-2.5 rounded-xl text-[10px] font-extrabold uppercase bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 shadow-xs">
-              ACTUAL
-            </span>
-          </div>
+        <!-- Type Item -->
+        <div class="flex flex-col gap-0.5">
+          <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">Type</span>
+          <strong id="mab-lvo-badge" class="text-slate-900 dark:text-slate-100 font-bold text-xs">Actual</strong>
         </div>
       </div>
+      
+      <!-- 2nd Row (Stacked Columns) -->
+      <div class="flex items-center gap-5">
+        <!-- Sim Item -->
+        <div class="flex flex-col gap-0.5">
+          <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">Sim</span>
+          <strong id="mab-lvo-sim" class="text-slate-800 dark:text-slate-200 font-bold text-[11px]">SIM2TEW</strong>
+        </div>
+        <!-- Category Item -->
+        <div class="flex flex-col gap-0.5">
+          <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">Category</span>
+          <strong id="mab-lvo-cat" class="text-slate-800 dark:text-slate-200 font-bold text-[11px]">III</strong>
+        </div>
+        <!-- DFE No Item -->
+        <div class="flex flex-col gap-0.5">
+          <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">DFE No</span>
+          <strong id="mab-lvo-dfe" class="text-slate-800 dark:text-slate-200 font-bold text-[11px]">DFE 11635</strong>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Merged Rightmost Badge (Stacked Vertically) -->
+    <div class="shrink-0 flex items-center justify-center">
+      <div class="px-3 py-2 rounded-xl bg-blue-100 dark:bg-blue-950/70 uppercase shadow-xs flex flex-col items-center leading-none min-w-[70px]">
+        <span id="mab-lvo-airport" class="text-blue-700 dark:text-slate-100 font-black text-lg tracking-wide">VIDP</span>
+        <span id="mab-lvo-runway" class="text-blue-600 dark:text-blue-300 font-extrabold text-xs mt-1">28</span>
+      </div>
+    </div>
+
+  </div>
+</div>
        <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
         <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
           <span class="text-slate-500 text-[10px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
