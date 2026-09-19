@@ -84,7 +84,7 @@ function isValidCaamUrl(urlStr) {
 
 function updateProfileUrlBadge(urlStr) {
   const urlBadge = document.getElementById("profile-url-status-badge") || document.getElementById("profile-url-badge");
-  const urlText = document.getElementById("profile-url-status-text") || document.getElementById("profile-url-badge-text");
+  const urlText = document.getElementById("profile-url-status-text") || document.getElementById("profile-url-badge-text") || (urlBadge ? urlBadge.querySelector("span") : null);
   if (!urlBadge) return;
 
   const cleanUrl = urlStr ? urlStr.trim() : "";
@@ -94,7 +94,7 @@ function updateProfileUrlBadge(urlStr) {
     if (urlText) {
       const storedProfile = getProfileData();
       if (storedProfile && storedProfile.url && cleanUrl === storedProfile.url.trim()) {
-        urlText.innerText = "Stored licence URL";
+        urlText.innerText = "✓ Stored licence URL";
       } else {
         urlText.innerText = "✓ Valid CAAM Licence URL captured";
       }
@@ -130,7 +130,7 @@ function initProfileUI() {
   const stopScanBtnProfile = document.getElementById("profile-stop-scan-btn");
   const urlStatusBadge = document.getElementById("profile-url-status-badge") || document.getElementById("profile-url-badge");
   const pdfStatusBadge = document.getElementById("profile-pdf-status-badge") || document.getElementById("profile-pdf-badge");
-  const pdfStatusText = document.getElementById("profile-pdf-status-text") || document.getElementById("profile-pdf-badge-text");
+  const pdfStatusText = document.getElementById("profile-pdf-status-text") || document.getElementById("profile-pdf-badge-text") || (pdfStatusBadge ? pdfStatusBadge.querySelector("span") : null);
 
   
 
@@ -146,7 +146,7 @@ function initProfileUI() {
   if (pdfStatusBadge && pdfStatusText) {
     if (profile.attestationFileName) {
       pdfStatusBadge.classList.remove("hidden");
-      pdfStatusText.innerText = "Stored attestation PDF file";
+      pdfStatusText.innerText = "✓ Stored Attestation PDF file";
     } else {
       pdfStatusBadge.classList.add("hidden");
     }
@@ -247,7 +247,7 @@ function initProfileUI() {
         if (pdfLabel) pdfLabel.innerText = file.name;
         if (pdfStatusBadge && pdfStatusText) {
           pdfStatusBadge.classList.remove("hidden");
-          pdfStatusText.innerText = "Verified attestation PDF ready";
+          pdfStatusText.innerText = "✓ Valid Attestation PDF file";
         }
         showProfileToast("MAB Attestation PDF verified!");
       } catch (err) {
@@ -263,10 +263,16 @@ function initProfileUI() {
       profileQrScannerActive = false;
 
       const urlVal = urlInput ? urlInput.value.trim() : "";
-      const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (profile.attestationFileName || "");
+      const currentProfile = getProfileData();
+      const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (currentProfile.attestationFileName || "");
 
-      if (urlVal && !isValidCaamUrl(urlVal)) {
-        alert("Please enter a valid CAAM eCLIPSE URL");
+      if (!urlVal || !isValidCaamUrl(urlVal)) {
+        alert("Please enter or scan a valid CAAM eCLIPSE URL.");
+        return;
+      }
+
+      if (!selectedAttestationFile && !currentProfile.attestationFileName) {
+        alert("Please upload a valid MAB company attestation PDF file.");
         return;
       }
 
@@ -278,12 +284,8 @@ function initProfileUI() {
       updateProfileUrlBadge(urlVal);
 
       if (pdfStatusBadge && pdfStatusText) {
-        if (attestationName) {
-          pdfStatusBadge.classList.remove("hidden");
-          pdfStatusText.innerText = "Stored attestation PDF file";
-        } else {
-          pdfStatusBadge.classList.add("hidden");
-        }
+        pdfStatusBadge.classList.remove("hidden");
+        pdfStatusText.innerText = "✓ Stored Attestation PDF file";
       }
 
       showProfileToast("Crew profile saved successfully!");
@@ -718,6 +720,16 @@ function renderDashboardResults(caamResults, mabResults = null) {
     if (mabResults && mabResults.lineCheck) {
       earliestName.innerText = `B738 Line Check (${mabResults.lineCheck.expiryDate})`;
       earliestSub.innerText = "MAB Operational Flight Check • Next Renewal";
+    }
+  }
+
+  // Hide open-original-btn in CAAM tab if profile is stored/loaded
+  const openOriginalBtn = getDashEl("open-original-btn");
+  if (openOriginalBtn) {
+    if (hasProfileData()) {
+      openOriginalBtn.classList.add("hidden");
+    } else {
+      openOriginalBtn.classList.remove("hidden");
     }
   }
 
