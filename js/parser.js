@@ -1,4 +1,3 @@
-
-// js/parser.js - Clean Bridge
+// js/parser.js - Parser Module Re-export Bridge
 export { parseLicenseDOM } from './caamParser.js';
-export { parseAttestationText } from './attestationParser.js';
+export { parseAttestationText, validateAttestationContent } from './attestationParser.js';
