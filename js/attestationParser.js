@@ -60,11 +60,11 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
     return new Date(year, mIdx, day);
   }
 
-  // 1. Pilot Profile Extraction
-  const nameMatch = pdfText.match(/Name\s*:?\s*([^\n\r]+)/i);
+  // 1. Pilot Profile Extraction (Bounded lookaheads prevent over-capturing un-newline-separated PDF text)
+  const nameMatch = pdfText.match(/Name\s*:?\s*(.*?)(?=\s*Staff|\s*Designation|\s*Department|\n|\r|$)/i);
   const staffMatch = pdfText.match(/Staff\s*(?:No)?\s*:?\s*(\d+)/i);
-  const desigMatch = pdfText.match(/Designation\s*:?\s*([^\n\r]+)/i);
-  const pubMatch = pdfText.match(/(?:BY THE AUTHORITY OF CHIEF PILOT TRAINING|CHIEF PILOT TRAINING)\s*:?\s*(\d{1,2}\s+[A-Za-z]{3}\s+\d{4}[^\n\r]*)/i);
+  const desigMatch = pdfText.match(/Designation\s*:?\s*(.*?)(?=\s*Department|\s*Date\s+Of\s+Birth|\s*Nationality|\s*Address|\s*NO\s+TRAINING|\n|\r|$)/i);
+  const pubMatch = pdfText.match(/(?:BY THE AUTHORITY OF CHIEF PILOT TRAINING|CHIEF PILOT TRAINING)\s*:?\s*(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}[^\n\r]*?)(?=\s*No\s+Signature|\s*FO|\n|\r|$)/i);
   const docRefMatch = pdfText.match(/(FO\s*\/\s*TRNG\s*\/\s*ATT\s*\/\s*[A-Z0-9]+)/i);
 
   const pilotName = nameMatch ? nameMatch[1].trim() : "MOHD SALLEHUDDIN BIN ZAIDY";
