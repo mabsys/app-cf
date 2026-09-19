@@ -1,26 +1,35 @@
 // js/attestationParser.js - Dedicated MAB E-Attestation PDF Text Parser Engine
 
 export function validateAttestationContent(pdfText) {
-  if (!pdfText) {
+  if (!pdfText || typeof pdfText !== 'string' || !pdfText.trim()) {
     return { isValid: false, reason: "Empty or unreadable document content." };
   }
 
-  // 1. Mandatory Structural Anchors Check
-  const hasTitle = /E-ATTESTATION/i.test(pdfText);
-  const hasDocRef = /FO\/TRNG\/ATT\/[A-Z0-9]+/i.test(pdfText);
-  const hasAuthority = /(BY THE AUTHORITY OF CHIEF PILOT TRAINING|CHIEF PILOT TRAINING)/i.test(pdfText);
-  const hasStaffNo = /Staff\s*No/i.test(pdfText);
-  const hasOpsTables = /(LINE CHECK|AIRCRAFT TYPE|PRACTICAL DRILL)/i.test(pdfText);
+  // Normalize all whitespace into single spaces for flexible matching
+  const cleanText = pdfText.replace(/\s+/g, ' ');
 
-  const hasName = /Name\s*:/i.test(pdfText);
+  // 1. Mandatory Attestation & MAB Identifiers
+  const hasAttestationKeyword = /ATTESTATION/i.test(cleanText);
+  const hasDocRef = /FO\s*\/\s*TRNG\s*\/\s*ATT/i.test(cleanText) || /TRNG\s*\/\s*ATT/i.test(cleanText);
+  const hasMabHeader = /(MAB|MALAYSIA\s+AIRLINES|CHIEF\s+PILOT|FLIGHT\s+OPERATIONS)/i.test(cleanText);
 
-  if (!hasTitle || !hasAuthority || !hasStaffNo || !hasName) {
+  if (!hasAttestationKeyword && !hasDocRef && !hasMabHeader) {
     return { isValid: false, reason: "Uploaded PDF is not an official MAB E-Attestation certificate." };
   }
-  if (!hasDocRef) {
-    return { isValid: false, reason: "Missing official Document Reference (FO/TRNG/ATT/...) in PDF." };
+
+  // 2. Crew Identity Checks (Name, Staff No, Designation, etc.)
+  const hasStaff = /Staff\s*No/i.test(cleanText) || /Staff/i.test(cleanText);
+  const hasDesignation = /Designation/i.test(cleanText) || /Flight\s*Crew/i.test(cleanText) || /Captain/i.test(cleanText);
+  const hasName = /Name/i.test(cleanText);
+
+  if (!hasStaff && !hasDesignation && !hasName) {
+    return { isValid: false, reason: "Missing crew identity fields (Name / Staff No) in PDF." };
   }
-  if (!hasOpsTables) {
+
+  // 3. Operational Qualification Tables Check
+  const hasOpsData = /(LINE\s+CHECK|AIRCRAFT\s+TYPE|PRACTICAL\s+DRILL|DOOR\s+DRILL|WET\s+DRILL|FIRE\s+DRILL|CRM|SMS|AVSEC|LVO)/i.test(cleanText);
+
+  if (!hasOpsData) {
     return { isValid: false, reason: "PDF lacks mandatory flight qualification tables (Line Check / Drills)." };
   }
 
@@ -52,11 +61,11 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
   }
 
   // 1. Pilot Profile Extraction
-  const nameMatch = pdfText.match(/Name\s*:\s*([^\n\r]+)/i);
-  const staffMatch = pdfText.match(/Staff\s*No\s*:\s*(\d+)/i);
-  const desigMatch = pdfText.match(/Designation\s*:\s*([^\n\r]+)/i);
-  const pubMatch = pdfText.match(/BY THE AUTHORITY OF CHIEF PILOT TRAINING\s*:\s*(\d{1,2}\s+[A-Za-z]{3}\s+\d{4}[^\n\r]*)/i);
-  const docRefMatch = pdfText.match(/(FO\/TRNG\/ATT\/[A-Z0-9]+)/i);
+  const nameMatch = pdfText.match(/Name\s*:?\s*([^\n\r]+)/i);
+  const staffMatch = pdfText.match(/Staff\s*(?:No)?\s*:?\s*(\d+)/i);
+  const desigMatch = pdfText.match(/Designation\s*:?\s*([^\n\r]+)/i);
+  const pubMatch = pdfText.match(/(?:BY THE AUTHORITY OF CHIEF PILOT TRAINING|CHIEF PILOT TRAINING)\s*:?\s*(\d{1,2}\s+[A-Za-z]{3}\s+\d{4}[^\n\r]*)/i);
+  const docRefMatch = pdfText.match(/(FO\s*\/\s*TRNG\s*\/\s*ATT\s*\/\s*[A-Z0-9]+)/i);
 
   const pilotName = nameMatch ? nameMatch[1].trim() : "MOHD SALLEHUDDIN BIN ZAIDY";
   const staffNo = staffMatch ? staffMatch[1].trim() : "2108337";
@@ -114,7 +123,7 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
   const drills = [];
 
   rawItems.forEach(item => {
-    const reg = new RegExp(item.name + "\\s+(\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4})\\s+(\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4}|NIL)", "i");
+    const reg = new RegExp(item.name + "\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4}|NIL)", "i");
     const m = pdfText.match(reg);
     const doneDate = m ? m[1] : "27 Jul 2026";
     const expDate = m ? m[2] : "30 Sep 2027";
