@@ -550,3 +550,15 @@ export function switchResultTab(tabName = 'overview') {
 }
 
 window.switchResultTab = switchResultTab;
+
+export function openProfileMenu() {
+  openMenu();
+  setTimeout(() => {
+    const navBtn = document.querySelector('[data-target="pane-profile"]');
+    if (navBtn) navBtn.click();
+  }, 150);
+}
+
+window.openMenu = openMenu;
+window.closeMenu = closeMenu;
+window.openProfileMenu = openProfileMenu;
