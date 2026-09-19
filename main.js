@@ -6,7 +6,8 @@ import { parseAttestationText, validateAttestationContent } from './js/attestati
 import {
   saveToHistory, renderHistoryList, getScanHistory, getProfileData,
   saveProfileData, clearProfileData, clearHistory, getThresholdDays, setThresholdDays,
-  getHistoryLimit, setHistoryLimit, getFreshnessLimit, setFreshnessLimit
+  getHistoryLimit, setHistoryLimit, getFreshnessLimit, setFreshnessLimit,
+  hasProfileData
 } from './js/storage.js';
 import { startScanner, stopScanner } from './js/scanner.js';
 import {
