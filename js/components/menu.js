@@ -26,7 +26,7 @@ export const menuHTML = `
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>
             </div>
             <div class="text-left">
-              <div class="text-xs font-bold text-slate-800 dark:text-slate-100">My Profile</div>
+              <div class="text-xs font-bold text-slate-800 dark:text-slate-100">My Credentials</div>
               <div class="text-[10px] text-slate-400">Manage licence QR / URL & company attestations</div>
             </div>
           </div>
@@ -84,7 +84,7 @@ export const menuHTML = `
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
 
-      <h3 class="text-xs font-black text-slate-800 dark:text-slate-100 mb-3.5 px-1 uppercase tracking-wider">Crew Profile Settings</h3>
+      <h3 class="text-xs font-black text-slate-800 dark:text-slate-100 mb-3.5 px-1 uppercase tracking-wider">Crew Credentials Setup</h3>
 
       
 
@@ -145,10 +145,10 @@ export const menuHTML = `
         <!-- Action Buttons -->
         <div class="px-1 flex flex-col gap-2.5 pt-1 pb-3">
           <button id="profile-save-btn" type="button" class="w-full p-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5">
-            Save Profile
+            Save Credentials
           </button>
           <button id="profile-clear-btn" type="button" class="w-full p-3 text-xs font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-100 dark:border-rose-900/50 hover:bg-rose-100 transition-all">
-            Clear Profile
+            Clear Credentials
           </button>
         </div>
 
