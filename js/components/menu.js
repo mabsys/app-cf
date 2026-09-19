@@ -27,7 +27,7 @@ export const menuHTML = `
             </div>
             <div class="text-left">
               <div class="text-xs font-bold text-slate-800 dark:text-slate-100">My Profile</div>
-              <div class="text-[10px] text-slate-400">Manage nickname, licence QR / URL & attestations</div>
+              <div class="text-[10px] text-slate-400">Manage licence QR / URL & company attestations</div>
             </div>
           </div>
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
@@ -86,14 +86,7 @@ export const menuHTML = `
 
       <h3 class="text-xs font-black text-slate-800 dark:text-slate-100 mb-3.5 px-1 uppercase tracking-wider">Crew Profile Settings</h3>
 
-      <div class="flex flex-col gap-3.5">
-        
-        <!-- Nickname -->
-        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
-          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-1">Nickname (Short Name)</label>
-          <input type="text" id="profile-nickname-input" placeholder="e.g. Salleh" class="w-full p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <p class="text-[9px] text-slate-400 mt-1">Short name used for quick verifications.</p>
-        </div>
+      
 
         <!-- Digital Licence Source -->
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
