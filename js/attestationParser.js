@@ -136,7 +136,11 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
           }
         }
       } else {
-        itemStatus = "COMPLETED";
+        if (name.toUpperCase().includes("FIRST AID") || doneDate.toUpperCase() !== "NIL") {
+          itemStatus = "VALID";
+        } else {
+          itemStatus = "COMPLETED";
+        }
       }
 
       drills.push({
