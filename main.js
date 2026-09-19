@@ -924,6 +924,318 @@ function renderDashboardResults(caamResults, mabResults = null) {
     const mabDesig = getDashEl("mab-designation");
     const mabPub = getDashEl("mab-published-date");
     const mabFresh = getDashEl("mab-freshness-tag");
+    const mabDocRef = getDashEl("mab-doc-ref");
+
+    if (mabPilot) mabPilot.innerText = mabResults.pilotName;
+    if (mabStaff) mabStaff.innerText = mabResults.staffNo;
+    if (mabDesig) mabDesig.innerText = mabResults.designation;
+    if (mabPub) mabPub.innerText = mabResults.publishedDateStr;
+    if (mabDocRef) mabDocRef.innerHTML = ""; // Omit FO/TRNG/ATT/MAR25
+    if (mabFresh) {
+      mabFresh.innerText = mabResults.isStale ? `Stale (>${mabResults.freshnessLimitDays}d)` : `Fresh (<${mabResults.freshnessLimitDays}d)`;
+      mabFresh.className = mabResults.isStale ? "text-rose-600 font-extrabold" : "text-emerald-600 dark:text-emerald-400 font-extrabold";
+    }
+
+    // Line Check Card
+    const lcTitle = getDashEl("mab-linecheck-title");
+    const lcLicence = getDashEl("mab-linecheck-licence");
+    const lcRoute = getDashEl("mab-linecheck-route");
+    const lcDate = getDashEl("mab-linecheck-date");
+    const lcExp = getDashEl("mab-linecheck-expiry");
+
+    if (lcTitle && mabResults.lineCheck) lcTitle.innerText = `${mabResults.lineCheck.fleet} LINE CHECK`;
+    if (lcLicence && mabResults.lineCheck) lcLicence.innerText = mabResults.lineCheck.licenseNo || "A3115";
+    if (lcRoute && mabResults.lineCheck) lcRoute.innerText = mabResults.lineCheck.route;
+    if (lcDate && mabResults.lineCheck) lcDate.innerText = mabResults.lineCheck.checkDate;
+    if (lcExp && mabResults.lineCheck) lcExp.innerText = mabResults.lineCheck.expiryDate;
+
+    // LVO Autoland Card
+    const lvoAirport = getDashEl("mab-lvo-airport");
+    const lvoRunway = getDashEl("mab-lvo-runway");
+    const lvoDate = getDashEl("mab-lvo-date");
+    const lvoSim = getDashEl("mab-lvo-sim");
+    const lvoCat = getDashEl("mab-lvo-cat");
+    const lvoDfe = getDashEl("mab-lvo-dfe");
+    const lvoBadge = getDashEl("mab-lvo-badge");
+
+    if (lvoAirport && mabResults.lvo) lvoAirport.innerText = mabResults.lvo.airport;
+    if (lvoRunway && mabResults.lvo) lvoRunway.innerText = mabResults.lvo.runway;
+    if (lvoDate && mabResults.lvo) lvoDate.innerText = mabResults.lvo.checkDate;
+    if (lvoSim && mabResults.lvo) lvoSim.innerText = mabResults.lvo.simCode;
+    if (lvoCat && mabResults.lvo) lvoCat.innerText = mabResults.lvo.category;
+    if (lvoDfe && mabResults.lvo) lvoDfe.innerText = mabResults.lvo.dfeNo || "DFE 11635";
+    if (lvoBadge && mabResults.lvo) lvoBadge.innerText = mabResults.lvo.type || "ACTUAL";
+
+    // Safety Drills & Recurrent Training List (Items 1-11)
+    const drillsContainer = getDashEl("mab-drills-list");
+    if (drillsContainer && mabResults.drills) {
+      drillsContainer.innerHTML = "";
+
+      mabResults.drills.forEach(d => {
+        const row = document.createElement("div");
+        row.className = "py-2.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 last:border-b-0";
+
+        let badgeHtml = "";
+        if (d.status === "EXPIRED") {
+          badgeHtml = `<span class="bg-rose-100 text-rose-700 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">Lapsed</span>`;
+        } else if (d.status === "EXPIRING_SOON") {
+          badgeHtml = `<span class="bg-amber-100 text-amber-800 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">${d.daysLeft} days left</span>`;
+        } else if (d.expiryDate.toUpperCase() === "NIL" || d.status === "COMPLETED") {
+          badgeHtml = `<span class="bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">Completed</span>`;
+        } else {
+          badgeHtml = `<span class="bg-emerald-100 text-emerald-700 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">Valid</span>`;
+        }
+
+        row.innerHTML = `
+          <div>
+            <div class="font-extrabold text-slate-800 dark:text-slate-100 text-xs">${d.name}</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">
+              Attended : <strong class="text-slate-600 dark:text-slate-300 font-semibold">${d.doneDate}</strong> &nbsp;|&nbsp; Expires : <strong class="text-slate-600 dark:text-slate-300 font-semibold">${d.expiryDate}</strong>
+            </div>
+          </div>
+          <div class="shrink-0 flex items-center">${badgeHtml}</div>
+        `;
+        drillsContainer.appendChild(row);
+      });
+    }
+  } else {
+    if (mabPane) {
+      mabPane.innerHTML = `
+        <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-8 border border-slate-100 dark:border-slate-800 text-center flex flex-col items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mb-1">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+          </div>
+          <h3 class="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">No MAB Attestation PDF</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-xs mx-auto">
+            Please upload your MAB E-Attestation PDF document in <strong>My Credentials</strong> to view company qualifications.
+          </p>
+          <button onclick="if(window.openProfileMenu) window.openProfileMenu(); else if(window.openMenu) window.openMenu();" type="button" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase py-2.5 px-5 rounded-2xl transition-all shadow-md flex items-center gap-2 cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            <span>Upload Attestation PDF</span>
+          </button>
+        </div>
+      `;
+    }
+  }
+
+  showView("dashboard-view");
+}
+
+async function renderDashboardView() {
+  const profile = getProfileData();
+  
+  if (profile.cachedCaamResults || profile.cachedMabResults) {
+    renderDashboardResults(profile.cachedCaamResults, profile.cachedMabResults);
+  } else if (profile.url) {
+    showLoading("Loading compliance dashboard...");
+    try {
+      const res = await processAndCacheProfileData(profile.url);
+      renderDashboardResults(res.caamResults, res.mabResults);
+    } catch (e) {
+      renderBlankDashboard();
+    }
+  } else {
+    renderBlankDashboard();
+  }
+}
+window.renderDashboardView = renderDashboardView;
+
+function renderDashboardResults(caamResults, mabResults = null) {
+  saveDashboardTemplates();
+  const profile = getProfileData();
+
+  if (!caamResults && !mabResults) {
+    renderBlankDashboard();
+    return;
+  }
+
+  const dashView = document.getElementById("dashboard-view");
+  const overviewPane = dashView ? (dashView.querySelector("#tab-overview-content") || document.getElementById("tab-overview-content")) : null;
+  const caamPane = dashView ? (dashView.querySelector("#tab-caam-content") || document.getElementById("tab-caam-content")) : null;
+  const mabPane = dashView ? (dashView.querySelector("#tab-mab-content") || document.getElementById("tab-mab-content")) : null;
+
+  if (overviewPane && initialOverviewTemplateHTML && !overviewPane.querySelector("#overview-status-title")) {
+    overviewPane.innerHTML = initialOverviewTemplateHTML;
+  }
+
+  function getDashEl(id) {
+    if (dashView) {
+      const el = dashView.querySelector("#" + id);
+      if (el) return el;
+    }
+    return document.getElementById(id);
+  }
+
+  const displayName = (caamResults && caamResults.pilotDetails && caamResults.pilotDetails.name && caamResults.pilotDetails.name !== "-") ? caamResults.pilotDetails.name : "MOHD SALLEHUDDIN BIN ZAIDY";
+
+  // 1. OVERVIEW TAB
+  const heroTitle = getDashEl("overview-status-title");
+  const heroBadge = getDashEl("overview-status-badge");
+  const heroMsg = getDashEl("overview-status-msg");
+  const heroPilot = getDashEl("overview-pilot-name");
+  const heroTime = getDashEl("overview-scan-timestamp");
+
+  if (heroPilot) heroPilot.innerText = displayName;
+  if (heroTime) heroTime.innerText = (caamResults && caamResults.scanTime) ? `${caamResults.scanTime} LT` : "14 Sep 2026 LT";
+
+  const caamBadge = getDashEl("overview-caam-status-badge");
+  const mabBadge = getDashEl("overview-mab-status-badge");
+
+  if (caamBadge && caamResults) {
+    if (caamResults.overallStatus === "EXPIRED") {
+      caamBadge.className = "mt-2 inline-block px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase bg-rose-100 text-rose-700";
+      caamBadge.innerText = "Lapsed";
+    } else if (caamResults.overallStatus === "EXPIRING_SOON") {
+      caamBadge.className = "mt-2 inline-block px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase bg-amber-100 text-amber-800";
+      caamBadge.innerText = "Expiring Soon";
+    } else {
+      caamBadge.className = "mt-2 inline-block px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-700";
+      caamBadge.innerText = "Valid";
+    }
+  }
+
+  let isMabValid = true;
+  if (mabResults && mabBadge) {
+    if (mabResults.isVoid) {
+      isMabValid = false;
+      mabBadge.className = "mt-2 inline-block px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase bg-rose-100 text-rose-700";
+      mabBadge.innerText = mabResults.isStale ? "PDF Stale (>30d)" : "Drill Lapsed";
+    } else {
+      mabBadge.className = "mt-2 inline-block px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-700";
+      mabBadge.innerText = "Attested";
+    }
+  }
+
+  if (heroTitle && heroBadge && heroMsg) {
+    const isCaamExpired = caamResults && caamResults.overallStatus === "EXPIRED";
+    const isCaamCaution = caamResults && caamResults.overallStatus === "EXPIRING_SOON";
+
+    if (isCaamExpired || !isMabValid) {
+      heroTitle.innerText = "Duty Restricted";
+      heroBadge.className = "font-black uppercase rounded-full px-6 py-2.5 text-white inline-block text-xs tracking-wider mt-3 shadow-md bg-rose-600";
+      heroBadge.innerText = "DO NOT FLY";
+      heroMsg.innerText = "Qualification lapsed or MAB attestation requires re-upload before flight duty.";
+    } else if (isCaamCaution) {
+      heroTitle.innerText = "Duty Eligible";
+      heroBadge.className = "font-black uppercase rounded-full px-6 py-2.5 text-white inline-block text-xs tracking-wider mt-3 shadow-md bg-amber-500";
+      heroBadge.innerText = "FLY WITH CAUTION";
+      heroMsg.innerText = "Licence or company attestation expiring soon. Verify dates for duty duration.";
+    } else {
+      heroTitle.innerText = "Flight Ready";
+      heroBadge.className = "font-black uppercase rounded-full px-6 py-2.5 text-white inline-block text-xs tracking-wider mt-3 shadow-md bg-emerald-600";
+      heroBadge.innerText = "ELIGIBLE FOR FLIGHT DUTY";
+      heroMsg.innerText = "All CAAM licence checks and MAB company attestations are active.";
+    }
+  }
+
+  const earliestName = getDashEl("overview-earliest-item-name");
+  const earliestSub = getDashEl("overview-earliest-item-sub");
+  if (earliestName && earliestSub) {
+    if (mabResults && mabResults.lineCheck) {
+      earliestName.innerText = `B738 Line Check (${mabResults.lineCheck.expiryDate})`;
+      earliestSub.innerText = "MAB Operational Flight Check • Next Renewal";
+    }
+  }
+
+  // Hide open-original-btn in CAAM tab if profile is stored/loaded, or if nil info / no credentials
+  const openOriginalBtn = getDashEl("open-original-btn");
+  if (openOriginalBtn) {
+    const hasStoredCredentials = hasProfileData();
+    const hasValidCaamData = caamResults && caamResults.pilotDetails && caamResults.pilotDetails.licenseNo && caamResults.pilotDetails.licenseNo !== "-";
+    if (hasStoredCredentials || !hasValidCaamData || !lastScannedUrl) {
+      openOriginalBtn.classList.add("hidden");
+    } else {
+      openOriginalBtn.classList.remove("hidden");
+    }
+  }
+
+  // 2. CAAM TAB
+  if (caamResults && caamResults.pilotDetails) {
+    if (caamPane && initialCaamTemplateHTML && !caamPane.querySelector("#pilot-name")) {
+      caamPane.innerHTML = initialCaamTemplateHTML;
+    }
+    const nameEl = getDashEl("pilot-name");
+    const typeEl = getDashEl("licence-type");
+    const noEl = getDashEl("licence-number");
+
+    if (nameEl) nameEl.innerText = displayName;
+    if (typeEl) typeEl.innerText = caamResults.pilotDetails.licenseType || "ATPL(A)";
+    if (noEl) noEl.innerText = caamResults.pilotDetails.licenseNo || "A3115";
+
+    const caamListContainer = getDashEl("qualifications-list");
+    if (caamListContainer) {
+      caamListContainer.innerHTML = "";
+      if (!caamResults.qualifications || caamResults.qualifications.length === 0) {
+        caamListContainer.innerHTML = `<div class="text-center text-slate-500 py-6 text-xs italic">No CAAM qualifications found on digital licence.</div>`;
+      } else {
+        caamResults.qualifications.forEach(q => {
+          const row = document.createElement("div");
+          row.className = "py-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 last:border-b-0";
+
+          let badgeHtml = "";
+          if (q.status === "EXPIRED") {
+            badgeHtml = `<span class="bg-rose-100 text-rose-700 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">Expired</span>`;
+          } else if (q.status === "EXPIRING_SOON") {
+            badgeHtml = `<span class="bg-amber-100 text-amber-800 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">${q.daysRemaining} days left</span>`;
+          } else {
+            badgeHtml = `<span class="bg-emerald-100 text-emerald-700 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">Valid</span>`;
+          }
+
+          row.innerHTML = `
+            <div>
+              <div class="font-extrabold text-slate-800 dark:text-slate-100 text-xs">${q.name}</div>
+              <div class="text-[10px] text-slate-400 mt-0.5">Expiry: <strong class="text-slate-600 dark:text-slate-300">${q.dateText || "No Expiry"}</strong></div>
+            </div>
+            <div>${badgeHtml}</div>
+          `;
+          caamListContainer.appendChild(row);
+        });
+      }
+    }
+  }
+
+  else {
+    if (caamPane) {
+      caamPane.innerHTML = `
+        <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-8 border border-slate-100 dark:border-slate-800 text-center flex flex-col items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mb-1">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+          </div>
+          <h3 class="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">No CAAM Digital Licence</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-xs mx-auto">
+            Please set up your official CAAM eCLIPSE digital licence URL in <strong>My Credentials</strong> to view licence validities.
+          </p>
+          <button onclick="if(window.openProfileMenu) window.openProfileMenu(); else if(window.openMenu) window.openMenu();" type="button" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase py-2.5 px-5 rounded-2xl transition-all shadow-md flex items-center gap-2 cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            <span>Configure Licence Source</span>
+          </button>
+        </div>
+      `;
+    }
+  }
+
+  // 3. MAB TAB
+  if (mabResults) {
+    if (mabPane && initialMabTemplateHTML && !mabPane.querySelector("#mab-pilot-name")) {
+      mabPane.innerHTML = initialMabTemplateHTML;
+    }
+    const voidBox = getDashEl("mab-void-warning-box");
+    const voidReasonEl = getDashEl("mab-void-reason");
+
+    if (voidBox && voidReasonEl) {
+      if (mabResults.isVoid) {
+        voidBox.classList.remove("hidden");
+        voidReasonEl.innerText = mabResults.voidReason;
+      } else {
+        voidBox.classList.add("hidden");
+      }
+    }
+
+    const mabPilot = getDashEl("mab-pilot-name");
+    const mabStaff = getDashEl("mab-staff-no");
+    const mabDesig = getDashEl("mab-designation");
+    const mabPub = getDashEl("mab-published-date");
+    const mabFresh = getDashEl("mab-freshness-tag");
 
     if (mabPilot) mabPilot.innerText = mabResults.pilotName;
     if (mabStaff) mabStaff.innerText = mabResults.staffNo;
