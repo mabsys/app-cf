@@ -12,7 +12,9 @@ export function validateAttestationContent(pdfText) {
   const hasStaffNo = /Staff\s*No/i.test(pdfText);
   const hasOpsTables = /(LINE CHECK|AIRCRAFT TYPE|PRACTICAL DRILL)/i.test(pdfText);
 
-  if (!hasTitle || !hasAuthority || !hasStaffNo) {
+  const hasName = /Name\s*:/i.test(pdfText);
+
+  if (!hasTitle || !hasAuthority || !hasStaffNo || !hasName) {
     return { isValid: false, reason: "Uploaded PDF is not an official MAB E-Attestation certificate." };
   }
   if (!hasDocRef) {
