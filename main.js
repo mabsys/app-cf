@@ -87,7 +87,6 @@ function showProfileToast(msg = "Crew profile saved successfully!") {
 
 function initProfileUI() {
   const profile = getProfileData();
-  const nicknameInput = document.getElementById("profile-nickname-input");
   const urlInput = document.getElementById("profile-url-input");
   const pdfFileInput = document.getElementById("profile-pdf-file");
   const pdfLabel = document.getElementById("profile-pdf-label");
@@ -102,10 +101,7 @@ function initProfileUI() {
   const pdfStatusBadge = document.getElementById("profile-pdf-status-badge") || document.getElementById("profile-pdf-badge");
   const pdfStatusText = document.getElementById("profile-pdf-status-text") || document.getElementById("profile-pdf-badge-text");
 
-  if (nicknameInput) {
-    nicknameInput.value = profile.nickname || "";
-    nicknameInput.placeholder = profile.nickname || "e.g Maverick";
-  }
+  
 
   if (urlInput) {
     urlInput.value = profile.url || "";
@@ -203,7 +199,6 @@ function initProfileUI() {
       stopScanner();
       profileQrScannerActive = false;
 
-      const nickVal = nicknameInput ? nicknameInput.value.trim() : "";
       const urlVal = urlInput ? urlInput.value.trim() : "";
       const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (profile.attestationFileName || "");
 
@@ -213,12 +208,9 @@ function initProfileUI() {
       }
 
       saveProfileData({
-        nickname: nickVal,
         url: urlVal,
         attestationFileName: attestationName
       });
-
-      if (nicknameInput) nicknameInput.placeholder = nickVal || "e.g Maverick";
 
       updateProfileUrlBadge(urlVal);
 
@@ -251,10 +243,6 @@ function initProfileUI() {
       if (confirm("Clear saved crew profile data from this device?")) {
         clearProfileData();
         selectedAttestationFile = null;
-        if (nicknameInput) {
-          nicknameInput.value = "";
-          nicknameInput.placeholder = "e.g Maverick";
-        }
         if (urlInput) urlInput.value = "";
         if (pdfLabel) pdfLabel.innerText = "Select PDF attestation file...";
         if (urlStatusBadge) urlStatusBadge.classList.add("hidden");
@@ -282,12 +270,9 @@ function handleProfileQrScanned(scannedUrl) {
   updateProfileUrlBadge(scannedUrl);
 
   const profile = getProfileData();
-  const nicknameInput = document.getElementById("profile-nickname-input");
-  const nickVal = nicknameInput ? nicknameInput.value.trim() : "";
   const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (profile.attestationFileName || "");
 
   saveProfileData({
-    nickname: nickVal,
     url: scannedUrl,
     attestationFileName: attestationName
   });
@@ -511,7 +496,20 @@ DG FUNCTION 7 21 May 2025 30 Jun 2027
   }
 }
 
+let initialOverviewTemplateHTML = "";
+
+function saveOverviewTemplate() {
+  if (initialOverviewTemplateHTML) return;
+  const dashView = document.getElementById("dashboard-view");
+  const overviewPane = dashView ? (dashView.querySelector("#tab-overview-content") || document.getElementById("tab-overview-content")) : null;
+  if (overviewPane && overviewPane.querySelector("#overview-status-title")) {
+    initialOverviewTemplateHTML = overviewPane.innerHTML;
+  }
+}
+
 function renderBlankDashboard() {
+  saveOverviewTemplate();
+
   const dashboardView = document.getElementById("dashboard-view");
   if (!dashboardView) return;
 
@@ -557,6 +555,7 @@ async function renderDashboardView() {
 window.renderDashboardView = renderDashboardView;
 
 function renderDashboardResults(caamResults, mabResults = null) {
+  saveOverviewTemplate();
   const profile = getProfileData();
 
   if (!caamResults && !mabResults) {
@@ -565,6 +564,12 @@ function renderDashboardResults(caamResults, mabResults = null) {
   }
 
   const dashView = document.getElementById("dashboard-view");
+  const overviewPane = dashView ? (dashView.querySelector("#tab-overview-content") || document.getElementById("tab-overview-content")) : null;
+
+  if (overviewPane && initialOverviewTemplateHTML && !overviewPane.querySelector("#overview-status-title")) {
+    overviewPane.innerHTML = initialOverviewTemplateHTML;
+  }
+
   function getDashEl(id) {
     if (dashView) {
       const el = dashView.querySelector("#" + id);
@@ -573,7 +578,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
     return document.getElementById(id);
   }
 
-  const displayName = profile.nickname || (caamResults && caamResults.pilotDetails ? caamResults.pilotDetails.name : "MOHD SALLEHUDDIN BIN ZAIDY");
+  const displayName = (caamResults && caamResults.pilotDetails && caamResults.pilotDetails.name && caamResults.pilotDetails.name !== "-") ? caamResults.pilotDetails.name : "MOHD SALLEHUDDIN BIN ZAIDY";
 
   // 1. OVERVIEW TAB
   const heroTitle = getDashEl("overview-status-title");
