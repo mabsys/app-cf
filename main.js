@@ -980,7 +980,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
           badgeHtml = `<span class="bg-rose-100 text-rose-700 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">Lapsed</span>`;
         } else if (d.status === "EXPIRING_SOON") {
           badgeHtml = `<span class="bg-amber-100 text-amber-800 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">${d.daysLeft} days left</span>`;
-        } else if (d.expiryDate.toUpperCase() === "NIL" || d.status === "COMPLETED") {
+        } else if (d.status === "COMPLETED") {
           badgeHtml = `<span class="bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">Completed</span>`;
         } else {
           badgeHtml = `<span class="bg-emerald-100 text-emerald-700 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">Valid</span>`;
