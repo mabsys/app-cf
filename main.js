@@ -566,6 +566,14 @@ async function processLicenseUrl(url) {
     hour: '2-digit', minute: '2-digit', hour12: false
   }).replace(',', ', ');
 
+  const threshold = getThresholdDays();
+  const freshnessLimit = getFreshnessLimit();
+  const profile = getProfileData();
+
+  let caamResults = null;
+  let fetchFailed = false;
+  let fetchStatus = 0;
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 7000);
 
@@ -573,21 +581,54 @@ async function processLicenseUrl(url) {
     const fetchUrl = `${PROXY_URL}?url=${encodeURIComponent(url)}`;
     const response = await fetch(fetchUrl, { signal: controller.signal });
     clearTimeout(timeoutId);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch license page (Status: ${response.status})`);
+
+    if (response.ok) {
+      const htmlText = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlText, "text/html");
+      caamResults = parseLicenseDOM(doc, threshold);
+      caamResults.scanTime = scanTime;
+    } else {
+      fetchFailed = true;
+      fetchStatus = response.status;
     }
-    const htmlText = await response.text();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlText, "text/html");
-    const threshold = getThresholdDays();
+  } catch (error) {
+    clearTimeout(timeoutId);
+    fetchFailed = true;
+  }
 
-    const caamResults = parseLicenseDOM(doc, threshold);
-    caamResults.scanTime = scanTime;
+  // Fallback to cached CAAM results if live fetch failed and URL matches saved crew credentials
+  if (fetchFailed || !caamResults) {
+    const isProfileUrlMatch = profile && profile.url && (
+      profile.url.trim() === url.trim() ||
+      url.trim().includes(profile.url.trim()) ||
+      profile.url.trim().includes(url.trim())
+    );
 
-    const freshnessLimit = getFreshnessLimit();
-    let mabTextToParse = selectedAttestationText;
+    if (isProfileUrlMatch && profile.cachedCaamResults) {
+      caamResults = profile.cachedCaamResults;
+      caamResults.scanTime = scanTime + " (Cached)";
+      showProfileToast("CAAM server offline/error. Displaying stored licence data.");
+    } else {
+      let errMsg = "CAAM eCLIPSE Server Error: Could not connect to digital licence server.";
+      if (fetchStatus === 500) {
+        errMsg = "CAAM Portal Server Error (Status 500): The official CAAM eCLIPSE server (eclipse.caam.gov.my) or proxy service is temporarily unresponsive. Please try again shortly or verify manually.";
+      } else if (fetchStatus === 404) {
+        errMsg = "Licence Page Not Found (Status 404): The scanned CAAM eCLIPSE URL is invalid or no longer exists.";
+      } else if (fetchStatus > 0) {
+        errMsg = `CAAM Server Error (Status ${fetchStatus}): Failed to fetch digital licence page.`;
+      }
+      showError(errMsg);
+      return;
+    }
+  }
+
+  // Process MAB E-Attestation (if available)
+  let mabTextToParse = selectedAttestationText;
   if (!mabTextToParse && selectedAttestationFile) {
-    mabTextToParse = await extractTextFromPdfFile(selectedAttestationFile);
+    try {
+      mabTextToParse = await extractTextFromPdfFile(selectedAttestationFile);
+    } catch (e) {}
   }
   const sampleMabText = `
 Name : MOHD SALLEHUDDIN BIN ZAIDY
@@ -608,15 +649,12 @@ SMS 6 May 2026 31 May 2029
 FIRST AID 18 Mar 2008 NIL
 AVSEC 28 Jul 2026 30 Sep 2027
 DG FUNCTION 7 21 May 2025 30 Jun 2027
-    `;
-    const mabResults = parseAttestationText(mabTextToParse || sampleMabText, freshnessLimit, threshold);
+  `;
 
-    saveToHistory(caamResults, url);
-    renderResults(caamResults, mabResults);
-  } catch (error) {
-    console.error("Processing error:", error);
-    showError(`Error processing digital license: ${error.message}.`);
-  }
+  const mabResults = parseAttestationText(mabTextToParse || (profile ? profile.cachedMabResults : null) || sampleMabText, freshnessLimit, threshold);
+
+  saveToHistory(caamResults, url);
+  renderResults(caamResults, mabResults);
 }
 
 let initialOverviewTemplateHTML = "";
@@ -943,7 +981,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
     const lcDate = getDashEl("mab-linecheck-date");
     const lcExp = getDashEl("mab-linecheck-expiry");
 
-    if (lcTitle && mabResults.lineCheck) lcTitle.innerText = `${mabResults.lineCheck.fleet}`;
+    if (lcTitle && mabResults.lineCheck) lcTitle.innerText = `${mabResults.lineCheck.fleet} LINE CHECK`;
     if (lcLicence && mabResults.lineCheck) lcLicence.innerText = mabResults.lineCheck.licenseNo || "A3115";
     if (lcRoute && mabResults.lineCheck) lcRoute.innerText = mabResults.lineCheck.route;
     if (lcDate && mabResults.lineCheck) lcDate.innerText = mabResults.lineCheck.checkDate;
