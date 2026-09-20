@@ -6,7 +6,8 @@ import { parseAttestationText, validateAttestationContent } from './js/attestati
 import {
   saveToHistory, renderHistoryList, getScanHistory, getProfileData,
   saveProfileData, clearProfileData, clearHistory, getThresholdDays, setThresholdDays,
-  getHistoryLimit, setHistoryLimit, getFreshnessLimit, setFreshnessLimit
+  getHistoryLimit, setHistoryLimit, getFreshnessLimit, setFreshnessLimit,
+  hasProfileData
 } from './js/storage.js';
 import { startScanner, stopScanner } from './js/scanner.js';
 import {
@@ -24,7 +25,15 @@ async function extractTextFromPdfFile(file) {
   if (!file) return "";
   if (window.pdfjsLib) {
     try {
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
+        try {
+          const workerUrl = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+          const blob = new Blob([`importScripts("${workerUrl}");`], { type: "application/javascript" });
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
+        } catch (e) {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        }
+      }
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
       let fullText = "";
@@ -34,15 +43,22 @@ async function extractTextFromPdfFile(file) {
         const pageText = textContent.items.map(item => item.str).join(" ");
         fullText += pageText + "\n";
       }
-      if (fullText.trim()) return fullText;
+      if (fullText.trim().length > 20) return fullText;
     } catch (e) {
-      console.warn("pdfjsLib extraction failed, falling back to text stream:", e);
+      console.warn("pdfjsLib extraction failed, falling back to text stream scanner:", e);
     }
   }
   try {
     const arrayBuffer = await file.arrayBuffer();
-    const text = new TextDecoder("latin1").decode(arrayBuffer);
-    return text;
+    const rawText = new TextDecoder("latin1").decode(arrayBuffer);
+    const matches = rawText.match(/\(([^()]{2,100})\)/g);
+    if (matches && matches.length > 0) {
+      const extractedStr = matches.map(m => m.slice(1, -1)).join(" ");
+      if (extractedStr.trim().length > 20) {
+        return rawText + "\n" + extractedStr;
+      }
+    }
+    return rawText;
   } catch (err) {
     console.error("TextDecoder failed:", err);
     return "";
@@ -84,7 +100,7 @@ function isValidCaamUrl(urlStr) {
 
 function updateProfileUrlBadge(urlStr) {
   const urlBadge = document.getElementById("profile-url-status-badge") || document.getElementById("profile-url-badge");
-  const urlText = document.getElementById("profile-url-status-text") || document.getElementById("profile-url-badge-text");
+  const urlText = document.getElementById("profile-url-status-text") || document.getElementById("profile-url-badge-text") || (urlBadge ? urlBadge.querySelector("span") : null);
   if (!urlBadge) return;
 
   const cleanUrl = urlStr ? urlStr.trim() : "";
@@ -94,7 +110,7 @@ function updateProfileUrlBadge(urlStr) {
     if (urlText) {
       const storedProfile = getProfileData();
       if (storedProfile && storedProfile.url && cleanUrl === storedProfile.url.trim()) {
-        urlText.innerText = "Stored licence URL";
+        urlText.innerText = "✓ Stored licence URL";
       } else {
         urlText.innerText = "✓ Valid CAAM Licence URL captured";
       }
@@ -104,7 +120,7 @@ function updateProfileUrlBadge(urlStr) {
   }
 }
 
-function showProfileToast(msg = "Crew profile saved successfully!") {
+function showProfileToast(msg = "Crew credentials saved successfully!") {
   const toast = document.getElementById("profile-toast");
   const toastMsg = document.getElementById("profile-toast-msg");
   if (toast) {
@@ -116,52 +132,6 @@ function showProfileToast(msg = "Crew profile saved successfully!") {
   }
 }
 
-function activateProfileUrlMode() {
-  stopScanner();
-  profileQrScannerActive = false;
-
-  const qrBox = document.getElementById("profile-qr-box");
-  const urlBox = document.getElementById("profile-url-box");
-  const modeQrBtn = document.getElementById("profile-mode-qr-btn");
-  const modeUrlBtn = document.getElementById("profile-mode-url-btn");
-  const stopScanBtnProfile = document.getElementById("profile-stop-qr-btn") || document.getElementById("profile-stop-scan-btn");
-
-  if (qrBox) qrBox.classList.add("hidden");
-  if (urlBox) urlBox.classList.remove("hidden");
-  if (stopScanBtnProfile) stopScanBtnProfile.classList.add("hidden");
-
-  if (modeUrlBtn) {
-    modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
-  }
-  if (modeQrBtn) {
-    modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
-  }
-}
-
-function activateProfileQrMode() {
-  if (profileQrScannerActive) return;
-
-  const qrBox = document.getElementById("profile-qr-box");
-  const urlBox = document.getElementById("profile-url-box");
-  const modeQrBtn = document.getElementById("profile-mode-qr-btn");
-  const modeUrlBtn = document.getElementById("profile-mode-url-btn");
-  const stopScanBtnProfile = document.getElementById("profile-stop-qr-btn") || document.getElementById("profile-stop-scan-btn");
-
-  if (qrBox) qrBox.classList.remove("hidden");
-  if (urlBox) urlBox.classList.add("hidden");
-  if (stopScanBtnProfile) stopScanBtnProfile.classList.remove("hidden");
-
-  if (modeQrBtn) {
-    modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
-  }
-  if (modeUrlBtn) {
-    modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
-  }
-
-  profileQrScannerActive = true;
-  startScanner(handleProfileQrScanned, showError, "profile-qr-video");
-}
-
 function initProfileUI() {
   const profile = getProfileData();
   const urlInput = document.getElementById("profile-url-input");
@@ -169,12 +139,16 @@ function initProfileUI() {
   const pdfLabel = document.getElementById("profile-pdf-label");
   const modeQrBtn = document.getElementById("profile-mode-qr-btn");
   const modeUrlBtn = document.getElementById("profile-mode-url-btn");
+  const qrBox = document.getElementById("profile-qr-box");
+  const urlBox = document.getElementById("profile-url-box");
   const saveBtn = document.getElementById("profile-save-btn");
   const clearBtn = document.getElementById("profile-clear-btn");
-  const stopScanBtnProfile = document.getElementById("profile-stop-qr-btn") || document.getElementById("profile-stop-scan-btn");
+  const stopScanBtnProfile = document.getElementById("profile-stop-scan-btn");
   const urlStatusBadge = document.getElementById("profile-url-status-badge") || document.getElementById("profile-url-badge");
   const pdfStatusBadge = document.getElementById("profile-pdf-status-badge") || document.getElementById("profile-pdf-badge");
   const pdfStatusText = document.getElementById("profile-pdf-status-text") || document.getElementById("profile-pdf-badge-text") || (pdfStatusBadge ? pdfStatusBadge.querySelector("span") : null);
+
+  
 
   if (urlInput) {
     urlInput.value = profile.url || "";
@@ -188,7 +162,7 @@ function initProfileUI() {
   if (pdfStatusBadge && pdfStatusText) {
     if (profile.attestationFileName) {
       pdfStatusBadge.classList.remove("hidden");
-      pdfStatusText.innerText = "Stored attestation PDF file";
+      pdfStatusText.innerText = "✓ Stored Attestation PDF file";
     } else {
       pdfStatusBadge.classList.add("hidden");
     }
@@ -196,10 +170,53 @@ function initProfileUI() {
 
   stopScanner();
   profileQrScannerActive = false;
+  if (qrBox) qrBox.classList.add("hidden");
 
-  if (modeQrBtn) modeQrBtn.onclick = activateProfileQrMode;
-  if (modeUrlBtn) modeUrlBtn.onclick = activateProfileUrlMode;
-  if (stopScanBtnProfile) stopScanBtnProfile.onclick = activateProfileUrlMode;
+  if (profile.url && urlBox && modeUrlBtn && modeQrBtn) {
+    urlBox.classList.remove("hidden");
+    modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
+    modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
+  }
+
+  const activateQrMode = () => {
+    if (profileQrScannerActive) return;
+
+    if (qrBox && urlBox && modeQrBtn && modeUrlBtn) {
+      qrBox.classList.remove("hidden");
+      urlBox.classList.add("hidden");
+      if (stopScanBtnProfile) stopScanBtnProfile.classList.remove("hidden");
+
+      modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
+      modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
+      
+      profileQrScannerActive = true;
+      startScanner(handleProfileQrScanned, showError, "profile-qr-video");
+    }
+  };
+
+  const activateUrlMode = () => {
+    if (qrBox && urlBox && modeQrBtn && modeUrlBtn) {
+      stopScanner();
+      profileQrScannerActive = false;
+      urlBox.classList.remove("hidden");
+      qrBox.classList.add("hidden");
+      if (stopScanBtnProfile) stopScanBtnProfile.classList.add("hidden");
+
+      modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
+      modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
+    }
+  };
+
+  if (modeQrBtn) modeQrBtn.onclick = activateQrMode;
+  if (modeUrlBtn) modeUrlBtn.onclick = activateUrlMode;
+
+  if (stopScanBtnProfile) {
+    stopScanBtnProfile.onclick = () => {
+      stopScanner();
+      profileQrScannerActive = false;
+      activateUrlMode();
+    };
+  }
 
   if (urlInput) {
     urlInput.oninput = () => updateProfileUrlBadge(urlInput.value.trim());
@@ -208,23 +225,44 @@ function initProfileUI() {
 
   if (pdfFileInput) {
     pdfFileInput.onchange = async (e) => {
+      selectedAttestationFile = null;
+      selectedAttestationText = "";
+
       const file = e.target.files && e.target.files[0];
-      if (!file) return;
+      const currentProfile = getProfileData();
+
+      const resetToStoredOrEmpty = () => {
+        pdfFileInput.value = "";
+        if (pdfLabel) {
+          pdfLabel.innerText = currentProfile.attestationFileName || "Select PDF attestation file...";
+        }
+        if (pdfStatusBadge && pdfStatusText) {
+          if (currentProfile.attestationFileName) {
+            pdfStatusBadge.classList.remove("hidden");
+            pdfStatusText.innerText = "✓ Stored Attestation PDF file";
+          } else {
+            pdfStatusBadge.classList.add("hidden");
+          }
+        }
+      };
+
+      if (!file) {
+        resetToStoredOrEmpty();
+        return;
+      }
 
       // Tier 1: Magic Bytes Check (%PDF-)
       try {
         const buffer = await file.slice(0, 5).arrayBuffer();
         const header = new TextDecoder().decode(buffer);
         if (header !== "%PDF-") {
-          alert("Invalid File Format: Please upload a valid PDF document.");
-          pdfFileInput.value = "";
-          if (pdfLabel) pdfLabel.innerText = "Select PDF attestation file...";
-          if (pdfStatusBadge) pdfStatusBadge.classList.add("hidden");
+          alert("Invalid File Format: Selected file is not a valid PDF document.");
+          resetToStoredOrEmpty();
           return;
         }
       } catch (err) {
         alert("Failed to read file header. Please try again.");
-        pdfFileInput.value = "";
+        resetToStoredOrEmpty();
         return;
       }
 
@@ -235,23 +273,22 @@ function initProfileUI() {
 
         if (!validation.isValid) {
           alert(`Validation Failed: ${validation.reason}`);
-          pdfFileInput.value = "";
-          if (pdfLabel) pdfLabel.innerText = "Select PDF attestation file...";
-          if (pdfStatusBadge) pdfStatusBadge.classList.add("hidden");
+          resetToStoredOrEmpty();
           return;
         }
 
         selectedAttestationFile = file;
         selectedAttestationText = extractedText;
+
         if (pdfLabel) pdfLabel.innerText = file.name;
         if (pdfStatusBadge && pdfStatusText) {
           pdfStatusBadge.classList.remove("hidden");
-          pdfStatusText.innerText = "Verified attestation PDF ready";
+          pdfStatusText.innerText = "✓ Valid Attestation PDF file";
         }
         showProfileToast("MAB Attestation PDF verified!");
       } catch (err) {
         alert("Could not process PDF contents. Please ensure the file is not corrupted or password-protected.");
-        pdfFileInput.value = "";
+        resetToStoredOrEmpty();
       }
     };
   }
@@ -262,10 +299,16 @@ function initProfileUI() {
       profileQrScannerActive = false;
 
       const urlVal = urlInput ? urlInput.value.trim() : "";
-      const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (profile.attestationFileName || "");
+      const currentProfile = getProfileData();
+      const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (currentProfile.attestationFileName || "");
 
-      if (urlVal && !isValidCaamUrl(urlVal)) {
-        alert("Please enter a valid CAAM eCLIPSE URL");
+      if (!urlVal || !isValidCaamUrl(urlVal)) {
+        alert("Please enter or scan a valid CAAM eCLIPSE URL.");
+        return;
+      }
+
+      if (!selectedAttestationFile && !currentProfile.attestationFileName) {
+        alert("Please upload a valid MAB company attestation PDF file.");
         return;
       }
 
@@ -277,16 +320,11 @@ function initProfileUI() {
       updateProfileUrlBadge(urlVal);
 
       if (pdfStatusBadge && pdfStatusText) {
-        if (attestationName) {
-          pdfStatusBadge.classList.remove("hidden");
-          pdfStatusText.innerText = "Stored attestation PDF file";
-        } else {
-          pdfStatusBadge.classList.add("hidden");
-        }
+        pdfStatusBadge.classList.remove("hidden");
+        pdfStatusText.innerText = "✓ Stored Attestation PDF file";
       }
 
-      showProfileToast("Crew profile saved successfully!");
-
+      showProfileToast("Crew credentials saved successfully!");
       closeMenu();
       showLoading("Processing licence & attestation for Dashboard...");
 
@@ -316,31 +354,28 @@ function initProfileUI() {
         if (pdfLabel) pdfLabel.innerText = "Select PDF attestation file...";
         if (urlStatusBadge) urlStatusBadge.classList.add("hidden");
         if (pdfStatusBadge) pdfStatusBadge.classList.add("hidden");
-        showProfileToast("Profile cleared successfully.");
+        showProfileToast("Credentials cleared successfully.");
         renderDashboardView();
       }
     };
   }
 }
 
-async function handleProfileQrScanned(scannedUrl) {
+function handleProfileQrScanned(scannedUrl) {
   if (!scannedUrl) return;
+  stopScanner();
+  profileQrScannerActive = false;
 
   if (!isValidCaamUrl(scannedUrl)) {
     alert("Invalid QR Code: Must be an official CAAM eCLIPSE QR.");
-    activateProfileUrlMode();
     return;
   }
 
-  // 1. Immediately switch UI mode back to URL mode so user sees the captured URL and status badge!
-  activateProfileUrlMode();
-
-  // 2. Populate input field and update green status badge
   const urlInput = document.getElementById("profile-url-input");
   if (urlInput) urlInput.value = scannedUrl;
+
   updateProfileUrlBadge(scannedUrl);
 
-  // 3. Save profile URL to local storage
   const profile = getProfileData();
   const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (profile.attestationFileName || "");
 
@@ -350,24 +385,8 @@ async function handleProfileQrScanned(scannedUrl) {
   });
 
   showProfileToast("Licence QR scanned & saved!");
-
-  // 4. Process licence & attestation for Dashboard and save cached results
-  showLoading("Processing licence & attestation for Dashboard...");
-  closeMenu();
-
-  try {
-    const res = await processAndCacheProfileData(scannedUrl, selectedAttestationFile);
-    if (res && (res.caamResults || res.mabResults)) {
-      renderDashboardResults(res.caamResults, res.mabResults);
-    } else {
-      renderDashboardView();
-    }
-  } catch (err) {
-    console.error("Error processing profile data on QR scan:", err);
-    renderDashboardView();
-  }
+  processLicenseUrl(scannedUrl);
 }
-
 
 function initSettingsUI() {
   document.getElementById("theme-pill-light")?.addEventListener("click", () => applyThemeMode("light"));
@@ -477,9 +496,12 @@ async function processAndCacheProfileData(url, pdfFile) {
   let mabResults = null;
 
   if (url && isValidCaamUrl(url)) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
     try {
       const fetchUrl = `${PROXY_URL}?url=${encodeURIComponent(url)}`;
-      const response = await fetch(fetchUrl);
+      const response = await fetch(fetchUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
       if (response.ok) {
         const htmlText = await response.text();
         const parser = new DOMParser();
@@ -488,13 +510,14 @@ async function processAndCacheProfileData(url, pdfFile) {
         caamResults.scanTime = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).replace(',', ', ');
       }
     } catch (e) {
+      clearTimeout(timeoutId);
       console.warn("Could not fetch CAAM profile URL live:", e);
     }
   }
 
   let mabTextToParse = selectedAttestationText;
-  if (!mabTextToParse && pdfFile) {
-    mabTextToParse = await extractTextFromPdfFile(pdfFile);
+  if (!mabTextToParse && selectedAttestationFile) {
+    mabTextToParse = await extractTextFromPdfFile(selectedAttestationFile);
   }
   const sampleMabText = `
 Name : MOHD SALLEHUDDIN BIN ZAIDY
@@ -634,17 +657,32 @@ DG FUNCTION 7 21 May 2025 30 Jun 2027
   renderResults(caamResults, mabResults);
 }
 
-function saveOverviewTemplate() {
-  if (initialOverviewTemplateHTML) return;
+let initialOverviewTemplateHTML = "";
+let initialCaamTemplateHTML = "";
+let initialMabTemplateHTML = "";
+
+function saveDashboardTemplates() {
   const dashView = document.getElementById("dashboard-view");
-  const overviewPane = dashView ? (dashView.querySelector("#tab-overview-content") || document.getElementById("tab-overview-content")) : null;
-  if (overviewPane && overviewPane.querySelector("#overview-status-title")) {
+  if (!dashView) return;
+
+  const overviewPane = dashView.querySelector("#tab-overview-content") || document.getElementById("tab-overview-content");
+  if (overviewPane && !initialOverviewTemplateHTML && overviewPane.querySelector("#overview-status-title")) {
     initialOverviewTemplateHTML = overviewPane.innerHTML;
+  }
+
+  const caamPane = dashView.querySelector("#tab-caam-content") || document.getElementById("tab-caam-content");
+  if (caamPane && !initialCaamTemplateHTML && caamPane.querySelector("#pilot-name")) {
+    initialCaamTemplateHTML = caamPane.innerHTML;
+  }
+
+  const mabPane = dashView.querySelector("#tab-mab-content") || document.getElementById("tab-mab-content");
+  if (mabPane && !initialMabTemplateHTML && mabPane.querySelector("#mab-pilot-name")) {
+    initialMabTemplateHTML = mabPane.innerHTML;
   }
 }
 
 function renderBlankDashboard() {
-  saveOverviewTemplate();
+  saveDashboardTemplates();
 
   const dashboardView = document.getElementById("dashboard-view");
   if (!dashboardView) return;
@@ -656,13 +694,51 @@ function renderBlankDashboard() {
         <div class="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mb-1">
           <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
         </div>
-        <h3 class="text-base font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">No Crew Profile Configured</h3>
+        <h3 class="text-base font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">No Duty Credentials Saved</h3>
         <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-xs mx-auto">
-          Please set up your digital licence URL and company attestation PDF in <strong>My Profile</strong> to activate your flight duty compliance dashboard.
+          Please set up your digital licence URL and company attestation PDF in <strong>My Credentials</strong> to activate your flight duty compliance dashboard.
         </p>
         <button onclick="if(window.openProfileMenu) window.openProfileMenu(); else if(window.openMenu) window.openMenu();" type="button" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase py-3 px-6 rounded-2xl transition-all shadow-md flex items-center gap-2 cursor-pointer">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-          <span>Set Up Profile</span>
+          <span>Set Up Credentials</span>
+        </button>
+      </div>
+    `;
+  }
+
+  const caamPane = dashboardView.querySelector("#tab-caam-content") || document.getElementById("tab-caam-content");
+  if (caamPane) {
+    caamPane.innerHTML = `
+      <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-8 border border-slate-100 dark:border-slate-800 text-center flex flex-col items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mb-1">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+        </div>
+        <h3 class="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">No CAAM Digital Licence</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-xs mx-auto">
+          Please set up your official CAAM eCLIPSE digital licence URL in <strong>My Credentials</strong> to view licence validities.
+        </p>
+        <button onclick="if(window.openProfileMenu) window.openProfileMenu(); else if(window.openMenu) window.openMenu();" type="button" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase py-2.5 px-5 rounded-2xl transition-all shadow-md flex items-center gap-2 cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          <span>Configure Licence Source</span>
+        </button>
+      </div>
+    `;
+  }
+
+  const mabPane = dashboardView.querySelector("#tab-mab-content") || document.getElementById("tab-mab-content");
+  if (mabPane) {
+    mabPane.innerHTML = `
+      <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-8 border border-slate-100 dark:border-slate-800 text-center flex flex-col items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mb-1">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+        </div>
+        <h3 class="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">No MAB Attestation PDF</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-xs mx-auto">
+          Please upload your MAB E-Attestation PDF document in <strong>My Credentials</strong> to view company qualifications.
+        </p>
+        <button onclick="if(window.openProfileMenu) window.openProfileMenu(); else if(window.openMenu) window.openMenu();" type="button" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase py-2.5 px-5 rounded-2xl transition-all shadow-md flex items-center gap-2 cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          <span>Upload Attestation PDF</span>
         </button>
       </div>
     `;
@@ -691,7 +767,7 @@ async function renderDashboardView() {
 window.renderDashboardView = renderDashboardView;
 
 function renderDashboardResults(caamResults, mabResults = null) {
-  saveOverviewTemplate();
+  saveDashboardTemplates();
   const profile = getProfileData();
 
   if (!caamResults && !mabResults) {
@@ -701,6 +777,8 @@ function renderDashboardResults(caamResults, mabResults = null) {
 
   const dashView = document.getElementById("dashboard-view");
   const overviewPane = dashView ? (dashView.querySelector("#tab-overview-content") || document.getElementById("tab-overview-content")) : null;
+  const caamPane = dashView ? (dashView.querySelector("#tab-caam-content") || document.getElementById("tab-caam-content")) : null;
+  const mabPane = dashView ? (dashView.querySelector("#tab-mab-content") || document.getElementById("tab-mab-content")) : null;
 
   if (overviewPane && initialOverviewTemplateHTML && !overviewPane.querySelector("#overview-status-title")) {
     overviewPane.innerHTML = initialOverviewTemplateHTML;
@@ -785,8 +863,23 @@ function renderDashboardResults(caamResults, mabResults = null) {
     }
   }
 
+  // Hide open-original-btn in CAAM tab if profile is stored/loaded, or if nil info / no credentials
+  const openOriginalBtn = getDashEl("open-original-btn");
+  if (openOriginalBtn) {
+    const hasStoredCredentials = hasProfileData();
+    const hasValidCaamData = caamResults && caamResults.pilotDetails && caamResults.pilotDetails.licenseNo && caamResults.pilotDetails.licenseNo !== "-";
+    if (hasStoredCredentials || !hasValidCaamData || !lastScannedUrl) {
+      openOriginalBtn.classList.add("hidden");
+    } else {
+      openOriginalBtn.classList.remove("hidden");
+    }
+  }
+
   // 2. CAAM TAB
-  if (caamResults) {
+  if (caamResults && caamResults.pilotDetails) {
+    if (caamPane && initialCaamTemplateHTML && !caamPane.querySelector("#pilot-name")) {
+      caamPane.innerHTML = initialCaamTemplateHTML;
+    }
     const nameEl = getDashEl("pilot-name");
     const typeEl = getDashEl("licence-type");
     const noEl = getDashEl("licence-number");
@@ -827,8 +920,31 @@ function renderDashboardResults(caamResults, mabResults = null) {
     }
   }
 
+  else {
+    if (caamPane) {
+      caamPane.innerHTML = `
+        <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-8 border border-slate-100 dark:border-slate-800 text-center flex flex-col items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mb-1">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+          </div>
+          <h3 class="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">No CAAM Digital Licence</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-xs mx-auto">
+            Please set up your official CAAM eCLIPSE digital licence URL in <strong>My Credentials</strong> to view licence validities.
+          </p>
+          <button onclick="if(window.openProfileMenu) window.openProfileMenu(); else if(window.openMenu) window.openMenu();" type="button" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase py-2.5 px-5 rounded-2xl transition-all shadow-md flex items-center gap-2 cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            <span>Configure Licence Source</span>
+          </button>
+        </div>
+      `;
+    }
+  }
+
   // 3. MAB TAB
   if (mabResults) {
+    if (mabPane && initialMabTemplateHTML && !mabPane.querySelector("#mab-pilot-name")) {
+      mabPane.innerHTML = initialMabTemplateHTML;
+    }
     const voidBox = getDashEl("mab-void-warning-box");
     const voidReasonEl = getDashEl("mab-void-reason");
 
@@ -846,58 +962,52 @@ function renderDashboardResults(caamResults, mabResults = null) {
     const mabDesig = getDashEl("mab-designation");
     const mabPub = getDashEl("mab-published-date");
     const mabFresh = getDashEl("mab-freshness-tag");
+    const mabDocRef = getDashEl("mab-doc-ref");
 
     if (mabPilot) mabPilot.innerText = mabResults.pilotName;
     if (mabStaff) mabStaff.innerText = mabResults.staffNo;
     if (mabDesig) mabDesig.innerText = mabResults.designation;
     if (mabPub) mabPub.innerText = mabResults.publishedDateStr;
+    if (mabDocRef) mabDocRef.innerHTML = ""; // Omit FO/TRNG/ATT/MAR25
     if (mabFresh) {
       mabFresh.innerText = mabResults.isStale ? `Stale (>${mabResults.freshnessLimitDays}d)` : `Fresh (<${mabResults.freshnessLimitDays}d)`;
       mabFresh.className = mabResults.isStale ? "text-rose-600 font-extrabold" : "text-emerald-600 dark:text-emerald-400 font-extrabold";
     }
 
-    const lcBadge = getDashEl("mab-linecheck-badge");
+    // Line Check Card
+    const lcTitle = getDashEl("mab-linecheck-title");
+    const lcLicence = getDashEl("mab-linecheck-licence");
+    const lcRoute = getDashEl("mab-linecheck-route");
     const lcDate = getDashEl("mab-linecheck-date");
     const lcExp = getDashEl("mab-linecheck-expiry");
 
-    if (lcBadge) {
-      lcBadge.className = mabResults.lineCheck.status === "EXPIRED"
-        ? "px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase bg-rose-100 text-rose-700"
-        : "px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-700";
-      lcBadge.innerText = mabResults.lineCheck.status;
-    }
-    if (lcDate) lcDate.innerText = mabResults.lineCheck.checkDate;
-    if (lcExp) lcExp.innerText = mabResults.lineCheck.expiryDate;
+    if (lcTitle && mabResults.lineCheck) lcTitle.innerText = `${mabResults.lineCheck.fleet}`;
+    if (lcLicence && mabResults.lineCheck) lcLicence.innerText = mabResults.lineCheck.licenseNo || "A3115";
+    if (lcRoute && mabResults.lineCheck) lcRoute.innerText = mabResults.lineCheck.route;
+    if (lcDate && mabResults.lineCheck) lcDate.innerText = mabResults.lineCheck.checkDate;
+    if (lcExp && mabResults.lineCheck) lcExp.innerText = mabResults.lineCheck.expiryDate;
 
-    const lvoDetails = getDashEl("mab-lvo-details");
-    if (lvoDetails) {
-      lvoDetails.innerHTML = `Checked: <strong>${mabResults.lvo.checkDate}</strong> &bull; ${mabResults.lvo.airport} Rwy ${mabResults.lvo.runway} (${mabResults.lvo.simCode} ${mabResults.lvo.type})`;
-    }
+    // LVO Autoland Card
+    const lvoAirport = getDashEl("mab-lvo-airport");
+    const lvoRunway = getDashEl("mab-lvo-runway");
+    const lvoDate = getDashEl("mab-lvo-date");
+    const lvoSim = getDashEl("mab-lvo-sim");
+    const lvoCat = getDashEl("mab-lvo-cat");
+    const lvoDfe = getDashEl("mab-lvo-dfe");
+    const lvoBadge = getDashEl("mab-lvo-badge");
 
+    if (lvoAirport && mabResults.lvo) lvoAirport.innerText = mabResults.lvo.airport;
+    if (lvoRunway && mabResults.lvo) lvoRunway.innerText = mabResults.lvo.runway;
+    if (lvoDate && mabResults.lvo) lvoDate.innerText = mabResults.lvo.checkDate;
+    if (lvoSim && mabResults.lvo) lvoSim.innerText = mabResults.lvo.simCode;
+    if (lvoCat && mabResults.lvo) lvoCat.innerText = mabResults.lvo.category;
+    if (lvoDfe && mabResults.lvo) lvoDfe.innerText = mabResults.lvo.dfeNo || "DFE 11635";
+    if (lvoBadge && mabResults.lvo) lvoBadge.innerText = mabResults.lvo.type || "ACTUAL";
+
+    // Safety Drills & Recurrent Training List (Items 1-11)
     const drillsContainer = getDashEl("mab-drills-list");
-    if (drillsContainer) {
+    if (drillsContainer && mabResults.drills) {
       drillsContainer.innerHTML = "";
-
-      if (mabResults.aircraftTypes && mabResults.aircraftTypes.length > 0) {
-        mabResults.aircraftTypes.forEach(ac => {
-          const row = document.createElement("div");
-          row.className = "py-2.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800";
-          let badgeHtml = `<span class="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded-md font-extrabold uppercase">Rated</span>`;
-          if (ac.status === "UNRATED") {
-            badgeHtml = `<span class="bg-slate-100 text-slate-500 text-[10px] px-2 py-0.5 rounded-md font-bold uppercase">Unrated</span>`;
-          } else if (ac.status === "EXPIRED") {
-            badgeHtml = `<span class="bg-rose-100 text-rose-700 text-[10px] px-2 py-0.5 rounded-md font-extrabold uppercase">Expired</span>`;
-          }
-          row.innerHTML = `
-            <div>
-              <div class="font-bold text-slate-800 dark:text-slate-100 text-[11px]">AIRCRAFT TYPE: ${ac.fleet}</div>
-              <div class="text-[9px] text-slate-400 mt-0.5">Valid: ${ac.startDate} &bull; Expires: <strong class="text-slate-700 dark:text-slate-200">${ac.expiryDate}</strong></div>
-            </div>
-            <div>${badgeHtml}</div>
-          `;
-          drillsContainer.appendChild(row);
-        });
-      }
 
       mabResults.drills.forEach(d => {
         const row = document.createElement("div");
@@ -905,22 +1015,44 @@ function renderDashboardResults(caamResults, mabResults = null) {
 
         let badgeHtml = "";
         if (d.status === "EXPIRED") {
-          badgeHtml = `<span class="bg-rose-100 text-rose-700 text-[10px] px-2 py-0.5 rounded-md font-extrabold uppercase">Lapsed</span>`;
+          badgeHtml = `<span class="bg-rose-100 text-rose-700 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">Lapsed</span>`;
         } else if (d.status === "EXPIRING_SOON") {
-          badgeHtml = `<span class="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-md font-extrabold uppercase">${d.daysLeft} days left</span>`;
+          badgeHtml = `<span class="bg-amber-100 text-amber-800 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">${d.daysLeft} days left</span>`;
+        } else if (d.status === "COMPLETED") {
+          badgeHtml = `<span class="bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">Completed</span>`;
         } else {
-          badgeHtml = `<span class="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded-md font-extrabold uppercase">Valid</span>`;
+          badgeHtml = `<span class="bg-emerald-100 text-emerald-700 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">Valid</span>`;
         }
 
         row.innerHTML = `
           <div>
-            <div class="font-bold text-slate-800 dark:text-slate-100 text-[11px]">${d.name}</div>
-            <div class="text-[9px] text-slate-400 mt-0.5">Done: ${d.doneDate} &bull; Expires: <strong class="text-slate-700 dark:text-slate-200">${d.expiryDate}</strong></div>
+            <div class="font-extrabold text-slate-800 dark:text-slate-100 text-xs">${d.name}</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">
+              Attended : <strong class="text-slate-600 dark:text-slate-300 font-semibold">${d.doneDate}</strong> &nbsp;|&nbsp; Expires : <strong class="text-slate-600 dark:text-slate-300 font-semibold">${d.expiryDate}</strong>
+            </div>
           </div>
-          <div>${badgeHtml}</div>
+          <div class="shrink-0 flex items-center">${badgeHtml}</div>
         `;
         drillsContainer.appendChild(row);
       });
+    }
+  } else {
+    if (mabPane) {
+      mabPane.innerHTML = `
+        <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-8 border border-slate-100 dark:border-slate-800 text-center flex flex-col items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mb-1">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+          </div>
+          <h3 class="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">No MAB Attestation PDF</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-xs mx-auto">
+            Please upload your MAB E-Attestation PDF document in <strong>My Credentials</strong> to view company qualifications.
+          </p>
+          <button onclick="if(window.openProfileMenu) window.openProfileMenu(); else if(window.openMenu) window.openMenu();" type="button" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase py-2.5 px-5 rounded-2xl transition-all shadow-md flex items-center gap-2 cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            <span>Upload Attestation PDF</span>
+          </button>
+        </div>
+      `;
     }
   }
 
@@ -929,8 +1061,8 @@ function renderDashboardResults(caamResults, mabResults = null) {
 
 function renderResults(caamResults, mabResults = null) {
   const profile = getProfileData();
-  const resView = document.getElementById("result-view");
 
+  const resView = document.getElementById("result-view");
   function getResEl(id) {
     if (resView) {
       const el = resView.querySelector("#" + id);
@@ -947,6 +1079,7 @@ function renderResults(caamResults, mabResults = null) {
   const scanTimeEl = getResEl("res-scan-timestamp") || getResEl("scan-timestamp");
   const headerEl = getResEl("res-header") || getResEl("result-header");
   const overallBadge = getResEl("res-overall-status-badge") || getResEl("overall-status-badge");
+  const overallMsg = getResEl("res-overall-message") || getResEl("overall-message");
 
   if (nameEl) nameEl.innerText = displayName;
   if (typeEl && caamResults && caamResults.pilotDetails) typeEl.innerText = caamResults.pilotDetails.licenseType || "ATPL(A)";
@@ -1000,6 +1133,7 @@ function renderResults(caamResults, mabResults = null) {
     }
   }
 
+  // Attach button event handlers inside #result-view
   const resOpenBtn = getResEl("res-open-original-btn") || getResEl("open-original-btn");
   if (resOpenBtn) {
     resOpenBtn.onclick = () => {
