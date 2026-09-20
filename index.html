@@ -354,7 +354,7 @@ if ('serviceWorker' in navigator) {
       </div>
 
   <div class="flex flex-col gap-3">
-        <!-- Line Check Card -->
+        <!-- Line Check Card
         <div id="mab-linecheck-box" class="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-md flex flex-col gap-2.5">
           <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
           <span class="text-slate-500 text-[10px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
@@ -363,37 +363,86 @@ if ('serviceWorker' in navigator) {
           </svg>
           LINE CHECK
           </span>
-        </div>
+          </div>
           
-        <div class="flex flex-col items-center justify-between">  
-          <div class="flex justify-between items-start border-b border-slate-100 dark:border-slate-800/80 pb-1 w-full">
-            <div class="items-">
+          <div class="flex flex-col items-center justify-between">  
+            <div class="flex justify-between items-start border-b border-slate-100 dark:border-slate-800/80 pb-1 w-full">
+              <div class="items-">
               <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wide block">FLEET</span>
               <h4 id="mab-linecheck-title" class="text-lg tracking-wide font-bold text-slate-800 dark:text-slate-100">B738</h4>
-            </div>
-            <div class="text-right">
+              </div>
+              <div class="text-right">
               <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wide block">Licence No</span>
               <span id="mab-linecheck-licence" class="text-lg font-semibold text-slate-800 dark:text-slate-200">A3115</span>
+              </div>
             </div>
-          </div>
-          <div class="flex items-center justify-between gap-2 text-center text-[10px] pt-2 w-full uppercase">
-            <div class="text-left">
+            <div class="flex items-center justify-between gap-2 text-center text-[10px] pt-2 w-full uppercase">
+              <div class="text-left">
               <span class="text-slate-400 block text-[10px] font-semibold">Route</span>
               <strong id="mab-linecheck-route" class="text-xs text-slate-800 dark:text-slate-200 font-bold uppercase">KUL/BKI/KUL</strong>
-            </div>
-            <div class="text-center">
+              </div>
+              <div class="text-center">
               <span class="text-slate-400 block text-[10px] font-semibold">Date of Check</span>
               <strong id="mab-linecheck-date" class="text-xs text-slate-800 dark:text-slate-200 font-bold uppercase">13 Oct 2025</strong>
-            </div>
-            <div class="text-right">
+              </div>
+              <div class="text-right">
               <span class="text-slate-400 block text-[10px] font-semibold">Expiry Date</span>
               <strong id="mab-linecheck-expiry" class="text-xs text-slate-900 dark:text-slate-100 font-bold uppercase">31 Oct 2026</strong>
+              </div>
             </div>
-          </div>
-        </div> 
-  </div>
+          </div> 
+        </div> -->
+        <!-- NEW LINE CHECK -->
+      <div id="mab-linecheck-box" class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-md flex flex-col gap-3">
+  
+        <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
+          <span class="text-slate-500 text-[12px] uppercase tracking-wide font-extrabold flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-Linecap="round" stroke-Linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+          </svg>
+          line check
+        </span>
+      </div>
 
-        <!-- LVO Autoland Card -->
+      <div class="flex items-center justify-between gap-4 pt-1">
+
+    <div class="shrink-0 flex items-center justify-center">
+      <div class="px-3 py-3 rounded-xl dark:bg-blue-950/70 uppercase shadow-xs flex flex-col items-center leading-none min-w-[70px] border border-slate-300 dark:border-blue-900">
+        <span class="text-slate-500 dark:text-blue-300 font-normal text-[12px] tracking-wide">FLEET</span>
+        
+        <span id="mab-linecheck-title" class="text-slate-500 dark:text-blue-300 font-black text-[20px] mt-0.5">B738</span>
+      </div>
+    </div>
+    
+    <div class="flex-1 flex flex-col">
+      
+
+      <div class="flex flex-col place-items-stretch justify-evenly">
+
+        <div class="flex flex-row gap-2 items-center justify-between w-full">
+          <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wide font-semibold">Check Date</span>
+          <strong id="mab-linecheck-date" class="text-slate-800 dark:text-slate-200 font-bold text-xs uppercase tracking-wide self-auto">13 OCT 2025</strong>
+        </div>
+
+        <div class="flex flex-row gap-2 items-center justify-between w-full">
+          <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wide font-semibold">EXPIRY DATE</span>
+          <strong id="mab-linecheck-expiry" class="text-slate-900 dark:text-slate-100 font-bold text-xs uppercase tracking-wide self-auto">31 OCT 2026</strong>
+        </div>
+        <div class="flex flex-row gap-2 items-center justify-between w-full">
+          <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">ROUTE</span>
+          <strong id="mab-linecheck-route" class="text-slate-800 dark:text-slate-200 font-bold text-xs uppercase tracking-wider">KUL/BKI/KUL</strong>
+        </div>
+        <div class="flex flex-row gap-2 items-center justify-between w-full">
+          <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wide font-semibold">LICENCE No</span>
+          <strong id="mab-linecheck-licence" class="text-slate-800 dark:text-slate-200 font-bold text-xs self-auto">A3115</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+        <!-- LVO AUTOLAND CARD -->
         <div id="mab-lvo-box" class="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-md flex flex-col gap-4">
   
   <!-- 1. CORRECTED HEADER: Clean text with full-width bottom border line -->
