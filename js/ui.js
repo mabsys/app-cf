@@ -1,7 +1,7 @@
 // js/ui.js - View State, Navigation, and Network Controller
 
 import { stopScanner } from './scanner.js';
-import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData } from './storage.js';
+import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit } from './storage.js';
 import { topbarHTML } from './components/topbar.js';
 import { dockHTML } from './components/dock.js';
 import { menuHTML } from './components/menu.js';
@@ -469,9 +469,9 @@ export function showView(viewId) {
   const targetView = document.getElementById(viewId);
   if (targetView) targetView.classList.remove("hidden");
 
-  if (viewId === "result-view" || viewId === "dashboard-view") {
+  if (viewId === "dashboard-view") {
     let savedTab = localStorage.getItem("certifly_active_tab") || "overview";
-    if (viewId === "dashboard-view" && typeof hasProfileData === "function" && !hasProfileData()) {
+    if (typeof hasProfileData === "function" && !hasProfileData()) {
       savedTab = "overview";
     }
     switchResultTab(savedTab);
@@ -488,6 +488,8 @@ export function showView(viewId) {
 
   const historyDetails = document.getElementById("history-details");
   if (historyDetails) historyDetails.removeAttribute("open");
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 export function showScannerView() {
