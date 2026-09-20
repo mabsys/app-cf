@@ -1073,13 +1073,13 @@ function renderResults(caamResults, mabResults = null) {
 
   const displayName = (caamResults && caamResults.pilotDetails && caamResults.pilotDetails.name) || "MOHD SALLEHUDDIN BIN ZAIDY";
 
-  const nameEl = getResEl("pilot-name");
-  const typeEl = getResEl("licence-type");
-  const noEl = getResEl("licence-number");
-  const scanTimeEl = getResEl("scan-timestamp");
-  const headerEl = getResEl("result-header");
-  const overallBadge = getResEl("overall-status-badge");
-  const overallMsg = getResEl("overall-message");
+  const nameEl = getResEl("res-pilot-name") || getResEl("pilot-name");
+  const typeEl = getResEl("res-licence-type") || getResEl("licence-type");
+  const noEl = getResEl("res-licence-number") || getResEl("licence-number");
+  const scanTimeEl = getResEl("res-scan-timestamp") || getResEl("scan-timestamp");
+  const headerEl = getResEl("res-header") || getResEl("result-header");
+  const overallBadge = getResEl("res-overall-status-badge") || getResEl("overall-status-badge");
+  const overallMsg = getResEl("res-overall-message") || getResEl("overall-message");
 
   if (nameEl) nameEl.innerText = displayName;
   if (typeEl && caamResults && caamResults.pilotDetails) typeEl.innerText = caamResults.pilotDetails.licenseType || "ATPL(A)";
@@ -1102,7 +1102,7 @@ function renderResults(caamResults, mabResults = null) {
     }
   }
 
-  const caamListContainer = getResEl("qualifications-list");
+  const caamListContainer = getResEl("res-qualifications-list") || getResEl("qualifications-list");
   if (caamListContainer && caamResults) {
     caamListContainer.innerHTML = "";
     if (!caamResults.qualifications || caamResults.qualifications.length === 0) {
@@ -1131,6 +1131,25 @@ function renderResults(caamResults, mabResults = null) {
         caamListContainer.appendChild(row);
       });
     }
+  }
+
+  // Attach button event handlers inside #result-view
+  const resOpenBtn = getResEl("res-open-original-btn") || getResEl("open-original-btn");
+  if (resOpenBtn) {
+    resOpenBtn.onclick = () => {
+      if (lastScannedUrl) {
+        window.open(lastScannedUrl, "_blank");
+      } else if (caamResults && caamResults.qrImageUrl) {
+        window.open(caamResults.qrImageUrl, "_blank");
+      }
+    };
+  }
+
+  const resScanNewBtn = getResEl("res-scan-new-btn") || getResEl("scan-new-btn");
+  if (resScanNewBtn) {
+    resScanNewBtn.onclick = () => {
+      showScannerView();
+    };
   }
 
   showView("result-view");
