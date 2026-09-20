@@ -2,9 +2,9 @@
 
 let qrScanner = null;
 
-if (typeof QrScanner !== 'undefined') {
-  QrScanner.WORKER_PATH = 'js/vendor/qr-scanner-worker.min.js';
-}
+//if (typeof QrScanner !== 'undefined') {
+//  QrScanner.WORKER_PATH = 'js/vendor/qr-scanner-worker.min.js';
+//}
 
 export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemId = "qr-video") {
   const errorMsg = document.getElementById("error-message");
