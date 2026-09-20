@@ -143,7 +143,7 @@ function initProfileUI() {
   const urlBox = document.getElementById("profile-url-box");
   const saveBtn = document.getElementById("profile-save-btn");
   const clearBtn = document.getElementById("profile-clear-btn");
-  const stopScanBtnProfile = document.getElementById("profile-stop-scan-btn");
+  const stopScanBtnProfile = document.getElementById("profile-stop-qr-btn") || document.getElementById("profile-stop-scan-btn");
   const urlStatusBadge = document.getElementById("profile-url-status-badge") || document.getElementById("profile-url-badge");
   const pdfStatusBadge = document.getElementById("profile-pdf-status-badge") || document.getElementById("profile-pdf-badge");
   const pdfStatusText = document.getElementById("profile-pdf-status-text") || document.getElementById("profile-pdf-badge-text") || (pdfStatusBadge ? pdfStatusBadge.querySelector("span") : null);
@@ -371,11 +371,31 @@ function handleProfileQrScanned(scannedUrl) {
     return;
   }
 
+  // 1. Immediately switch UI view back to URL mode so input field & status badge are visible
+  const qrBox = document.getElementById("profile-qr-box");
+  const urlBox = document.getElementById("profile-url-box");
+  const modeQrBtn = document.getElementById("profile-mode-qr-btn");
+  const modeUrlBtn = document.getElementById("profile-mode-url-btn");
+  const stopScanBtnProfile = document.getElementById("profile-stop-qr-btn") || document.getElementById("profile-stop-scan-btn");
+
+  if (qrBox) qrBox.classList.add("hidden");
+  if (urlBox) urlBox.classList.remove("hidden");
+  if (stopScanBtnProfile) stopScanBtnProfile.classList.add("hidden");
+
+  if (modeUrlBtn) {
+    modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
+  }
+  if (modeQrBtn) {
+    modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
+  }
+
+  // 2. Populate URL input field and update green status badge
   const urlInput = document.getElementById("profile-url-input");
   if (urlInput) urlInput.value = scannedUrl;
 
   updateProfileUrlBadge(scannedUrl);
 
+  // 3. Save profile URL
   const profile = getProfileData();
   const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (profile.attestationFileName || "");
 
@@ -384,8 +404,7 @@ function handleProfileQrScanned(scannedUrl) {
     attestationFileName: attestationName
   });
 
-  showProfileToast("Licence QR scanned & saved!");
-  processLicenseUrl(scannedUrl);
+  showProfileToast("Licence QR scanned & captured!");
 }
 
 function initSettingsUI() {
@@ -492,6 +511,7 @@ function openOriginalLicense() {
 async function processAndCacheProfileData(url, pdfFile) {
   const threshold = getThresholdDays();
   const freshnessLimit = getFreshnessLimit();
+  const existingProfile = getProfileData();
   let caamResults = null;
   let mabResults = null;
 
@@ -541,12 +561,15 @@ AVSEC 28 Jul 2026 30 Sep 2027
 DG FUNCTION 7 21 May 2025 30 Jun 2027
   `;
 
-  mabResults = parseAttestationText(mabTextToParse || sampleMabText, freshnessLimit, threshold);
+  mabResults = parseAttestationText(mabTextToParse || (existingProfile ? existingProfile.cachedMabResults : null) || sampleMabText, freshnessLimit, threshold);
+
+  // Preserve existing cached CAAM results if live fetch failed
+  const finalCaamResults = caamResults || (existingProfile ? existingProfile.cachedCaamResults : null);
 
   saveProfileData({
-    cachedCaamResults: caamResults,
+    cachedCaamResults: finalCaamResults,
     cachedMabResults: mabResults,
-    qrImageUrl: caamResults ? caamResults.qrImageUrl : ""
+    qrImageUrl: finalCaamResults ? finalCaamResults.qrImageUrl : ""
   });
 
   return { caamResults, mabResults };
@@ -981,7 +1004,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
     const lcDate = getDashEl("mab-linecheck-date");
     const lcExp = getDashEl("mab-linecheck-expiry");
 
-    if (lcTitle && mabResults.lineCheck) lcTitle.innerText = `${mabResults.lineCheck.fleet}`;
+    if (lcTitle && mabResults.lineCheck) lcTitle.innerText = `${mabResults.lineCheck.fleet} LINE CHECK`;
     if (lcLicence && mabResults.lineCheck) lcLicence.innerText = mabResults.lineCheck.licenseNo || "A3115";
     if (lcRoute && mabResults.lineCheck) lcRoute.innerText = mabResults.lineCheck.route;
     if (lcDate && mabResults.lineCheck) lcDate.innerText = mabResults.lineCheck.checkDate;
