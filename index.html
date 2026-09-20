@@ -397,59 +397,47 @@ if ('serviceWorker' in navigator) {
 
   <!-- 2. CONTENT WRAPPER: Multi-column Metadata Grid + Right Badge -->
   <div class="flex items-center justify-between gap-4 pt-1">
-    
-    <!-- Left Column: Unified Metadata Grid Layout -->
-    <div class="flex-1 flex flex-col gap-3">
-      
-      <!-- 1st Row (Stacked Columns) -->
-      <div class="flex items-center gap-6 border-b border-slate-100 dark:border-slate-800/80 pb-2">
-        <!-- Check Date Item -->
-        <div class="flex flex-col gap-0.5">
-          <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">Check Date</span>
-          <strong id="mab-lvo-date" class="text-slate-800 dark:text-slate-200 font-bold text-xs">9 Sep 2026</strong>
-        </div>
-        <!-- Type Item -->
-        <div class="flex flex-col gap-0.5">
-          <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">Type</span>
-          <strong id="mab-lvo-badge" class="text-slate-900 dark:text-slate-100 font-bold text-xs">Actual</strong>
-        </div>
-        <!-- Category Item
-        <div class="flex flex-col gap-0.5">
-          <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">CAT</span>
-          <strong id="mab-lvo-cat" class="text-slate-800 dark:text-slate-200 font-bold text-xs">III</strong>
-        </div>-->  
-      </div>
-      
-      <!-- 2nd Row (Stacked Columns) -->
-      <div class="flex items-center gap-5">
-        <!-- Sim Item -->
-        <div class="flex flex-col gap-0.5">
-          <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">Sim</span>
-          <strong id="mab-lvo-sim" class="text-slate-800 dark:text-slate-200 font-bold text-xs">SIM2TEW</strong>
-        </div>
-      
-        <!-- DFE No Item -->
-        <div class="flex flex-col gap-0.5">
-          <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">DFE No</span>
-          <strong id="mab-lvo-dfe" class="text-slate-800 dark:text-slate-200 font-bold text-xs">DFE 11635</strong>
-        </div>
-      </div>
 
-    </div>
-
-    <!-- Right Column: Merged Rightmost Badge (Stacked Vertically) -->
+        <!-- Right Column: Merged Rightmost Badge (Stacked Vertically) -->
     <div class="shrink-0 flex items-center justify-center">
       <div class="px-3 py-2 rounded-xl bg-slate-200 dark:bg-blue-950/70 uppercase shadow-xs flex flex-col items-center leading-none min-w-[70px] border border-slate-300 dark:border-blue-900">
-        <span id="mab-lvo-airport" class="text-slate-500 dark:text-blue-300 font-bold text-[18px] tracking-wide">XXXX</span>
-        <span id="mab-lvo-runway" class="text-slate-500 dark:text-blue-300 font-extrabold text-[32px] mt-1">XX</span>
-        <span class="text-slate-500 dark:text-blue-300 font-bold text-[12px] mt-1">CAT <span id="mab-lvo-cat">XXX</span></span>
+        <span id="mab-lvo-airport" class="text-slate-500 dark:text-blue-300 font-bold text-[18px] tracking-wide">VIDP</span>
+        
+        <span id="mab-lvo-runway" class="text-slate-500 dark:text-blue-300 font-extrabold text-[32px] mt-0.5">28</span>
+        <span class="text-slate-500 dark:text-blue-300 font-bold text-[12px] mt-0.5">CAT <span id="mab-lvo-cat">III</span></span>
       </div>
     </div>
-
+    
+    <!-- Left Column: Unified Metadata Grid Layout -->
+    <div class="flex-1 flex flex-col  gap-4">
+      
+      <!-- 1st Row (Stacked Columns) -->
+      <div class="flex flex-col place-items-stretch justify-evenly 0 pb-2">
+        <!-- Check Date Item -->
+        <div class="flex flex-row gap-2 items-center justify-between w-full">
+          <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wide font-semibold">Check Date</span>
+          <strong id="mab-lvo-date" class="text-slate-800 dark:text-slate-200 font-bold text-xs uppercase tracking-wide self-auto">9 Sep 2026</strong>
+        </div>
+        <!-- Type Item -->
+        <div class="flex flex-row gap-2 items-center justify-between w-full">
+          <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wide font-semibold">Type</span>
+          <strong id="mab-lvo-badge" class="text-slate-900 dark:text-slate-100 font-bold text-xs uppercase tracking-wide self-auto">Actual</strong>
+        </div>
+        <div class="flex flex-row gap-2 items-center justify-between w-full">
+          <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">Sim</span>
+          <strong id="mab-lvo-sim" class="text-slate-800 dark:text-slate-200 font-bold text-xs uppercase tracking-wide">SIM2TEW</strong>
+        </div>
+        <div class="flex flex-row gap-2 items-center justify-between w-full">
+          <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wide font-semibold">DFE No</span>
+          <strong id="mab-lvo-dfe" class="text-slate-800 dark:text-slate-200 font-bold text-xs self-auto">DFE 11635</strong>
+        </div>
+      </div>
+    </div>
   </div>
+          
 </div>
 
-          
+       <!-- SAFETY & RECURRENT TRAININGS -->   
        <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
         <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
           <span class="text-slate-500 text-[10px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
