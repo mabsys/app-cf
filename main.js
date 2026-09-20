@@ -516,8 +516,8 @@ async function processAndCacheProfileData(url, pdfFile) {
   }
 
   let mabTextToParse = selectedAttestationText;
-  if (!mabTextToParse && pdfFile) {
-    mabTextToParse = await extractTextFromPdfFile(pdfFile);
+  if (!mabTextToParse && selectedAttestationFile) {
+    mabTextToParse = await extractTextFromPdfFile(selectedAttestationFile);
   }
   const sampleMabText = `
 Name : MOHD SALLEHUDDIN BIN ZAIDY
@@ -586,8 +586,8 @@ async function processLicenseUrl(url) {
 
     const freshnessLimit = getFreshnessLimit();
     let mabTextToParse = selectedAttestationText;
-  if (!mabTextToParse && pdfFile) {
-    mabTextToParse = await extractTextFromPdfFile(pdfFile);
+  if (!mabTextToParse && selectedAttestationFile) {
+    mabTextToParse = await extractTextFromPdfFile(selectedAttestationFile);
   }
   const sampleMabText = `
 Name : MOHD SALLEHUDDIN BIN ZAIDY
@@ -943,7 +943,6 @@ function renderDashboardResults(caamResults, mabResults = null) {
     const lcDate = getDashEl("mab-linecheck-date");
     const lcExp = getDashEl("mab-linecheck-expiry");
 
-    //if (lcTitle && mabResults.lineCheck) lcTitle.innerText = `${mabResults.lineCheck.fleet} LINE CHECK`;
     if (lcTitle && mabResults.lineCheck) lcTitle.innerText = `${mabResults.lineCheck.fleet}`;
     if (lcLicence && mabResults.lineCheck) lcLicence.innerText = mabResults.lineCheck.licenseNo || "A3115";
     if (lcRoute && mabResults.lineCheck) lcRoute.innerText = mabResults.lineCheck.route;
