@@ -348,11 +348,11 @@ export function initNavigationBars() {
   document.getElementById("dock-menu-btn")?.addEventListener("click", openMenu);
   document.getElementById("dock-scan-btn")?.addEventListener("click", showScannerView);
   document.getElementById("dock-dashboard-btn")?.addEventListener("click", () => {
+    switchResultTab("overview");
     if (window.renderDashboardView) {
       window.renderDashboardView();
-    } else {
-      showView("dashboard-view");
     }
+    showView("dashboard-view", "overview");
   });
 
   document.getElementById("dock-history-btn")?.addEventListener("click", () => {
@@ -461,7 +461,7 @@ export function updateNetworkStatus() {
   }
 }
 
-export function showView(viewId) {
+export function showView(viewId, defaultTab = null) {
   document.querySelectorAll(".app-view").forEach(view => {
     view.classList.add("hidden");
   });
