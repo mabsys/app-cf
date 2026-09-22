@@ -931,7 +931,8 @@ function renderDashboardResults(caamResults, mabResults = null) {
 
     // Collect CAAM qualifications
     if (caamResults && Array.isArray(caamResults.qualifications)) {
-      sortedCaamQuals.forEach(q => {
+      const sortedEarliestQuals = sortCaamQualifications(caamResults.qualifications);
+      sortedEarliestQuals.forEach(q => {
         if (q.dateText && !['NO EXPIRY', 'NIL', 'NA', 'N/A', '-'].includes(q.dateText.trim().toUpperCase())) {
           const d = q.parsedDate || parseAnyDate(q.dateText);
           if (d && !isNaN(d.getTime())) {
@@ -1024,7 +1025,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
       if (!sortedCaamQuals || sortedCaamQuals.length === 0) {
         caamListContainer.innerHTML = `<div class="text-center text-slate-500 py-6 text-xs italic">No CAAM qualifications found on digital licence.</div>`;
       } else {
-        sortedResQuals.forEach(q => {
+        sortedCaamQuals.forEach(q => {
           const row = document.createElement("div");
           row.className = "py-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 last:border-b-0";
 
@@ -1244,7 +1245,7 @@ function renderResults(caamResults, mabResults = null) {
     if (!sortedResQuals || sortedResQuals.length === 0) {
       caamListContainer.innerHTML = `<div class="text-center text-slate-500 py-6 text-xs italic">No CAAM qualifications found on digital licence.</div>`;
     } else {
-      caamResults.qualifications.forEach(q => {
+      sortedResQuals.forEach(q => {
         const row = document.createElement("div");
         row.className = "py-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 last:border-b-0";
 
