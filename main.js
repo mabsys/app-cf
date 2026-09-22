@@ -877,12 +877,92 @@ function renderDashboardResults(caamResults, mabResults = null) {
     }
   }
 
+  function parseAnyDate(dateStr) {
+    if (!dateStr || typeof dateStr !== 'string') return null;
+    const trimmed = dateStr.trim();
+    if (['NO EXPIRY', 'NIL', 'NA', 'N/A', '-'].includes(trimmed.toUpperCase())) {
+      return null;
+    }
+    const timestamp = Date.parse(trimmed);
+    if (!isNaN(timestamp)) {
+      return new Date(timestamp);
+    }
+    const match = trimmed.match(/^(\d{1,2})\s+([a-zA-Z]{3,10})\s+(\d{4})$/);
+    if (match) {
+      const day = parseInt(match[1], 10);
+      const monthStr = match[2].toUpperCase();
+      const year = parseInt(match[3], 10);
+      const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+      const monthsMalay = ['JAN', 'FEB', 'MAC', 'APR', 'MEI', 'JUN', 'JUL', 'OGOS', 'SEP', 'OKT', 'NOV', 'DIS'];
+      let mIdx = months.indexOf(monthStr);
+      if (mIdx === -1) mIdx = monthsMalay.indexOf(monthStr);
+      if (mIdx !== -1) {
+        return new Date(year, mIdx, day);
+      }
+    }
+    return null;
+  }
+
   const earliestName = getDashEl("overview-earliest-item-name");
   const earliestSub = getDashEl("overview-earliest-item-sub");
   if (earliestName && earliestSub) {
-    if (mabResults && mabResults.lineCheck) {
-      earliestName.innerText = `B738 Line Check (${mabResults.lineCheck.expiryDate})`;
-      earliestSub.innerText = "MAB Operational Flight Check • Next Renewal";
+    const candidates = [];
+
+    // Collect CAAM qualifications
+    if (caamResults && Array.isArray(caamResults.qualifications)) {
+      caamResults.qualifications.forEach(q => {
+        if (q.dateText && !['NO EXPIRY', 'NIL', 'NA', 'N/A', '-'].includes(q.dateText.trim().toUpperCase())) {
+          const d = q.parsedDate || parseAnyDate(q.dateText);
+          if (d && !isNaN(d.getTime())) {
+            candidates.push({
+              name: `${q.name} (${q.dateText})`,
+              sub: "CAAM Licence Qualification • Next Renewal",
+              date: d
+            });
+          }
+        }
+      });
+    }
+
+    // Collect MAB Line Check
+    if (mabResults && mabResults.lineCheck && mabResults.lineCheck.expiryDate) {
+      const d = parseAnyDate(mabResults.lineCheck.expiryDate);
+      if (d && !isNaN(d.getTime())) {
+        candidates.push({
+          name: `${mabResults.lineCheck.fleet || 'B738'} Line Check (${mabResults.lineCheck.expiryDate})`,
+          sub: "MAB Operational Flight Check • Next Renewal",
+          date: d
+        });
+      }
+    }
+
+    // Collect MAB Drills
+    if (mabResults && Array.isArray(mabResults.drills)) {
+      mabResults.drills.forEach(dr => {
+        const dateStr = dr.nextDue || dr.expiryDate;
+        if (dateStr) {
+          const d = parseAnyDate(dateStr);
+          if (d && !isNaN(d.getTime())) {
+            candidates.push({
+              name: `${dr.item} (${dateStr})`,
+              sub: "MAB Safety & Recurrent Training • Next Renewal",
+              date: d
+            });
+          }
+        }
+      });
+    }
+
+    // Sort candidates chronologically ascending (earliest date first)
+    candidates.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    if (candidates.length > 0) {
+      const earliest = candidates[0];
+      earliestName.innerText = earliest.name;
+      earliestSub.innerText = earliest.sub;
+    } else {
+      earliestName.innerText = "All Items Valid";
+      earliestSub.innerText = "No immediate renewals required.";
     }
   }
 
