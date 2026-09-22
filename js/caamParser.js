@@ -16,9 +16,12 @@ function parseLicenseDate(dateStr) {
 
   const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
   const monthsMalay = ['JAN', 'FEB', 'MAC', 'APR', 'MEI', 'JUN', 'JUL', 'OGOS', 'SEP', 'OKT', 'NOV', 'DIS'];
+
   let monthIdx = months.indexOf(monthStr);
   if (monthIdx === -1) monthIdx = monthsMalay.indexOf(monthStr);
+
   if (monthIdx === -1) return null;
+
   return new Date(year, monthIdx, day);
 }
 
@@ -31,6 +34,7 @@ function isUnderPg2(el) {
       if (match && parseInt(match[1], 10) >= 2) return true;
     }
   }
+
   let curr = el;
   while (curr) {
     if (curr.id && typeof curr.id === 'string') {
@@ -74,9 +78,12 @@ function shouldIgnore(el) {
   const text = el.textContent.trim();
   if (!text) return true;
   const upperText = text.toUpperCase();
+
   if (upperText.includes('INITIAL GRANT') || upperText.includes('INITIAL_GRANT')) return true;
   if (upperText.includes('7 DECEMBER 1944') || upperText.includes('7 DISEMBER 1944') || upperText.includes('DECEMBER 1944') || upperText.includes('DISEMBER 1944')) return true;
+
   if (/\d{1,2}:\d{2}:\d{2}/.test(text)) return true;
+
   let curr = el;
   for (let i = 0; i < 5; i++) {
     if (!curr || !curr.tagName) break;
@@ -92,12 +99,15 @@ function shouldIgnore(el) {
     if (currText.includes('LAST SYNCHRONIZATION') || currText.includes('PENYELARASAN TERAKHIR')) return true;
     if (currText.includes('INITIAL GRANT')) return true;
     if (currText.includes('CHICAGO CONVENTION') || currText.includes('ANNEX 1') || currText.includes('ANEKS 1')) return true;
+
     curr = curr.parentElement;
   }
+
   const tr = el.closest ? el.closest('tr') : null;
   if (tr) {
     const rowText = tr.textContent.toUpperCase();
     if (rowText.includes('VALIDITY ISSUE DATE') || rowText.includes('TARIKH KELUARAN')) return true;
+
     const tds = getDirectChildCells(tr);
     if (tds.length === 3) {
       const table = tr.closest ? tr.closest('table') : null;
@@ -106,6 +116,7 @@ function shouldIgnore(el) {
       }
     }
   }
+
   return false;
 }
 
@@ -113,6 +124,7 @@ function isRedOrExpired(el) {
   if (!el) return false;
   const text = el.textContent.trim().toUpperCase();
   if (text === 'EXPIRED') return true;
+
   const inlineStyle = (el.getAttribute('style') || '').toLowerCase();
   return (
     inlineStyle.includes('color: red') ||
@@ -134,10 +146,14 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
   function processQualification(labelText, dateText, parsedDate, isVisuallyExpired) {
     const name = labelText || 'Qualification';
     const key = name.toUpperCase().replace(/\s+/g, '');
+
     if (key.includes('CLASS1(SC)') || key.includes('CLASS1SC') || key.includes('CLASS1(S.C.)')) return;
+
     const cleanName = name.replace('•', '').trim();
+
     let status = 'VALID';
     let daysRemaining = null;
+
     if (isVisuallyExpired) {
       status = 'EXPIRED';
     } else if (parsedDate) {
@@ -149,7 +165,9 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
         status = 'EXPIRING_SOON';
       }
     }
+
     if (qualificationData[key] && qualificationData[key].status === 'EXPIRED') return;
+
     qualificationData[key] = {
       name: cleanName,
       dateText: dateText,
@@ -168,6 +186,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
   for (let i = 0; i < allElements.length; i++) {
     if (isUnderPg2(allElements[i])) continue;
     const text = allElements[i].textContent.toUpperCase();
+
     if (text.includes('FULL NAME OF HOLDER') || text.includes('NAMA PENUH PEMEGANG')) {
       const tr = allElements[i].closest ? allElements[i].closest('tr') : null;
       if (tr) {
@@ -193,6 +212,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
   for (let i = 0; i < allElements.length; i++) {
     if (isUnderPg2(allElements[i])) continue;
     const text = allElements[i].textContent.trim();
+
     if (text === 'II') {
       const tr = allElements[i].closest ? allElements[i].closest('tr') : null;
       if (tr) {
@@ -210,6 +230,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
         }
       }
     }
+
     if (text === 'III') {
       const tr = allElements[i].closest ? allElements[i].closest('tr') : null;
       if (tr) {
@@ -255,6 +276,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
     const headers = table.querySelectorAll('th, td');
     let isFclTable = false;
     let licenceTypeColIndex = -1;
+
     for (let h = 0; h < headers.length; h++) {
       const headerText = headers[h].textContent.toUpperCase();
       if (headerText.includes('LICENCE TYPE') || headerText.includes('JENIS LESEN')) {
@@ -267,6 +289,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
         break;
       }
     }
+
     if (isFclTable && licenceTypeColIndex !== -1) {
       const rows = table.querySelectorAll('tr');
       for (let r = 0; r < rows.length; r++) {
@@ -301,7 +324,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
     }
   }
 
-  // Medical Limitations Extraction (Item XVc & Item XVd)
+  // Extract Item XVc (Special Medical Limitations) and Item XVd (Other Medical Limitations)
   let xvcText = '';
   let xvdText = '';
 
@@ -362,7 +385,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
     if (!rawStr) return [];
     const lines = rawStr.split(/[\n\r•;]+/);
     const items = [];
-    lines.forEach(l => {
+    lines.forEach(function(l) {
       let clean = l.replace(/^[•\s\-\*]+/, '').replace(/\s+/g, ' ').trim();
       const upper = clean.toUpperCase();
       if (clean && upper !== 'NIL' && upper !== 'NONE' && upper !== '-' && upper !== 'N/A' && !upper.includes('SPECIAL MEDICAL LIMITATIONS') && !upper.includes('OTHER MEDICAL LIMITATIONS')) {
@@ -378,8 +401,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
 
   let medicalLimitationsFormatted = 'NIL';
   if (allMedicalItems.length > 0) {
-    medicalLimitationsFormatted = allMedicalItems.map(item => ).join('
-');
+    medicalLimitationsFormatted = allMedicalItems.map(function(item) { return '• ' + item; }).join('\n');
   }
 
   // Pass 1: Card Extraction
@@ -412,6 +434,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
     if (isUnderPg2(tr)) continue;
     const rowText = tr.textContent.toUpperCase();
     const rowNormalized = rowText.replace(/\s+/g, '');
+
     if (rowNormalized.includes('CLASS1(SC)') || rowNormalized.includes('CLASS1SC') || rowNormalized.includes('CLASS1(S.C.)')) continue;
     if (rowText.includes('LICENCE TYPE') || rowText.includes('VALIDITY EXPIRY DATE')) continue;
     if (rowText.includes('MEDICAL CLASS') || rowText.includes('KELAS PERUBATAN')) continue;
@@ -419,6 +442,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
 
     const labelText = getLabelFromRow(tr);
     if (!labelText) continue;
+
     const tds = getDirectChildCells(tr);
     for (let j = 0; j < tds.length; j++) {
       const tdText = tds[j].textContent.trim();
@@ -444,6 +468,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
         let dateText = el.textContent.trim();
         const tr = el.closest ? el.closest('tr') : null;
         const card = el.closest ? el.closest('.card') : null;
+
         if (tr) {
           const rowNormalized = tr.textContent.toUpperCase().replace(/\s+/g, '');
           if (rowNormalized.includes('CLASS1(SC)') || rowNormalized.includes('CLASS1SC') || rowNormalized.includes('CLASS1(S.C.)')) continue;
@@ -457,7 +482,9 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
           const dateEl = card.querySelector('.text-uppercase b') || card.querySelector('.fs-4 b, .fs-3 b');
           if (dateEl) dateText = dateEl.textContent.trim();
         }
+
         if (!labelText) labelText = 'Qualification';
+
         const key = labelText.toUpperCase().replace(/\s+/g, '');
         if (!qualificationData[key]) {
           const parsedDate = parseLicenseDate(dateText);
