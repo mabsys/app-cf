@@ -127,98 +127,6 @@ function isRedOrExpired(el) {
   );
 }
 
-function extractNestedLimitations(docObj, itemCode) {
-  if (!docObj) return [];
-  const items = [];
-  const targetCode = itemCode.toUpperCase();
-
-  const candidates = docObj.querySelectorAll('.licenceNumbering, td, th, div, span, b');
-
-  for (let i = 0; i < candidates.length; i++) {
-    const el = candidates[i];
-    if (isUnderPg2(el)) continue;
-
-    const elText = el.textContent.trim().toUpperCase();
-
-    let isMatch = false;
-    if (targetCode === 'XVC') {
-      if (elText === 'XVC' || elText === 'XVC.' || elText === 'XVC:' || elText.includes('SPECIAL MEDICAL LIMITATIONS') || elText.includes('HAD HADAN PERUBATAN KHAS')) {
-        isMatch = true;
-      }
-    } else if (targetCode === 'XVD') {
-      if (elText === 'XVD' || elText === 'XVD.' || elText === 'XVD:' || elText.includes('OTHER MEDICAL LIMITATIONS') || elText.includes('HAD HADAN PERUBATAN LAIN')) {
-        isMatch = true;
-      }
-    }
-
-    if (!isMatch) continue;
-
-    const tr = el.closest ? el.closest('tr') : null;
-    if (!tr) continue;
-
-    const nextTr = tr.nextElementSibling;
-    if (!nextTr) continue;
-
-    const nestedTable = nextTr.querySelector('table');
-    if (nestedTable) {
-      const rows = nestedTable.querySelectorAll('tr');
-      for (let r = 0; r < rows.length; r++) {
-        const cells = rows[r].querySelectorAll('td, th');
-        if (cells.length > 0) {
-          const rawVal = cells[cells.length - 1].textContent.trim();
-          const clean = rawVal.replace(/^[•\s\-\*\&\#8226\;]+/, '').replace(/\s+/g, ' ').trim();
-          const upper = clean.toUpperCase();
-
-          if (clean && clean !== '•' && upper !== 'XVC' && upper !== 'XVD' && !upper.includes('SPECIAL MEDICAL LIMITATIONS') && !upper.includes('OTHER MEDICAL LIMITATIONS') && !upper.includes('HAD HADAN')) {
-            if (!items.includes(clean)) {
-              items.push(clean);
-            }
-          }
-        }
-      }
-    } else {
-      const spans = nextTr.querySelectorAll('.labelfield, span, td');
-      for (let s = 0; s < spans.length; s++) {
-        if (spans[s].children && spans[s].children.length > 0) continue;
-        const sText = spans[s].textContent.trim();
-        const clean = sText.replace(/^[•\s\-\*\&\#8226\;]+/, '').replace(/\s+/g, ' ').trim();
-        const upper = clean.toUpperCase();
-
-        if (clean && clean !== '•' && upper !== 'XVC' && upper !== 'XVD' && !upper.includes('SPECIAL MEDICAL LIMITATIONS') && !upper.includes('OTHER MEDICAL LIMITATIONS') && !upper.includes('HAD HADAN')) {
-          if (!items.includes(clean)) {
-            items.push(clean);
-          }
-        }
-      }
-    }
-
-    if (items.length > 0) break;
-  }
-
-  return items;
-}
-
-
-function sortCaamQualifications(quals) {
-  if (!Array.isArray(quals) || quals.length === 0) return [];
-  const validityItems = [];
-  const medicalItems = [];
-  const otherItems = [];
-
-  quals.forEach(q => {
-    const nameUpper = (q.name || '').toUpperCase();
-    if (nameUpper.includes('VALIDITY EXPIR') || nameUpper.includes('LICENCE EXPIR') || nameUpper.includes('VALIDITY EXPIRE')) {
-      validityItems.push(q);
-    } else if (nameUpper.includes('MEDICAL EXPIR') || nameUpper.includes('MEDICAL VALIDITY') || nameUpper.includes('MEDICAL EXPIRE')) {
-      medicalItems.push(q);
-    } else {
-      otherItems.push(q);
-    }
-  });
-
-  return [...validityItems, ...medicalItems, ...otherItems];
-}
-
 export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
   const refDate = new Date();
   const qualificationData = {};
@@ -394,26 +302,86 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
   }
 
   // Medical Limitations Extraction (Item XVc & Item XVd)
-  const xvcRaw = extractNestedLimitations(doc, 'XVC');
-  const xvdRaw = extractNestedLimitations(doc, 'XVD');
+  let xvcText = '';
+  let xvdText = '';
 
-  const xvcFiltered = xvcRaw.filter(function(item) {
-    const u = item.toUpperCase();
-    return u !== 'NIL' && u !== 'NONE' && u !== '-' && u !== 'N/A';
-  });
+  for (let i = 0; i < allElements.length; i++) {
+    if (isUnderPg2(allElements[i])) continue;
+    const text = allElements[i].textContent.toUpperCase();
 
-  const xvdFiltered = xvdRaw.filter(function(item) {
-    const u = item.toUpperCase();
-    return u !== 'NIL' && u !== 'NONE' && u !== '-' && u !== 'N/A';
-  });
+    if (!xvcText && (text.includes('XVC') || text.includes('SPECIAL MEDICAL LIMITATIONS') || text.includes('HAD HADAN PERUBATAN KHAS'))) {
+      const tr = allElements[i].closest ? allElements[i].closest('tr') : null;
+      if (tr) {
+        const tds = tr.querySelectorAll('td, th');
+        if (tds.length > 1) {
+          for (let j = tds.length - 1; j >= 0; j--) {
+            const cellText = tds[j].textContent.trim();
+            const cellUpper = cellText.toUpperCase();
+            if (tds[j] !== allElements[i] && cellText && !cellUpper.includes('SPECIAL MEDICAL LIMITATIONS') && !cellUpper.includes('HAD HADAN PERUBATAN KHAS') && cellUpper !== 'XVC') {
+              xvcText = cellText;
+              break;
+            }
+          }
+        }
+        if (!xvcText) {
+          const nextTr = tr.nextElementSibling;
+          if (nextTr) xvcText = nextTr.textContent.trim();
+        }
+      } else {
+        const nextEl = allElements[i].nextElementSibling;
+        if (nextEl) xvcText = nextEl.textContent.trim();
+      }
+    }
 
-  const allActiveLimitations = xvcFiltered.concat(xvdFiltered);
+    if (!xvdText && (text.includes('XVD') || text.includes('OTHER MEDICAL LIMITATIONS') || text.includes('HAD HADAN PERUBATAN LAIN'))) {
+      const tr = allElements[i].closest ? allElements[i].closest('tr') : null;
+      if (tr) {
+        const tds = tr.querySelectorAll('td, th');
+        if (tds.length > 1) {
+          for (let j = tds.length - 1; j >= 0; j--) {
+            const cellText = tds[j].textContent.trim();
+            const cellUpper = cellText.toUpperCase();
+            if (tds[j] !== allElements[i] && cellText && !cellUpper.includes('OTHER MEDICAL LIMITATIONS') && !cellUpper.includes('HAD HADAN PERUBATAN LAIN') && cellUpper !== 'XVD') {
+              xvdText = cellText;
+              break;
+            }
+          }
+        }
+        if (!xvdText) {
+          const nextTr = tr.nextElementSibling;
+          if (nextTr) xvdText = nextTr.textContent.trim();
+        }
+      } else {
+        const nextEl = allElements[i].nextElementSibling;
+        if (nextEl) xvdText = nextEl.textContent.trim();
+      }
+    }
+  }
+
+  function parseLimitationItems(rawStr) {
+    if (!rawStr) return [];
+    const lines = rawStr.split(/[
+
+•;]+/);
+    const items = [];
+    lines.forEach(l => {
+      let clean = l.replace(/^[•\s\-\*]+/, '').replace(/\s+/g, ' ').trim();
+      const upper = clean.toUpperCase();
+      if (clean && upper !== 'NIL' && upper !== 'NONE' && upper !== '-' && upper !== 'N/A' && !upper.includes('SPECIAL MEDICAL LIMITATIONS') && !upper.includes('OTHER MEDICAL LIMITATIONS')) {
+        items.push(clean);
+      }
+    });
+    return items;
+  }
+
+  const xvcItems = parseLimitationItems(xvcText);
+  const xvdItems = parseLimitationItems(xvdText);
+  const allMedicalItems = [...xvcItems, ...xvdItems];
 
   let medicalLimitationsFormatted = 'NIL';
-  if (allActiveLimitations.length > 0) {
-    medicalLimitationsFormatted = allActiveLimitations.map(function(item) {
-      return '• ' + item;
-    }).join('\n');
+  if (allMedicalItems.length > 0) {
+    medicalLimitationsFormatted = allMedicalItems.map(item => ).join('
+');
   }
 
   // Pass 1: Card Extraction
@@ -533,8 +501,10 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
       licenseType: licenseType || 'ATPL(A)',
       licenseNo: licenseNo || '-'
     },
-    qualifications: sortCaamQualifications(qualificationsList),
+    qualifications: qualificationsList,
     medicalLimitations: medicalLimitationsFormatted,
+    xvcText: xvcText,
+    xvdText: xvdText,
     qrImageUrl: qrImageUrl,
     overallStatus: overallStatus,
     expiredCount: expiredCount,
