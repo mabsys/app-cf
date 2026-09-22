@@ -360,9 +360,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
 
   function parseLimitationItems(rawStr) {
     if (!rawStr) return [];
-    const lines = rawStr.split(/[
-
-•;]+/);
+    const lines = rawStr.split(/[\n\r•;]+/);
     const items = [];
     lines.forEach(l => {
       let clean = l.replace(/^[•\s\-\*]+/, '').replace(/\s+/g, ' ').trim();
