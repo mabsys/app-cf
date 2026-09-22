@@ -48,7 +48,7 @@ if ('serviceWorker' in navigator) {
 <div class="max-w-md mx-auto w-full p-4 flex flex-col min-h-screen">
 <!-- Header -->
 <header class="text-center py-3">
-  <h1 onclick="showScannerView()" class="text-3xl font-bold text-blue-950 dark:text-white tracking-tight italic flex items-center justify-center gap-1 leading-none cursor-pointer">
+  <h1 onclick="showScannerView()" class="text-3xl font-extrabold text-blue-950 dark:text-white tracking-tight italic flex items-center justify-center gap-1 leading-none cursor-pointer">
     <span class="relative">
       CertiFly<span class="align-super text-[6px] font-bold absolute -top-0.5 -right-1.5 dark:text-white">™</span>
     </span>
@@ -57,7 +57,7 @@ if ('serviceWorker' in navigator) {
       <path id="path90" d="M97.674,34.461C91.512,34.598 86.903,31.955 86.462,26.379C86.372,25.254 86.47,24.202 86.374,23.231C86.071,20.148 85.407,17.72 84.36,15.317C80.344,6.093 72.42,1.014 59.683,0L20.128,0C20.052,0.692 19.743,1.157 19.69,1.872L45.243,1.872C48.033,1.872 51.129,1.493 53.469,2.127C54.98,2.536 56.823,3.895 56.707,6.55C56.648,7.912 56.012,9.361 55.568,10.891C54.344,15.126 53.293,19.321 52.069,23.57C51.272,26.331 50.706,29.272 49.005,31.313C47.464,33.164 44.67,34.974 41.304,34.036C40.08,33.694 39.313,33.263 38.768,32.42C37.447,30.385 38.661,27.255 39.293,25.017C39.638,23.789 40.016,22.65 40.341,21.527C40.654,20.448 41.19,19.152 41.216,17.869C41.261,15.895 40.004,14.878 38.768,14.464C37.3,13.977 35.183,14.21 33.253,14.21C27.62,14.21 21.544,14.14 16.101,14.295C15.985,14.89 15.76,15.38 15.664,15.997C20.565,15.997 28.44,15.382 28.44,19.401C28.452,20.339 28.113,21.388 27.827,22.378C27.306,24.191 26.76,25.985 26.253,27.825C25.996,28.758 25.82,29.719 25.466,30.548C24.534,32.732 23.549,34.461 19.952,34.461L10.372,34.461L10.143,35.354L97.349,35.354C97.484,34.956 97.558,34.761 97.674,34.461" style="fill-rule:nonzero;"/>
     </svg>
   </h1>
-  <p class="text-[7.5px] font-semibold text-slate-500 dark:text-slate-200 mt-0.5 uppercase tracking-widest">Digital Licence Checker</p>
+  <p class="text-[7.5px] font-semibold text-slate-500 dark:text-slate-200 mt-0.5 uppercase tracking-widest">Compliance Checker</p>
 </header>
 
 <!-- Main Body -->
@@ -198,8 +198,8 @@ if ('serviceWorker' in navigator) {
           Verify your CAAM licence and MAB attestation to view duty readiness.
         </p>
         <div class="w-full border-t border-slate-100 dark:border-slate-800/80 mt-4 pt-3 flex justify-between items-center text-[10px] text-slate-400">
-          <span>Crew: <strong id="overview-pilot-name" class="text-slate-800 dark:text-slate-200 font-extrabold">--</strong></span>
-          <span>Checked: <strong id="overview-scan-timestamp" class="text-slate-800 dark:text-slate-200 font-extrabold">--:--</strong></span>
+          <span>Crew: <br><strong id="overview-pilot-name" class="text-slate-800 dark:text-slate-200 font-extrabold">--</strong></span>
+          <span>Checked: <br><strong id="overview-scan-timestamp" class="text-slate-800 dark:text-slate-200 font-extrabold">--:--</strong></span>
         </div>
       </div>
 
