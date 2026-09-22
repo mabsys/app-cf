@@ -127,85 +127,67 @@ function isRedOrExpired(el) {
   );
 }
 
-
 function extractNestedLimitations(docObj, itemCode) {
   if (!docObj) return [];
-  var items = [];
-  var isXvc = (itemCode === 'XVC');
-  var targetKw = isXvc ? ['XVC', 'SPECIAL MEDICAL LIMITATIONS', 'HAD HADAN PERUBATAN KHAS'] : ['XVD', 'OTHER MEDICAL LIMITATIONS', 'HAD HADAN PERUBATAN LAIN'];
-  var otherKw = isXvc ? ['XVD', 'OTHER MEDICAL LIMITATIONS', 'HAD HADAN PERUBATAN LAIN'] : ['XVC', 'SPECIAL MEDICAL LIMITATIONS', 'HAD HADAN PERUBATAN KHAS'];
+  const items = [];
+  const targetCode = itemCode.toUpperCase();
 
-  var candidates = docObj.querySelectorAll('.licenceNumbering, td, th, div, span, b, p');
+  const candidates = docObj.querySelectorAll('.licenceNumbering, td, th, div, span, b');
 
-  for (var i = 0; i < candidates.length; i++) {
-    var el = candidates[i];
+  for (let i = 0; i < candidates.length; i++) {
+    const el = candidates[i];
     if (isUnderPg2(el)) continue;
 
-    var text = el.textContent.trim();
-    var textUpper = text.toUpperCase();
+    const elText = el.textContent.trim().toUpperCase();
 
-    var matches = targetKw.some(function(kw) { return textUpper.indexOf(kw) !== -1; });
-    if (!matches) continue;
-
-    var hasOther = otherKw.some(function(okw) { return textUpper.indexOf(okw) !== -1; });
-    if (hasOther) continue;
-
-    var containers = [];
-
-    var tr = el.closest ? el.closest('tr') : null;
-    if (tr) {
-      if (tr.nextElementSibling) containers.push(tr.nextElementSibling);
-      containers.push(tr);
+    let isMatch = false;
+    if (targetCode === 'XVC') {
+      if (elText === 'XVC' || elText === 'XVC.' || elText === 'XVC:' || elText.includes('SPECIAL MEDICAL LIMITATIONS') || elText.includes('HAD HADAN PERUBATAN KHAS')) {
+        isMatch = true;
+      }
+    } else if (targetCode === 'XVD') {
+      if (elText === 'XVD' || elText === 'XVD.' || elText === 'XVD:' || elText.includes('OTHER MEDICAL LIMITATIONS') || elText.includes('HAD HADAN PERUBATAN LAIN')) {
+        isMatch = true;
+      }
     }
 
-    var card = el.closest ? el.closest('.card') : null;
-    if (card) {
-      var body = card.querySelector('.card-body, .body');
-      if (body && body !== el) containers.push(body);
-      containers.push(card);
-    }
+    if (!isMatch) continue;
 
-    for (var c = 0; c < containers.length; c++) {
-      var container = containers[c];
-      if (!container) continue;
+    const tr = el.closest ? el.closest('tr') : null;
+    if (!tr) continue;
 
-      var tables = container.querySelectorAll('table');
-      for (var t = 0; t < tables.length; t++) {
-        var rows = tables[t].querySelectorAll('tr');
-        for (var r = 0; r < rows.length; r++) {
-          var cells = rows[r].querySelectorAll('td, th');
-          if (cells.length > 0) {
-            var rawVal = cells[cells.length - 1].textContent.trim();
-            var cleanVal = rawVal.replace(/^[•\s\-\*\&\#8226\;]+/, '').replace(/\s+/g, ' ').trim();
-            var cleanUpper = cleanVal.toUpperCase();
-            if (cleanVal && ['NIL', 'NONE', '-', 'N/A', 'NO EXPIRY'].indexOf(cleanUpper) === -1 && cleanUpper.indexOf('LIMITATIONS') === -1) {
-              if (items.indexOf(cleanVal) === -1) items.push(cleanVal);
-            }
+    const nextTr = tr.nextElementSibling;
+    if (!nextTr) continue;
+
+    const nestedTable = nextTr.querySelector('table');
+    if (nestedTable) {
+      const spans = nestedTable.querySelectorAll('.labelfield, span, td');
+      for (let s = 0; s < spans.length; s++) {
+        if (spans[s].children && spans[s].children.length > 0) continue;
+        const sText = spans[s].textContent.trim();
+        const clean = sText.replace(/^[•\s\-\*\&\#8226\;]+/, '').replace(/\s+/g, ' ').trim();
+        const upper = clean.toUpperCase();
+
+        if (clean && clean !== '•' && upper !== 'XVC' && upper !== 'XVD' && !upper.includes('SPECIAL MEDICAL LIMITATIONS') && !upper.includes('OTHER MEDICAL LIMITATIONS') && !upper.includes('HAD HADAN')) {
+          if (!items.includes(clean)) {
+            items.push(clean);
           }
         }
       }
+    } else {
+      const spans = nextTr.querySelectorAll('.labelfield, span, td');
+      for (let s = 0; s < spans.length; s++) {
+        if (spans[s].children && spans[s].children.length > 0) continue;
+        const sText = spans[s].textContent.trim();
+        const clean = sText.replace(/^[•\s\-\*\&\#8226\;]+/, '').replace(/\s+/g, ' ').trim();
+        const upper = clean.toUpperCase();
 
-      if (items.length > 0) break;
-
-      var subElements = container.querySelectorAll('div, p, span, li, td');
-      for (var s = 0; s < subElements.length; s++) {
-        var sub = subElements[s];
-        var hasChildren = sub.querySelectorAll('div, p, td, table').length > 0;
-        if (hasChildren) continue;
-
-        var sText = sub.textContent.trim();
-        var sClean = sText.replace(/^[•\s\-\*\&\#8226\;]+/, '').replace(/\s+/g, ' ').trim();
-        var sUpper = sClean.toUpperCase();
-
-        var matchesSubHeader = targetKw.some(function(kw) { return sUpper.indexOf(kw) !== -1; }) || otherKw.some(function(okw) { return sUpper.indexOf(okw) !== -1; });
-        if (matchesSubHeader) continue;
-
-        if (sClean && ['NIL', 'NONE', '-', 'N/A', 'NO EXPIRY'].indexOf(sUpper) === -1 && sUpper.indexOf('LIMITATIONS') === -1 && sUpper.indexOf('PENGEHADAN') === -1) {
-          if (items.indexOf(sClean) === -1) items.push(sClean);
+        if (clean && clean !== '•' && upper !== 'XVC' && upper !== 'XVD' && !upper.includes('SPECIAL MEDICAL LIMITATIONS') && !upper.includes('OTHER MEDICAL LIMITATIONS') && !upper.includes('HAD HADAN')) {
+          if (!items.includes(clean)) {
+            items.push(clean);
+          }
         }
       }
-
-      if (items.length > 0) break;
     }
 
     if (items.length > 0) break;
@@ -215,6 +197,13 @@ function extractNestedLimitations(docObj, itemCode) {
 }
 
 export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
+  if (doc && typeof doc.querySelectorAll === 'function') {
+    const scriptsAndStyles = doc.querySelectorAll('script, style');
+    for (let i = 0; i < scriptsAndStyles.length; i++) {
+      try { scriptsAndStyles[i].remove(); } catch(e) {}
+    }
+  }
+
   const refDate = new Date();
   const qualificationData = {};
 
@@ -391,29 +380,24 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
   // Medical Limitations Extraction (Item XVc & Item XVd)
   const xvcItems = extractNestedLimitations(doc, 'XVC');
   const xvdItems = extractNestedLimitations(doc, 'XVD');
-  let allMedicalItems = [...xvcItems, ...xvdItems];
 
-  if (allMedicalItems.length === 0) {
-    const allTags = doc.querySelectorAll('td, span, div, p, b');
-    for (let i = 0; i < allTags.length; i++) {
-      const tag = allTags[i];
-      if (isUnderPg2(tag)) continue;
-      if (tag.querySelectorAll('div, p, td, table').length > 0) continue;
-      const txt = tag.textContent.trim();
-      if (/\b[A-Z]{3,4}\s*-\s*VALID ONLY\b/i.test(txt)) {
-        const clean = txt.replace(/^[•\s\-\*\&\#8226\;]+/, '').replace(/\s+/g, ' ').trim();
-        if (clean && !allMedicalItems.includes(clean)) {
-          allMedicalItems.push(clean);
-        }
+  const allMedicalRaw = [...xvcItems, ...xvdItems];
+  const activeLimitations = [];
+
+  allMedicalRaw.forEach(item => {
+    const upper = item.toUpperCase();
+    if (upper !== 'NIL' && upper !== 'NONE' && upper !== '-' && upper !== 'N/A') {
+      if (!activeLimitations.includes(item)) {
+        activeLimitations.push(item);
       }
     }
-  }
+  });
 
   let medicalLimitationsFormatted = 'NIL';
-  if (allMedicalItems.length > 0) {
-    medicalLimitationsFormatted = allMedicalItems.map(function(item) { return '• ' + item; }).join('\n');
+  if (activeLimitations.length > 0) {
+    medicalLimitationsFormatted = activeLimitations.map(item => '• ' + item).join('
+');
   }
-
 
   // Pass 1: Card Extraction
   const cards = doc.querySelectorAll('.card');
@@ -534,8 +518,8 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
     },
     qualifications: qualificationsList,
     medicalLimitations: medicalLimitationsFormatted,
-    xvcText: xvcText,
-    xvdText: xvdText,
+    xvcText: xvcItems.join('; '),
+    xvdText: xvdItems.join('; '),
     qrImageUrl: qrImageUrl,
     overallStatus: overallStatus,
     expiredCount: expiredCount,
