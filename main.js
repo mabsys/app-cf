@@ -789,6 +789,27 @@ async function renderDashboardView() {
 }
 window.renderDashboardView = renderDashboardView;
 
+
+function sortCaamQualifications(quals) {
+  if (!Array.isArray(quals) || quals.length === 0) return [];
+  const validityItems = [];
+  const medicalItems = [];
+  const otherItems = [];
+
+  quals.forEach(q => {
+    const nameUpper = (q.name || '').toUpperCase();
+    if (nameUpper.includes('VALIDITY EXPIR') || nameUpper.includes('LICENCE EXPIR') || nameUpper.includes('VALIDITY EXPIRE')) {
+      validityItems.push(q);
+    } else if (nameUpper.includes('MEDICAL EXPIR') || nameUpper.includes('MEDICAL VALIDITY') || nameUpper.includes('MEDICAL EXPIRE')) {
+      medicalItems.push(q);
+    } else {
+      otherItems.push(q);
+    }
+  });
+
+  return [...validityItems, ...medicalItems, ...otherItems];
+}
+
 function renderDashboardResults(caamResults, mabResults = null) {
   saveDashboardTemplates();
   const profile = getProfileData();
@@ -910,7 +931,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
 
     // Collect CAAM qualifications
     if (caamResults && Array.isArray(caamResults.qualifications)) {
-      caamResults.qualifications.forEach(q => {
+      sortedCaamQuals.forEach(q => {
         if (q.dateText && !['NO EXPIRY', 'NIL', 'NA', 'N/A', '-'].includes(q.dateText.trim().toUpperCase())) {
           const d = q.parsedDate || parseAnyDate(q.dateText);
           if (d && !isNaN(d.getTime())) {
@@ -999,10 +1020,11 @@ function renderDashboardResults(caamResults, mabResults = null) {
     const caamListContainer = getDashEl("qualifications-list");
     if (caamListContainer) {
       caamListContainer.innerHTML = "";
-      if (!caamResults.qualifications || caamResults.qualifications.length === 0) {
+      const sortedCaamQuals = sortCaamQualifications(caamResults.qualifications);
+      if (!sortedCaamQuals || sortedCaamQuals.length === 0) {
         caamListContainer.innerHTML = `<div class="text-center text-slate-500 py-6 text-xs italic">No CAAM qualifications found on digital licence.</div>`;
       } else {
-        caamResults.qualifications.forEach(q => {
+        sortedResQuals.forEach(q => {
           const row = document.createElement("div");
           row.className = "py-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 last:border-b-0";
 
@@ -1089,7 +1111,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
     const lcDate = getDashEl("mab-linecheck-date");
     const lcExp = getDashEl("mab-linecheck-expiry");
 
-    if (lcTitle && mabResults.lineCheck) lcTitle.innerText = `${mabResults.lineCheck.fleet}`;
+    if (lcTitle && mabResults.lineCheck) lcTitle.innerText = `${mabResults.lineCheck.fleet} LINE CHECK`;
     if (lcLicence && mabResults.lineCheck) lcLicence.innerText = mabResults.lineCheck.licenseNo || "A3115";
     if (lcRoute && mabResults.lineCheck) lcRoute.innerText = mabResults.lineCheck.route;
     if (lcDate && mabResults.lineCheck) lcDate.innerText = mabResults.lineCheck.checkDate;
@@ -1218,7 +1240,8 @@ function renderResults(caamResults, mabResults = null) {
   const caamListContainer = getResEl("res-qualifications-list") || getResEl("qualifications-list");
   if (caamListContainer && caamResults) {
     caamListContainer.innerHTML = "";
-    if (!caamResults.qualifications || caamResults.qualifications.length === 0) {
+    const sortedResQuals = sortCaamQualifications(caamResults.qualifications);
+    if (!sortedResQuals || sortedResQuals.length === 0) {
       caamListContainer.innerHTML = `<div class="text-center text-slate-500 py-6 text-xs italic">No CAAM qualifications found on digital licence.</div>`;
     } else {
       caamResults.qualifications.forEach(q => {
