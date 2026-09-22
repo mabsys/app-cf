@@ -911,6 +911,11 @@ function renderDashboardResults(caamResults, mabResults = null) {
     if (typeEl) typeEl.innerText = caamResults.pilotDetails.licenseType || "ATPL(A)";
     if (noEl) noEl.innerText = caamResults.pilotDetails.licenseNo || "A3115";
 
+    const medLimitEl = getDashEl("dash-medical-limit");
+    if (medLimitEl) {
+      medLimitEl.innerText = caamResults.medicalLimitations || "NIL";
+    }
+
     const caamListContainer = getDashEl("qualifications-list");
     if (caamListContainer) {
       caamListContainer.innerHTML = "";
@@ -1108,6 +1113,11 @@ function renderResults(caamResults, mabResults = null) {
   if (typeEl && caamResults && caamResults.pilotDetails) typeEl.innerText = caamResults.pilotDetails.licenseType || "ATPL(A)";
   if (noEl && caamResults && caamResults.pilotDetails) noEl.innerText = caamResults.pilotDetails.licenseNo || "A3115";
   if (scanTimeEl) scanTimeEl.innerText = (caamResults && caamResults.scanTime) ? `${caamResults.scanTime} LT` : "14 Sep 2026 LT";
+
+  const medLimitEl = getResEl("res-medical-limit") || getResEl("dash-medical-limit");
+  if (medLimitEl) {
+    medLimitEl.innerText = (caamResults && caamResults.medicalLimitations) ? caamResults.medicalLimitations : "NIL";
+  }
 
   if (caamResults && overallBadge && headerEl) {
     if (caamResults.overallStatus === "EXPIRED") {
