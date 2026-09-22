@@ -202,9 +202,7 @@ function extractNestedLimitations(docObj, itemCode) {
 
 function parseLimitationItems(rawStr) {
   if (!rawStr) return [];
-  const lines = rawStr.split(/[
-
-•;]+/);
+  const lines = rawStr.split(/[\n\r•;]+/);
   const items = [];
   const codeKeywords = ['{', '}', 'function', 'var ', 'const ', 'let ', 'return', 'document.', 'window.', '<script', '</', '=>', '==', '!=', '//', '/*', 'http:', 'https:', '.js', '.css', 'px ', 'rgb('];
 
