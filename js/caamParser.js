@@ -161,16 +161,18 @@ function extractNestedLimitations(docObj, itemCode) {
 
     const nestedTable = nextTr.querySelector('table');
     if (nestedTable) {
-      const spans = nestedTable.querySelectorAll('.labelfield, span, td');
-      for (let s = 0; s < spans.length; s++) {
-        if (spans[s].children && spans[s].children.length > 0) continue;
-        const sText = spans[s].textContent.trim();
-        const clean = sText.replace(/^[•\s\-\*\&\#8226\;]+/, '').replace(/\s+/g, ' ').trim();
-        const upper = clean.toUpperCase();
+      const rows = nestedTable.querySelectorAll('tr');
+      for (let r = 0; r < rows.length; r++) {
+        const cells = rows[r].querySelectorAll('td, th');
+        if (cells.length > 0) {
+          const rawVal = cells[cells.length - 1].textContent.trim();
+          const clean = rawVal.replace(/^[•\s\-\*\&\#8226\;]+/, '').replace(/\s+/g, ' ').trim();
+          const upper = clean.toUpperCase();
 
-        if (clean && clean !== '•' && upper !== 'XVC' && upper !== 'XVD' && !upper.includes('SPECIAL MEDICAL LIMITATIONS') && !upper.includes('OTHER MEDICAL LIMITATIONS') && !upper.includes('HAD HADAN')) {
-          if (!items.includes(clean)) {
-            items.push(clean);
+          if (clean && clean !== '•' && upper !== 'XVC' && upper !== 'XVD' && !upper.includes('SPECIAL MEDICAL LIMITATIONS') && !upper.includes('OTHER MEDICAL LIMITATIONS') && !upper.includes('HAD HADAN')) {
+            if (!items.includes(clean)) {
+              items.push(clean);
+            }
           }
         }
       }
@@ -197,13 +199,6 @@ function extractNestedLimitations(docObj, itemCode) {
 }
 
 export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
-  if (doc && typeof doc.querySelectorAll === 'function') {
-    const scriptsAndStyles = doc.querySelectorAll('script, style');
-    for (let i = 0; i < scriptsAndStyles.length; i++) {
-      try { scriptsAndStyles[i].remove(); } catch(e) {}
-    }
-  }
-
   const refDate = new Date();
   const qualificationData = {};
 
@@ -378,25 +373,26 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
   }
 
   // Medical Limitations Extraction (Item XVc & Item XVd)
-  const xvcItems = extractNestedLimitations(doc, 'XVC');
-  const xvdItems = extractNestedLimitations(doc, 'XVD');
+  const xvcRaw = extractNestedLimitations(doc, 'XVC');
+  const xvdRaw = extractNestedLimitations(doc, 'XVD');
 
-  const allMedicalRaw = [...xvcItems, ...xvdItems];
-  const activeLimitations = [];
-
-  allMedicalRaw.forEach(item => {
-    const upper = item.toUpperCase();
-    if (upper !== 'NIL' && upper !== 'NONE' && upper !== '-' && upper !== 'N/A') {
-      if (!activeLimitations.includes(item)) {
-        activeLimitations.push(item);
-      }
-    }
+  const xvcFiltered = xvcRaw.filter(function(item) {
+    const u = item.toUpperCase();
+    return u !== 'NIL' && u !== 'NONE' && u !== '-' && u !== 'N/A';
   });
 
+  const xvdFiltered = xvdRaw.filter(function(item) {
+    const u = item.toUpperCase();
+    return u !== 'NIL' && u !== 'NONE' && u !== '-' && u !== 'N/A';
+  });
+
+  const allActiveLimitations = xvcFiltered.concat(xvdFiltered);
+
   let medicalLimitationsFormatted = 'NIL';
-  if (activeLimitations.length > 0) {
-    medicalLimitationsFormatted = activeLimitations.map(item => '• ' + item).join('
-');
+  if (allActiveLimitations.length > 0) {
+    medicalLimitationsFormatted = allActiveLimitations.map(function(item) {
+      return '• ' + item;
+    }).join('\n');
   }
 
   // Pass 1: Card Extraction
@@ -518,8 +514,6 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
     },
     qualifications: qualificationsList,
     medicalLimitations: medicalLimitationsFormatted,
-    xvcText: xvcItems.join('; '),
-    xvdText: xvdItems.join('; '),
     qrImageUrl: qrImageUrl,
     overallStatus: overallStatus,
     expiredCount: expiredCount,
