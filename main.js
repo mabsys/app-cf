@@ -1111,7 +1111,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
     const lcDate = getDashEl("mab-linecheck-date");
     const lcExp = getDashEl("mab-linecheck-expiry");
 
-    if (lcTitle && mabResults.lineCheck) lcTitle.innerText = `${mabResults.lineCheck.fleet} LINE CHECK`;
+    if (lcTitle && mabResults.lineCheck) lcTitle.innerText = `${mabResults.lineCheck.fleet}`;
     if (lcLicence && mabResults.lineCheck) lcLicence.innerText = mabResults.lineCheck.licenseNo || "A3115";
     if (lcRoute && mabResults.lineCheck) lcRoute.innerText = mabResults.lineCheck.route;
     if (lcDate && mabResults.lineCheck) lcDate.innerText = mabResults.lineCheck.checkDate;
