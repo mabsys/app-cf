@@ -1,4 +1,5 @@
 // js/caamParser.js - Dedicated CAAM eCLIPSE Digital Licence Parser Engine
+
 import { DEFAULT_THRESHOLD } from './config.js';
 
 function parseLicenseDate(dateStr) {
@@ -12,6 +13,7 @@ function parseLicenseDate(dateStr) {
   const day = parseInt(match[1], 10);
   const monthStr = match[2].toUpperCase();
   const year = parseInt(match[3], 10);
+
   const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
   const monthsMalay = ['JAN', 'FEB', 'MAC', 'APR', 'MEI', 'JUN', 'JUL', 'OGOS', 'SEP', 'OKT', 'NOV', 'DIS'];
   let monthIdx = months.indexOf(monthStr);
@@ -75,7 +77,6 @@ function shouldIgnore(el) {
   if (upperText.includes('INITIAL GRANT') || upperText.includes('INITIAL_GRANT')) return true;
   if (upperText.includes('7 DECEMBER 1944') || upperText.includes('7 DISEMBER 1944') || upperText.includes('DECEMBER 1944') || upperText.includes('DISEMBER 1944')) return true;
   if (/\d{1,2}:\d{2}:\d{2}/.test(text)) return true;
-
   let curr = el;
   for (let i = 0; i < 5; i++) {
     if (!curr || !curr.tagName) break;
@@ -93,7 +94,6 @@ function shouldIgnore(el) {
     if (currText.includes('CHICAGO CONVENTION') || currText.includes('ANNEX 1') || currText.includes('ANEKS 1')) return true;
     curr = curr.parentElement;
   }
-
   const tr = el.closest ? el.closest('tr') : null;
   if (tr) {
     const rowText = tr.textContent.toUpperCase();
@@ -135,11 +135,9 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
     const name = labelText || 'Qualification';
     const key = name.toUpperCase().replace(/\s+/g, '');
     if (key.includes('CLASS1(SC)') || key.includes('CLASS1SC') || key.includes('CLASS1(S.C.)')) return;
-
     const cleanName = name.replace('•', '').trim();
     let status = 'VALID';
     let daysRemaining = null;
-
     if (isVisuallyExpired) {
       status = 'EXPIRED';
     } else if (parsedDate) {
@@ -151,9 +149,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
         status = 'EXPIRING_SOON';
       }
     }
-
     if (qualificationData[key] && qualificationData[key].status === 'EXPIRED') return;
-
     qualificationData[key] = {
       name: cleanName,
       dateText: dateText,
@@ -214,7 +210,6 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
         }
       }
     }
-
     if (text === 'III') {
       const tr = allElements[i].closest ? allElements[i].closest('tr') : null;
       if (tr) {
@@ -272,7 +267,6 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
         break;
       }
     }
-
     if (isFclTable && licenceTypeColIndex !== -1) {
       const rows = table.querySelectorAll('tr');
       for (let r = 0; r < rows.length; r++) {
@@ -305,6 +299,89 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
         }
       }
     }
+  }
+
+  // Medical Limitations Extraction (Item XVc & Item XVd)
+  let xvcText = '';
+  let xvdText = '';
+
+  for (let i = 0; i < allElements.length; i++) {
+    if (isUnderPg2(allElements[i])) continue;
+    const text = allElements[i].textContent.toUpperCase();
+
+    if (!xvcText && (text.includes('XVC') || text.includes('SPECIAL MEDICAL LIMITATIONS') || text.includes('HAD HADAN PERUBATAN KHAS'))) {
+      const tr = allElements[i].closest ? allElements[i].closest('tr') : null;
+      if (tr) {
+        const tds = tr.querySelectorAll('td, th');
+        if (tds.length > 1) {
+          for (let j = tds.length - 1; j >= 0; j--) {
+            const cellText = tds[j].textContent.trim();
+            const cellUpper = cellText.toUpperCase();
+            if (tds[j] !== allElements[i] && cellText && !cellUpper.includes('SPECIAL MEDICAL LIMITATIONS') && !cellUpper.includes('HAD HADAN PERUBATAN KHAS') && cellUpper !== 'XVC') {
+              xvcText = cellText;
+              break;
+            }
+          }
+        }
+        if (!xvcText) {
+          const nextTr = tr.nextElementSibling;
+          if (nextTr) xvcText = nextTr.textContent.trim();
+        }
+      } else {
+        const nextEl = allElements[i].nextElementSibling;
+        if (nextEl) xvcText = nextEl.textContent.trim();
+      }
+    }
+
+    if (!xvdText && (text.includes('XVD') || text.includes('OTHER MEDICAL LIMITATIONS') || text.includes('HAD HADAN PERUBATAN LAIN'))) {
+      const tr = allElements[i].closest ? allElements[i].closest('tr') : null;
+      if (tr) {
+        const tds = tr.querySelectorAll('td, th');
+        if (tds.length > 1) {
+          for (let j = tds.length - 1; j >= 0; j--) {
+            const cellText = tds[j].textContent.trim();
+            const cellUpper = cellText.toUpperCase();
+            if (tds[j] !== allElements[i] && cellText && !cellUpper.includes('OTHER MEDICAL LIMITATIONS') && !cellUpper.includes('HAD HADAN PERUBATAN LAIN') && cellUpper !== 'XVD') {
+              xvdText = cellText;
+              break;
+            }
+          }
+        }
+        if (!xvdText) {
+          const nextTr = tr.nextElementSibling;
+          if (nextTr) xvdText = nextTr.textContent.trim();
+        }
+      } else {
+        const nextEl = allElements[i].nextElementSibling;
+        if (nextEl) xvdText = nextEl.textContent.trim();
+      }
+    }
+  }
+
+  function parseLimitationItems(rawStr) {
+    if (!rawStr) return [];
+    const lines = rawStr.split(/[
+
+•;]+/);
+    const items = [];
+    lines.forEach(l => {
+      let clean = l.replace(/^[•\s\-\*]+/, '').replace(/\s+/g, ' ').trim();
+      const upper = clean.toUpperCase();
+      if (clean && upper !== 'NIL' && upper !== 'NONE' && upper !== '-' && upper !== 'N/A' && !upper.includes('SPECIAL MEDICAL LIMITATIONS') && !upper.includes('OTHER MEDICAL LIMITATIONS')) {
+        items.push(clean);
+      }
+    });
+    return items;
+  }
+
+  const xvcItems = parseLimitationItems(xvcText);
+  const xvdItems = parseLimitationItems(xvdText);
+  const allMedicalItems = [...xvcItems, ...xvdItems];
+
+  let medicalLimitationsFormatted = 'NIL';
+  if (allMedicalItems.length > 0) {
+    medicalLimitationsFormatted = allMedicalItems.map(item => ).join('
+');
   }
 
   // Pass 1: Card Extraction
@@ -344,7 +421,6 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
 
     const labelText = getLabelFromRow(tr);
     if (!labelText) continue;
-
     const tds = getDirectChildCells(tr);
     for (let j = 0; j < tds.length; j++) {
       const tdText = tds[j].textContent.trim();
@@ -426,6 +502,9 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
       licenseNo: licenseNo || '-'
     },
     qualifications: qualificationsList,
+    medicalLimitations: medicalLimitationsFormatted,
+    xvcText: xvcText,
+    xvdText: xvdText,
     qrImageUrl: qrImageUrl,
     overallStatus: overallStatus,
     expiredCount: expiredCount,
