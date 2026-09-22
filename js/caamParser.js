@@ -131,8 +131,106 @@ function isRedOrExpired(el) {
   );
 }
 
+function extractNestedLimitations(docObj, itemCode) {
+  if (!docObj) return [];
+  const items = [];
+  const targetCode = itemCode.toUpperCase();
+
+  const candidates = docObj.querySelectorAll('.licenceNumbering, td, th, div, span, b');
+
+  for (let i = 0; i < candidates.length; i++) {
+    const el = candidates[i];
+    if (isUnderPg2(el)) continue;
+
+    const elText = el.textContent.trim().toUpperCase();
+    
+    const isCodeMatch = (elText === targetCode || elText === targetCode + '.' || elText === targetCode + ':') ||
+                        (targetCode === 'XVC' && (elText.includes('SPECIAL MEDICAL LIMITATIONS') || elText.includes('HAD HADAN PERUBATAN KHAS'))) ||
+                        (targetCode === 'XVD' && (elText.includes('OTHER MEDICAL LIMITATIONS') || elText.includes('HAD HADAN PERUBATAN LAIN')));
+
+    if (!isCodeMatch) continue;
+
+    const tr = el.closest ? el.closest('tr') : null;
+    if (!tr) continue;
+
+    const searchContainers = [];
+    if (tr.nextElementSibling) searchContainers.push(tr.nextElementSibling);
+    searchContainers.push(tr);
+
+    for (let c = 0; c < searchContainers.length; c++) {
+      const container = searchContainers[c];
+      const nestedTable = container.querySelector('table');
+
+      if (nestedTable) {
+        const nestedRows = nestedTable.querySelectorAll('tr');
+        nestedRows.forEach(function(row) {
+          const labelSpan = row.querySelector('.labelfield') || row.querySelector('span, td:last-child');
+          const rowText = labelSpan ? labelSpan.textContent.trim() : row.textContent.trim();
+          const clean = rowText.replace(/^[•\s\-\*\&\#8226\;]+/, '').replace(/\s+/g, ' ').trim();
+          const upper = clean.toUpperCase();
+
+          if (clean && upper !== 'NIL' && upper !== 'NONE' && upper !== '-' && upper !== 'N/A' && !upper.includes('LIMITATIONS')) {
+            items.push(clean);
+          }
+        });
+      }
+
+      if (items.length === 0) {
+        const spans = container.querySelectorAll('.labelfield, .fs-4, span');
+        spans.forEach(function(span) {
+          const sText = span.textContent.trim();
+          const clean = sText.replace(/^[•\s\-\*\&\#8226\;]+/, '').replace(/\s+/g, ' ').trim();
+          const upper = clean.toUpperCase();
+
+          if (clean && upper !== 'NIL' && upper !== 'NONE' && upper !== '-' && upper !== 'N/A' &&
+              !upper.includes('SPECIAL MEDICAL LIMITATIONS') && !upper.includes('OTHER MEDICAL LIMITATIONS') &&
+              !upper.includes('HAD HADAN')) {
+            items.push(clean);
+          }
+        });
+      }
+
+      if (items.length > 0) break;
+    }
+
+    if (items.length > 0) break;
+  }
+
+  return items;
+}
+
+
+function parseLimitationItems(rawStr) {
+  if (!rawStr) return [];
+  const lines = rawStr.split(/[
+
+•;]+/);
+  const items = [];
+  const codeKeywords = ['{', '}', 'function', 'var ', 'const ', 'let ', 'return', 'document.', 'window.', '<script', '</', '=>', '==', '!=', '//', '/*', 'http:', 'https:', '.js', '.css', 'px ', 'rgb('];
+
+  lines.forEach(function(l) {
+    let clean = l.replace(/^[•\s\-\*]+/, '').replace(/\s+/g, ' ').trim();
+    const upper = clean.toUpperCase();
+
+    if (codeKeywords.some(function(kw) { return clean.includes(kw); })) return;
+
+    if (upper.includes('SPECIAL MEDICAL LIMITATIONS') || upper.includes('HAD HADAN PERUBATAN KHAS') ||
+        upper.includes('OTHER MEDICAL LIMITATIONS') || upper.includes('HAD HADAN PERUBATAN LAIN') ||
+        upper === 'XVC' || upper === 'XVD' || upper === 'XVC.' || upper === 'XVD.' || upper === 'XVC:' || upper === 'XVD:') {
+      return;
+    }
+
+    if (!clean || upper === 'NIL' || upper === 'NONE' || upper === '-' || upper === 'N/A' || upper === 'NO EXPIRY' || upper === 'NA') {
+      return;
+    }
+
+    items.push(clean);
+  });
+
+  return items;
+}
+
 export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
-  // Purge script and style elements from doc to prevent code leakage
   if (doc && typeof doc.querySelectorAll === 'function') {
     const scriptsAndStyles = doc.querySelectorAll('script, style');
     for (let i = 0; i < scriptsAndStyles.length; i++) {
@@ -314,92 +412,14 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
   }
 
   // Medical Limitations Extraction (Item XVc & Item XVd)
-  function extractMedicalLimitationText(docObj, typeKeywords) {
-    let foundText = '';
-    const candidateElements = docObj.querySelectorAll('tr, .card, td, th, div, p');
-    for (let i = 0; i < candidateElements.length; i++) {
-      const el = candidateElements[i];
-      if (isUnderPg2(el)) continue;
-
-      const textUpper = el.textContent.toUpperCase();
-      const matchesKeyword = typeKeywords.some(kw => textUpper.includes(kw));
-      if (!matchesKeyword) continue;
-
-      if (el.textContent.length > 800) continue;
-
-      const tr = el.closest ? el.closest('tr') : null;
-      if (tr) {
-        const tds = tr.querySelectorAll('td, th');
-        if (tds.length > 1) {
-          for (let j = tds.length - 1; j >= 0; j--) {
-            const cellText = tds[j].textContent.trim();
-            const cellUpper = cellText.toUpperCase();
-            const isLabelCell = typeKeywords.some(kw => cellUpper.includes(kw));
-            if (!isLabelCell && cellText) {
-              foundText = cellText;
-              break;
-            }
-          }
-        }
-        if (!foundText && tr.nextElementSibling) {
-          const nextTrText = tr.nextElementSibling.textContent.trim();
-          if (nextTrText && nextTrText.length < 500) {
-            foundText = nextTrText;
-          }
-        }
-      } else {
-        const nextEl = el.nextElementSibling;
-        if (nextEl) {
-          const nextText = nextEl.textContent.trim();
-          if (nextText && nextText.length < 500) {
-            foundText = nextText;
-          }
-        }
-      }
-
-      if (foundText) break;
-    }
-    return foundText;
-  }
-
-  const xvcText = extractMedicalLimitationText(doc, ['XVC', 'SPECIAL MEDICAL LIMITATIONS', 'HAD HADAN PERUBATAN KHAS']);
-  const xvdText = extractMedicalLimitationText(doc, ['XVD', 'OTHER MEDICAL LIMITATIONS', 'HAD HADAN PERUBATAN LAIN']);
-
-  function parseLimitationItems(rawStr) {
-    if (!rawStr) return [];
-    const lines = rawStr.split(/[\n\r•;]+/);
-    const items = [];
-    const codeKeywords = ['{', '}', 'function', 'var ', 'const ', 'let ', 'return', 'document.', 'window.', '<script', '</', '=>', '==', '!=', '//', '/*', 'http:', 'https:', '.js', '.css', 'px ', 'rgb('];
-
-    lines.forEach(function(l) {
-      let clean = l.replace(/^[•\s\-\*]+/, '').replace(/\s+/g, ' ').trim();
-      const upper = clean.toUpperCase();
-
-      if (codeKeywords.some(kw => clean.includes(kw))) return;
-
-      if (upper.includes('SPECIAL MEDICAL LIMITATIONS') || upper.includes('HAD HADAN PERUBATAN KHAS') ||
-          upper.includes('OTHER MEDICAL LIMITATIONS') || upper.includes('HAD HADAN PERUBATAN LAIN') ||
-          upper === 'XVC' || upper === 'XVD' || upper === 'XVC.' || upper === 'XVD.') {
-        return;
-      }
-
-      if (!clean || upper === 'NIL' || upper === 'NONE' || upper === '-' || upper === 'N/A' || upper === 'NO EXPIRY') {
-        return;
-      }
-
-      items.push(clean);
-    });
-
-    return items;
-  }
-
-  const xvcItems = parseLimitationItems(xvcText);
-  const xvdItems = parseLimitationItems(xvdText);
+    // Medical Limitations Extraction (Item XVc & Item XVd - Nested Table Parser R042)
+  const xvcItems = extractNestedLimitations(doc, 'XVC');
+  const xvdItems = extractNestedLimitations(doc, 'XVD');
   const allMedicalItems = [...xvcItems, ...xvdItems];
 
   let medicalLimitationsFormatted = 'NIL';
   if (allMedicalItems.length > 0) {
-    medicalLimitationsFormatted = allMedicalItems.map(function(item) { return '• ' + item; }).join('\n');
+    medicalLimitationsFormatted = allMedicalItems.map(function(item) { return '\u2022 ' + item; }).join('\n');
   }
 
   // Pass 1: Card Extraction
