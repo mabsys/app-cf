@@ -198,6 +198,27 @@ function extractNestedLimitations(docObj, itemCode) {
   return items;
 }
 
+
+function sortCaamQualifications(quals) {
+  if (!Array.isArray(quals) || quals.length === 0) return [];
+  const validityItems = [];
+  const medicalItems = [];
+  const otherItems = [];
+
+  quals.forEach(q => {
+    const nameUpper = (q.name || '').toUpperCase();
+    if (nameUpper.includes('VALIDITY EXPIR') || nameUpper.includes('LICENCE EXPIR') || nameUpper.includes('VALIDITY EXPIRE')) {
+      validityItems.push(q);
+    } else if (nameUpper.includes('MEDICAL EXPIR') || nameUpper.includes('MEDICAL VALIDITY') || nameUpper.includes('MEDICAL EXPIRE')) {
+      medicalItems.push(q);
+    } else {
+      otherItems.push(q);
+    }
+  });
+
+  return [...validityItems, ...medicalItems, ...otherItems];
+}
+
 export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
   const refDate = new Date();
   const qualificationData = {};
@@ -512,7 +533,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
       licenseType: licenseType || 'ATPL(A)',
       licenseNo: licenseNo || '-'
     },
-    qualifications: qualificationsList,
+    qualifications: sortCaamQualifications(qualificationsList),
     medicalLimitations: medicalLimitationsFormatted,
     qrImageUrl: qrImageUrl,
     overallStatus: overallStatus,
