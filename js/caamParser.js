@@ -400,7 +400,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
       if (isUnderPg2(tag)) continue;
       if (tag.querySelectorAll('div, p, td, table').length > 0) continue;
       const txt = tag.textContent.trim();
-      if (/[A-Z]{3,4}\s*-\s*VALID ONLY/i.test(txt)) {
+      if (/\b[A-Z]{3,4}\s*-\s*VALID ONLY\b/i.test(txt)) {
         const clean = txt.replace(/^[•\s\-\*\&\#8226\;]+/, '').replace(/\s+/g, ' ').trim();
         if (clean && !allMedicalItems.includes(clean)) {
           allMedicalItems.push(clean);
@@ -411,8 +411,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
 
   let medicalLimitationsFormatted = 'NIL';
   if (allMedicalItems.length > 0) {
-    medicalLimitationsFormatted = allMedicalItems.map(function(item) { return '• ' + item; }).join('
-');
+    medicalLimitationsFormatted = allMedicalItems.map(function(item) { return '• ' + item; }).join('\n');
   }
 
 
