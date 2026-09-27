@@ -1,4 +1,4 @@
-// main.js - Main Application Entry Orchestrator (Phase 2 Unified Summary Dashboard)
+// main.js (2609_R054) - Main Application Entry Orchestrator (3-Tab Pilot Scan Hub)
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -9,7 +9,10 @@ import {
   getHistoryLimit, setHistoryLimit, getFreshnessLimit, setFreshnessLimit,
   hasProfileData
 } from './js/storage.js';
-import { startScanner, stopScanner } from './js/scanner.js';
+import {
+  startScanner, stopScanner, switchScanHubTab, renderMyQrPass,
+  renderRecentPilotsList, cycleCameraLens, toggleTorch, handleClipboardPaste
+} from './js/scanner.js';
 import {
   updateNetworkStatus, showScannerView, showLoading, showError, showView,
   initNavigationBars, closeMenu, applyThemeMode, applyTextSize, updateThresholdPills,
@@ -68,12 +71,81 @@ async function extractTextFromPdfFile(file) {
 
 document.addEventListener("DOMContentLoaded", () => {
   initApp();
+  initScanHubUI();
   initNavigationBars();
   initProfileUI();
   initSettingsUI();
   initStorageUI();
   renderDashboardView();
 });
+
+// ----------------------------------------------------------------------------
+// 3-TAB PILOT SCAN HUB EVENT BINDINGS
+// ----------------------------------------------------------------------------
+function initScanHubUI() {
+  const tabCameraBtn = document.getElementById("tab-camera-btn");
+  const tabQrPassBtn = document.getElementById("tab-qrpass-btn");
+  const tabManualBtn = document.getElementById("tab-manual-btn");
+
+  if (tabCameraBtn) tabCameraBtn.addEventListener("click", () => switchScanHubTab("camera"));
+  if (tabQrPassBtn) tabQrPassBtn.addEventListener("click", () => switchScanHubTab("qrpass"));
+  if (tabManualBtn) tabManualBtn.addEventListener("click", () => switchScanHubTab("manual"));
+
+  const cycleLensBtn = document.getElementById("camera-cycle-btn");
+  if (cycleLensBtn) cycleLensBtn.addEventListener("click", cycleCameraLens);
+
+  const torchBtn = document.getElementById("torch-toggle-btn");
+  if (torchBtn) torchBtn.addEventListener("click", toggleTorch);
+
+  const uploadQrBtn = document.getElementById("upload-qr-btn");
+  const qrFileInput = document.getElementById("qr-file-input");
+
+  if (uploadQrBtn && qrFileInput) {
+    uploadQrBtn.addEventListener("click", () => qrFileInput.click());
+    qrFileInput.addEventListener("change", async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (window.QrScanner) {
+        try {
+          showLoading("Processing QR code image...");
+          const result = await window.QrScanner.scanImage(file, { returnDetailedScanResult: true });
+          const decodedText = (typeof result === 'object' ? result.data : result) || "";
+          if (decodedText.trim()) {
+            processLicenseUrl(decodedText.trim());
+          } else {
+            showError("No valid QR code found in selected photo.");
+          }
+        } catch (err) {
+          showError("Could not decode QR code from image. Please ensure image is clear.");
+        }
+      }
+      qrFileInput.value = "";
+    });
+  }
+
+  const pasteUrlBtn = document.getElementById("paste-url-btn");
+  if (pasteUrlBtn) pasteUrlBtn.addEventListener("click", handleClipboardPaste);
+
+  const verifyMyLicenceBtn = document.getElementById("verify-my-licence-btn");
+  if (verifyMyLicenceBtn) {
+    verifyMyLicenceBtn.addEventListener("click", () => {
+      const profile = getProfileData();
+      if (profile && profile.url) {
+        processLicenseUrl(profile.url);
+      } else {
+        showError("No stored licence URL. Please configure credentials in My Credentials.");
+      }
+    });
+  }
+
+  const pausedOverlay = document.getElementById("scanner-paused-overlay");
+  if (pausedOverlay) {
+    pausedOverlay.addEventListener("click", () => {
+      startScanner(processLicenseUrl, showError);
+    });
+  }
+}
+
 
 // Strict CAAM eCLIPSE URL Validator
 function isValidCaamUrl(urlStr) {
@@ -110,9 +182,9 @@ function updateProfileUrlBadge(urlStr) {
     if (urlText) {
       const storedProfile = getProfileData();
       if (storedProfile && storedProfile.url && cleanUrl === storedProfile.url.trim()) {
-        urlText.innerText = "✓ Stored licence URL";
+        urlText.innerText = "Stored licence URL";
       } else {
-        urlText.innerText = "✓ Valid CAAM Licence URL captured";
+        urlText.innerText = "Valid CAAM Licence URL captured";
       }
     }
   } else {
@@ -162,7 +234,7 @@ function initProfileUI() {
   if (pdfStatusBadge && pdfStatusText) {
     if (profile.attestationFileName) {
       pdfStatusBadge.classList.remove("hidden");
-      pdfStatusText.innerText = "✓ Stored Attestation PDF file";
+      pdfStatusText.innerText = "Stored Attestation PDF file";
     } else {
       pdfStatusBadge.classList.add("hidden");
     }
@@ -239,7 +311,7 @@ function initProfileUI() {
         if (pdfStatusBadge && pdfStatusText) {
           if (currentProfile.attestationFileName) {
             pdfStatusBadge.classList.remove("hidden");
-            pdfStatusText.innerText = "✓ Stored Attestation PDF file";
+            pdfStatusText.innerText = "Stored Attestation PDF file";
           } else {
             pdfStatusBadge.classList.add("hidden");
           }
@@ -283,7 +355,7 @@ function initProfileUI() {
         if (pdfLabel) pdfLabel.innerText = file.name;
         if (pdfStatusBadge && pdfStatusText) {
           pdfStatusBadge.classList.remove("hidden");
-          pdfStatusText.innerText = "✓ Valid Attestation PDF file";
+          pdfStatusText.innerText = "Valid Attestation PDF file";
         }
         showProfileToast("MAB Attestation PDF verified!");
       } catch (err) {
@@ -321,7 +393,7 @@ function initProfileUI() {
 
       if (pdfStatusBadge && pdfStatusText) {
         pdfStatusBadge.classList.remove("hidden");
-        pdfStatusText.innerText = "✓ Stored Attestation PDF file";
+        pdfStatusText.innerText = "Stored Attestation PDF file";
       }
 
       showProfileToast("Crew credentials saved successfully!");
@@ -1112,7 +1184,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
     const lcDate = getDashEl("mab-linecheck-date");
     const lcExp = getDashEl("mab-linecheck-expiry");
 
-    if (lcTitle && mabResults.lineCheck) lcTitle.innerText = `${mabResults.lineCheck.fleet}`;
+    if (lcTitle && mabResults.lineCheck) lcTitle.innerText = `${mabResults.lineCheck.fleet} LINE CHECK`;
     if (lcLicence && mabResults.lineCheck) lcLicence.innerText = mabResults.lineCheck.licenseNo || "A3115";
     if (lcRoute && mabResults.lineCheck) lcRoute.innerText = mabResults.lineCheck.route;
     if (lcDate && mabResults.lineCheck) lcDate.innerText = mabResults.lineCheck.checkDate;
