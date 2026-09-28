@@ -1,4 +1,4 @@
-// js/ui.js (2609_R054) - UI View State, Navigation, and Network Controller
+// js/ui.js (2809_R059) - View State & Navigation Controller
 
 import { stopScanner, switchScanHubTab } from './scanner.js';
 import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit } from './storage.js';
@@ -515,6 +515,7 @@ export function showError(msg) {
   const errMsg = document.getElementById("error-message");
   if (errMsg) {
     errMsg.innerHTML = msg;
+    errMsg.classList.remove("hidden");
   } else {
     alert(msg);
   }
@@ -523,6 +524,10 @@ export function showError(msg) {
   if (manualInput) manualInput.value = "";
 
   showView("scanner-view");
+  // Restart scanner so the video feed is live and never pitch dark
+  if (window.startScanner) {
+    window.startScanner(window.processLicenseUrl, null);
+  }
 }
 
 window.showScannerView = showScannerView;
