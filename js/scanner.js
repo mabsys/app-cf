@@ -1,4 +1,4 @@
-// js/scanner.js (2809_R055) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// js/scanner.js (2809_R056) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
 import { getProfileData, getScanHistory } from './storage.js';
 
@@ -9,45 +9,58 @@ let activeMediaStream = null;
 let torchActive = false;
 let idleTimer = null;
 let wakeLock = null;
+let currentZoomLevel = 1.8;
 
 // IDLE TIMEOUT THRESHOLD: 60 Seconds
 const IDLE_TIMEOUT_MS = 60000;
 
-// Format camera device labels for iOS/Android
-function formatCameraLabel(label, index) {
-  if (!label) return `Camera ${index + 1}`;
-  const lower = label.toLowerCase();
-  if (lower.includes('front') || lower.includes('user') || lower.includes('facing front')) {
-    return 'Front Camera';
+// Filter out front/selfie cameras strictly
+function filterRearCameras(cameras) {
+  if (!Array.isArray(cameras)) return [];
+  return cameras.filter(cam => {
+    const label = (cam.label || '').toLowerCase();
+    if (label.includes('front') || label.includes('user') || label.includes('selfie') || label.includes('facing front')) {
+      return false;
+    }
+    return true;
+  });
+}
+
+// Format camera device or zoom level labels for clear user feedback
+function formatCameraLabel(camObj, index, total) {
+  if (!camObj && total <= 1) {
+    return `Back ${currentZoomLevel.toFixed(1)}x`;
   }
-  if (lower.includes('ultra') || lower.includes('0.5x') || lower.includes('wide-angle')) {
-    return 'Ultra Wide (0.5x)';
+  const label = camObj ? (camObj.label || '').toLowerCase() : '';
+  if (label.includes('ultra') || label.includes('0.5x') || label.includes('wide-angle')) {
+    return 'Ultra Wide 0.5x';
   }
-  if (lower.includes('telephoto') || lower.includes('zoom') || lower.includes('2x') || lower.includes('3x')) {
-    return 'Telephoto Camera';
+  if (label.includes('telephoto') || label.includes('zoom') || label.includes('2x') || label.includes('3x')) {
+    return 'Telephoto 2.0x';
   }
-  if (lower.includes('back') || lower.includes('rear') || lower.includes('environment') || lower.includes('wide')) {
-    return index === 0 ? 'Back Camera (1x)' : `Back Camera ${index + 1}`;
+  if (label.includes('back') || label.includes('rear') || label.includes('environment') || label.includes('wide')) {
+    return index === 0 ? 'Back 1.0x' : `Back Lens ${index + 1}`;
   }
-  return label.length > 18 ? label.substring(0, 16) + '...' : label;
+  if (total > 1) {
+    return `Back Lens ${index + 1}`;
+  }
+  return `Back ${currentZoomLevel.toFixed(1)}x`;
 }
 
 export function updateCameraCycleButtonLabel() {
   const cycleLabel = document.getElementById("camera-cycle-label");
-  if (!cycleLabel) return;
-  
+  const cycleBtn = document.getElementById("camera-cycle-btn");
+  const targetEl = cycleLabel || cycleBtn;
+  if (!targetEl) return;
+
   if (!availableCameraDevices || availableCameraDevices.length <= 1) {
-    cycleLabel.innerText = "Back Camera";
+    targetEl.innerText = `Back ${currentZoomLevel.toFixed(1)}x`;
     return;
   }
-  
-  const current = availableCameraDevices.find(c => c.id === currentCameraDeviceId);
+
   const index = availableCameraDevices.findIndex(c => c.id === currentCameraDeviceId);
-  if (current) {
-    cycleLabel.innerText = formatCameraLabel(current.label, index >= 0 ? index : 0);
-  } else {
-    cycleLabel.innerText = "Switch Lens";
-  }
+  const current = availableCameraDevices[index >= 0 ? index : 0];
+  targetEl.innerText = formatCameraLabel(current, index >= 0 ? index : 0, availableCameraDevices.length);
 }
 
 // ============================================================================
@@ -99,13 +112,14 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
         onDecodeError: (error) => {},
         highlightScanRegion: true,
         highlightCodeOutline: true,
-        maxScansPerSecond: 10,
+        maxScansPerSecond: 15,
+        alsoTryWithoutScanRegion: true,
         preferredCamera: currentCameraDeviceId || 'environment'
       }
     );
 
     qrScanner.start().then(() => {
-      // Enforce max optical zoom if supported (1.5x - 2.0x)
+      // Optimize camera stream for high-resolution 1080p & autofocus
       try {
         const stream = videoElem.srcObject;
         if (stream) {
@@ -113,9 +127,16 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
           const track = stream.getVideoTracks();
           if (track && track.getCapabilities) {
             const capabilities = track.getCapabilities();
+            const constraints = {};
+            if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
+              constraints.focusMode = 'continuous';
+            }
             if (capabilities.zoom) {
-              const targetZoom = Math.min(capabilities.zoom.max, Math.max(capabilities.zoom.min, 1.8));
-              track.applyConstraints({ advanced: [{ zoom: targetZoom }] }).catch(() => {});
+              const targetZoom = Math.min(capabilities.zoom.max, Math.max(capabilities.zoom.min, currentZoomLevel));
+              constraints.zoom = targetZoom;
+            }
+            if (Object.keys(constraints).length > 0) {
+              track.applyConstraints({ advanced: [constraints] }).catch(() => {});
             }
             // Check torch availability
             const torchBtn = document.getElementById("torch-toggle-btn");
@@ -132,9 +153,9 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
         }
       } catch (e) {}
 
-      // Enumerate available cameras for lens switcher
+      // Enumerate and filter rear cameras for lens switcher
       window.QrScanner.listCameras(true).then((cameras) => {
-        availableCameraDevices = cameras || [];
+        availableCameraDevices = filterRearCameras(cameras || []);
         updateCameraCycleButtonLabel();
       }).catch(() => {});
     }).catch((err) => {
@@ -234,8 +255,12 @@ export function renderMyQrPass() {
   const badgeEl = document.getElementById("pass-eligibility-badge");
   const freshnessTag = document.getElementById("pass-freshness-tag");
 
-  if (pilotNameEl) pilotNameEl.innerText = profile.name || "Capt. Mohd Sallehuddin Zaidy";
-  if (licenceNoEl) licenceNoEl.innerText = `${profile.licenceType || 'ATPL(A)'} • ${profile.licenceNo || 'A3115'}`;
+  if (pilotNameEl) pilotNameEl.innerText = profile.name || "-";
+  if (licenceNoEl) {
+    const lType = profile.licenceType || "-";
+    const lNo = profile.licenceNo || "-";
+    licenceNoEl.innerText = `${lType} • ${lNo}`;
+  }
 
   const isEligible = profile.dutyStatus ? profile.dutyStatus === 'ELIGIBLE' : true;
   if (badgeEl) {
@@ -324,51 +349,60 @@ export async function handleClipboardPaste() {
 export async function cycleCameraLens() {
   const cycleBtn = document.getElementById("camera-cycle-btn");
   const cycleLabel = document.getElementById("camera-cycle-label");
+  const targetEl = cycleLabel || cycleBtn;
+
+  if (targetEl) targetEl.innerText = "Switching...";
 
   if (!availableCameraDevices || availableCameraDevices.length === 0) {
     try {
       if (window.QrScanner) {
-        availableCameraDevices = await window.QrScanner.listCameras(true);
+        const cameras = await window.QrScanner.listCameras(true);
+        availableCameraDevices = filterRearCameras(cameras || []);
       }
     } catch (e) {}
   }
 
-  if (!availableCameraDevices || availableCameraDevices.length <= 1) {
-    if (cycleLabel) cycleLabel.innerText = "Back Camera";
-    return;
-  }
+  // MODE A: Multiple Rear Cameras Detected (Wide, Telephoto, Ultra Wide)
+  if (availableCameraDevices && availableCameraDevices.length > 1) {
+    const currentIndex = availableCameraDevices.findIndex(c => c.id === currentCameraDeviceId);
+    const nextIndex = (currentIndex + 1) % availableCameraDevices.length;
+    const nextCamera = availableCameraDevices[nextIndex];
+    currentCameraDeviceId = nextCamera.id;
 
-  const currentIndex = availableCameraDevices.findIndex(c => c.id === currentCameraDeviceId);
-  const nextIndex = (currentIndex + 1) % availableCameraDevices.length;
-  const nextCamera = availableCameraDevices[nextIndex];
-  currentCameraDeviceId = nextCamera.id;
-
-  if (cycleLabel) cycleLabel.innerText = "Switching...";
-
-  try {
-    if (qrScanner) {
-      await qrScanner.setCamera(currentCameraDeviceId);
-    } else {
-      await startScanner(
-        (url) => { if (typeof window.processLicenseUrl === 'function') window.processLicenseUrl(url); },
-        null
-      );
-    }
-    updateCameraCycleButtonLabel();
-  } catch (err) {
-    console.warn("Lens switch failed on device, falling back to default camera:", err);
-    currentCameraDeviceId = 'environment';
     try {
       if (qrScanner) {
-        await qrScanner.setCamera('environment');
+        await qrScanner.setCamera(currentCameraDeviceId);
+      } else {
+        startScanner(
+          (url) => { if (typeof window.processLicenseUrl === 'function') window.processLicenseUrl(url); },
+          null
+        );
       }
-    } catch (e) {
-      startScanner(
-        (url) => { if (typeof window.processLicenseUrl === 'function') window.processLicenseUrl(url); },
-        null
-      );
+      updateCameraCycleButtonLabel();
+      return;
+    } catch (err) {
+      console.warn("Lens switch failed, attempting zoom mode fallback:", err);
     }
-    if (cycleLabel) cycleLabel.innerText = "Back Camera";
+  }
+
+  // MODE B: Single Rear Camera exposed by OS -> Toggle Zoom Constraint (1.0x <-> 2.0x)
+  currentZoomLevel = currentZoomLevel >= 1.8 ? 1.0 : 2.0;
+  try {
+    const videoElem = document.getElementById("qr-video");
+    if (videoElem && videoElem.srcObject) {
+      const track = videoElem.srcObject.getVideoTracks();
+      if (track && track.getCapabilities) {
+        const capabilities = track.getCapabilities();
+        if (capabilities.zoom) {
+          const targetZoom = Math.min(capabilities.zoom.max, Math.max(capabilities.zoom.min, currentZoomLevel));
+          await track.applyConstraints({ advanced: [{ zoom: targetZoom }] });
+        }
+      }
+    }
+  } catch (e) {}
+
+  if (targetEl) {
+    targetEl.innerText = `Back ${currentZoomLevel.toFixed(1)}x`;
   }
 }
 
