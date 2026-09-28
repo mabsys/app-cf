@@ -1,4 +1,4 @@
-// js/scanner.js (2809_R056) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// js/scanner.js (2609_R054) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
 import { getProfileData, getScanHistory } from './storage.js';
 
@@ -9,59 +9,9 @@ let activeMediaStream = null;
 let torchActive = false;
 let idleTimer = null;
 let wakeLock = null;
-let currentZoomLevel = 1.8;
 
 // IDLE TIMEOUT THRESHOLD: 60 Seconds
 const IDLE_TIMEOUT_MS = 60000;
-
-// Filter out front/selfie cameras strictly
-function filterRearCameras(cameras) {
-  if (!Array.isArray(cameras)) return [];
-  return cameras.filter(cam => {
-    const label = (cam.label || '').toLowerCase();
-    if (label.includes('front') || label.includes('user') || label.includes('selfie') || label.includes('facing front')) {
-      return false;
-    }
-    return true;
-  });
-}
-
-// Format camera device or zoom level labels for clear user feedback
-function formatCameraLabel(camObj, index, total) {
-  if (!camObj && total <= 1) {
-    return `Back ${currentZoomLevel.toFixed(1)}x`;
-  }
-  const label = camObj ? (camObj.label || '').toLowerCase() : '';
-  if (label.includes('ultra') || label.includes('0.5x') || label.includes('wide-angle')) {
-    return 'Ultra Wide 0.5x';
-  }
-  if (label.includes('telephoto') || label.includes('zoom') || label.includes('2x') || label.includes('3x')) {
-    return 'Telephoto 2.0x';
-  }
-  if (label.includes('back') || label.includes('rear') || label.includes('environment') || label.includes('wide')) {
-    return index === 0 ? 'Back 1.0x' : `Back Lens ${index + 1}`;
-  }
-  if (total > 1) {
-    return `Back Lens ${index + 1}`;
-  }
-  return `Back ${currentZoomLevel.toFixed(1)}x`;
-}
-
-export function updateCameraCycleButtonLabel() {
-  const cycleLabel = document.getElementById("camera-cycle-label");
-  const cycleBtn = document.getElementById("camera-cycle-btn");
-  const targetEl = cycleLabel || cycleBtn;
-  if (!targetEl) return;
-
-  if (!availableCameraDevices || availableCameraDevices.length <= 1) {
-    targetEl.innerText = `Back ${currentZoomLevel.toFixed(1)}x`;
-    return;
-  }
-
-  const index = availableCameraDevices.findIndex(c => c.id === currentCameraDeviceId);
-  const current = availableCameraDevices[index >= 0 ? index : 0];
-  targetEl.innerText = formatCameraLabel(current, index >= 0 ? index : 0, availableCameraDevices.length);
-}
 
 // ============================================================================
 // 1. TAB 1: LIVE CAMERA SCANNER & HARDWARE STREAM CONTROLLER
@@ -86,360 +36,422 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
 
   // Destroy existing active scanner instance
   if (qrScanner) {
-    try {
-      qrScanner.destroy();
-    } catch (e) {}
-    qrScanner = null;
-  }
-
-  if (window.QrScanner) {
-    qrScanner = new window.QrScanner(
-      videoElem,
-      (result) => {
-        const decodedText = (typeof result === 'object' ? (result.data || result.text) : result) || "";
-        const cleanUrl = decodedText ? decodedText.trim() : "";
-        if (cleanUrl) {
-          stopScanner();
-          const targetCb = onDecodeCallback || window.processLicenseUrl;
-          if (typeof targetCb === 'function') {
-            targetCb(cleanUrl);
-          } else {
-            console.warn("QR Code decoded but no handler found:", cleanUrl);
-          }
-        }
-      },
-      {
-        onDecodeError: (error) => {},
-        highlightScanRegion: true,
-        highlightCodeOutline: true,
-        maxScansPerSecond: 15,
-        alsoTryWithoutScanRegion: true,
-        preferredCamera: currentCameraDeviceId || 'environment'
-      }
-    );
-
-    qrScanner.start().then(() => {
-      // Optimize camera stream for high-resolution 1080p & autofocus
-      try {
-        const stream = videoElem.srcObject;
-        if (stream) {
-          activeMediaStream = stream;
-          const track = stream.getVideoTracks();
-          if (track && track.getCapabilities) {
-            const capabilities = track.getCapabilities();
-            const constraints = {};
-            if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
-              constraints.focusMode = 'continuous';
-            }
-            if (capabilities.zoom) {
-              const targetZoom = Math.min(capabilities.zoom.max, Math.max(capabilities.zoom.min, currentZoomLevel));
-              constraints.zoom = targetZoom;
-            }
-            if (Object.keys(constraints).length > 0) {
-              track.applyConstraints({ advanced: [constraints] }).catch(() => {});
-            }
-            // Check torch availability
-            const torchBtn = document.getElementById("torch-toggle-btn");
-            if (torchBtn) {
-              if (capabilities.torch) {
-                torchBtn.classList.remove("hidden");
-                torchBtn.classList.add("flex");
-              } else {
-                torchBtn.classList.add("hidden");
-                torchBtn.classList.remove("flex");
-              }
-            }
-          }
-        }
-      } catch (e) {}
-
-      // Enumerate and filter rear cameras for lens switcher
-      window.QrScanner.listCameras(true).then((cameras) => {
-        availableCameraDevices = filterRearCameras(cameras || []);
-        updateCameraCycleButtonLabel();
-      }).catch(() => {});
-    }).catch((err) => {
-      console.error("Camera start failed:", err);
-      if (onErrorCallback) onErrorCallback("Unable to access camera. Please verify permissions.");
-    });
-  }
-}
-
-export function stopScanner() {
-  if (idleTimer) {
-    clearTimeout(idleTimer);
-    idleTimer = null;
-  }
-
-  if (qrScanner) {
-    try {
-      qrScanner.stop();
-      qrScanner.destroy();
-    } catch (e) {}
+    qrScanner.destroy();
     qrScanner = null;
   }
 
   if (activeMediaStream) {
+    activeMediaStream.getTracks().forEach(track => track.stop());
+    activeMediaStream = null;
+  }
+
+  // Configure high-resolution camera constraints for physical 14mm x 14mm QR cards
+  const videoConstraints = {
+    width: { ideal: 1920, min: 1280 },
+    height: { ideal: 1080, min: 720 },
+    facingMode: "environment"
+  };
+
+  if (currentCameraDeviceId) {
+    videoConstraints.deviceId = { exact: currentCameraDeviceId };
+    delete videoConstraints.facingMode;
+  }
+
+  qrScanner = new QrScanner(
+    videoElem,
+    result => {
+      // Trigger subtle haptic feedback on scan success
+      if (navigator.vibrate) {
+        try { navigator.vibrate(100); } catch (e) {}
+      }
+
+      const decodedText = typeof result === 'object' ? result.data : result;
+      const cleanScannedText = (decodedText || "").trim();
+
+      // Reset idle timer on successful decode
+      resetIdleTimer(onDecodeCallback, onErrorCallback);
+
+      if (onDecodeCallback) onDecodeCallback(cleanScannedText);
+    },
+    {
+      highlightScanRegion: true,
+      highlightCodeOutline: true,
+      maxScansPerSecond: 25,
+      preferredCamera: 'environment',
+      constraints: videoConstraints,
+      calculateScanRegion: (video) => {
+        const smallerDimension = Math.min(video.videoWidth, video.videoHeight);
+        const scanRegionSize = Math.round(smallerDimension * 0.85);
+        return {
+          x: Math.round((video.videoWidth - scanRegionSize) / 2),
+          y: Math.round((video.videoHeight - scanRegionSize) / 2),
+          width: scanRegionSize,
+          height: scanRegionSize,
+          downScaledWidth: 800,
+          downScaledHeight: 800
+        };
+      }
+    }
+  );
+
+  qrScanner.start().then(() => {
+    // Attempt 1.5x-2.0x optical/hardware zoom for small QR code scanning
     try {
-      activeMediaStream.getTracks().forEach(track => track.stop());
+      const stream = videoElem.srcObject;
+      if (stream) {
+        activeMediaStream = stream;
+        const track = stream.getVideoTracks()[0];
+        if (track && typeof track.getCapabilities === 'function') {
+          const capabilities = track.getCapabilities();
+          if (capabilities.zoom) {
+            const targetZoom = Math.min(capabilities.zoom.max, Math.max(capabilities.zoom.min, 1.8));
+            track.applyConstraints({ advanced: [{ zoom: targetZoom }] }).catch(() => {});
+          }
+
+          // Detect hardware torch support
+          const torchBtn = document.getElementById("torch-toggle-btn");
+          if (torchBtn) {
+            if (capabilities.torch) {
+              torchBtn.classList.remove("hidden");
+              torchBtn.classList.add("flex");
+            } else {
+              torchBtn.classList.add("hidden");
+              torchBtn.classList.remove("flex");
+            }
+          }
+        }
+      }
     } catch (e) {}
+
+    // Enumerate available rear video devices for lens cycling
+    enumerateRearCameras();
+
+  }).catch(err => {
+    if (onErrorCallback) onErrorCallback("Camera Access Failed: " + err);
+  });
+}
+
+export function stopScanner() {
+  clearTimeout(idleTimer);
+
+  if (qrScanner) {
+    qrScanner.destroy();
+    qrScanner = null;
+  }
+
+  if (activeMediaStream) {
+    activeMediaStream.getTracks().forEach(track => track.stop());
     activeMediaStream = null;
   }
 
   torchActive = false;
-  const torchBtn = document.getElementById("torch-toggle-btn");
-  if (torchBtn) {
-    torchBtn.classList.add("hidden");
-    torchBtn.classList.remove("flex");
-  }
-
   releaseWakeLock();
+
+  return Promise.resolve();
 }
 
-export function switchScanHubTab(tabName) {
-  const tabCamera = document.getElementById('camera-scan-tab');
-  const tabQrPass = document.getElementById('my-qr-pass-tab');
-  const tabManual = document.getElementById('manual-entry-tab');
+function resetIdleTimer(onDecodeCallback, onErrorCallback) {
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => {
+    // Stop camera stream on 60-second idle timeout
+    if (qrScanner) {
+      qrScanner.stop();
+    }
+    if (activeMediaStream) {
+      activeMediaStream.getTracks().forEach(track => track.stop());
+      activeMediaStream = null;
+    }
+    const pausedOverlay = document.getElementById("scanner-paused-overlay");
+    if (pausedOverlay) {
+      pausedOverlay.classList.remove("hidden");
+      pausedOverlay.classList.add("flex");
+    }
+  }, IDLE_TIMEOUT_MS);
+}
 
-  const btnCamera = document.getElementById('tab-camera-btn');
-  const btnQrPass = document.getElementById('tab-qrpass-btn');
-  const btnManual = document.getElementById('tab-manual-btn');
+export function cycleCameraLens(onDecodeCallback, onErrorCallback) {
+  if (availableCameraDevices.length <= 1) return;
 
-  const activeBtnClass = 'flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-xs';
-  const inactiveBtnClass = 'flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100';
+  const currentIndex = availableCameraDevices.findIndex(d => d.id === currentCameraDeviceId);
+  const nextIndex = (currentIndex + 1) % availableCameraDevices.length;
+  currentCameraDeviceId = availableCameraDevices[nextIndex].id;
 
-  if (tabCamera) tabCamera.classList.add('hidden');
-  if (tabQrPass) tabQrPass.classList.add('hidden');
-  if (tabManual) tabManual.classList.add('hidden');
+  startScanner(onDecodeCallback, onErrorCallback);
+}
+
+function enumerateRearCameras() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+
+  navigator.mediaDevices.enumerateDevices().then(devices => {
+    const videoDevices = devices.filter(d => d.kind === 'videoinput');
+    // Filter environment/rear cameras
+    availableCameraDevices = videoDevices.filter(d => 
+      d.label.toLowerCase().includes('back') || 
+      d.label.toLowerCase().includes('rear') || 
+      d.label.toLowerCase().includes('environment')
+    );
+
+    if (availableCameraDevices.length === 0) {
+      availableCameraDevices = videoDevices;
+    }
+
+    const lensBtn = document.getElementById("camera-cycle-btn");
+    if (lensBtn) {
+      if (availableCameraDevices.length > 1) {
+        lensBtn.disabled = false;
+        lensBtn.classList.remove("opacity-50", "cursor-not-allowed");
+      } else {
+        lensBtn.disabled = true;
+        lensBtn.classList.add("opacity-50", "cursor-not-allowed");
+      }
+    }
+  }).catch(() => {});
+}
+
+export function toggleTorch() {
+  if (!activeMediaStream) return;
+  const track = activeMediaStream.getVideoTracks()[0];
+  if (track && typeof track.getCapabilities === 'function') {
+    const capabilities = track.getCapabilities();
+    if (capabilities.torch) {
+      torchActive = !torchActive;
+      track.applyConstraints({ advanced: [{ torch: torchActive }] }).catch(() => {});
+    }
+  }
+}
+
+export function decodeGalleryPhoto(file, onDecodeCallback, onErrorCallback) {
+  if (!file) return;
+  QrScanner.scanImage(file, { returnDetailedScanResult: true })
+    .then(result => {
+      const decodedText = typeof result === 'object' ? result.data : result;
+      if (decodedText && onDecodeCallback) {
+        onDecodeCallback(decodedText.trim());
+      }
+    })
+    .catch(err => {
+      if (onErrorCallback) onErrorCallback("No valid QR code found in uploaded image.");
+    });
+}
+
+// ============================================================================
+// 2. TAB 2: MY QR PASS CONTROLLER (OFFLINE ON-DEVICE CANVAS QR GENERATOR)
+// ============================================================================
+
+export function renderMyQrPass() {
+  requestWakeLock();
+
+  const profile = getProfileData();
+  const passContainer = document.getElementById("my-qr-pass-tab");
+  if (!passContainer) return;
+
+  const canvas = document.getElementById("pass-qr-canvas");
+  const nameElem = document.getElementById("pass-pilot-name");
+  const licenceElem = document.getElementById("pass-licence-no");
+  const badgeElem = document.getElementById("pass-eligibility-badge");
+  const freshnessElem = document.getElementById("pass-freshness-tag");
+  const verifyBtn = document.getElementById("verify-my-licence-btn");
+
+  if (!profile || !profile.url) {
+    if (nameElem) nameElem.innerText = "No Profile Saved";
+    if (licenceElem) licenceElem.innerText = "Scan or verify a licence to enable My Pass";
+    if (badgeElem) {
+      badgeElem.className = "mt-3 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400";
+      badgeElem.innerText = "UNVERIFIED";
+    }
+    if (verifyBtn) verifyBtn.classList.add("hidden");
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    return;
+  }
+
+  // Render Pilot Details
+  if (nameElem) nameElem.innerText = profile.pilotName || "CAPT. MOHD SALLEHUDDIN ZAIDY";
+  if (licenceElem) licenceElem.innerText = `${profile.licenceType || 'ATPL(A)'} • ${profile.licenceNo || 'A3115'}`;
+  
+  // Status Badge Logic
+  if (badgeElem) {
+    if (profile.isLapsed) {
+      badgeElem.className = "mt-3 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 border border-red-200/80";
+      badgeElem.innerText = "LAPSED / INELIGIBLE";
+    } else if (profile.isExpiringSoon) {
+      badgeElem.className = "mt-3 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200/80";
+      badgeElem.innerText = "EXPIRING SOON";
+    } else {
+      badgeElem.className = "mt-3 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200/80";
+      badgeElem.innerText = "ELIGIBLE FOR FLIGHT DUTY";
+    }
+  }
+
+  if (freshnessElem) {
+    freshnessElem.innerText = profile.lastUpdated ? `Cached: ${profile.lastUpdated}` : "Offline Pass Ready (0ms delay)";
+  }
+
+  if (verifyBtn) verifyBtn.classList.remove("hidden");
+
+  // Render Vector Canvas QR Code On-Device (Offline Ready)
+  if (canvas && typeof QrScanner !== 'undefined' && profile.url) {
+    drawCanvasQrCode(canvas, profile.url);
+  }
+}
+
+function drawCanvasQrCode(canvas, text) {
+  // Uses HTML5 Canvas API to generate high-contrast vector modules
+  const ctx = canvas.getContext("2d");
+  const size = 240;
+  canvas.width = size;
+  canvas.height = size;
+
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillRect(0, 0, size, size);
+
+  // Fallback visual encoding pattern if qrcode.js library isn't loaded
+  if (typeof QRCode !== 'undefined') {
+    QRCode.toCanvas(canvas, text, { width: size, margin: 2, color: { dark: '#000000', light: '#FFFFFF' } });
+  } else {
+    // Basic high-contrast SVG / Canvas fallback representation
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = () => { ctx.drawImage(img, 10, 10, size - 20, size - 20); };
+    img.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(text)}`;
+  }
+}
+
+// ============================================================================
+// 3. TAB 3: MANUAL ENTRY & RECENT CREW CARDS CONTROLLER
+// ============================================================================
+
+export function renderRecentPilotsList(onSelectUrlCallback) {
+  const listContainer = document.getElementById("recent-pilots-list");
+  const countTag = document.getElementById("recent-count-tag");
+
+  if (!listContainer) return;
+
+  const history = getScanHistory() || [];
+  if (countTag) countTag.innerText = history.length;
+
+  if (history.length === 0) {
+    listContainer.innerHTML = `
+      <div class="p-4 text-center text-xs text-slate-400 font-medium">
+        No recent verified crew records found.
+      </div>
+    `;
+    return;
+  }
+
+  listContainer.innerHTML = history.slice(0, 5).map(item => {
+    const pilotName = item.pilotName || "CAPT. UNKNOWN CREW";
+    const licenceInfo = `${item.licenceType || 'ATPL(A)'} • ${item.licenceNo || 'N/A'}`;
+    const timestamp = item.timestamp || item.scannedAt || "Recent";
+
+    return `
+      <div data-url="${item.url || ''}" class="recent-pilot-card p-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer flex items-center justify-between group">
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs font-black text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors uppercase">
+            ${pilotName}
+          </span>
+          <span class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+            ${licenceInfo} &bull; Verified ${timestamp}
+          </span>
+        </div>
+        <svg class="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
+        </svg>
+      </div>
+    `;
+  }).join('');
+
+  // Bind click handlers to recent pilot cards
+  const cards = listContainer.querySelectorAll(".recent-pilot-card");
+  cards.forEach(card => {
+    card.addEventListener("click", () => {
+      const targetUrl = card.getAttribute("data-url");
+      const input = document.getElementById("manual-url-input");
+      if (input && targetUrl) {
+        input.value = targetUrl;
+        if (onSelectUrlCallback) onSelectUrlCallback(targetUrl);
+      }
+    });
+  });
+}
+
+export function handleClipboardPaste(inputElemId = "manual-url-input") {
+  const inputElem = document.getElementById(inputElemId);
+  if (!inputElem) return;
+
+  if (navigator.clipboard && navigator.clipboard.readText) {
+    navigator.clipboard.readText()
+      .then(text => {
+        if (text) {
+          inputElem.value = text.trim();
+        }
+      })
+      .catch(() => {});
+  }
+}
+
+// ============================================================================
+// 4. SCAN HUB TAB SWITCHER & LIFECYCLE orchestrator
+// ============================================================================
+
+export function switchScanHubTab(targetTabId, onDecodeCallback, onErrorCallback) {
+  const cameraTab = document.getElementById("camera-scan-tab");
+  const myQrPassTab = document.getElementById("my-qr-pass-tab");
+  const manualTab = document.getElementById("manual-entry-tab");
+
+  const btnCamera = document.getElementById("tab-camera-btn");
+  const btnQrPass = document.getElementById("tab-qrpass-btn");
+  const btnManual = document.getElementById("tab-manual-btn");
+
+  const activeBtnClass = "py-2 px-1 rounded-xl text-[11px] font-extrabold transition-all bg-blue-600 text-white shadow-xs flex items-center justify-center gap-1.5 cursor-pointer";
+  const inactiveBtnClass = "py-2 px-1 rounded-xl text-[11px] font-extrabold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 flex items-center justify-center gap-1.5 cursor-pointer";
+
+  // Reset tab views
+  if (cameraTab) cameraTab.classList.add("hidden");
+  if (myQrPassTab) myQrPassTab.classList.add("hidden");
+  if (manualTab) manualTab.classList.add("hidden");
 
   if (btnCamera) btnCamera.className = inactiveBtnClass;
   if (btnQrPass) btnQrPass.className = inactiveBtnClass;
   if (btnManual) btnManual.className = inactiveBtnClass;
 
-  if (tabName === 'camera') {
-    if (tabCamera) tabCamera.classList.remove('hidden');
+  if (targetTabId === "camera") {
+    if (cameraTab) cameraTab.classList.remove("hidden");
     if (btnCamera) btnCamera.className = activeBtnClass;
-    startScanner(
-      (scannedUrl) => {
-        if (typeof window.processLicenseUrl === 'function') {
-          window.processLicenseUrl(scannedUrl);
-        }
-      },
-      (err) => {
-        const errorMsg = document.getElementById("error-message");
-        if (errorMsg) errorMsg.innerText = err;
-      }
-    );
-  } else if (tabName === 'qrpass') {
-    if (tabQrPass) tabQrPass.classList.remove('hidden');
+    releaseWakeLock();
+    startScanner(onDecodeCallback, onErrorCallback);
+  } else if (targetTabId === "qrpass") {
+    if (myQrPassTab) myQrPassTab.classList.remove("hidden");
     if (btnQrPass) btnQrPass.className = activeBtnClass;
     stopScanner();
     renderMyQrPass();
-  } else if (tabName === 'manual') {
-    if (tabManual) tabManual.classList.remove('hidden');
+  } else if (targetTabId === "manual") {
+    if (manualTab) manualTab.classList.remove("hidden");
     if (btnManual) btnManual.className = activeBtnClass;
     stopScanner();
+    releaseWakeLock();
     renderRecentPilotsList();
   }
 }
 
 // ============================================================================
-// 2. TAB 2: MY QR PASS GENERATOR & DISPLAY CONTROLLER
+// 5. HELPER FUNCTIONS (WAKE LOCK MANAGEMENT)
 // ============================================================================
 
-export function renderMyQrPass() {
-  const profile = getProfileData();
-  const canvas = document.getElementById("pass-qr-canvas");
-  const pilotNameEl = document.getElementById("pass-pilot-name");
-  const licenceNoEl = document.getElementById("pass-licence-no");
-  const badgeEl = document.getElementById("pass-eligibility-badge");
-  const freshnessTag = document.getElementById("pass-freshness-tag");
-
-  if (pilotNameEl) pilotNameEl.innerText = profile.name || "-";
-  if (licenceNoEl) {
-    const lType = profile.licenceType || "-";
-    const lNo = profile.licenceNo || "-";
-    licenceNoEl.innerText = `${lType} • ${lNo}`;
+function requestWakeLock() {
+  if ('wakeLock' in navigator) {
+    navigator.wakeLock.request('screen')
+      .then(lock => { wakeLock = lock; })
+      .catch(() => {});
   }
-
-  const isEligible = profile.dutyStatus ? profile.dutyStatus === 'ELIGIBLE' : true;
-  if (badgeEl) {
-    if (isEligible) {
-      badgeEl.innerText = "ELIGIBLE FOR FLIGHT DUTY";
-      badgeEl.className = "mt-3 px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300";
-    } else {
-      badgeEl.innerText = "LAPSED / INELIGIBLE";
-      badgeEl.className = "mt-3 px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300";
-    }
-  }
-
-  if (freshnessTag) {
-    freshnessTag.innerText = profile.lastVerified ? `Verified ${profile.lastVerified}` : "Cached Offline";
-  }
-
-  if (canvas && window.QrScanner) {
-    const qrContent = profile.url || "https://eclipse.caam.gov.my";
-    try {
-      window.QrScanner.hasCamera();
-    } catch (e) {}
-  }
-
-  requestWakeLock();
-}
-
-// ============================================================================
-// 3. TAB 3: MANUAL URL ENTRY & RECENT PILOTS CONTROLLER
-// ============================================================================
-
-export function renderRecentPilotsList() {
-  const container = document.getElementById("recent-pilots-list");
-  const countTag = document.getElementById("recent-count-tag");
-  if (!container) return;
-
-  const history = getScanHistory();
-  if (countTag) countTag.innerText = history.length;
-
-  if (history.length === 0) {
-    container.innerHTML = '<div class="py-4 text-center text-xs text-slate-400 font-medium">No recently verified pilots</div>';
-    return;
-  }
-
-  container.innerHTML = "";
-  history.slice(0, 5).forEach(item => {
-    const name = item.pilotName || "Verified Crew";
-    const licence = item.licenceNo || "ATPL(A)";
-    const time = item.timestamp || "Recent";
-
-    const div = document.createElement("div");
-    div.className = "py-3 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 px-2 rounded-xl transition-colors";
-    div.innerHTML = `
-      <div class="flex flex-col">
-        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">${name}</span>
-        <span class="text-[10px] text-slate-400 font-medium">${licence} • ${time}</span>
-      </div>
-      <span class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 uppercase">View</span>
-    `;
-    div.onclick = () => {
-      if (window.loadHistoricalRecord) window.loadHistoricalRecord(item.id);
-    };
-    container.appendChild(div);
-  });
-}
-
-export async function handleClipboardPaste() {
-  const input = document.getElementById("manual-url-input");
-  if (!input) return;
-
-  try {
-    if (navigator.clipboard && navigator.clipboard.readText) {
-      const text = await navigator.clipboard.readText();
-      if (text) {
-        input.value = text.trim();
-      }
-    }
-  } catch (err) {
-    console.warn("Clipboard permission denied:", err);
-  }
-}
-
-// ============================================================================
-// 4. HARDWARE TOOLBAR CONTROLLERS (LENS SWITCHER & FLASHLIGHT)
-// ============================================================================
-
-export async function cycleCameraLens() {
-  const cycleBtn = document.getElementById("camera-cycle-btn");
-  const cycleLabel = document.getElementById("camera-cycle-label");
-  const targetEl = cycleLabel || cycleBtn;
-
-  if (targetEl) targetEl.innerText = "Switching...";
-
-  if (!availableCameraDevices || availableCameraDevices.length === 0) {
-    try {
-      if (window.QrScanner) {
-        const cameras = await window.QrScanner.listCameras(true);
-        availableCameraDevices = filterRearCameras(cameras || []);
-      }
-    } catch (e) {}
-  }
-
-  // MODE A: Multiple Rear Cameras Detected (Wide, Telephoto, Ultra Wide)
-  if (availableCameraDevices && availableCameraDevices.length > 1) {
-    const currentIndex = availableCameraDevices.findIndex(c => c.id === currentCameraDeviceId);
-    const nextIndex = (currentIndex + 1) % availableCameraDevices.length;
-    const nextCamera = availableCameraDevices[nextIndex];
-    currentCameraDeviceId = nextCamera.id;
-
-    try {
-      if (qrScanner) {
-        await qrScanner.setCamera(currentCameraDeviceId);
-      } else {
-        startScanner(
-          (url) => { if (typeof window.processLicenseUrl === 'function') window.processLicenseUrl(url); },
-          null
-        );
-      }
-      updateCameraCycleButtonLabel();
-      return;
-    } catch (err) {
-      console.warn("Lens switch failed, attempting zoom mode fallback:", err);
-    }
-  }
-
-  // MODE B: Single Rear Camera exposed by OS -> Toggle Zoom Constraint (1.0x <-> 2.0x)
-  currentZoomLevel = currentZoomLevel >= 1.8 ? 1.0 : 2.0;
-  try {
-    const videoElem = document.getElementById("qr-video");
-    if (videoElem && videoElem.srcObject) {
-      const track = videoElem.srcObject.getVideoTracks();
-      if (track && track.getCapabilities) {
-        const capabilities = track.getCapabilities();
-        if (capabilities.zoom) {
-          const targetZoom = Math.min(capabilities.zoom.max, Math.max(capabilities.zoom.min, currentZoomLevel));
-          await track.applyConstraints({ advanced: [{ zoom: targetZoom }] });
-        }
-      }
-    }
-  } catch (e) {}
-
-  if (targetEl) {
-    targetEl.innerText = `Back ${currentZoomLevel.toFixed(1)}x`;
-  }
-}
-
-export function toggleTorch() {
-  if (!qrScanner) return;
-  torchActive = !torchActive;
-  if (torchActive) {
-    qrScanner.turnFlashOn().catch(() => { torchActive = false; });
-  } else {
-    qrScanner.turnFlashOff().catch(() => {});
-  }
-}
-
-// ============================================================================
-// 5. AUTO-TEARDOWN & POWER MANAGEMENT (60s IDLE TIMEOUT & WAKE LOCK)
-// ============================================================================
-
-function resetIdleTimer(onDecodeCallback, onErrorCallback) {
-  if (idleTimer) clearTimeout(idleTimer);
-  idleTimer = setTimeout(() => {
-    stopScanner();
-    const pausedOverlay = document.getElementById("scanner-paused-overlay");
-    if (pausedOverlay) pausedOverlay.classList.remove("hidden");
-  }, IDLE_TIMEOUT_MS);
-}
-
-async function requestWakeLock() {
-  try {
-    if ('wakeLock' in navigator && !wakeLock) {
-      wakeLock = await navigator.wakeLock.request('screen');
-    }
-  } catch (e) {}
 }
 
 function releaseWakeLock() {
   if (wakeLock) {
-    wakeLock.release().catch(() => {});
-    wakeLock = null;
+    wakeLock.release()
+      .then(() => { wakeLock = null; })
+      .catch(() => {});
   }
 }
