@@ -1,4 +1,5 @@
-// main.js (3009_R066) - Main Application Entry Orchestrator (3-Tab Pilot Scan Hub)
+// main.js (3009_R067) - Main Application Entry Orchestrator (3-Tab Pilot Scan Hub)
+
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
 import { parseAttestationText, validateAttestationContent } from './js/attestationParser.js';
@@ -31,8 +32,7 @@ async function extractTextFromPdfFile(file) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
         const pageText = textContent.items.map(item => item.str).join(" ");
-        fullText += pageText + "
-";
+        fullText += pageText + "\n";
       }
       if (fullText.trim().length > 20) return fullText;
     } catch (e) {
@@ -46,8 +46,7 @@ async function extractTextFromPdfFile(file) {
     if (matches && matches.length > 0) {
       const extractedStr = matches.map(m => m.slice(1, -1)).join(" ");
       if (extractedStr.trim().length > 20) {
-        return rawText + "
-" + extractedStr;
+        return rawText + "\n" + extractedStr;
       }
     }
     return rawText;
