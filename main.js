@@ -693,21 +693,19 @@ async function processLicenseUrl(url) {
   }
 
 
-    const isProfileUrlMatch = profile && profile.url && (
-      profile.url.trim() === url.trim() ||
-      url.trim().includes(profile.url.trim()) ||
-      profile.url.trim().includes(url.trim())
-    );
+const isProfileUrlMatch = profile && profile.url && (
+    profile.url.trim() === url.trim() ||
+    url.trim().includes(profile.url.trim()) ||
+    profile.url.trim().includes(url.trim())
+  );
 
-    // Fallback to offline verified results if live fetch failed and URL is valid CAAM eCLIPSE
+  // Fallback to offline verified results if live fetch failed and URL is valid CAAM eCLIPSE
   if (fetchFailed || !caamResults) {
-  
-  if (isProfileUrlMatch && profile.cachedCaamResults) {
+    if (isProfileUrlMatch && profile.cachedCaamResults) {
       caamResults = profile.cachedCaamResults;
       caamResults.scanTime = scanTime + " (Cached)";
       showProfileToast("CAAM server offline/error. Displaying stored licence data.");
-    ///
-        } else if (isValidCaamUrl(url)) {
+    } else if (isValidCaamUrl(url)) {
       caamResults = {
         overallStatus: "VALID",
         scanTime: scanTime,
@@ -724,7 +722,6 @@ async function processLicenseUrl(url) {
         ]
       };
       showProfileToast("Digital licence scanned & verified.");
-    ///
     } else {
       let errMsg = "CAAM eCLIPSE Server Error: Could not connect to digital licence server.";
       if (fetchStatus === 500) {
@@ -749,31 +746,29 @@ async function processLicenseUrl(url) {
       } catch (e) {}
     }
 
-  const sampleMabText = `
-Name : MOHD SALLEHUDDIN BIN ZAIDY
-Staff No : 2108337
-Designation : Captain.OPS - Flight Crew(FC)
-BY THE AUTHORITY OF CHIEF PILOT TRAINING : 14 SEP 2026 10:00:52 PM
-FO/TRNG/ATT/MAR25
-B738 KUL/BKI/KUL 13 Oct 2025 31 Oct 2026 A3115
-VIDP 28 9 Sep 2026 SIM2TEW III ACTUAL DFE 11635 9 Sep 2026
-AIRCRAFT TYPE: B737 27 Jul 2026 30 Sep 2027
-AIRCRAFT TYPE: A330 NIL NIL
-AIRCRAFT TYPE: A350 NIL NIL
-PRACTICAL DRILL - DOOR DRILL 27 Jul 2026 30 Sep 2027
-PRACTICAL DRILL - WET DRILL 27 Jul 2026 31 Jul 2029
-PRACTICAL DRILL - FIRE DRILL 24 Jul 2024 31 Jul 2027
-CRM 6 May 2026 31 May 2027
-SMS 6 May 2026 31 May 2029
-FIRST AID 18 Mar 2008 NIL
-AVSEC 28 Jul 2026 30 Sep 2027
-DG FUNCTION 7 21 May 2025 30 Jun 2027
-  `;
+    const sampleMabText = `
+      Name                : MOHD SALLEHUDDIN BIN ZAIDY
+      Staff No            : 2108337
+      Designation         : Captain.OPS - Flight Crew(FC)
+      BY THE AUTHORITY OF CHIEF PILOT TRAINING : 14 SEP 2026 10:00:52 PM
+      FO/TRNG/ATT/MAR25
+      B738 KUL/BKI/KUL 13 Oct 2025 31 Oct 2026 A3115 VIDP 28 9 Sep 2026 SIM2TEW III
+      ACTUAL DFE 11635 9 Sep 2026
+      AIRCRAFT TYPE: B737 27 Jul 2026 30 Sep 2027
+      AIRCRAFT TYPE: A330 NIL NIL
+      AIRCRAFT TYPE: A350 NIL NIL
+      PRACTICAL DRILL - DOOR DRILL 27 Jul 2026 30 Sep 2027
+      PRACTICAL DRILL - WET DRILL 27 Jul 2026 31 Jul 2029
+      PRACTICAL DRILL - FIRE DRILL 24 Jul 2024 31 Jul 2027
+      CRM 6 May 2026 31 May 2027
+      SMS 6 May 2026 31 May 2029
+      FIRST AID 18 Mar 2008 NIL
+      AVSEC 28 Jul 2026 30 Sep 2027
+      DG FUNCTION 7 21 May 2025 30 Jun 2027
+    `;
 
-//  const mabResults = parseAttestationText(mabTextToParse || (profile ? profile.cachedMabResults : null) || sampleMabText, freshnessLimit, threshold);
     mabResults = parseAttestationText(mabTextToParse || (profile ? profile.cachedMabResults : null) || sampleMabText, freshnessLimit, threshold);
   }
-
 
   saveToHistory(caamResults, url);
   renderResults(caamResults, mabResults);
