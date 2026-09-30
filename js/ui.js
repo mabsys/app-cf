@@ -1,15 +1,15 @@
-// js/ui.js (3009_R065) - View State, Navigation, and Network Controller
+// js/ui.js (2809_R059) - View State & Navigation Controller
 
-import { stopScanner } from './scanner.js';
-import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData } from './storage.js';
+import { stopScanner, switchScanHubTab } from './scanner.js';
+import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit } from './storage.js';
 import { topbarHTML } from './components/topbar.js';
 import { dockHTML } from './components/dock.js';
 import { menuHTML } from './components/menu.js';
 
 const textSizeIcons = {
-  std: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l3-7 3 7M5 15h4"/><path d="M13 18l4-11 4 11M14 14h6"/><path d="M11 7h2"/></svg>`,
-  lg: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l3-7 3 7M5 15h4"/><path d="M13 18l4-11 4 11M14 14h6"/><path d="M11 6l1-1 1 1"/></svg>`,
-  xl: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l3-7 3 7M5 15h4"/><path d="M13 18l4-11 4 11M14 14h6"/><path d="M11 6l1-1 1 1M11 3l1-1 1 1"/></svg>`
+  std: `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 18H7.5m9-6h2.25m-2.25 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 12h9.75" /></svg>`,
+  lg: `<svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 18H7.5m9-6h2.25m-2.25 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 12h9.75" /></svg>`,
+  xl: `<svg class="w-4 h-4 text-blue-800" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 18H7.5m9-6h2.25m-2.25 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 12h9.75" /></svg>`
 };
 
 let currentTextSize = localStorage.getItem("app_text_size") || "std";
@@ -37,6 +37,7 @@ export function applyTextSize(size = currentTextSize) {
   }
 
   document.documentElement.style.fontSize = "100%";
+
   let styleEl = document.getElementById("certifly-text-scale-style");
   if (!styleEl) {
     styleEl = document.createElement("style");
@@ -52,10 +53,10 @@ export function applyTextSize(size = currentTextSize) {
   const mult = size === "lg" ? 1.15 : 1.30;
   styleEl.textContent = `
     main { font-size: ${(mult * 100).toFixed(1)}% !important; }
-    main .text-\[9px\] { font-size: ${(9 * mult).toFixed(1)}px !important; }
-    main .text-\[10px\] { font-size: ${(10 * mult).toFixed(1)}px !important; }
-    main .text-\[11px\] { font-size: ${(11 * mult).toFixed(1)}px !important; }
-    main .text-\[13px\] { font-size: ${(13 * mult).toFixed(1)}px !important; }
+    main .text-\\[9px\\] { font-size: ${(9 * mult).toFixed(1)}px !important; }
+    main .text-\\[10px\\] { font-size: ${(10 * mult).toFixed(1)}px !important; }
+    main .text-\\[11px\\] { font-size: ${(11 * mult).toFixed(1)}px !important; }
+    main .text-\\[13px\\] { font-size: ${(13 * mult).toFixed(1)}px !important; }
     main .text-xxs { font-size: ${(0.625 * mult).toFixed(4)}rem !important; }
     main .text-xs { font-size: ${(0.75 * mult).toFixed(4)}rem !important; }
     main .text-sm { font-size: ${(0.875 * mult).toFixed(4)}rem !important; }
@@ -75,9 +76,9 @@ export function cycleTextSize() {
 }
 
 const themeSolidIcons = {
-  system: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M6 3.5A1.5 1.5 0 0 1 7.5 2h5A1.5 1.5 0 0 1 14 3.5v13a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 6 16.5v-13ZM10 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd"/></svg>`,
-  light: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path d="M10 2a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 2ZM10 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 15ZM10 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM15.657 5.404a.75.75 0 1 0-1.06-1.06l-1.061 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM6.464 14.596a.75.75 0 1 0-1.06-1.06l-1.06 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM18 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 18 10ZM4.25 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 4.25 10ZM14.596 15.657a.75.75 0 0 0 1.06-1.06l-1.06-1.061a.75.75 0 1 0-1.06 1.06l1.06 1.061ZM5.404 6.464a.75.75 0 0 0 1.06-1.06l-1.06-1.06a.75.75 0 0 0-1.06 1.06l1.06 1.06Z"/></svg>`,
-  dark: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 0 1 .868.397 6.5 6.5 0 1 0 9.277 9.277.75.75 0 0 1 1.266.697 8 8 0 1 1-11.808-10.102.75.75 0 0 1 .397-.269Z" clip-rule="evenodd"/></svg>`
+  system: `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25z" /></svg>`,
+  light: `<svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m0 13.5V21m8.966-8.966h-2.25m-13.5 0H3m15.364 6.364l-1.591-1.591M6.758 6.758L5.167 5.167m12.728 0l-1.591 1.591M6.758 17.242l-1.591 1.591M12 18a6 6 0 100-12 6 6 0 000 12z" /></svg>`,
+  dark: `<svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" /></svg>`
 };
 
 let currentThemeMode = localStorage.getItem("app_theme_mode") || "light";
@@ -273,6 +274,7 @@ function initGrabberGesture() {
     } else {
       menu.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
       menu.style.transform = 'translateY(0px)';
+
       setTimeout(() => {
         if (!isDragging) {
           menu.style.transition = '';
@@ -293,19 +295,17 @@ export function initNavigationBars() {
   if (!document.getElementById("persistent-topbar")) {
     document.body.insertAdjacentHTML('afterbegin', topbarHTML);
   }
-
   if (!document.getElementById("persistent-dock")) {
     document.body.insertAdjacentHTML('beforeend', dockHTML);
   }
-
   if (!document.getElementById("bottom-sheet-menu")) {
     document.body.insertAdjacentHTML('beforeend', menuHTML);
   }
 
   const topbar = document.getElementById("persistent-topbar");
   const dock = document.getElementById("persistent-dock");
-  const topbarHeight = 48;
 
+  const topbarHeight = 48;
   if (topbar) {
     topbar.style.transform = "translateY(-100%)";
     topbar.style.opacity = "0";
@@ -314,6 +314,7 @@ export function initNavigationBars() {
   const dockMaxTravel = 80;
   let currentTranslateY = 0;
   const getMaxScrollY = () => Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+
   let lastClampedScrollY = Math.max(0, Math.min(window.scrollY, getMaxScrollY()));
 
   window.addEventListener("scroll", () => {
@@ -348,25 +349,20 @@ export function initNavigationBars() {
 
   document.getElementById("topbar-text-btn")?.addEventListener("click", cycleTextSize);
   document.getElementById("topbar-theme-btn")?.addEventListener("click", cycleThemeMode);
+
   document.getElementById("dock-menu-btn")?.addEventListener("click", openMenu);
   document.getElementById("dock-scan-btn")?.addEventListener("click", showScannerView);
   document.getElementById("dock-dashboard-btn")?.addEventListener("click", () => {
+    stopScanner();
+    switchResultTab("overview");
     if (window.renderDashboardView) {
       window.renderDashboardView();
-    } else {
-      showView("dashboard-view");
     }
+    showView("dashboard-view", "overview");
   });
-
   document.getElementById("dock-history-btn")?.addEventListener("click", () => {
-    const historyDetails = document.getElementById("history-details");
-    if (historyDetails) {
-      if (historyDetails.hasAttribute("open")) {
-        historyDetails.removeAttribute("open");
-      } else {
-        historyDetails.setAttribute("open", "");
-      }
-    }
+    stopScanner();
+    showView("history-view");
   });
 
   document.getElementById("bottom-sheet-overlay")?.addEventListener("click", closeMenu);
@@ -381,6 +377,7 @@ export function initNavigationBars() {
       if (targetPane && paneMain) {
         paneMain.classList.add("opacity-0", "pointer-events-none");
         paneMain.classList.remove("opacity-100", "pointer-events-auto");
+
         targetPane.classList.remove("hidden", "translate-x-full", "opacity-0", "pointer-events-none");
         targetPane.classList.add("translate-x-0", "opacity-100", "pointer-events-auto");
       }
@@ -397,6 +394,7 @@ export function initNavigationBars() {
         subPane.classList.add("translate-x-full", "opacity-0", "pointer-events-none");
         paneMain.classList.remove("opacity-0", "pointer-events-none");
         paneMain.classList.add("opacity-100", "pointer-events-auto");
+
         setTimeout(() => {
           subPane.classList.add("hidden");
         }, 300);
@@ -460,7 +458,11 @@ export function updateNetworkStatus() {
   }
 }
 
-export function showView(viewId) {
+export function showView(viewId, defaultTab = null) {
+  if (viewId !== "scanner-view") {
+    stopScanner();
+  }
+
   document.querySelectorAll(".app-view").forEach(view => {
     view.classList.add("hidden");
   });
@@ -468,29 +470,20 @@ export function showView(viewId) {
   const targetView = document.getElementById(viewId);
   if (targetView) targetView.classList.remove("hidden");
 
-  if (viewId === "result-view" || viewId === "dashboard-view") {
+  if (viewId === "dashboard-view") {
     let savedTab = localStorage.getItem("certifly_active_tab") || "overview";
-    if (viewId === "dashboard-view" && typeof hasProfileData === "function" && !hasProfileData()) {
+    if (typeof hasProfileData === "function" && !hasProfileData()) {
       savedTab = "overview";
     }
     switchResultTab(savedTab);
   }
 
-  const historyWrapper = document.getElementById("history-card-wrapper");
-  if (historyWrapper) {
-    if (viewId === "scanner-view") {
-      historyWrapper.classList.remove("hidden");
-    } else {
-      historyWrapper.classList.add("hidden");
-    }
-  }
-
-  const historyDetails = document.getElementById("history-details");
-  if (historyDetails) historyDetails.removeAttribute("open");
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 export function showScannerView() {
   stopScanner();
+
   const errorMsg = document.getElementById("error-message");
   if (errorMsg) errorMsg.innerText = "";
 
@@ -502,6 +495,11 @@ export function showScannerView() {
 
   renderHistoryList();
   showView("scanner-view");
+
+  if (typeof switchScanHubTab === "function") {
+    switchScanHubTab("camera");
+  }
+
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -526,6 +524,7 @@ export function showError(msg) {
   if (manualInput) manualInput.value = "";
 
   showView("scanner-view");
+  // Restart scanner so the video feed is live and never pitch dark
   if (window.startScanner) {
     window.startScanner(window.processLicenseUrl, null);
   }
