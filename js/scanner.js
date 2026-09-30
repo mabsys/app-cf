@@ -1,4 +1,4 @@
-// js/scanner.js (2909_R063) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// js/scanner.js (3009_R064) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
 import { getProfileData, getScanHistory } from './storage.js';
 
@@ -10,6 +10,18 @@ let torchActive = false;
 let idleTimer = null;
 let wakeLock = null;
 let currentZoomLevel = 1.8;
+
+// Hardware-Accelerated Native BarcodeDetector Engine
+let nativeBarcodeDetector = null;
+let nativeScanInterval = null;
+
+if ('BarcodeDetector' in window) {
+  try {
+    nativeBarcodeDetector = new window.BarcodeDetector({ formats: ['qr_code'] });
+  } catch (e) {
+    nativeBarcodeDetector = null;
+  }
+}
 
 // IDLE TIMEOUT THRESHOLD: 60 Seconds
 const IDLE_TIMEOUT_MS = 60000;
@@ -66,7 +78,38 @@ export function updateCameraCycleButtonLabel() {
 }
 
 // ============================================================================
-// 1. TAB 1: LIVE CAMERA SCANNER & HARDWARE STREAM CONTROLLER
+// 1. HARDWARE-ACCELERATED NATIVE BARCODE DETECTOR LOOP
+// ============================================================================
+
+function startNativeDetection(videoElem, handleSuccess) {
+  if (!nativeBarcodeDetector || !videoElem) return;
+  stopNativeDetection();
+
+  nativeScanInterval = setInterval(async () => {
+    if (!videoElem || videoElem.readyState < 2 || videoElem.paused || videoElem.ended) return;
+    try {
+      const barcodes = await nativeBarcodeDetector.detect(videoElem);
+      if (barcodes && barcodes.length > 0) {
+        const raw = barcodes.rawValue || barcodes.data || "";
+        const cleanScannedText = raw ? raw.trim() : "";
+        if (cleanScannedText) {
+          stopNativeDetection();
+          handleSuccess(cleanScannedText);
+        }
+      }
+    } catch (e) {}
+  }, 40); // 25 scans per second on GPU
+}
+
+function stopNativeDetection() {
+  if (nativeScanInterval) {
+    clearInterval(nativeScanInterval);
+    nativeScanInterval = null;
+  }
+}
+
+// ============================================================================
+// 2. TAB 1: LIVE CAMERA SCANNER & HARDWARE STREAM CONTROLLER
 // ============================================================================
 
 export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemId = "qr-video") {
@@ -86,13 +129,25 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
   // Reset idle timer
   resetIdleTimer(onDecodeCallback, onErrorCallback);
 
-  // Destroy existing active scanner instance
+  // Stop active native detector and scanner instance
+  stopNativeDetection();
   if (qrScanner) {
     try {
       qrScanner.destroy();
     } catch (e) {}
     qrScanner = null;
   }
+
+  const handleQrSuccess = (cleanScannedText) => {
+    stopScanner();
+    if (navigator.vibrate) {
+      try { navigator.vibrate(100); } catch (e) {}
+    }
+    const callback = onDecodeCallback || window.processLicenseUrl;
+    if (typeof callback === 'function') {
+      callback(cleanScannedText);
+    }
+  };
 
   if (window.QrScanner) {
     qrScanner = new window.QrScanner(
@@ -101,14 +156,7 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
         const decodedText = (typeof result === 'object' ? (result.data || result.text) : result) || "";
         const cleanScannedText = decodedText ? decodedText.trim() : "";
         if (cleanScannedText) {
-          stopScanner();
-          if (navigator.vibrate) {
-            try { navigator.vibrate(100); } catch (e) {}
-          }
-          const callback = onDecodeCallback || window.processLicenseUrl;
-          if (typeof callback === 'function') {
-            callback(cleanScannedText);
-          }
+          handleQrSuccess(cleanScannedText);
         }
       },
       {
@@ -116,6 +164,7 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
         highlightScanRegion: true,
         highlightCodeOutline: true,
         maxScansPerSecond: 25,
+        alsoTryWithoutScanRegion: true,
         calculateScanRegion: (v) => {
           const minDim = Math.min(v.videoWidth, v.videoHeight);
           const factor = 0.85;
@@ -132,21 +181,23 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
     );
 
     qrScanner.start().then(() => {
-      // Option 3: Enforce 1080p Full HD resolution & Macro Focus constraints
+      // 1080p Full HD & Hardware Focus/Exposure Constraints
       try {
         const stream = videoElem.srcObject;
         if (stream) {
           activeMediaStream = stream;
-          const track = stream.getVideoTracks()[0];
+          const track = stream.getVideoTracks();
           if (track && track.applyConstraints) {
             const advancedConstraints = [];
-            let caps = null;
             if (track.getCapabilities) {
-              caps = track.getCapabilities();
+              const caps = track.getCapabilities();
               if (caps.focusMode && caps.focusMode.includes('macro')) {
                 advancedConstraints.push({ focusMode: 'macro' });
               } else if (caps.focusMode && caps.focusMode.includes('continuous')) {
                 advancedConstraints.push({ focusMode: 'continuous' });
+              }
+              if (caps.exposureMode && caps.exposureMode.includes('continuous')) {
+                advancedConstraints.push({ exposureMode: 'continuous' });
               }
               if (caps.zoom) {
                 const targetZoom = Math.min(caps.zoom.max, Math.max(caps.zoom.min, currentZoomLevel));
@@ -162,6 +213,7 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
             // Check torch availability
             const torchBtn = document.getElementById("torch-toggle-btn");
             if (torchBtn) {
+              const caps = track.getCapabilities ? track.getCapabilities() : null;
               if (caps && caps.torch) {
                 torchBtn.classList.remove("hidden");
                 torchBtn.classList.add("flex");
@@ -173,6 +225,11 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
           }
         }
       } catch (e) {}
+
+      // Start Native GPU BarcodeDetector loop alongside jsQR
+      if (nativeBarcodeDetector) {
+        startNativeDetection(videoElem, handleQrSuccess);
+      }
 
       // Enumerate and filter rear cameras for lens switcher
       window.QrScanner.listCameras(true).then((cameras) => {
@@ -187,6 +244,8 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
 }
 
 export function stopScanner() {
+  stopNativeDetection();
+
   if (idleTimer) {
     clearTimeout(idleTimer);
     idleTimer = null;
@@ -265,7 +324,7 @@ export function switchScanHubTab(tabName) {
 }
 
 // ============================================================================
-// 2. TAB 2: MY QR PASS GENERATOR & DISPLAY CONTROLLER
+// 3. TAB 2: MY QR PASS GENERATOR & DISPLAY CONTROLLER
 // ============================================================================
 
 export function renderMyQrPass() {
@@ -309,7 +368,7 @@ export function renderMyQrPass() {
 }
 
 // ============================================================================
-// 3. TAB 3: MANUAL URL ENTRY & RECENT PILOTS CONTROLLER
+// 4. TAB 3: MANUAL URL ENTRY & RECENT PILOTS CONTROLLER
 // ============================================================================
 
 export function renderRecentPilotsList() {
@@ -364,7 +423,7 @@ export async function handleClipboardPaste() {
 }
 
 // ============================================================================
-// 4. HARDWARE TOOLBAR CONTROLLERS (LENS SWITCHER & FLASHLIGHT)
+// 5. HARDWARE TOOLBAR CONTROLLERS (LENS SWITCHER & FLASHLIGHT)
 // ============================================================================
 
 export async function cycleCameraLens() {
@@ -418,7 +477,7 @@ export async function cycleCameraLens() {
   try {
     const videoElem = document.getElementById("qr-video");
     if (videoElem && videoElem.srcObject) {
-      const track = videoElem.srcObject.getVideoTracks()[0];
+      const track = videoElem.srcObject.getVideoTracks();
       if (track && track.getCapabilities) {
         const capabilities = track.getCapabilities();
         const advanced = [];
@@ -450,7 +509,7 @@ export function toggleTorch() {
 }
 
 // ============================================================================
-// 5. AUTO-TEARDOWN & POWER MANAGEMENT (60s IDLE TIMEOUT & WAKE LOCK)
+// 6. AUTO-TEARDOWN & POWER MANAGEMENT (60s IDLE TIMEOUT & WAKE LOCK)
 // ============================================================================
 
 function resetIdleTimer(onDecodeCallback, onErrorCallback) {
