@@ -1,23 +1,11 @@
-// main.js (3009_R070) - Main Application Entry Orchestrator (3-Tab Pilot Scan Hub)
+// main.js (3009_R071) - Main Application Entry Orchestrator (3-Tab Pilot Scan Hub)
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
 import { parseAttestationText, validateAttestationContent } from './js/attestationParser.js';
-import {
-  saveToHistory, renderHistoryList, getScanHistory, getProfileData,
-  saveProfileData, clearProfileData, clearHistory, getThresholdDays, setThresholdDays,
-  getHistoryLimit, setHistoryLimit, getFreshnessLimit, setFreshnessLimit,
-  hasProfileData
-} from './js/storage.js';
-import {
-  startScanner, stopScanner, switchScanHubTab, renderMyQrPass,
-  renderRecentPilotsList, cycleCameraLens, toggleTorch, handleClipboardPaste
-} from './js/scanner.js';
-import {
-  updateNetworkStatus, showScannerView, showLoading, showError, showView,
-  initNavigationBars, closeMenu, applyThemeMode, applyTextSize, updateThresholdPills,
-  updateHistoryLimitPills, updateFreshnessLimitPills, switchResultTab, openProfileMenu, openMenu
-} from './js/ui.js';
+import { saveToHistory, renderHistoryList, getScanHistory, getProfileData, saveProfileData, clearProfileData, clearHistory, getThresholdDays, setThresholdDays, getHistoryLimit, setHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData } from './js/storage.js';
+import { startScanner, stopScanner, switchScanHubTab, renderMyQrPass, renderRecentPilotsList, cycleCameraLens, toggleTorch, handleClipboardPaste } from './js/scanner.js';
+import { updateNetworkStatus, showScannerView, showLoading, showError, showView, initNavigationBars, closeMenu, applyThemeMode, applyTextSize, updateThresholdPills, updateHistoryLimitPills, updateFreshnessLimitPills, switchResultTab, openProfileMenu, openMenu } from './js/ui.js';
 
 let lastScannedUrl = "";
 let selectedAttestationFile = null;
@@ -68,7 +56,6 @@ async function extractTextFromPdfFile(file) {
   }
 }
 
-
 document.addEventListener("DOMContentLoaded", () => {
   initApp();
   initScanHubUI();
@@ -99,7 +86,6 @@ function initScanHubUI() {
 
   const uploadQrBtn = document.getElementById("upload-qr-btn");
   const qrFileInput = document.getElementById("qr-file-input");
-
   if (uploadQrBtn && qrFileInput) {
     uploadQrBtn.addEventListener("click", () => qrFileInput.click());
     qrFileInput.addEventListener("change", async (e) => {
@@ -146,24 +132,20 @@ function initScanHubUI() {
   }
 }
 
-
 // Strict CAAM eCLIPSE URL Validator
 function isValidCaamUrl(urlStr) {
   if (!urlStr || typeof urlStr !== 'string') return false;
   let trimmed = urlStr.trim();
   if (!trimmed) return false;
-
   if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
     trimmed = "https://" + trimmed;
   }
-
   try {
     const parsed = new URL(trimmed);
     const host = parsed.hostname.toLowerCase();
     const isValidProtocol = parsed.protocol === "http:" || parsed.protocol === "https:";
     const isCaamDomain = host.includes("caam.gov.my") || host.includes("eclipse.caam") || host === "eclipse.caam.gov.my";
     const hasValidTld = host.includes(".");
-
     return isValidProtocol && isCaamDomain && hasValidTld;
   } catch (e) {
     return false;
@@ -176,7 +158,6 @@ function updateProfileUrlBadge(urlStr) {
   if (!urlBadge) return;
 
   const cleanUrl = urlStr ? urlStr.trim() : "";
-
   if (isValidCaamUrl(cleanUrl)) {
     urlBadge.classList.remove("hidden");
     if (urlText) {
@@ -216,11 +197,10 @@ function initProfileUI() {
   const saveBtn = document.getElementById("profile-save-btn");
   const clearBtn = document.getElementById("profile-clear-btn");
   const stopScanBtnProfile = document.getElementById("profile-stop-qr-btn") || document.getElementById("profile-stop-scan-btn");
+
   const urlStatusBadge = document.getElementById("profile-url-status-badge") || document.getElementById("profile-url-badge");
   const pdfStatusBadge = document.getElementById("profile-pdf-status-badge") || document.getElementById("profile-pdf-badge");
   const pdfStatusText = document.getElementById("profile-pdf-status-text") || document.getElementById("profile-pdf-badge-text") || (pdfStatusBadge ? pdfStatusBadge.querySelector("span") : null);
-
-  
 
   if (urlInput) {
     urlInput.value = profile.url || "";
@@ -252,15 +232,12 @@ function initProfileUI() {
 
   const activateQrMode = () => {
     if (profileQrScannerActive) return;
-
     if (qrBox && urlBox && modeQrBtn && modeUrlBtn) {
       qrBox.classList.remove("hidden");
       urlBox.classList.add("hidden");
       if (stopScanBtnProfile) stopScanBtnProfile.classList.remove("hidden");
-
       modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
       modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
-      
       profileQrScannerActive = true;
       startScanner(handleProfileQrScanned, showError, "profile-qr-video");
     }
@@ -273,7 +250,6 @@ function initProfileUI() {
       urlBox.classList.remove("hidden");
       qrBox.classList.add("hidden");
       if (stopScanBtnProfile) stopScanBtnProfile.classList.add("hidden");
-
       modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
       modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
     }
@@ -299,7 +275,6 @@ function initProfileUI() {
     pdfFileInput.onchange = async (e) => {
       selectedAttestationFile = null;
       selectedAttestationText = "";
-
       const file = e.target.files && e.target.files[0];
       const currentProfile = getProfileData();
 
@@ -342,16 +317,13 @@ function initProfileUI() {
       try {
         const extractedText = await extractTextFromPdfFile(file);
         const validation = validateAttestationContent(extractedText);
-
         if (!validation.isValid) {
           alert(`Validation Failed: ${validation.reason}`);
           resetToStoredOrEmpty();
           return;
         }
-
         selectedAttestationFile = file;
         selectedAttestationText = extractedText;
-
         if (pdfLabel) pdfLabel.innerText = file.name;
         if (pdfStatusBadge && pdfStatusText) {
           pdfStatusBadge.classList.remove("hidden");
@@ -369,7 +341,6 @@ function initProfileUI() {
     saveBtn.onclick = async () => {
       stopScanner();
       profileQrScannerActive = false;
-
       const urlVal = urlInput ? urlInput.value.trim() : "";
       const currentProfile = getProfileData();
       const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (currentProfile.attestationFileName || "");
@@ -384,22 +355,16 @@ function initProfileUI() {
         return;
       }
 
-      saveProfileData({
-        url: urlVal,
-        attestationFileName: attestationName
-      });
-
+      saveProfileData({ url: urlVal, attestationFileName: attestationName });
       updateProfileUrlBadge(urlVal);
-
       if (pdfStatusBadge && pdfStatusText) {
         pdfStatusBadge.classList.remove("hidden");
         pdfStatusText.innerText = "Stored Attestation PDF file";
       }
-
       showProfileToast("Crew credentials saved successfully!");
       closeMenu();
-      showLoading("Processing licence & attestation for Dashboard...");
 
+      showLoading("Processing licence & attestation for Dashboard...");
       try {
         const res = await processAndCacheProfileData(urlVal, selectedAttestationFile);
         if (res && (res.caamResults || res.mabResults)) {
@@ -453,7 +418,6 @@ function handleProfileQrScanned(scannedUrl) {
   if (qrBox) qrBox.classList.add("hidden");
   if (urlBox) urlBox.classList.remove("hidden");
   if (stopScanBtnProfile) stopScanBtnProfile.classList.add("hidden");
-
   if (modeUrlBtn) {
     modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
   }
@@ -464,18 +428,12 @@ function handleProfileQrScanned(scannedUrl) {
   // 2. Populate URL input field and update green status badge
   const urlInput = document.getElementById("profile-url-input");
   if (urlInput) urlInput.value = scannedUrl;
-
   updateProfileUrlBadge(scannedUrl);
 
   // 3. Save profile URL
   const profile = getProfileData();
   const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (profile.attestationFileName || "");
-
-  saveProfileData({
-    url: scannedUrl,
-    attestationFileName: attestationName
-  });
-
+  saveProfileData({ url: scannedUrl, attestationFileName: attestationName });
   showProfileToast("Licence QR scanned & captured!");
 }
 
@@ -535,6 +493,12 @@ function initStorageUI() {
 }
 
 function initApp() {
+  // Expose key orchestrator functions on window for cross-module reliability
+  window.processLicenseUrl = processLicenseUrl;
+  window.showError = showError;
+  window.startScanner = startScanner;
+  window.showScannerView = showScannerView;
+
   const startScanBtn = document.getElementById("start-scan-btn");
   const stopScanBtn = document.getElementById("stop-scan-btn");
   const submitUrlBtn = document.getElementById("submit-url-btn");
@@ -584,6 +548,7 @@ async function processAndCacheProfileData(url, pdfFile) {
   const threshold = getThresholdDays();
   const freshnessLimit = getFreshnessLimit();
   const existingProfile = getProfileData();
+
   let caamResults = null;
   let mabResults = null;
 
@@ -611,26 +576,27 @@ async function processAndCacheProfileData(url, pdfFile) {
   if (!mabTextToParse && selectedAttestationFile) {
     mabTextToParse = await extractTextFromPdfFile(selectedAttestationFile);
   }
+
   const sampleMabText = `
-Name : MOHD SALLEHUDDIN BIN ZAIDY
-Staff No : 2108337
-Designation : Captain.OPS - Flight Crew(FC)
-Department : MAB - Fleet Operations (EVA5DEPT194)
-BY THE AUTHORITY OF CHIEF PILOT TRAINING : 14 SEP 2026 10:00:52 PM
-FO/TRNG/ATT/MAR25
-B738 KUL/BKI/KUL 13 Oct 2025 31 Oct 2026 A3115
-VIDP 28 9 Sep 2026 SIM2TEW III ACTUAL DFE 11635 9 Sep 2026
-AIRCRAFT TYPE: B737 27 Jul 2026 30 Sep 2027
-AIRCRAFT TYPE: A330 NIL NIL
-AIRCRAFT TYPE: A350 NIL NIL
-PRACTICAL DRILL - DOOR DRILL 27 Jul 2026 30 Sep 2027
-PRACTICAL DRILL - WET DRILL 27 Jul 2026 31 Jul 2029
-PRACTICAL DRILL - FIRE DRILL 24 Jul 2024 31 Jul 2027
-CRM 6 May 2026 31 May 2027
-SMS 6 May 2026 31 May 2029
-FIRST AID 18 Mar 2008 NIL
-AVSEC 28 Jul 2026 30 Sep 2027
-DG FUNCTION 7 21 May 2025 30 Jun 2027
+    Name                : MOHD SALLEHUDDIN BIN ZAIDY
+    Staff No            : 2108337
+    Designation         : Captain.OPS - Flight Crew(FC)
+    Department          : MAB - Fleet Operations (EVA5DEPT194)
+    BY THE AUTHORITY OF CHIEF PILOT TRAINING : 14 SEP 2026 10:00:52 PM
+    FO/TRNG/ATT/MAR25
+    B738 KUL/BKI/KUL 13 Oct 2025 31 Oct 2026 A3115 VIDP 28 9 Sep 2026 SIM2TEW III
+    ACTUAL DFE 11635 9 Sep 2026
+    AIRCRAFT TYPE: B737 27 Jul 2026 30 Sep 2027
+    AIRCRAFT TYPE: A330 NIL NIL
+    AIRCRAFT TYPE: A350 NIL NIL
+    PRACTICAL DRILL - DOOR DRILL 27 Jul 2026 30 Sep 2027
+    PRACTICAL DRILL - WET DRILL 27 Jul 2026 31 Jul 2029
+    PRACTICAL DRILL - FIRE DRILL 24 Jul 2024 31 Jul 2027
+    CRM 6 May 2026 31 May 2027
+    SMS 6 May 2026 31 May 2029
+    FIRST AID 18 Mar 2008 NIL
+    AVSEC 28 Jul 2026 30 Sep 2027
+    DG FUNCTION 7 21 May 2025 30 Jun 2027
   `;
 
   mabResults = parseAttestationText(mabTextToParse || (existingProfile ? existingProfile.cachedMabResults : null) || sampleMabText, freshnessLimit, threshold);
@@ -652,7 +618,8 @@ async function processLicenseUrl(url) {
     showError("Invalid or non-eCLIPSE QR");
     return;
   }
-  lastScannedUrl = url;
+  const cleanUrl = url.trim();
+  lastScannedUrl = cleanUrl;
   await stopScanner();
   showLoading("Fetching digital licence...");
 
@@ -665,6 +632,12 @@ async function processLicenseUrl(url) {
   const freshnessLimit = getFreshnessLimit();
   const profile = getProfileData();
 
+  const isProfileUrlMatch = profile && profile.url && (
+    profile.url.trim() === cleanUrl ||
+    cleanUrl.includes(profile.url.trim()) ||
+    profile.url.trim().includes(cleanUrl)
+  );
+
   let caamResults = null;
   let fetchFailed = false;
   let fetchStatus = 0;
@@ -673,7 +646,7 @@ async function processLicenseUrl(url) {
   const timeoutId = setTimeout(() => controller.abort(), 7000);
 
   try {
-    const fetchUrl = `${PROXY_URL}?url=${encodeURIComponent(url)}`;
+    const fetchUrl = `${PROXY_URL}?url=${encodeURIComponent(cleanUrl)}`;
     const response = await fetch(fetchUrl, { signal: controller.signal });
     clearTimeout(timeoutId);
 
@@ -682,7 +655,9 @@ async function processLicenseUrl(url) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(htmlText, "text/html");
       caamResults = parseLicenseDOM(doc, threshold);
-      caamResults.scanTime = scanTime;
+      if (caamResults) {
+        caamResults.scanTime = scanTime;
+      }
     } else {
       fetchFailed = true;
       fetchStatus = response.status;
@@ -692,24 +667,17 @@ async function processLicenseUrl(url) {
     fetchFailed = true;
   }
 
-
-const isProfileUrlMatch = profile && profile.url && (
-    profile.url.trim() === url.trim() ||
-    url.trim().includes(profile.url.trim()) ||
-    profile.url.trim().includes(url.trim())
-  );
-
   // Fallback to offline verified results if live fetch failed and URL is valid CAAM eCLIPSE
   if (fetchFailed || !caamResults) {
     if (isProfileUrlMatch && profile.cachedCaamResults) {
       caamResults = profile.cachedCaamResults;
       caamResults.scanTime = scanTime + " (Cached)";
       showProfileToast("CAAM server offline/error. Displaying stored licence data.");
-    } else if (isValidCaamUrl(url)) {
+    } else if (isValidCaamUrl(cleanUrl)) {
       caamResults = {
         overallStatus: "VALID",
         scanTime: scanTime,
-        qrImageUrl: url,
+        qrImageUrl: cleanUrl,
         pilotDetails: {
           name: "External Crew Member",
           licenseType: "ATPL(A)",
@@ -770,7 +738,12 @@ const isProfileUrlMatch = profile && profile.url && (
     mabResults = parseAttestationText(mabTextToParse || (profile ? profile.cachedMabResults : null) || sampleMabText, freshnessLimit, threshold);
   }
 
-  saveToHistory(caamResults, url);
+  try {
+    saveToHistory(caamResults, cleanUrl);
+  } catch (e) {
+    console.warn("Could not save to history:", e);
+  }
+
   renderResults(caamResults, mabResults);
 }
 
@@ -800,24 +773,22 @@ function saveDashboardTemplates() {
 
 function renderBlankDashboard() {
   saveDashboardTemplates();
-
   const dashboardView = document.getElementById("dashboard-view");
   if (!dashboardView) return;
 
   const overviewPane = dashboardView.querySelector("#tab-overview-content") || document.getElementById("tab-overview-content");
   if (overviewPane) {
     overviewPane.innerHTML = `
-      <div class="bg-white dark:bg-slate-900 shadow-lg rounded-3xl p-8 border border-slate-100 dark:border-slate-800 text-center flex flex-col items-center gap-3">
-        <div class="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mb-1">
-          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+      <div class="p-6 text-center space-y-4 my-8">
+        <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
         </div>
-        <h3 class="text-base font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">No Duty Credentials Saved</h3>
-        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-xs mx-auto">
-          Please set up your digital licence URL and company attestation PDF in <strong>My Credentials</strong> to activate your flight duty compliance dashboard.
+        <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No Duty Credentials Saved</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+          Please set up your digital licence URL and company attestation PDF in My Credentials to activate your flight duty compliance dashboard.
         </p>
-        <button onclick="if(window.openProfileMenu) window.openProfileMenu(); else if(window.openMenu) window.openMenu();" type="button" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase py-3 px-6 rounded-2xl transition-all shadow-md flex items-center gap-2 cursor-pointer">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-          <span>Set Up Credentials</span>
+        <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+          Set Up Credentials
         </button>
       </div>
     `;
@@ -826,17 +797,16 @@ function renderBlankDashboard() {
   const caamPane = dashboardView.querySelector("#tab-caam-content") || document.getElementById("tab-caam-content");
   if (caamPane) {
     caamPane.innerHTML = `
-      <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-8 border border-slate-100 dark:border-slate-800 text-center flex flex-col items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mb-1">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+      <div class="p-6 text-center space-y-4 my-8">
+        <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h2a2 2 0 012 2v1m-4 0h4"></path></svg>
         </div>
-        <h3 class="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">No CAAM Digital Licence</h3>
-        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-xs mx-auto">
-          Please set up your official CAAM eCLIPSE digital licence URL in <strong>My Credentials</strong> to view licence validities.
+        <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No CAAM Digital Licence</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+          Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to view licence validities.
         </p>
-        <button onclick="if(window.openProfileMenu) window.openProfileMenu(); else if(window.openMenu) window.openMenu();" type="button" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase py-2.5 px-5 rounded-2xl transition-all shadow-md flex items-center gap-2 cursor-pointer">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-          <span>Configure Licence Source</span>
+        <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+          Configure Licence Source
         </button>
       </div>
     `;
@@ -845,17 +815,16 @@ function renderBlankDashboard() {
   const mabPane = dashboardView.querySelector("#tab-mab-content") || document.getElementById("tab-mab-content");
   if (mabPane) {
     mabPane.innerHTML = `
-      <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-8 border border-slate-100 dark:border-slate-800 text-center flex flex-col items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mb-1">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+      <div class="p-6 text-center space-y-4 my-8">
+        <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
         </div>
-        <h3 class="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">No MAB Attestation PDF</h3>
-        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-xs mx-auto">
-          Please upload your MAB E-Attestation PDF document in <strong>My Credentials</strong> to view company qualifications.
+        <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No MAB Attestation PDF</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+          Please upload your MAB E-Attestation PDF document in My Credentials to view company qualifications.
         </p>
-        <button onclick="if(window.openProfileMenu) window.openProfileMenu(); else if(window.openMenu) window.openMenu();" type="button" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase py-2.5 px-5 rounded-2xl transition-all shadow-md flex items-center gap-2 cursor-pointer">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-          <span>Upload Attestation PDF</span>
+        <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+          Upload Attestation PDF
         </button>
       </div>
     `;
@@ -866,7 +835,7 @@ function renderBlankDashboard() {
 
 async function renderDashboardView() {
   const profile = getProfileData();
-  
+
   if (profile.cachedCaamResults || profile.cachedMabResults) {
     renderDashboardResults(profile.cachedCaamResults, profile.cachedMabResults);
   } else if (profile.url) {
@@ -881,8 +850,8 @@ async function renderDashboardView() {
     renderBlankDashboard();
   }
 }
-window.renderDashboardView = renderDashboardView;
 
+window.renderDashboardView = renderDashboardView;
 
 function sortCaamQualifications(quals) {
   if (!Array.isArray(quals) || quals.length === 0) return [];
@@ -1020,6 +989,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
 
   const earliestName = getDashEl("overview-earliest-item-name");
   const earliestSub = getDashEl("overview-earliest-item-sub");
+
   if (earliestName && earliestSub) {
     const candidates = [];
 
@@ -1099,6 +1069,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
     if (caamPane && initialCaamTemplateHTML && !caamPane.querySelector("#pilot-name")) {
       caamPane.innerHTML = initialCaamTemplateHTML;
     }
+
     const nameEl = getDashEl("pilot-name");
     const typeEl = getDashEl("licence-type");
     const noEl = getDashEl("licence-number");
@@ -1117,48 +1088,43 @@ function renderDashboardResults(caamResults, mabResults = null) {
       caamListContainer.innerHTML = "";
       const sortedCaamQuals = sortCaamQualifications(caamResults.qualifications);
       if (!sortedCaamQuals || sortedCaamQuals.length === 0) {
-        caamListContainer.innerHTML = `<div class="text-center text-slate-500 py-6 text-xs italic">No CAAM qualifications found on digital licence.</div>`;
+        caamListContainer.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">No CAAM qualifications found on digital licence.</div>`;
       } else {
         sortedCaamQuals.forEach(q => {
           const row = document.createElement("div");
           row.className = "py-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 last:border-b-0";
-
           let badgeHtml = "";
           if (q.status === "EXPIRED") {
-            badgeHtml = `<span class="bg-rose-100 text-rose-700 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">Expired</span>`;
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-100 text-rose-700">Expired</span>`;
           } else if (q.status === "EXPIRING_SOON") {
-            badgeHtml = `<span class="bg-amber-100 text-amber-800 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">${q.daysRemaining} days left</span>`;
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800">${q.daysRemaining} days left</span>`;
           } else {
-            badgeHtml = `<span class="bg-emerald-100 text-emerald-700 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">Valid</span>`;
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700">Valid</span>`;
           }
-
           row.innerHTML = `
             <div>
-              <div class="font-extrabold text-slate-800 dark:text-slate-100 text-xs">${q.name}</div>
-              <div class="text-[10px] text-slate-400 mt-0.5">Expiry: <strong class="text-slate-600 dark:text-slate-300">${q.dateText || "No Expiry"}</strong></div>
+              <div class="text-xs font-bold text-slate-800 dark:text-slate-200">${q.name}</div>
+              <div class="text-[10px] text-slate-400">Expiry: ${q.dateText || "No Expiry"}</div>
             </div>
-            <div>${badgeHtml}</div>
+            ${badgeHtml}
           `;
           caamListContainer.appendChild(row);
         });
       }
     }
-  }
-
-  else {
+  } else {
     if (caamPane) {
       caamPane.innerHTML = `
-        <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-8 border border-slate-100 dark:border-slate-800 text-center flex flex-col items-center gap-3">
-          <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mb-1">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+        <div class="p-6 text-center space-y-4 my-8">
+          <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h2a2 2 0 012 2v1m-4 0h4"></path></svg>
           </div>
-          <h3 class="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">No CAAM Digital Licence</h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-xs mx-auto">
-            Please set up your official CAAM eCLIPSE digital licence URL in <strong>My Credentials</strong> to view licence validities.
+          <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No CAAM Digital Licence</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+            Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to view licence validities.
           </p>
-          <button onclick="if(window.openProfileMenu) window.openProfileMenu(); else if(window.openMenu) window.openMenu();" type="button" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase py-2.5 px-5 rounded-2xl transition-all shadow-md flex items-center gap-2 cursor-pointer">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-            <span>Configure Licence Source</span>
+          <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+            Configure Licence Source
           </button>
         </div>
       `;
@@ -1170,6 +1136,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
     if (mabPane && initialMabTemplateHTML && !mabPane.querySelector("#mab-pilot-name")) {
       mabPane.innerHTML = initialMabTemplateHTML;
     }
+
     const voidBox = getDashEl("mab-void-warning-box");
     const voidReasonEl = getDashEl("mab-void-reason");
 
@@ -1193,7 +1160,8 @@ function renderDashboardResults(caamResults, mabResults = null) {
     if (mabStaff) mabStaff.innerText = mabResults.staffNo;
     if (mabDesig) mabDesig.innerText = mabResults.designation;
     if (mabPub) mabPub.innerText = mabResults.publishedDateStr;
-    if (mabDocRef) mabDocRef.innerHTML = ""; // Omit FO/TRNG/ATT/MAR25
+    if (mabDocRef) mabDocRef.innerHTML = "";
+
     if (mabFresh) {
       mabFresh.innerText = mabResults.isStale ? `Stale (>${mabResults.freshnessLimitDays}d)` : `Fresh (<${mabResults.freshnessLimitDays}d)`;
       mabFresh.className = mabResults.isStale ? "text-rose-600 font-extrabold" : "text-emerald-600 dark:text-emerald-400 font-extrabold";
@@ -1233,30 +1201,25 @@ function renderDashboardResults(caamResults, mabResults = null) {
     const drillsContainer = getDashEl("mab-drills-list");
     if (drillsContainer && mabResults.drills) {
       drillsContainer.innerHTML = "";
-
       mabResults.drills.forEach(d => {
         const row = document.createElement("div");
         row.className = "py-2.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 last:border-b-0";
-
         let badgeHtml = "";
         if (d.status === "EXPIRED") {
-          badgeHtml = `<span class="bg-rose-100 text-rose-700 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">Lapsed</span>`;
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-100 text-rose-700">Lapsed</span>`;
         } else if (d.status === "EXPIRING_SOON") {
-          badgeHtml = `<span class="bg-amber-100 text-amber-800 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">${d.daysLeft} days left</span>`;
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800">${d.daysLeft} days left</span>`;
         } else if (d.status === "COMPLETED") {
-          badgeHtml = `<span class="bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">Completed</span>`;
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700">Completed</span>`;
         } else {
-          badgeHtml = `<span class="bg-emerald-100 text-emerald-700 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">Valid</span>`;
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700">Valid</span>`;
         }
-
         row.innerHTML = `
           <div>
-            <div class="font-extrabold text-slate-800 dark:text-slate-100 text-xs">${d.name}</div>
-            <div class="text-[10px] text-slate-400 mt-0.5">
-              Attended : <strong class="text-slate-600 dark:text-slate-300 font-semibold">${d.doneDate}</strong> &nbsp;|&nbsp; Expires : <strong class="text-slate-600 dark:text-slate-300 font-semibold">${d.expiryDate}</strong>
-            </div>
+            <div class="text-xs font-bold text-slate-800 dark:text-slate-200">${d.name}</div>
+            <div class="text-[10px] text-slate-400">Attended : ${d.doneDate} | Expires : ${d.expiryDate}</div>
           </div>
-          <div class="shrink-0 flex items-center">${badgeHtml}</div>
+          ${badgeHtml}
         `;
         drillsContainer.appendChild(row);
       });
@@ -1264,17 +1227,16 @@ function renderDashboardResults(caamResults, mabResults = null) {
   } else {
     if (mabPane) {
       mabPane.innerHTML = `
-        <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-8 border border-slate-100 dark:border-slate-800 text-center flex flex-col items-center gap-3">
-          <div class="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mb-1">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+        <div class="p-6 text-center space-y-4 my-8">
+          <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
           </div>
-          <h3 class="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">No MAB Attestation PDF</h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-xs mx-auto">
-            Please upload your MAB E-Attestation PDF document in <strong>My Credentials</strong> to view company qualifications.
+          <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No MAB Attestation PDF</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+            Please upload your MAB E-Attestation PDF document in My Credentials to view company qualifications.
           </p>
-          <button onclick="if(window.openProfileMenu) window.openProfileMenu(); else if(window.openMenu) window.openMenu();" type="button" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase py-2.5 px-5 rounded-2xl transition-all shadow-md flex items-center gap-2 cursor-pointer">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-            <span>Upload Attestation PDF</span>
+          <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+            Upload Attestation PDF
           </button>
         </div>
       `;
@@ -1286,8 +1248,8 @@ function renderDashboardResults(caamResults, mabResults = null) {
 
 function renderResults(caamResults, mabResults = null) {
   const profile = getProfileData();
-
   const resView = document.getElementById("result-view");
+
   function getResEl(id) {
     if (resView) {
       const el = resView.querySelector("#" + id);
@@ -1296,8 +1258,7 @@ function renderResults(caamResults, mabResults = null) {
     return document.getElementById(id);
   }
 
-  const displayName = (caamResults && caamResults.pilotDetails && caamResults.pilotDetails.name) || "MOHD SALLEHUDDIN BIN ZAIDY";
-
+  const displayName = (caamResults && caamResults.pilotDetails && caamResults.pilotDetails.name && caamResults.pilotDetails.name !== "-") ? caamResults.pilotDetails.name : "External Crew Member";
   const nameEl = getResEl("res-pilot-name") || getResEl("pilot-name");
   const typeEl = getResEl("res-licence-type") || getResEl("licence-type");
   const noEl = getResEl("res-licence-number") || getResEl("licence-number");
@@ -1337,27 +1298,25 @@ function renderResults(caamResults, mabResults = null) {
     caamListContainer.innerHTML = "";
     const sortedResQuals = sortCaamQualifications(caamResults.qualifications);
     if (!sortedResQuals || sortedResQuals.length === 0) {
-      caamListContainer.innerHTML = `<div class="text-center text-slate-500 py-6 text-xs italic">No CAAM qualifications found on digital licence.</div>`;
+      caamListContainer.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">No CAAM qualifications found on digital licence.</div>`;
     } else {
       sortedResQuals.forEach(q => {
         const row = document.createElement("div");
         row.className = "py-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 last:border-b-0";
-
         let badgeHtml = "";
         if (q.status === "EXPIRED") {
-          badgeHtml = `<span class="bg-rose-100 text-rose-700 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">Expired</span>`;
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-100 text-rose-700">Expired</span>`;
         } else if (q.status === "EXPIRING_SOON") {
-          badgeHtml = `<span class="bg-amber-100 text-amber-800 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">${q.daysRemaining} days left</span>`;
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800">${q.daysRemaining} days left</span>`;
         } else {
-          badgeHtml = `<span class="bg-emerald-100 text-emerald-700 text-[10px] px-2.5 py-1 rounded-md font-extrabold uppercase">Valid</span>`;
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700">Valid</span>`;
         }
-
         row.innerHTML = `
           <div>
-            <div class="font-extrabold text-slate-800 dark:text-slate-100 text-xs">${q.name}</div>
-            <div class="text-[10px] text-slate-400 mt-0.5">Expiry: <strong class="text-slate-600 dark:text-slate-300">${q.dateText || "No Expiry"}</strong></div>
+            <div class="text-xs font-bold text-slate-800 dark:text-slate-200">${q.name}</div>
+            <div class="text-[10px] text-slate-400">Expiry: ${q.dateText || "No Expiry"}</div>
           </div>
-          <div>${badgeHtml}</div>
+          ${badgeHtml}
         `;
         caamListContainer.appendChild(row);
       });
