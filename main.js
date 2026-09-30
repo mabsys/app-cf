@@ -1,4 +1,4 @@
-// main.js (3009_R072) - Main Application Entry Orchestrator (3-Tab Pilot Scan Hub)
+// main.js (3009_R073) - Main Application Entry Orchestrator (3-Tab Pilot Scan Hub)
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -493,12 +493,14 @@ function initStorageUI() {
 }
 
 function initApp() {
-  saveDashboardTemplates();
   // Expose key orchestrator functions on window for cross-module reliability
   window.processLicenseUrl = processLicenseUrl;
   window.showError = showError;
   window.startScanner = startScanner;
   window.showScannerView = showScannerView;
+
+  // Snapshot clean dashboard HTML templates early before any view logic or DOM mutation
+  saveDashboardTemplates();
 
   const startScanBtn = document.getElementById("start-scan-btn");
   const stopScanBtn = document.getElementById("stop-scan-btn");
@@ -604,15 +606,16 @@ async function processAndCacheProfileData(url, pdfFile) {
 
   // Preserve existing cached CAAM results if live fetch failed, or create valid profile fallback
   let finalCaamResults = caamResults || (existingProfile ? existingProfile.cachedCaamResults : null);
+
   if (!finalCaamResults && url && isValidCaamUrl(url)) {
     finalCaamResults = {
       overallStatus: "VALID",
       scanTime: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).replace(',', ', '),
       qrImageUrl: url,
       pilotDetails: {
-        name: "MOHD SALLEHUDDIN BIN ZAIDY",
+        name: (mabResults && mabResults.pilotName && mabResults.pilotName !== "-") ? mabResults.pilotName : "MOHD SALLEHUDDIN BIN ZAIDY",
         licenseType: "ATPL(A)",
-        licenseNo: "A3115"
+        licenseNo: (mabResults && mabResults.lineCheck && mabResults.lineCheck.licenseNo) ? mabResults.lineCheck.licenseNo : "A3115"
       },
       medicalLimitations: "NIL",
       qualifications: [
@@ -852,6 +855,9 @@ function renderBlankDashboard() {
 }
 
 async function renderDashboardView() {
+  // Ensure dashboard view container is visible immediately on load
+  showView("dashboard-view");
+
   const profile = getProfileData();
 
   if (profile.cachedCaamResults || profile.cachedMabResults) {
@@ -1054,7 +1060,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
           const d = parseAnyDate(dateStr);
           if (d && !isNaN(d.getTime())) {
             candidates.push({
-              name: `${dr.item} (${dateStr})`,
+              name: `${dr.name || dr.item || "Drill"} (${dateStr})`,
               sub: "MAB Safety & Recurrent Training • Next Renewal",
               date: d
             });
