@@ -1,4 +1,4 @@
-// main.js (3009_R082) - Main Application Entry Orchestrator (Mobile Touch Clipboard & Seamless Paste)
+// main.js (3009_R081) - Main Application Entry Orchestrator (Optimized Tab 3 Grid Layout & Single-Tap Clipboard)
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -1574,49 +1574,32 @@ function setupTab3ManualLayout() {
     }
   }
 
-  // Bind single-tap mobile hardware touch paste handler
+  // Bind single-tap paste handler
   if (pasteBtn) {
-    let lastPasteTime = 0;
-    const performMobilePaste = (e) => {
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-
-      const now = Date.now();
-      if (now - lastPasteTime < 400) return;
-      lastPasteTime = now;
-
-      // Ensure window focus for mobile WebKit & Chrome
-      if (typeof window.focus === 'function') {
-        try { window.focus(); } catch (err) {}
-      }
-
+    pasteBtn.onclick = (e) => {
+      e.preventDefault();
       if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
         navigator.clipboard.readText().then(text => {
           if (text && text.trim()) {
             urlInput.value = text.trim();
             urlInput.dispatchEvent(new Event("input", { bubbles: true }));
-            urlInput.dispatchEvent(new Event("change", { bubbles: true }));
             updateProfileUrlBadge(text.trim());
             if (typeof showProfileToast === 'function') showProfileToast("URL pasted from clipboard");
           } else if (typeof showError === 'function') {
             showError("Clipboard is empty or contains no text.");
           }
         }).catch(err => {
-          console.warn("Mobile clipboard read blocked by browser security:", err);
-          // Gently focus input WITHOUT .select() to prevent triggering OS native 'Paste' popup menu
+          console.warn("Direct clipboard read blocked by browser, focusing input:", err);
           urlInput.focus();
-          if (typeof showProfileToast === 'function') showProfileToast("Tap 'Allow Paste' on prompt or paste into field");
+          urlInput.select();
+          if (typeof showProfileToast === 'function') showProfileToast("Tap field to paste from keyboard");
         });
       } else {
         urlInput.focus();
-        if (typeof showProfileToast === 'function') showProfileToast("Tap URL field to paste from keyboard");
+        urlInput.select();
+        if (typeof showProfileToast === 'function') showProfileToast("Tap field to paste from keyboard");
       }
     };
-
-    pasteBtn.addEventListener("pointerdown", performMobilePaste, { passive: false });
-    pasteBtn.onclick = performMobilePaste;
   }
 }
 
