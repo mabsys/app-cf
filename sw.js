@@ -18,6 +18,8 @@ const ASSETS_TO_CACHE = [
   'js/vendor/qr-scanner.umd.min.js',
   'js/vendor/qr-scanner-worker.min.js',
   'js/vendor/qrcode.min.js',
+  'js/vendor/pdf.min.js', 
+  'js/vendor/pdf.worker.min.js',
   'assets/icons/icon-192.png',
   'assets/icons/icon-512.png'
 ];
