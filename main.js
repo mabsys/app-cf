@@ -1,4 +1,4 @@
-// main.js (3009_R084) - Main Application Entry Orchestrator (Offline Base64 QR Pass & CDN PDF Worker)
+// main.js (3009_R085) - Main Application Entry Orchestrator (Offline Base64 QR Pass & CDN PDF Worker)
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -16,17 +16,12 @@ async function extractTextFromPdfFile(file) {
   if (!file) return "";
   if (window.pdfjsLib) {
     try {
-      if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
-        try {
-          const workerUrl = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-          const blob = new Blob([`importScripts("${workerUrl}");`], { type: "application/javascript" });
-          window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
-        } catch (e) {
-          window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-        }
-      }
+      // Set workerSrc directly to CDN URL without cross-origin Blob importScripts wrapper
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      
       const arrayBuffer = await file.arrayBuffer();
-      const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer });
+      const pdf = await loadingTask.promise;
       let fullText = "";
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
@@ -34,26 +29,30 @@ async function extractTextFromPdfFile(file) {
         const pageText = textContent.items.map(item => item.str).join(" ");
         fullText += pageText + "\n";
       }
-      if (fullText.trim().length > 20) return fullText;
-    } catch (e) {
-      console.warn("pdfjsLib extraction failed, falling back to text stream scanner:", e);
-    }
-  }
-  try {
-    const arrayBuffer = await file.arrayBuffer();
-    const rawText = new TextDecoder("latin1").decode(arrayBuffer);
-    const matches = rawText.match(/\(([^()]{2,100})\)/g);
-    if (matches && matches.length > 0) {
-      const extractedStr = matches.map(m => m.slice(1, -1)).join(" ");
-      if (extractedStr.trim().length > 20) {
-        return rawText + "\n" + extractedStr;
+      if (fullText.trim().length > 20) {
+        return fullText;
       }
+    } catch (e) {
+      console.warn("PDF.js text extraction failed:", e);
     }
-    return rawText;
-  } catch (err) {
-    console.error("TextDecoder failed:", err);
-    return "";
   }
+
+  // Fallback raw stream reader + PostScript operator cleaner
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      let rawText = e.target.result || "";
+      // Strip raw PDF PostScript stream operators (Tj, TJ, ET, BT, Td, Tm) and brackets
+      rawText = rawText
+        .replace(/\/\w+/g, " ")
+        .replace(/\)?\s*(?:Tj|TJ|ET|BT|Td|Tm|T\*)/g, " ")
+        .replace(/[\(\)\[\]\<\>]+/g, " ")
+        .replace(/\s+/g, " ");
+      resolve(rawText);
+    };
+    reader.onerror = () => resolve("");
+    reader.readAsText(file);
+  });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
