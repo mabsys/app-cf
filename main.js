@@ -1,4 +1,4 @@
-// main.js (3009_R082) - Main Application Entry Orchestrator (My QR Unconfigured Notice & Symmetrical Reset/Verify)
+// main.js (3009_R083) - Main Application Entry Orchestrator (Offline Base64 Canvas Cache & Local Vendor Workers)
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -18,11 +18,11 @@ async function extractTextFromPdfFile(file) {
     try {
       if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
         try {
-          const workerUrl = ".js/vendor/pdf.worker.min.js";
+          const workerUrl = "js/vendor/pdf.worker.min.js";
           const blob = new Blob([`importScripts("${workerUrl}");`], { type: "application/javascript" });
           window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
         } catch (e) {
-          window.pdfjsLib.GlobalWorkerOptions.workerSrc = ".js/vendor/pdf.worker.min.js";
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = "js/vendor/pdf.worker.min.js";
         }
       }
       const arrayBuffer = await file.arrayBuffer();
@@ -850,8 +850,6 @@ async function renderDashboardView() {
 }
 
 window.renderDashboardView = renderDashboardView;
-  window.openMenu = openMenu;
-  window.openProfileMenu = openProfileMenu;
 
 function sortCaamQualifications(quals) {
   if (!Array.isArray(quals) || quals.length === 0) return [];
@@ -1380,30 +1378,125 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
   ctx.fillStyle = "#FFFFFF";
   ctx.fillRect(0, 0, size, size);
 
-  // Priority 1: Check if window.QRCode library exists with toCanvas
+  if (!qrUrlText) {
+    ctx.fillStyle = "#F8FAFC";
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = "#0F172A";
+    ctx.font = "bold 12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("CAAM eCLIPSE QR", size / 2, size / 2 - 10);
+    ctx.font = "10px sans-serif";
+    ctx.fillStyle = "#64748B";
+    ctx.fillText("No Licence URL Configured", size / 2, size / 2 + 10);
+    return;
+  }
+
+  // Helper: Cache rendered canvas as Base64 Data URL in localStorage
+  const cacheCanvasDataUrl = () => {
+    try {
+      const dataUrl = canvasElem.toDataURL("image/png");
+      if (dataUrl && dataUrl.length > 100 && typeof saveProfileData === "function") {
+        const currentProfile = (typeof getProfileData === "function") ? getProfileData() : {};
+        if (currentProfile.cachedQrDataUrl !== dataUrl) {
+          saveProfileData({ cachedQrDataUrl: dataUrl });
+        }
+      }
+    } catch (err) {
+      console.warn("Could not cache QR canvas Data URL:", err);
+    }
+  };
+
+  // Engine 1: Check for npm qrcode library API (window.QRCode.toCanvas)
   if (window.QRCode && typeof window.QRCode.toCanvas === 'function') {
     try {
-      window.QRCode.toCanvas(canvasElem, qrUrlText, { width: size, margin: 2, color: { dark: '#000000', light: '#FFFFFF' } });
+      window.QRCode.toCanvas(canvasElem, qrUrlText, {
+        width: size,
+        margin: 2,
+        color: { dark: '#000000', light: '#FFFFFF' }
+      });
+      cacheCanvasDataUrl();
       return;
     } catch (e) {
-      console.warn("QRCode.toCanvas failed, using image draw fallback:", e);
+      console.warn("Engine 1 (QRCode.toCanvas) failed:", e);
     }
   }
 
-  // Priority 2: Draw clean high-res QR code generated directly from pilot licence URL (no CORS restrictions)
-  let imgSrc = "";
-  if (qrUrlText) {
-    imgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrUrlText)}`;
-  } else if (qrImageUrl) {
-    imgSrc = `${PROXY_URL}?url=${encodeURIComponent(qrImageUrl)}`;
+  // Engine 2: Check for David Shim qrcode.js API (new window.QRCode constructor - qrcode.min.js)
+  if (window.QRCode && typeof window.QRCode === 'function') {
+    try {
+      const tempDiv = document.createElement("div");
+      tempDiv.style.position = "absolute";
+      tempDiv.style.left = "-9999px";
+      tempDiv.style.top = "-9999px";
+      document.body.appendChild(tempDiv);
+
+      new window.QRCode(tempDiv, {
+        text: qrUrlText,
+        width: size,
+        height: size,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: (window.QRCode.CorrectLevel ? window.QRCode.CorrectLevel.H : 2)
+      });
+
+      const generatedCanvas = tempDiv.querySelector("canvas");
+      const generatedImg = tempDiv.querySelector("img");
+
+      if (generatedCanvas) {
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0, 0, size, size);
+        ctx.drawImage(generatedCanvas, 0, 0, size, size);
+        if (tempDiv.parentNode) document.body.removeChild(tempDiv);
+        cacheCanvasDataUrl();
+        return;
+      } else if (generatedImg) {
+        const renderImageToCanvas = () => {
+          ctx.fillStyle = "#FFFFFF";
+          ctx.fillRect(0, 0, size, size);
+          ctx.drawImage(generatedImg, 0, 0, size, size);
+          if (tempDiv.parentNode) document.body.removeChild(tempDiv);
+          cacheCanvasDataUrl();
+        };
+
+        if (generatedImg.complete && generatedImg.src) {
+          renderImageToCanvas();
+          return;
+        } else {
+          generatedImg.onload = renderImageToCanvas;
+          setTimeout(() => {
+            if (tempDiv.parentNode) document.body.removeChild(tempDiv);
+          }, 1000);
+          return;
+        }
+      } else {
+        if (tempDiv.parentNode) document.body.removeChild(tempDiv);
+      }
+    } catch (e) {
+      console.warn("Engine 2 (David Shim QRCode) failed:", e);
+    }
   }
 
+  // Engine 3: Check for cached Base64 Data URL stored in localStorage from previous session
+  const profile = (typeof getProfileData === "function") ? getProfileData() : {};
+  if (profile && profile.cachedQrDataUrl) {
+    const cachedImg = new Image();
+    cachedImg.onload = () => {
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, size, size);
+      ctx.drawImage(cachedImg, 0, 0, size, size);
+    };
+    cachedImg.src = profile.cachedQrDataUrl;
+    return;
+  }
+
+  // Engine 4: Online API Fallback (if network is available)
+  let imgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrUrlText)}`;
   const img = new Image();
-  // Do NOT set crossOrigin = "anonymous" for external CORS images to prevent browser blocking
   img.onload = () => {
     ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(0, 0, size, size);
     ctx.drawImage(img, 10, 10, size - 20, size - 20);
+    cacheCanvasDataUrl();
   };
   img.onerror = () => {
     if (qrImageUrl && imgSrc !== `${PROXY_URL}?url=${encodeURIComponent(qrImageUrl)}`) {
@@ -1420,9 +1513,7 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
       ctx.fillText("Offline Pass Active", size / 2, size / 2 + 10);
     }
   };
-  if (imgSrc) {
-    img.src = imgSrc;
-  }
+  img.src = imgSrc;
 }
 
 let initialMyQrPassTemplateHTML = "";
@@ -1454,22 +1545,13 @@ function renderMyQrPass() {
           </div>
           <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1">No Crew Credentials Configured</h3>
           <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto mb-6">Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to view your digital QR pass.</p>
-          <button id="configure-creds-btn" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-md active:scale-95 cursor-pointer">
+          <button onclick="if(typeof openMenu==='function') openMenu(); if(typeof openProfileMenu==='function') openProfileMenu();" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-md active:scale-95 cursor-pointer">
             Configure Licence Source
           </button>
         </div>
       `;
-      const btn = document.getElementById("configure-creds-btn");
-      if (btn) {
-        btn.addEventListener("click", () => {
-          if (typeof openMenu === "function") openMenu();
-          if (typeof openProfileMenu === "function") openProfileMenu();
-        });
-      }
       return;
-    }
-
-    if (initialMyQrPassTemplateHTML && !tabContainer.querySelector("#pass-qr-canvas")) {
+    } else if (initialMyQrPassTemplateHTML && !tabContainer.querySelector("#pass-qr-canvas")) {
       tabContainer.innerHTML = initialMyQrPassTemplateHTML;
     }
   }
