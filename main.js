@@ -1,4 +1,4 @@
-// main.js (3009_R079) - Main Application Entry Orchestrator (3-Tab Pilot Scan Hub - Dynamic Clean Fallbacks & CORS Fixed)
+// main.js (3009_R080) - Main Application Entry Orchestrator (3-Tab Pilot Scan Hub - Restructured Tab 3 Manual Entry)
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -70,6 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // 3-TAB PILOT SCAN HUB EVENT BINDINGS
 // ----------------------------------------------------------------------------
 function initScanHubUI() {
+  setupTab3ManualLayout();
   const tabCameraBtn = document.getElementById("tab-camera-btn");
   const tabQrPassBtn = document.getElementById("tab-qrpass-btn");
   const tabManualBtn = document.getElementById("tab-manual-btn");
@@ -79,7 +80,10 @@ function initScanHubUI() {
     switchScanHubTab("qrpass");
     renderMyQrPass();
   });
-  if (tabManualBtn) tabManualBtn.addEventListener("click", () => switchScanHubTab("manual"));
+  if (tabManualBtn) tabManualBtn.addEventListener("click", () => {
+    switchScanHubTab("manual");
+    setupTab3ManualLayout();
+  });
 
   const cycleLensBtn = document.getElementById("camera-cycle-btn");
   if (cycleLensBtn) cycleLensBtn.addEventListener("click", cycleCameraLens);
@@ -1481,3 +1485,110 @@ function renderMyQrPass() {
 }
 
 window.renderMyQrPass = renderMyQrPass;
+
+
+
+function setupTab3ManualLayout() {
+  const manualTab = document.getElementById("tab-manual-content") || document.getElementById("manual-entry-tab");
+
+  // 1. Hide/Remove redundant "Recently Verified Crew" card at the bottom of Tab 3
+  const recentCard = document.getElementById("recent-verified-crew-card");
+  if (recentCard) {
+    recentCard.style.display = "none";
+    recentCard.classList.add("hidden");
+  }
+  
+  if (manualTab) {
+    const headings = manualTab.querySelectorAll("h3, h4, div");
+    headings.forEach(el => {
+      if (el.innerText && el.innerText.trim().toLowerCase().includes("recently verified crew")) {
+        let parent = el;
+        while (parent && parent !== manualTab && parent.parentNode !== manualTab) {
+          parent = parent.parentNode;
+        }
+        if (parent && parent !== manualTab) {
+          parent.style.display = "none";
+          parent.classList.add("hidden");
+        }
+      }
+    });
+  }
+
+  const urlInput = document.getElementById("manual-url-input");
+  const submitBtn = document.getElementById("submit-url-btn");
+  let pasteBtn = document.getElementById("paste-url-btn");
+
+  if (!urlInput || !submitBtn) return;
+
+  // 2. Format urlInput as clean full-width input
+  urlInput.className = "w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-xs";
+
+  // Remove old pasteBtn from inside urlInput wrapper if nested
+  if (pasteBtn && pasteBtn.parentNode && pasteBtn.parentNode !== manualTab && pasteBtn.parentNode.id !== "manual-action-btn-row") {
+    pasteBtn.parentNode.removeChild(pasteBtn);
+    pasteBtn = null;
+  }
+
+  // 3. Create or update Action Button Row (Reset on Left, Paste on Right) above Submit Button
+  let btnRow = document.getElementById("manual-action-btn-row");
+  if (!btnRow) {
+    btnRow = document.createElement("div");
+    btnRow.id = "manual-action-btn-row";
+    btnRow.className = "flex items-center gap-3 my-3 w-full";
+
+    // Reset Button (Left) - SVG icon, strictly no emoji
+    const resetBtn = document.createElement("button");
+    resetBtn.id = "reset-url-btn";
+    resetBtn.type = "button";
+    resetBtn.className = "flex-1 py-2.5 px-4 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-xs active:scale-95 cursor-pointer";
+    resetBtn.innerHTML = `
+      <svg class="w-4 h-4 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+      <span>Reset</span>
+    `;
+    resetBtn.onclick = () => {
+      urlInput.value = "";
+      urlInput.focus();
+      updateProfileUrlBadge("");
+    };
+
+    // Paste Button (Right) - SVG icon, strictly no emoji
+    pasteBtn = document.createElement("button");
+    pasteBtn.id = "paste-url-btn";
+    pasteBtn.type = "button";
+    pasteBtn.className = "flex-1 py-2.5 px-4 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 border border-blue-200/80 dark:border-blue-800/80 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-xs active:scale-95 cursor-pointer";
+    pasteBtn.innerHTML = `
+      <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+      <span>Paste Clipboard</span>
+    `;
+
+    btnRow.appendChild(resetBtn);
+    btnRow.appendChild(pasteBtn);
+
+    if (submitBtn.parentNode) {
+      submitBtn.parentNode.insertBefore(btnRow, submitBtn);
+    }
+  }
+
+  // Bind single-tap paste handler
+  if (pasteBtn) {
+    pasteBtn.onclick = async () => {
+      try {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            urlInput.value = text.trim();
+            urlInput.dispatchEvent(new Event("input", { bubbles: true }));
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("Direct clipboard read blocked by browser, focusing input:", err);
+      }
+      urlInput.focus();
+    };
+  }
+}
