@@ -18,11 +18,11 @@ async function extractTextFromPdfFile(file) {
     try {
       if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
         try {
-          const workerUrl = "js/vendor/pdf.worker.min.js";
+          const workerUrl = "./js/vendor/pdf.worker.min.js";
           const blob = new Blob([`importScripts("${workerUrl}");`], { type: "application/javascript" });
           window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
         } catch (e) {
-          window.pdfjsLib.GlobalWorkerOptions.workerSrc = "js/vendor/pdf.worker.min.js";
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = "./js/vendor/pdf.worker.min.js";
         }
       }
       const arrayBuffer = await file.arrayBuffer();
@@ -1378,34 +1378,97 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
   ctx.fillStyle = "#FFFFFF";
   ctx.fillRect(0, 0, size, size);
 
-  // Priority 1: Check if window.QRCode library exists with toCanvas
+  if (!qrUrlText) {
+    ctx.fillStyle = "#F8FAFC";
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = "#0F172A";
+    ctx.font = "bold 12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("CAAM eCLIPSE QR", size / 2, size / 2 - 10);
+    ctx.font = "10px sans-serif";
+    ctx.fillStyle = "#64748B";
+    ctx.fillText("No Licence URL Configured", size / 2, size / 2 + 10);
+    return;
+  }
+
+  // Engine 1: Check for npm qrcode library API (window.QRCode.toCanvas)
   if (window.QRCode && typeof window.QRCode.toCanvas === 'function') {
     try {
-      window.QRCode.toCanvas(canvasElem, qrUrlText, { width: size, margin: 2, color: { dark: '#000000', light: '#FFFFFF' } });
+      window.QRCode.toCanvas(canvasElem, qrUrlText, {
+        width: size,
+        margin: 2,
+        color: { dark: '#000000', light: '#FFFFFF' }
+      });
       return;
     } catch (e) {
-      console.warn("QRCode.toCanvas failed, using image draw fallback:", e);
+      console.warn("Engine 1 (QRCode.toCanvas) failed:", e);
     }
   }
 
-  // Priority 2: Draw clean high-res QR code generated directly from pilot licence URL (no CORS restrictions)
-  let imgSrc = "";
-  if (qrUrlText) {
-    imgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrUrlText)}`;
-  } else if (qrImageUrl) {
-    imgSrc = `${PROXY_URL}?url=${encodeURIComponent(qrImageUrl)}`;
+  // Engine 2: Check for David Shim qrcode.js API (new window.QRCode constructor - qrcode.min.js)
+  if (window.QRCode && typeof window.QRCode === 'function') {
+    try {
+      const tempDiv = document.createElement("div");
+      tempDiv.style.position = "absolute";
+      tempDiv.style.left = "-9999px";
+      tempDiv.style.top = "-9999px";
+      document.body.appendChild(tempDiv);
+
+      new window.QRCode(tempDiv, {
+        text: qrUrlText,
+        width: size,
+        height: size,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: (window.QRCode.CorrectLevel ? window.QRCode.CorrectLevel.H : 2)
+      });
+
+      const generatedCanvas = tempDiv.querySelector("canvas");
+      const generatedImg = tempDiv.querySelector("img");
+
+      if (generatedCanvas) {
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0, 0, size, size);
+        ctx.drawImage(generatedCanvas, 0, 0, size, size);
+        if (tempDiv.parentNode) document.body.removeChild(tempDiv);
+        return;
+      } else if (generatedImg) {
+        const renderImageToCanvas = () => {
+          ctx.fillStyle = "#FFFFFF";
+          ctx.fillRect(0, 0, size, size);
+          ctx.drawImage(generatedImg, 0, 0, size, size);
+          if (tempDiv.parentNode) document.body.removeChild(tempDiv);
+        };
+
+        if (generatedImg.complete && generatedImg.src) {
+          renderImageToCanvas();
+          return;
+        } else {
+          generatedImg.onload = renderImageToCanvas;
+          setTimeout(() => {
+            if (tempDiv.parentNode) document.body.removeChild(tempDiv);
+          }, 1000);
+          return;
+        }
+      } else {
+        if (tempDiv.parentNode) document.body.removeChild(tempDiv);
+      }
+    } catch (e) {
+      console.warn("Engine 2 (David Shim QRCode) failed:", e);
+    }
   }
 
+  // Engine 3: Online API Fallback & Offline Canvas Text Fallback
+  let imgSrc = ;
   const img = new Image();
-  // Do NOT set crossOrigin = "anonymous" for external CORS images to prevent browser blocking
   img.onload = () => {
     ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(0, 0, size, size);
     ctx.drawImage(img, 10, 10, size - 20, size - 20);
   };
   img.onerror = () => {
-    if (qrImageUrl && imgSrc !== `${PROXY_URL}?url=${encodeURIComponent(qrImageUrl)}`) {
-      img.src = `${PROXY_URL}?url=${encodeURIComponent(qrImageUrl)}`;
+    if (qrImageUrl && imgSrc !== ) {
+      img.src = ;
     } else {
       ctx.fillStyle = "#F8FAFC";
       ctx.fillRect(0, 0, size, size);
@@ -1418,9 +1481,7 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
       ctx.fillText("Offline Pass Active", size / 2, size / 2 + 10);
     }
   };
-  if (imgSrc) {
-    img.src = imgSrc;
-  }
+  img.src = imgSrc;
 }
 
 let initialMyQrPassTemplateHTML = "";
