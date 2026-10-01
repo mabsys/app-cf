@@ -17,6 +17,7 @@ const ASSETS_TO_CACHE = [
   'manifest.json',
   'js/vendor/qr-scanner.umd.min.js',
   'js/vendor/qr-scanner-worker.min.js',
+  'js/vendor/qrcode.min.js',
   'assets/icons/icon-192.png',
   'assets/icons/icon-512.png'
 ];
