@@ -1,4 +1,4 @@
-// main.js (3009_R088) - Main Application Entry Orchestrator (Clean CDN PDF.js Extraction & Line Preservation)
+// main.js (3009_R090) - Full Complete R081 Orchestrator + Offline QR Base64 Caching & Tab 2/3 UI Improvements
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -14,64 +14,46 @@ let profileQrScannerActive = false;
 
 async function extractTextFromPdfFile(file) {
   if (!file) return "";
-  
-  // Primary Engine: PDF.js text extraction using global cdnjs script in index.html
   if (window.pdfjsLib) {
     try {
-      // Direct CDN worker configuration (avoids Blob/importScripts CORS security blocks)
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-
+      if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
+        try {
+          const workerUrl = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+          const blob = new Blob([`importScripts("${workerUrl}");`], { type: "application/javascript" });
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
+        } catch (e) {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        }
+      }
       const arrayBuffer = await file.arrayBuffer();
-      const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer });
-      const pdf = await loadingTask.promise;
+      const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
       let fullText = "";
-
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
-        
-        // Group text items by vertical Y coordinate to preserve discrete lines for attestationParser
-        let lastY = null;
-        let pageLines = [];
-        let currentLine = "";
-
-        for (const item of textContent.items) {
-          const y = (item.transform && item.transform.length >= 6) ? Math.round(item.transform[5]) : null;
-          if (lastY !== null && y !== null && Math.abs(y - lastY) > 3) {
-            if (currentLine.trim()) pageLines.push(currentLine.trim());
-            currentLine = "";
-          }
-          currentLine += (currentLine ? " " : "") + item.str;
-          if (y !== null) lastY = y;
-        }
-        if (currentLine.trim()) pageLines.push(currentLine.trim());
-
-        fullText += pageLines.join("\n") + "\n";
+        const pageText = textContent.items.map(item => item.str).join(" ");
+        fullText += pageText + "\n";
       }
-
-      if (fullText.trim().length > 20) {
-        return fullText;
-      }
+      if (fullText.trim().length > 20) return fullText;
     } catch (e) {
-      console.warn("PDF.js extraction error:", e);
+      console.warn("pdfjsLib extraction failed, falling back to text stream scanner:", e);
     }
   }
-
-  // Fallback: If PDF.js fails or is unavailable, extract text literals safely without raw PostScript binary noise
   try {
     const arrayBuffer = await file.arrayBuffer();
     const rawText = new TextDecoder("latin1").decode(arrayBuffer);
-    const matches = rawText.match(/\(([^()]{2,120})\)/g);
+    const matches = rawText.match(/\(([^()]{2,100})\)/g);
     if (matches && matches.length > 0) {
-      const extractedLines = matches
-        .map(m => m.slice(1, -1).trim())
-        .filter(str => !/^[0-9\.\-\s]+$/.test(str) && str.length > 1);
-      return extractedLines.join("\n");
+      const extractedStr = matches.map(m => m.slice(1, -1)).join(" ");
+      if (extractedStr.trim().length > 20) {
+        return rawText + "\n" + extractedStr;
+      }
     }
+    return rawText;
   } catch (err) {
-    console.error("Fallback text extraction failed:", err);
+    console.error("TextDecoder failed:", err);
+    return "";
   }
-  return "";
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -92,12 +74,6 @@ function initScanHubUI() {
   const tabCameraBtn = document.getElementById("tab-camera-btn");
   const tabQrPassBtn = document.getElementById("tab-qrpass-btn");
   const tabManualBtn = document.getElementById("tab-manual-btn");
-
-  if (tabQrPassBtn) {
-    const span = tabQrPassBtn.querySelector("span");
-    if (span) span.innerText = "My QR";
-    else tabQrPassBtn.innerText = "My QR";
-  }
 
   if (tabCameraBtn) tabCameraBtn.addEventListener("click", () => switchScanHubTab("camera"));
   if (tabQrPassBtn) tabQrPassBtn.addEventListener("click", () => {
@@ -140,6 +116,9 @@ function initScanHubUI() {
     });
   }
 
+  const pasteUrlBtn = document.getElementById("paste-url-btn");
+  if (pasteUrlBtn) pasteUrlBtn.addEventListener("click", handleClipboardPaste);
+
   const verifyMyLicenceBtn = document.getElementById("verify-my-licence-btn");
   if (verifyMyLicenceBtn) {
     verifyMyLicenceBtn.addEventListener("click", () => {
@@ -160,6 +139,7 @@ function initScanHubUI() {
   }
 }
 
+// Strict CAAM eCLIPSE URL Validator
 function isValidCaamUrl(urlStr) {
   if (!urlStr || typeof urlStr !== 'string') return false;
   let trimmed = urlStr.trim();
@@ -1396,34 +1376,129 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
   ctx.fillStyle = "#FFFFFF";
   ctx.fillRect(0, 0, size, size);
 
-  // Priority 1: Check if window.QRCode library exists with toCanvas
+  if (!qrUrlText) {
+    ctx.fillStyle = "#F8FAFC";
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = "#0F172A";
+    ctx.font = "bold 12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("CAAM eCLIPSE QR", size / 2, size / 2 - 10);
+    ctx.font = "10px sans-serif";
+    ctx.fillStyle = "#64748B";
+    ctx.fillText("No Licence URL Configured", size / 2, size / 2 + 10);
+    return;
+  }
+
+  // Helper: Cache rendered canvas as Base64 Data URL in localStorage
+  const cacheCanvasDataUrl = () => {
+    try {
+      const dataUrl = canvasElem.toDataURL("image/png");
+      if (dataUrl && dataUrl.length > 100 && typeof saveProfileData === "function") {
+        const currentProfile = (typeof getProfileData === "function") ? getProfileData() : {};
+        if (currentProfile.cachedQrDataUrl !== dataUrl) {
+          saveProfileData({ cachedQrDataUrl: dataUrl });
+        }
+      }
+    } catch (err) {
+      console.warn("Could not cache QR canvas Data URL:", err);
+    }
+  };
+
+  // Engine 1: Check for npm qrcode library API (window.QRCode.toCanvas)
   if (window.QRCode && typeof window.QRCode.toCanvas === 'function') {
     try {
-      window.QRCode.toCanvas(canvasElem, qrUrlText, { width: size, margin: 2, color: { dark: '#000000', light: '#FFFFFF' } });
+      window.QRCode.toCanvas(canvasElem, qrUrlText, {
+        width: size,
+        margin: 2,
+        color: { dark: '#000000', light: '#FFFFFF' }
+      });
+      cacheCanvasDataUrl();
       return;
     } catch (e) {
-      console.warn("QRCode.toCanvas failed, using image draw fallback:", e);
+      console.warn("Engine 1 (QRCode.toCanvas) failed:", e);
     }
   }
 
-  // Priority 2: Draw clean high-res QR code generated directly from pilot licence URL (no CORS restrictions)
-  let imgSrc = "";
-  if (qrUrlText) {
-    imgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrUrlText)}`;
-  } else if (qrImageUrl) {
-    imgSrc = `${PROXY_URL}?url=${encodeURIComponent(qrImageUrl)}`;
+  // Engine 2: Check for David Shim qrcode.js API (new window.QRCode constructor - qrcode.min.js)
+  if (window.QRCode && typeof window.QRCode === 'function') {
+    try {
+      const tempDiv = document.createElement("div");
+      tempDiv.style.position = "absolute";
+      tempDiv.style.left = "-9999px";
+      tempDiv.style.top = "-9999px";
+      document.body.appendChild(tempDiv);
+
+      new window.QRCode(tempDiv, {
+        text: qrUrlText,
+        width: size,
+        height: size,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: (window.QRCode.CorrectLevel ? window.QRCode.CorrectLevel.H : 2)
+      });
+
+      const generatedCanvas = tempDiv.querySelector("canvas");
+      const generatedImg = tempDiv.querySelector("img");
+
+      if (generatedCanvas) {
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0, 0, size, size);
+        ctx.drawImage(generatedCanvas, 0, 0, size, size);
+        if (tempDiv.parentNode) document.body.removeChild(tempDiv);
+        cacheCanvasDataUrl();
+        return;
+      } else if (generatedImg) {
+        const renderImageToCanvas = () => {
+          ctx.fillStyle = "#FFFFFF";
+          ctx.fillRect(0, 0, size, size);
+          ctx.drawImage(generatedImg, 0, 0, size, size);
+          if (tempDiv.parentNode) document.body.removeChild(tempDiv);
+          cacheCanvasDataUrl();
+        };
+
+        if (generatedImg.complete && generatedImg.src) {
+          renderImageToCanvas();
+          return;
+        } else {
+          generatedImg.onload = renderImageToCanvas;
+          setTimeout(() => {
+            if (tempDiv.parentNode) document.body.removeChild(tempDiv);
+          }, 1000);
+          return;
+        }
+      } else {
+        if (tempDiv.parentNode) document.body.removeChild(tempDiv);
+      }
+    } catch (e) {
+      console.warn("Engine 2 (David Shim QRCode) failed:", e);
+    }
   }
 
+  // Engine 3: Check for cached Base64 Data URL stored in localStorage from previous session
+  const profile = (typeof getProfileData === "function") ? getProfileData() : {};
+  if (profile && profile.cachedQrDataUrl) {
+    const cachedImg = new Image();
+    cachedImg.onload = () => {
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, size, size);
+      ctx.drawImage(cachedImg, 0, 0, size, size);
+    };
+    cachedImg.src = profile.cachedQrDataUrl;
+    return;
+  }
+
+  // Engine 4: Online API Fallback (if network is available)
+  let imgSrc = "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=" + encodeURIComponent(qrUrlText);
   const img = new Image();
-  // Do NOT set crossOrigin = "anonymous" for external CORS images to prevent browser blocking
   img.onload = () => {
     ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(0, 0, size, size);
     ctx.drawImage(img, 10, 10, size - 20, size - 20);
+    cacheCanvasDataUrl();
   };
   img.onerror = () => {
-    if (qrImageUrl && imgSrc !== `${PROXY_URL}?url=${encodeURIComponent(qrImageUrl)}`) {
-      img.src = `${PROXY_URL}?url=${encodeURIComponent(qrImageUrl)}`;
+    if (qrImageUrl && imgSrc !== (PROXY_URL + "?url=" + encodeURIComponent(qrImageUrl))) {
+      img.src = PROXY_URL + "?url=" + encodeURIComponent(qrImageUrl);
     } else {
       ctx.fillStyle = "#F8FAFC";
       ctx.fillRect(0, 0, size, size);
@@ -1436,51 +1511,11 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
       ctx.fillText("Offline Pass Active", size / 2, size / 2 + 10);
     }
   };
-  if (imgSrc) {
-    img.src = imgSrc;
-  }
+  img.src = imgSrc;
 }
 
-let initialMyQrPassTemplateHTML = "";
-
 function renderMyQrPass() {
-  const tabQrPassBtn = document.getElementById("tab-qrpass-btn");
-  if (tabQrPassBtn) {
-    const span = tabQrPassBtn.querySelector("span");
-    if (span) span.innerText = "My QR";
-    else tabQrPassBtn.innerText = "My QR";
-  }
-
   const profile = getProfileData();
-  const hasUrl = profile && profile.url && profile.url.trim() !== "";
-  const tabContainer = document.getElementById("my-qr-pass-tab");
-
-  if (tabContainer) {
-    if (!initialMyQrPassTemplateHTML && tabContainer.querySelector("#pass-qr-canvas")) {
-      initialMyQrPassTemplateHTML = tabContainer.innerHTML;
-    }
-
-    if (!hasUrl) {
-      tabContainer.innerHTML = `
-        <div class="text-center py-10 px-4">
-          <div class="w-16 h-16 bg-blue-50 dark:bg-blue-950/60 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600 dark:text-blue-400">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m0 14v1m8-8h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          </div>
-          <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1">No Crew Credentials Configured</h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto mb-6">Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to view your digital QR pass.</p>
-          <button onclick="if(typeof openMenu==='function') openMenu(); if(typeof openProfileMenu==='function') openProfileMenu();" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-md active:scale-95 cursor-pointer">
-            Configure Licence Source
-          </button>
-        </div>
-      `;
-      return;
-    } else if (initialMyQrPassTemplateHTML && !tabContainer.querySelector("#pass-qr-canvas")) {
-      tabContainer.innerHTML = initialMyQrPassTemplateHTML;
-    }
-  }
-
   const canvas = document.getElementById("pass-qr-canvas");
   const nameElem = document.getElementById("pass-pilot-name");
   const licenceElem = document.getElementById("pass-licence-no") || document.getElementById("pass-licence-number");
@@ -1488,20 +1523,16 @@ function renderMyQrPass() {
   const freshnessElem = document.getElementById("pass-freshness-tag") || document.getElementById("pass-timestamp");
   const verifyBtn = document.getElementById("verify-my-licence-btn");
 
+  // Always hide the redundant "Verify My Licence" self-check button on Tab 2
   if (verifyBtn) {
     verifyBtn.classList.add("hidden");
-  }
-
-  // Remove flight eligibility badge under QR image as requested
-  if (badgeElem) {
-    badgeElem.classList.add("hidden");
-    badgeElem.style.display = "none";
   }
 
   const url = (profile.url || "").trim();
   const caam = profile.cachedCaamResults || null;
   const mab = profile.cachedMabResults || null;
 
+  // Determine pilot name from cached CAAM or MAB or stored profile
   let displayName = "Unconfigured Profile";
   if (caam && caam.pilotDetails && caam.pilotDetails.name && caam.pilotDetails.name !== "-") {
     displayName = caam.pilotDetails.name;
@@ -1509,17 +1540,38 @@ function renderMyQrPass() {
     displayName = mab.pilotName;
   }
 
+  // Determine licence type & number
   let licenceType = (caam && caam.pilotDetails && caam.pilotDetails.licenseType) ? caam.pilotDetails.licenseType : "ATPL(A)";
   let licenceNo = (caam && caam.pilotDetails && caam.pilotDetails.licenseNo && caam.pilotDetails.licenseNo !== "-") 
     ? caam.pilotDetails.licenseNo 
     : ((mab && mab.lineCheck && mab.lineCheck.licenseNo) ? mab.lineCheck.licenseNo : "-");
 
+  // Determine scan timestamp
   let scanTimeStr = (caam && caam.scanTime) ? caam.scanTime : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
   if (nameElem) nameElem.innerText = displayName;
   if (licenceElem) licenceElem.innerText = `${licenceType} • ${licenceNo}`;
   if (freshnessElem) freshnessElem.innerText = scanTimeStr;
 
+  // Update Flight Duty Compliance Badge
+  if (badgeElem) {
+    const isCaamExpired = caam && caam.overallStatus === "EXPIRED";
+    const isMabVoid = mab && mab.isVoid;
+    const isCaution = caam && caam.overallStatus === "EXPIRING_SOON";
+
+    if (isCaamExpired || isMabVoid) {
+      badgeElem.className = "px-4 py-1.5 rounded-full text-xs font-black uppercase bg-rose-600 text-white shadow-md inline-block";
+      badgeElem.innerText = "LAPSED / INELIGIBLE";
+    } else if (isCaution) {
+      badgeElem.className = "px-4 py-1.5 rounded-full text-xs font-black uppercase bg-amber-500 text-white shadow-md inline-block";
+      badgeElem.innerText = "EXPIRING SOON";
+    } else {
+      badgeElem.className = "px-4 py-1.5 rounded-full text-xs font-black uppercase bg-emerald-600 text-white shadow-md inline-block";
+      badgeElem.innerText = "ELIGIBLE FOR FLIGHT DUTY";
+    }
+  }
+
+  // Draw QR Code onto Canvas
   if (canvas) {
     drawQrToCanvas(canvas, url, profile.qrImageUrl || (caam ? caam.qrImageUrl : ""));
   }
@@ -1527,109 +1579,121 @@ function renderMyQrPass() {
 
 window.renderMyQrPass = renderMyQrPass;
 
+
+
 function setupTab3ManualLayout() {
-  try {
-    const manualTab = document.getElementById("tab-manual-content") || document.getElementById("manual-entry-tab");
+  const manualTab = document.getElementById("tab-manual-content") || document.getElementById("manual-entry-tab");
 
-    // 1. Hide/Remove redundant "Recently Verified Crew" card at the bottom of Tab 3
-    const recentCard = document.getElementById("recent-verified-crew-card");
-    if (recentCard) {
-      recentCard.style.display = "none";
-      recentCard.classList.add("hidden");
-    }
-    
-    if (manualTab) {
-      const headings = manualTab.querySelectorAll("h3, h4, div");
-      headings.forEach(el => {
-        if (el.innerText && el.innerText.trim().toLowerCase().includes("recently verified crew")) {
-          let parent = el;
-          while (parent && parent !== manualTab && parent.parentNode !== manualTab) {
-            parent = parent.parentNode;
-          }
-          if (parent && parent !== manualTab) {
-            parent.style.display = "none";
-            parent.classList.add("hidden");
-          }
+  // 1. Hide/Remove redundant "Recently Verified Crew" card at the bottom of Tab 3
+  const recentCard = document.getElementById("recent-verified-crew-card");
+  if (recentCard) {
+    recentCard.style.display = "none";
+    recentCard.classList.add("hidden");
+  }
+  
+  if (manualTab) {
+    const headings = manualTab.querySelectorAll("h3, h4, div");
+    headings.forEach(el => {
+      if (el.innerText && el.innerText.trim().toLowerCase().includes("recently verified crew")) {
+        let parent = el;
+        while (parent && parent !== manualTab && parent.parentNode !== manualTab) {
+          parent = parent.parentNode;
         }
-      });
+        if (parent && parent !== manualTab) {
+          parent.style.display = "none";
+          parent.classList.add("hidden");
+        }
+      }
+    });
+  }
+
+  const urlInput = document.getElementById("manual-url-input");
+  const submitBtn = document.getElementById("submit-url-btn");
+  let pasteBtn = document.getElementById("paste-url-btn");
+
+  if (!urlInput || !submitBtn) return;
+
+  // 2. Format urlInput as clean full-width input
+  urlInput.className = "w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-xs";
+
+  // Remove old pasteBtn from inside urlInput wrapper if nested
+  if (pasteBtn && pasteBtn.parentNode && pasteBtn.parentNode !== manualTab && pasteBtn.parentNode.id !== "manual-action-btn-row") {
+    pasteBtn.parentNode.removeChild(pasteBtn);
+    pasteBtn = null;
+  }
+
+  // 3. Create or update Action Button Row (Reset on Left, Paste on Right) above Submit Button
+  let btnRow = document.getElementById("manual-action-btn-row");
+  if (!btnRow) {
+    btnRow = document.createElement("div");
+    btnRow.id = "manual-action-btn-row";
+    btnRow.className = "grid grid-cols-2 gap-2.5 my-3 w-full";
+
+    // Reset Button (Left) - Equal height & SVG icon
+    const resetBtn = document.createElement("button");
+    resetBtn.id = "reset-url-btn";
+    resetBtn.type = "button";
+    resetBtn.className = "h-11 px-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-95 cursor-pointer whitespace-nowrap overflow-hidden";
+    resetBtn.innerHTML = `
+      <svg class="w-4 h-4 text-slate-600 dark:text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+      <span>Reset</span>
+    `;
+    resetBtn.onclick = (e) => {
+      e.preventDefault();
+      urlInput.value = "";
+      urlInput.focus();
+      updateProfileUrlBadge("");
+    };
+
+    // Paste Button (Right) - Equal height & SVG icon
+    pasteBtn = document.createElement("button");
+    pasteBtn.id = "paste-url-btn";
+    pasteBtn.type = "button";
+    pasteBtn.className = "h-11 px-3 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 border border-blue-200/80 dark:border-blue-800/80 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-95 cursor-pointer whitespace-nowrap overflow-hidden";
+    pasteBtn.innerHTML = `
+      <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+      <span>Paste</span>
+    `;
+
+    btnRow.appendChild(resetBtn);
+    btnRow.appendChild(pasteBtn);
+
+    if (submitBtn.parentNode) {
+      submitBtn.parentNode.insertBefore(btnRow, submitBtn);
     }
+  }
 
-    const urlInput = document.getElementById("manual-url-input");
-    let submitBtn = document.getElementById("submit-url-btn");
-    const pasteBtn = document.getElementById("paste-url-btn");
-
-    // Remove paste button completely from DOM
-    if (pasteBtn && pasteBtn.parentNode) {
-      pasteBtn.parentNode.removeChild(pasteBtn);
-    }
-
-    if (!urlInput) return;
-
-    // 2. Format urlInput as clean full-width input
-    urlInput.className = "w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-xs";
-
-    // 3. Create or update Action Button Row (Reset on Left, Verify on Right)
-    let btnRow = document.getElementById("manual-action-btn-row");
-    if (!btnRow) {
-      btnRow = document.createElement("div");
-      btnRow.id = "manual-action-btn-row";
-      btnRow.className = "grid grid-cols-2 gap-2.5 my-3 w-full";
-
-      // Reset Button (Left) - Equal height & SVG icon
-      const resetBtn = document.createElement("button");
-      resetBtn.id = "reset-url-btn";
-      resetBtn.type = "button";
-      resetBtn.className = "h-11 px-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-95 cursor-pointer whitespace-nowrap overflow-hidden";
-      resetBtn.innerHTML = `
-        <svg class="w-4 h-4 text-slate-600 dark:text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-        </svg>
-        <span>Reset</span>
-      `;
-      resetBtn.onclick = (e) => {
-        e.preventDefault();
-        urlInput.value = "";
+  // Bind single-tap paste handler
+  if (pasteBtn) {
+    pasteBtn.onclick = (e) => {
+      e.preventDefault();
+      if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
+        navigator.clipboard.readText().then(text => {
+          if (text && text.trim()) {
+            urlInput.value = text.trim();
+            urlInput.dispatchEvent(new Event("input", { bubbles: true }));
+            updateProfileUrlBadge(text.trim());
+            if (typeof showProfileToast === 'function') showProfileToast("URL pasted from clipboard");
+          } else if (typeof showError === 'function') {
+            showError("Clipboard is empty or contains no text.");
+          }
+        }).catch(err => {
+          console.warn("Direct clipboard read blocked by browser, focusing input:", err);
+          urlInput.focus();
+          urlInput.select();
+          if (typeof showProfileToast === 'function') showProfileToast("Tap field to paste from keyboard");
+        });
+      } else {
         urlInput.focus();
-        if (typeof updateProfileUrlBadge === 'function') updateProfileUrlBadge("");
-      };
-
-      // Verify Button (Right) - re-uses or creates submitBtn
-      if (!submitBtn) {
-        submitBtn = document.createElement("button");
-        submitBtn.id = "submit-url-btn";
-        submitBtn.type = "button";
-        submitBtn.onclick = () => {
-          if (typeof handleManualUrl === 'function') handleManualUrl();
-        };
+        urlInput.select();
+        if (typeof showProfileToast === 'function') showProfileToast("Tap field to paste from keyboard");
       }
-      submitBtn.className = "h-11 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer whitespace-nowrap overflow-hidden";
-      submitBtn.innerHTML = `
-        <svg class="w-4 h-4 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span>Verify</span>
-      `;
-
-      btnRow.appendChild(resetBtn);
-
-      if (submitBtn.parentNode && submitBtn.parentNode !== btnRow) {
-        submitBtn.parentNode.insertBefore(btnRow, submitBtn);
-      } else if (urlInput.parentNode) {
-        urlInput.parentNode.insertBefore(btnRow, urlInput.nextSibling);
-      }
-      btnRow.appendChild(submitBtn);
-    } else {
-      if (submitBtn) {
-        submitBtn.className = "h-11 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer whitespace-nowrap overflow-hidden";
-        submitBtn.innerHTML = `
-          <svg class="w-4 h-4 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span>Verify</span>
-        `;
-      }
-    }
-  } catch (e) {
-    console.warn("setupTab3ManualLayout error:", e);
+    };
   }
 }
+
+
