@@ -1,4 +1,4 @@
-// main.js (3009_R080) - Main Application Entry Orchestrator (3-Tab Pilot Scan Hub - Restructured Tab 3 Manual Entry)
+// main.js (3009_R081) - Main Application Entry Orchestrator (Optimized Tab 3 Grid Layout & Single-Tap Clipboard)
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -1534,35 +1534,36 @@ function setupTab3ManualLayout() {
   if (!btnRow) {
     btnRow = document.createElement("div");
     btnRow.id = "manual-action-btn-row";
-    btnRow.className = "flex items-center gap-3 my-3 w-full";
+    btnRow.className = "grid grid-cols-2 gap-2.5 my-3 w-full";
 
-    // Reset Button (Left) - SVG icon, strictly no emoji
+    // Reset Button (Left) - Equal height & SVG icon
     const resetBtn = document.createElement("button");
     resetBtn.id = "reset-url-btn";
     resetBtn.type = "button";
-    resetBtn.className = "flex-1 py-2.5 px-4 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-xs active:scale-95 cursor-pointer";
+    resetBtn.className = "h-11 px-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-95 cursor-pointer whitespace-nowrap overflow-hidden";
     resetBtn.innerHTML = `
-      <svg class="w-4 h-4 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-4 h-4 text-slate-600 dark:text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
       </svg>
       <span>Reset</span>
     `;
-    resetBtn.onclick = () => {
+    resetBtn.onclick = (e) => {
+      e.preventDefault();
       urlInput.value = "";
       urlInput.focus();
       updateProfileUrlBadge("");
     };
 
-    // Paste Button (Right) - SVG icon, strictly no emoji
+    // Paste Button (Right) - Equal height & SVG icon
     pasteBtn = document.createElement("button");
     pasteBtn.id = "paste-url-btn";
     pasteBtn.type = "button";
-    pasteBtn.className = "flex-1 py-2.5 px-4 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 border border-blue-200/80 dark:border-blue-800/80 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-xs active:scale-95 cursor-pointer";
+    pasteBtn.className = "h-11 px-3 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 border border-blue-200/80 dark:border-blue-800/80 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-95 cursor-pointer whitespace-nowrap overflow-hidden";
     pasteBtn.innerHTML = `
-      <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
       </svg>
-      <span>Paste Clipboard</span>
+      <span>Paste</span>
     `;
 
     btnRow.appendChild(resetBtn);
@@ -1575,20 +1576,31 @@ function setupTab3ManualLayout() {
 
   // Bind single-tap paste handler
   if (pasteBtn) {
-    pasteBtn.onclick = async () => {
-      try {
-        if (navigator.clipboard && navigator.clipboard.readText) {
-          const text = await navigator.clipboard.readText();
-          if (text) {
+    pasteBtn.onclick = (e) => {
+      e.preventDefault();
+      if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
+        navigator.clipboard.readText().then(text => {
+          if (text && text.trim()) {
             urlInput.value = text.trim();
             urlInput.dispatchEvent(new Event("input", { bubbles: true }));
-            return;
+            updateProfileUrlBadge(text.trim());
+            if (typeof showProfileToast === 'function') showProfileToast("URL pasted from clipboard");
+          } else if (typeof showError === 'function') {
+            showError("Clipboard is empty or contains no text.");
           }
-        }
-      } catch (err) {
-        console.warn("Direct clipboard read blocked by browser, focusing input:", err);
+        }).catch(err => {
+          console.warn("Direct clipboard read blocked by browser, focusing input:", err);
+          urlInput.focus();
+          urlInput.select();
+          if (typeof showProfileToast === 'function') showProfileToast("Tap field to paste from keyboard");
+        });
+      } else {
+        urlInput.focus();
+        urlInput.select();
+        if (typeof showProfileToast === 'function') showProfileToast("Tap field to paste from keyboard");
       }
-      urlInput.focus();
     };
   }
 }
+
+
