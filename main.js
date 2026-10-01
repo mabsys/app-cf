@@ -1,4 +1,4 @@
-// main.js (3009_R081) - Main Application Entry Orchestrator (Optimized Tab 3 Grid Layout & Single-Tap Clipboard)
+// main.js (3009_R082) - Main Application Entry Orchestrator (My QR Unconfigured Notice & Symmetrical Reset/Verify)
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -75,6 +75,12 @@ function initScanHubUI() {
   const tabQrPassBtn = document.getElementById("tab-qrpass-btn");
   const tabManualBtn = document.getElementById("tab-manual-btn");
 
+  if (tabQrPassBtn) {
+    const span = tabQrPassBtn.querySelector("span");
+    if (span) span.innerText = "My QR";
+    else tabQrPassBtn.innerText = "My QR";
+  }
+
   if (tabCameraBtn) tabCameraBtn.addEventListener("click", () => switchScanHubTab("camera"));
   if (tabQrPassBtn) tabQrPassBtn.addEventListener("click", () => {
     switchScanHubTab("qrpass");
@@ -116,9 +122,6 @@ function initScanHubUI() {
     });
   }
 
-  const pasteUrlBtn = document.getElementById("paste-url-btn");
-  if (pasteUrlBtn) pasteUrlBtn.addEventListener("click", handleClipboardPaste);
-
   const verifyMyLicenceBtn = document.getElementById("verify-my-licence-btn");
   if (verifyMyLicenceBtn) {
     verifyMyLicenceBtn.addEventListener("click", () => {
@@ -139,7 +142,6 @@ function initScanHubUI() {
   }
 }
 
-// Strict CAAM eCLIPSE URL Validator
 function isValidCaamUrl(urlStr) {
   if (!urlStr || typeof urlStr !== 'string') return false;
   let trimmed = urlStr.trim();
@@ -1421,8 +1423,46 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
   }
 }
 
+let initialMyQrPassTemplateHTML = "";
+
 function renderMyQrPass() {
+  const tabQrPassBtn = document.getElementById("tab-qrpass-btn");
+  if (tabQrPassBtn) {
+    const span = tabQrPassBtn.querySelector("span");
+    if (span) span.innerText = "My QR";
+    else tabQrPassBtn.innerText = "My QR";
+  }
+
   const profile = getProfileData();
+  const hasUrl = profile && profile.url && profile.url.trim() !== "";
+  const tabContainer = document.getElementById("my-qr-pass-tab");
+
+  if (tabContainer) {
+    if (!initialMyQrPassTemplateHTML && tabContainer.querySelector("#pass-qr-canvas")) {
+      initialMyQrPassTemplateHTML = tabContainer.innerHTML;
+    }
+
+    if (!hasUrl) {
+      tabContainer.innerHTML = `
+        <div class="text-center py-10 px-4">
+          <div class="w-16 h-16 bg-blue-50 dark:bg-blue-950/60 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600 dark:text-blue-400">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m0 14v1m8-8h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </div>
+          <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1">No Crew Credentials Configured</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto mb-6">Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to view your digital QR pass.</p>
+          <button onclick="if(typeof openMenu==='function') openMenu(); if(typeof openProfileMenu==='function') openProfileMenu();" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-md active:scale-95 cursor-pointer">
+            Configure Licence Source
+          </button>
+        </div>
+      `;
+      return;
+    } else if (initialMyQrPassTemplateHTML && !tabContainer.querySelector("#pass-qr-canvas")) {
+      tabContainer.innerHTML = initialMyQrPassTemplateHTML;
+    }
+  }
+
   const canvas = document.getElementById("pass-qr-canvas");
   const nameElem = document.getElementById("pass-pilot-name");
   const licenceElem = document.getElementById("pass-licence-no") || document.getElementById("pass-licence-number");
@@ -1430,16 +1470,20 @@ function renderMyQrPass() {
   const freshnessElem = document.getElementById("pass-freshness-tag") || document.getElementById("pass-timestamp");
   const verifyBtn = document.getElementById("verify-my-licence-btn");
 
-  // Always hide the redundant "Verify My Licence" self-check button on Tab 2
   if (verifyBtn) {
     verifyBtn.classList.add("hidden");
+  }
+
+  // Remove flight eligibility badge under QR image as requested
+  if (badgeElem) {
+    badgeElem.classList.add("hidden");
+    badgeElem.style.display = "none";
   }
 
   const url = (profile.url || "").trim();
   const caam = profile.cachedCaamResults || null;
   const mab = profile.cachedMabResults || null;
 
-  // Determine pilot name from cached CAAM or MAB or stored profile
   let displayName = "Unconfigured Profile";
   if (caam && caam.pilotDetails && caam.pilotDetails.name && caam.pilotDetails.name !== "-") {
     displayName = caam.pilotDetails.name;
@@ -1447,38 +1491,17 @@ function renderMyQrPass() {
     displayName = mab.pilotName;
   }
 
-  // Determine licence type & number
   let licenceType = (caam && caam.pilotDetails && caam.pilotDetails.licenseType) ? caam.pilotDetails.licenseType : "ATPL(A)";
   let licenceNo = (caam && caam.pilotDetails && caam.pilotDetails.licenseNo && caam.pilotDetails.licenseNo !== "-") 
     ? caam.pilotDetails.licenseNo 
     : ((mab && mab.lineCheck && mab.lineCheck.licenseNo) ? mab.lineCheck.licenseNo : "-");
 
-  // Determine scan timestamp
   let scanTimeStr = (caam && caam.scanTime) ? caam.scanTime : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
   if (nameElem) nameElem.innerText = displayName;
   if (licenceElem) licenceElem.innerText = `${licenceType} • ${licenceNo}`;
   if (freshnessElem) freshnessElem.innerText = scanTimeStr;
 
-  // Update Flight Duty Compliance Badge
-  if (badgeElem) {
-    const isCaamExpired = caam && caam.overallStatus === "EXPIRED";
-    const isMabVoid = mab && mab.isVoid;
-    const isCaution = caam && caam.overallStatus === "EXPIRING_SOON";
-
-    if (isCaamExpired || isMabVoid) {
-      badgeElem.className = "px-4 py-1.5 rounded-full text-xs font-black uppercase bg-rose-600 text-white shadow-md inline-block";
-      badgeElem.innerText = "LAPSED / INELIGIBLE";
-    } else if (isCaution) {
-      badgeElem.className = "px-4 py-1.5 rounded-full text-xs font-black uppercase bg-amber-500 text-white shadow-md inline-block";
-      badgeElem.innerText = "EXPIRING SOON";
-    } else {
-      badgeElem.className = "px-4 py-1.5 rounded-full text-xs font-black uppercase bg-emerald-600 text-white shadow-md inline-block";
-      badgeElem.innerText = "ELIGIBLE FOR FLIGHT DUTY";
-    }
-  }
-
-  // Draw QR Code onto Canvas
   if (canvas) {
     drawQrToCanvas(canvas, url, profile.qrImageUrl || (caam ? caam.qrImageUrl : ""));
   }
@@ -1486,121 +1509,109 @@ function renderMyQrPass() {
 
 window.renderMyQrPass = renderMyQrPass;
 
-
-
 function setupTab3ManualLayout() {
-  const manualTab = document.getElementById("tab-manual-content") || document.getElementById("manual-entry-tab");
+  try {
+    const manualTab = document.getElementById("tab-manual-content") || document.getElementById("manual-entry-tab");
 
-  // 1. Hide/Remove redundant "Recently Verified Crew" card at the bottom of Tab 3
-  const recentCard = document.getElementById("recent-verified-crew-card");
-  if (recentCard) {
-    recentCard.style.display = "none";
-    recentCard.classList.add("hidden");
-  }
-  
-  if (manualTab) {
-    const headings = manualTab.querySelectorAll("h3, h4, div");
-    headings.forEach(el => {
-      if (el.innerText && el.innerText.trim().toLowerCase().includes("recently verified crew")) {
-        let parent = el;
-        while (parent && parent !== manualTab && parent.parentNode !== manualTab) {
-          parent = parent.parentNode;
-        }
-        if (parent && parent !== manualTab) {
-          parent.style.display = "none";
-          parent.classList.add("hidden");
-        }
-      }
-    });
-  }
-
-  const urlInput = document.getElementById("manual-url-input");
-  const submitBtn = document.getElementById("submit-url-btn");
-  let pasteBtn = document.getElementById("paste-url-btn");
-
-  if (!urlInput || !submitBtn) return;
-
-  // 2. Format urlInput as clean full-width input
-  urlInput.className = "w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-xs";
-
-  // Remove old pasteBtn from inside urlInput wrapper if nested
-  if (pasteBtn && pasteBtn.parentNode && pasteBtn.parentNode !== manualTab && pasteBtn.parentNode.id !== "manual-action-btn-row") {
-    pasteBtn.parentNode.removeChild(pasteBtn);
-    pasteBtn = null;
-  }
-
-  // 3. Create or update Action Button Row (Reset on Left, Paste on Right) above Submit Button
-  let btnRow = document.getElementById("manual-action-btn-row");
-  if (!btnRow) {
-    btnRow = document.createElement("div");
-    btnRow.id = "manual-action-btn-row";
-    btnRow.className = "grid grid-cols-2 gap-2.5 my-3 w-full";
-
-    // Reset Button (Left) - Equal height & SVG icon
-    const resetBtn = document.createElement("button");
-    resetBtn.id = "reset-url-btn";
-    resetBtn.type = "button";
-    resetBtn.className = "h-11 px-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-95 cursor-pointer whitespace-nowrap overflow-hidden";
-    resetBtn.innerHTML = `
-      <svg class="w-4 h-4 text-slate-600 dark:text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-      </svg>
-      <span>Reset</span>
-    `;
-    resetBtn.onclick = (e) => {
-      e.preventDefault();
-      urlInput.value = "";
-      urlInput.focus();
-      updateProfileUrlBadge("");
-    };
-
-    // Paste Button (Right) - Equal height & SVG icon
-    pasteBtn = document.createElement("button");
-    pasteBtn.id = "paste-url-btn";
-    pasteBtn.type = "button";
-    pasteBtn.className = "h-11 px-3 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 border border-blue-200/80 dark:border-blue-800/80 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-95 cursor-pointer whitespace-nowrap overflow-hidden";
-    pasteBtn.innerHTML = `
-      <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-      </svg>
-      <span>Paste</span>
-    `;
-
-    btnRow.appendChild(resetBtn);
-    btnRow.appendChild(pasteBtn);
-
-    if (submitBtn.parentNode) {
-      submitBtn.parentNode.insertBefore(btnRow, submitBtn);
+    // 1. Hide/Remove redundant "Recently Verified Crew" card at the bottom of Tab 3
+    const recentCard = document.getElementById("recent-verified-crew-card");
+    if (recentCard) {
+      recentCard.style.display = "none";
+      recentCard.classList.add("hidden");
     }
-  }
-
-  // Bind single-tap paste handler
-  if (pasteBtn) {
-    pasteBtn.onclick = (e) => {
-      e.preventDefault();
-      if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
-        navigator.clipboard.readText().then(text => {
-          if (text && text.trim()) {
-            urlInput.value = text.trim();
-            urlInput.dispatchEvent(new Event("input", { bubbles: true }));
-            updateProfileUrlBadge(text.trim());
-            if (typeof showProfileToast === 'function') showProfileToast("URL pasted from clipboard");
-          } else if (typeof showError === 'function') {
-            showError("Clipboard is empty or contains no text.");
+    
+    if (manualTab) {
+      const headings = manualTab.querySelectorAll("h3, h4, div");
+      headings.forEach(el => {
+        if (el.innerText && el.innerText.trim().toLowerCase().includes("recently verified crew")) {
+          let parent = el;
+          while (parent && parent !== manualTab && parent.parentNode !== manualTab) {
+            parent = parent.parentNode;
           }
-        }).catch(err => {
-          console.warn("Direct clipboard read blocked by browser, focusing input:", err);
-          urlInput.focus();
-          urlInput.select();
-          if (typeof showProfileToast === 'function') showProfileToast("Tap field to paste from keyboard");
-        });
-      } else {
+          if (parent && parent !== manualTab) {
+            parent.style.display = "none";
+            parent.classList.add("hidden");
+          }
+        }
+      });
+    }
+
+    const urlInput = document.getElementById("manual-url-input");
+    let submitBtn = document.getElementById("submit-url-btn");
+    const pasteBtn = document.getElementById("paste-url-btn");
+
+    // Remove paste button completely from DOM
+    if (pasteBtn && pasteBtn.parentNode) {
+      pasteBtn.parentNode.removeChild(pasteBtn);
+    }
+
+    if (!urlInput) return;
+
+    // 2. Format urlInput as clean full-width input
+    urlInput.className = "w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-xs";
+
+    // 3. Create or update Action Button Row (Reset on Left, Verify on Right)
+    let btnRow = document.getElementById("manual-action-btn-row");
+    if (!btnRow) {
+      btnRow = document.createElement("div");
+      btnRow.id = "manual-action-btn-row";
+      btnRow.className = "grid grid-cols-2 gap-2.5 my-3 w-full";
+
+      // Reset Button (Left) - Equal height & SVG icon
+      const resetBtn = document.createElement("button");
+      resetBtn.id = "reset-url-btn";
+      resetBtn.type = "button";
+      resetBtn.className = "h-11 px-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-95 cursor-pointer whitespace-nowrap overflow-hidden";
+      resetBtn.innerHTML = `
+        <svg class="w-4 h-4 text-slate-600 dark:text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+        <span>Reset</span>
+      `;
+      resetBtn.onclick = (e) => {
+        e.preventDefault();
+        urlInput.value = "";
         urlInput.focus();
-        urlInput.select();
-        if (typeof showProfileToast === 'function') showProfileToast("Tap field to paste from keyboard");
+        if (typeof updateProfileUrlBadge === 'function') updateProfileUrlBadge("");
+      };
+
+      // Verify Button (Right) - re-uses or creates submitBtn
+      if (!submitBtn) {
+        submitBtn = document.createElement("button");
+        submitBtn.id = "submit-url-btn";
+        submitBtn.type = "button";
+        submitBtn.onclick = () => {
+          if (typeof handleManualUrl === 'function') handleManualUrl();
+        };
       }
-    };
+      submitBtn.className = "h-11 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer whitespace-nowrap overflow-hidden";
+      submitBtn.innerHTML = `
+        <svg class="w-4 h-4 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>Verify</span>
+      `;
+
+      btnRow.appendChild(resetBtn);
+
+      if (submitBtn.parentNode && submitBtn.parentNode !== btnRow) {
+        submitBtn.parentNode.insertBefore(btnRow, submitBtn);
+      } else if (urlInput.parentNode) {
+        urlInput.parentNode.insertBefore(btnRow, urlInput.nextSibling);
+      }
+      btnRow.appendChild(submitBtn);
+    } else {
+      if (submitBtn) {
+        submitBtn.className = "h-11 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer whitespace-nowrap overflow-hidden";
+        submitBtn.innerHTML = `
+          <svg class="w-4 h-4 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>Verify</span>
+        `;
+      }
+    }
+  } catch (e) {
+    console.warn("setupTab3ManualLayout error:", e);
   }
 }
-
-
