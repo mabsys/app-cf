@@ -1,4 +1,4 @@
-// main.js (3009_R085) - Main Application Entry Orchestrator (Offline Base64 QR Pass & CDN PDF Worker)
+// main.js (3009_R086) - Main Application Entry Orchestrator (Robust PDF Text Extractor & Offline Base64 QR)
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -14,13 +14,19 @@ let profileQrScannerActive = false;
 
 async function extractTextFromPdfFile(file) {
   if (!file) return "";
+  
   if (window.pdfjsLib) {
     try {
-      // Set workerSrc directly to CDN URL without cross-origin Blob importScripts wrapper
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      }
       
       const arrayBuffer = await file.arrayBuffer();
-      const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer });
+      const loadingTask = window.pdfjsLib.getDocument({
+        data: arrayBuffer,
+        useSystemFonts: true,
+        isEvalSupported: false
+      });
       const pdf = await loadingTask.promise;
       let fullText = "";
       for (let i = 1; i <= pdf.numPages; i++) {
@@ -33,22 +39,39 @@ async function extractTextFromPdfFile(file) {
         return fullText;
       }
     } catch (e) {
-      console.warn("PDF.js text extraction failed:", e);
+      console.warn("PDF.js worker extraction failed, retrying inline PDF parsing:", e);
+      try {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = "";
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = "";
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          fullText += textContent.items.map(item => item.str).join(" ") + "\n";
+        }
+        if (fullText.trim().length > 20) return fullText;
+      } catch (e2) {
+        console.error("PDF.js inline parsing failed:", e2);
+      }
     }
   }
 
-  // Fallback raw stream reader + PostScript operator cleaner
+  // Smart Binary PDF Fallback (Extracts string literals and filters layout coordinates like 314.65)
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      let rawText = e.target.result || "";
-      // Strip raw PDF PostScript stream operators (Tj, TJ, ET, BT, Td, Tm) and brackets
-      rawText = rawText
-        .replace(/\/\w+/g, " ")
-        .replace(/\)?\s*(?:Tj|TJ|ET|BT|Td|Tm|T\*)/g, " ")
-        .replace(/[\(\)\[\]\<\>]+/g, " ")
-        .replace(/\s+/g, " ");
-      resolve(rawText);
+      const rawText = e.target.result || "";
+      const matches = rawText.match(/\(([^()]{2,})\)/g);
+      if (matches && matches.length > 0) {
+        const cleanedText = matches
+          .map(m => m.slice(1, -1).trim())
+          .filter(str => !/^[0-9\.\-\s]+$/.test(str) && str.length > 1)
+          .join(" ");
+        resolve(cleanedText);
+      } else {
+        resolve("");
+      }
     };
     reader.onerror = () => resolve("");
     reader.readAsText(file);
@@ -1513,90 +1536,6 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
     }
   };
   img.src = imgSrc;
-}
-
-let initialMyQrPassTemplateHTML = "";
-
-function renderMyQrPass() {
-  const tabQrPassBtn = document.getElementById("tab-qrpass-btn");
-  if (tabQrPassBtn) {
-    const span = tabQrPassBtn.querySelector("span");
-    if (span) span.innerText = "My QR";
-    else tabQrPassBtn.innerText = "My QR";
-  }
-
-  const profile = getProfileData();
-  const hasUrl = profile && profile.url && profile.url.trim() !== "";
-  const tabContainer = document.getElementById("my-qr-pass-tab");
-
-  if (tabContainer) {
-    if (!initialMyQrPassTemplateHTML && tabContainer.querySelector("#pass-qr-canvas")) {
-      initialMyQrPassTemplateHTML = tabContainer.innerHTML;
-    }
-
-    if (!hasUrl) {
-      tabContainer.innerHTML = `
-        <div class="text-center py-10 px-4">
-          <div class="w-16 h-16 bg-blue-50 dark:bg-blue-950/60 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600 dark:text-blue-400">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m0 14v1m8-8h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          </div>
-          <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1">No Crew Credentials Configured</h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto mb-6">Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to view your digital QR pass.</p>
-          <button onclick="if(typeof openMenu==='function') openMenu(); if(typeof openProfileMenu==='function') openProfileMenu();" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-md active:scale-95 cursor-pointer">
-            Configure Licence Source
-          </button>
-        </div>
-      `;
-      return;
-    } else if (initialMyQrPassTemplateHTML && !tabContainer.querySelector("#pass-qr-canvas")) {
-      tabContainer.innerHTML = initialMyQrPassTemplateHTML;
-    }
-  }
-
-  const canvas = document.getElementById("pass-qr-canvas");
-  const nameElem = document.getElementById("pass-pilot-name");
-  const licenceElem = document.getElementById("pass-licence-no") || document.getElementById("pass-licence-number");
-  const badgeElem = document.getElementById("pass-eligibility-badge") || document.getElementById("pass-status-badge");
-  const freshnessElem = document.getElementById("pass-freshness-tag") || document.getElementById("pass-timestamp");
-  const verifyBtn = document.getElementById("verify-my-licence-btn");
-
-  if (verifyBtn) {
-    verifyBtn.classList.add("hidden");
-  }
-
-  // Remove flight eligibility badge under QR image as requested
-  if (badgeElem) {
-    badgeElem.classList.add("hidden");
-    badgeElem.style.display = "none";
-  }
-
-  const url = (profile.url || "").trim();
-  const caam = profile.cachedCaamResults || null;
-  const mab = profile.cachedMabResults || null;
-
-  let displayName = "Unconfigured Profile";
-  if (caam && caam.pilotDetails && caam.pilotDetails.name && caam.pilotDetails.name !== "-") {
-    displayName = caam.pilotDetails.name;
-  } else if (mab && mab.pilotName && mab.pilotName !== "-") {
-    displayName = mab.pilotName;
-  }
-
-  let licenceType = (caam && caam.pilotDetails && caam.pilotDetails.licenseType) ? caam.pilotDetails.licenseType : "ATPL(A)";
-  let licenceNo = (caam && caam.pilotDetails && caam.pilotDetails.licenseNo && caam.pilotDetails.licenseNo !== "-") 
-    ? caam.pilotDetails.licenseNo 
-    : ((mab && mab.lineCheck && mab.lineCheck.licenseNo) ? mab.lineCheck.licenseNo : "-");
-
-  let scanTimeStr = (caam && caam.scanTime) ? caam.scanTime : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-
-  if (nameElem) nameElem.innerText = displayName;
-  if (licenceElem) licenceElem.innerText = `${licenceType} • ${licenceNo}`;
-  if (freshnessElem) freshnessElem.innerText = scanTimeStr;
-
-  if (canvas) {
-    drawQrToCanvas(canvas, url, profile.qrImageUrl || (caam ? caam.qrImageUrl : ""));
-  }
 }
 
 window.renderMyQrPass = renderMyQrPass;
