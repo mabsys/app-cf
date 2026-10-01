@@ -1,4 +1,4 @@
-// main.js (3009_R087) - Main Application Entry Orchestrator (Fully Validated QR & PDF Worker)
+// main.js (3009_R088) - Main Application Entry Orchestrator (Clean CDN PDF.js Extraction & Line Preservation)
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -14,55 +14,64 @@ let profileQrScannerActive = false;
 
 async function extractTextFromPdfFile(file) {
   if (!file) return "";
+  
+  // Primary Engine: PDF.js text extraction using global cdnjs script in index.html
   if (window.pdfjsLib) {
     try {
+      // Direct CDN worker configuration (avoids Blob/importScripts CORS security blocks)
       window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
       const arrayBuffer = await file.arrayBuffer();
-      const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer });
+      const pdf = await loadingTask.promise;
       let fullText = "";
+
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
-        fullText += textContent.items.map(item => item.str).join(" ") + "\n";
-      }
-      if (fullText.trim().length > 20) return fullText;
-    } catch (e) {
-      console.warn("PDF.js worker extraction failed, trying inline parsing:", e);
-      try {
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc = "";
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        let fullText = "";
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          fullText += textContent.items.map(item => item.str).join(" ") + "\n";
+        
+        // Group text items by vertical Y coordinate to preserve discrete lines for attestationParser
+        let lastY = null;
+        let pageLines = [];
+        let currentLine = "";
+
+        for (const item of textContent.items) {
+          const y = (item.transform && item.transform.length >= 6) ? Math.round(item.transform[5]) : null;
+          if (lastY !== null && y !== null && Math.abs(y - lastY) > 3) {
+            if (currentLine.trim()) pageLines.push(currentLine.trim());
+            currentLine = "";
+          }
+          currentLine += (currentLine ? " " : "") + item.str;
+          if (y !== null) lastY = y;
         }
-        if (fullText.trim().length > 20) return fullText;
-      } catch (e2) {
-        console.error("PDF.js inline parsing failed:", e2);
+        if (currentLine.trim()) pageLines.push(currentLine.trim());
+
+        fullText += pageLines.join("\n") + "\n";
       }
+
+      if (fullText.trim().length > 20) {
+        return fullText;
+      }
+    } catch (e) {
+      console.warn("PDF.js extraction error:", e);
     }
   }
 
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const rawText = e.target.result || "";
-      const matches = rawText.match(/\(([^()]{2,})\)/g);
-      if (matches && matches.length > 0) {
-        const cleanedText = matches
-          .map(m => m.slice(1, -1).trim())
-          .filter(str => !/^[0-9\.\-\s]+$/.test(str) && str.length > 1)
-          .join(" ");
-        resolve(cleanedText);
-      } else {
-        resolve(rawText);
-      }
-    };
-    reader.onerror = () => resolve("");
-    reader.readAsText(file);
-  });
+  // Fallback: If PDF.js fails or is unavailable, extract text literals safely without raw PostScript binary noise
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const rawText = new TextDecoder("latin1").decode(arrayBuffer);
+    const matches = rawText.match(/\(([^()]{2,120})\)/g);
+    if (matches && matches.length > 0) {
+      const extractedLines = matches
+        .map(m => m.slice(1, -1).trim())
+        .filter(str => !/^[0-9\.\-\s]+$/.test(str) && str.length > 1);
+      return extractedLines.join("\n");
+    }
+  } catch (err) {
+    console.error("Fallback text extraction failed:", err);
+  }
+  return "";
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -1383,123 +1392,34 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
   canvasElem.width = size;
   canvasElem.height = size;
 
+  // Clear and fill solid white background
   ctx.fillStyle = "#FFFFFF";
   ctx.fillRect(0, 0, size, size);
 
-  if (!qrUrlText) {
-    ctx.fillStyle = "#F8FAFC";
-    ctx.fillRect(0, 0, size, size);
-    ctx.fillStyle = "#0F172A";
-    ctx.font = "bold 12px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("CAAM eCLIPSE QR", size / 2, size / 2 - 10);
-    ctx.font = "10px sans-serif";
-    ctx.fillStyle = "#64748B";
-    ctx.fillText("No Licence URL Configured", size / 2, size / 2 + 10);
-    return;
-  }
-
-  const cacheCanvasDataUrl = () => {
-    try {
-      const dataUrl = canvasElem.toDataURL("image/png");
-      if (dataUrl && dataUrl.length > 100 && typeof saveProfileData === "function") {
-        const currentProfile = (typeof getProfileData === "function") ? getProfileData() : {};
-        if (currentProfile.cachedQrDataUrl !== dataUrl) {
-          saveProfileData({ cachedQrDataUrl: dataUrl });
-        }
-      }
-    } catch (err) {
-      console.warn("Could not cache QR canvas Data URL:", err);
-    }
-  };
-
+  // Priority 1: Check if window.QRCode library exists with toCanvas
   if (window.QRCode && typeof window.QRCode.toCanvas === 'function') {
     try {
-      window.QRCode.toCanvas(canvasElem, qrUrlText, {
-        width: size,
-        margin: 2,
-        color: { dark: '#000000', light: '#FFFFFF' }
-      });
-      cacheCanvasDataUrl();
+      window.QRCode.toCanvas(canvasElem, qrUrlText, { width: size, margin: 2, color: { dark: '#000000', light: '#FFFFFF' } });
       return;
     } catch (e) {
-      console.warn("Engine 1 (QRCode.toCanvas) failed:", e);
+      console.warn("QRCode.toCanvas failed, using image draw fallback:", e);
     }
   }
 
-  if (window.QRCode && typeof window.QRCode === 'function') {
-    try {
-      const tempDiv = document.createElement("div");
-      tempDiv.style.position = "absolute";
-      tempDiv.style.left = "-9999px";
-      tempDiv.style.top = "-9999px";
-      document.body.appendChild(tempDiv);
-
-      new window.QRCode(tempDiv, {
-        text: qrUrlText,
-        width: size,
-        height: size,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-        correctLevel: (window.QRCode.CorrectLevel ? window.QRCode.CorrectLevel.H : 2)
-      });
-
-      const generatedCanvas = tempDiv.querySelector("canvas");
-      const generatedImg = tempDiv.querySelector("img");
-
-      if (generatedCanvas) {
-        ctx.fillStyle = "#FFFFFF";
-        ctx.fillRect(0, 0, size, size);
-        ctx.drawImage(generatedCanvas, 0, 0, size, size);
-        if (tempDiv.parentNode) document.body.removeChild(tempDiv);
-        cacheCanvasDataUrl();
-        return;
-      } else if (generatedImg) {
-        const renderImageToCanvas = () => {
-          ctx.fillStyle = "#FFFFFF";
-          ctx.fillRect(0, 0, size, size);
-          ctx.drawImage(generatedImg, 0, 0, size, size);
-          if (tempDiv.parentNode) document.body.removeChild(tempDiv);
-          cacheCanvasDataUrl();
-        };
-
-        if (generatedImg.complete && generatedImg.src) {
-          renderImageToCanvas();
-          return;
-        } else {
-          generatedImg.onload = renderImageToCanvas;
-          setTimeout(() => {
-            if (tempDiv.parentNode) document.body.removeChild(tempDiv);
-          }, 1000);
-          return;
-        }
-      } else {
-        if (tempDiv.parentNode) document.body.removeChild(tempDiv);
-      }
-    } catch (e) {
-      console.warn("Engine 2 (David Shim QRCode) failed:", e);
-    }
+  // Priority 2: Draw clean high-res QR code generated directly from pilot licence URL (no CORS restrictions)
+  let imgSrc = "";
+  if (qrUrlText) {
+    imgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrUrlText)}`;
+  } else if (qrImageUrl) {
+    imgSrc = `${PROXY_URL}?url=${encodeURIComponent(qrImageUrl)}`;
   }
 
-  const profile = (typeof getProfileData === "function") ? getProfileData() : {};
-  if (profile && profile.cachedQrDataUrl) {
-    const cachedImg = new Image();
-    cachedImg.onload = () => {
-      ctx.fillStyle = "#FFFFFF";
-      ctx.fillRect(0, 0, size, size);
-      ctx.drawImage(cachedImg, 0, 0, size, size);
-    };
-    cachedImg.src = profile.cachedQrDataUrl;
-    return;
-  }
-
-  let imgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrUrlText)}`;
   const img = new Image();
+  // Do NOT set crossOrigin = "anonymous" for external CORS images to prevent browser blocking
   img.onload = () => {
     ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(0, 0, size, size);
     ctx.drawImage(img, 10, 10, size - 20, size - 20);
-    cacheCanvasDataUrl();
   };
   img.onerror = () => {
     if (qrImageUrl && imgSrc !== `${PROXY_URL}?url=${encodeURIComponent(qrImageUrl)}`) {
@@ -1516,7 +1436,9 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
       ctx.fillText("Offline Pass Active", size / 2, size / 2 + 10);
     }
   };
-  img.src = imgSrc;
+  if (imgSrc) {
+    img.src = imgSrc;
+  }
 }
 
 let initialMyQrPassTemplateHTML = "";
