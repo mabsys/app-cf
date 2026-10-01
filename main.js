@@ -1,4 +1,4 @@
-// main.js (3009_R074) - Main Application Entry Orchestrator (3-Tab Pilot Scan Hub)
+// main.js (3009_R075) - Main Application Entry Orchestrator (3-Tab Pilot Scan Hub)
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -75,7 +75,10 @@ function initScanHubUI() {
   const tabManualBtn = document.getElementById("tab-manual-btn");
 
   if (tabCameraBtn) tabCameraBtn.addEventListener("click", () => switchScanHubTab("camera"));
-  if (tabQrPassBtn) tabQrPassBtn.addEventListener("click", () => switchScanHubTab("qrpass"));
+  if (tabQrPassBtn) tabQrPassBtn.addEventListener("click", () => {
+    switchScanHubTab("qrpass");
+    renderMyQrPass();
+  });
   if (tabManualBtn) tabManualBtn.addEventListener("click", () => switchScanHubTab("manual"));
 
   const cycleLensBtn = document.getElementById("camera-cycle-btn");
@@ -498,6 +501,7 @@ function initApp() {
   window.showError = showError;
   window.startScanner = startScanner;
   window.showScannerView = showScannerView;
+  window.renderMyQrPass = renderMyQrPass;
 
   // Snapshot clean dashboard HTML templates early before any view logic or DOM mutation
   saveDashboardTemplates();
@@ -1376,3 +1380,109 @@ window.loadHistoricalRecord = function(id) {
     renderResults(match.resultsData);
   }
 };
+
+
+function renderMyQrPass() {
+  const profile = getProfileData();
+  const passContainer = document.getElementById("pass-qr-canvas");
+  const nameEl = document.getElementById("pass-pilot-name");
+  const licenceTypeEl = document.getElementById("pass-licence-type");
+  const licenceNoEl = document.getElementById("pass-licence-number");
+  const badgeEl = document.getElementById("pass-status-badge");
+  const timestampEl = document.getElementById("pass-timestamp");
+  const verifyBtn = document.getElementById("verify-my-licence-btn");
+
+  // Always hide the redundant "Verify My Licence" self-check button on Tab 2
+  if (verifyBtn) {
+    verifyBtn.classList.add("hidden");
+  }
+
+  if (!passContainer) return;
+
+  const url = (profile.url || "").trim();
+  const caam = profile.cachedCaamResults || null;
+  const mab = profile.cachedMabResults || null;
+
+  // Determine pilot name from cached CAAM or MAB or default profile
+  let displayName = "MOHD SALLEHUDDIN BIN ZAIDY";
+  if (caam && caam.pilotDetails && caam.pilotDetails.name && caam.pilotDetails.name !== "-") {
+    displayName = caam.pilotDetails.name;
+  } else if (mab && mab.pilotName && mab.pilotName !== "-") {
+    displayName = mab.pilotName;
+  }
+
+  // Determine licence type & number
+  let licenceType = (caam && caam.pilotDetails && caam.pilotDetails.licenseType) ? caam.pilotDetails.licenseType : "ATPL(A)";
+  let licenceNo = (caam && caam.pilotDetails && caam.pilotDetails.licenseNo && caam.pilotDetails.licenseNo !== "-") 
+    ? caam.pilotDetails.licenseNo 
+    : ((mab && mab.lineCheck && mab.lineCheck.licenseNo) ? mab.lineCheck.licenseNo : "A3115");
+
+  // Determine scan timestamp
+  let scanTimeStr = (caam && caam.scanTime) ? caam.scanTime : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+  if (nameEl) nameEl.innerText = displayName;
+  if (licenceTypeEl) licenceTypeEl.innerText = licenceType;
+  if (licenceNoEl) licenceNoEl.innerText = licenceNo;
+  if (timestampEl) timestampEl.innerText = scanTimeStr;
+
+  // Update Flight Duty Compliance Badge
+  if (badgeEl) {
+    const isCaamExpired = caam && caam.overallStatus === "EXPIRED";
+    const isMabVoid = mab && mab.isVoid;
+    const isCaution = caam && caam.overallStatus === "EXPIRING_SOON";
+
+    if (isCaamExpired || isMabVoid) {
+      badgeEl.className = "px-4 py-1.5 rounded-full text-xs font-black uppercase bg-rose-600 text-white shadow-md inline-block";
+      badgeEl.innerText = "LAPSED / INELIGIBLE";
+    } else if (isCaution) {
+      badgeEl.className = "px-4 py-1.5 rounded-full text-xs font-black uppercase bg-amber-500 text-white shadow-md inline-block";
+      badgeEl.innerText = "EXPIRING SOON";
+    } else {
+      badgeEl.className = "px-4 py-1.5 rounded-full text-xs font-black uppercase bg-emerald-600 text-white shadow-md inline-block";
+      badgeEl.innerText = "ELIGIBLE FOR FLIGHT DUTY";
+    }
+  }
+
+  // Generate / Render QR Image on Canvas
+  passContainer.innerHTML = "";
+
+  if (url) {
+    // Priority 1: Check if window.QRCode library exists
+    if (window.QRCode) {
+      try {
+        new window.QRCode(passContainer, {
+          text: url,
+          width: 220,
+          height: 220,
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: window.QRCode.CorrectLevel.H
+        });
+        return;
+      } catch (e) {
+        console.warn("window.QRCode generation failed, falling back to image:", e);
+      }
+    }
+
+    // Priority 2: Use cached QRservlet / QR image URL if available or fall back to high-res QR API
+    const qrImgSrc = profile.qrImageUrl || `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
+    
+    passContainer.innerHTML = `
+      <div class="p-3 bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-200 dark:border-slate-800 inline-block">
+        <img src="${qrImgSrc}" alt="Licence QR Code" class="w-52 h-52 mx-auto rounded-xl object-contain" />
+      </div>
+    `;
+  } else {
+    passContainer.innerHTML = `
+      <div class="p-6 text-center space-y-2 my-4">
+        <div class="text-xs font-bold text-slate-500 dark:text-slate-400">No stored licence URL</div>
+        <p class="text-[11px] text-slate-400 max-w-xs mx-auto leading-relaxed">Please configure your official CAAM eCLIPSE URL in My Credentials to generate your digital QR pass.</p>
+        <button onclick="openProfileMenu()" class="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95">
+          Set Up Credentials
+        </button>
+      </div>
+    `;
+  }
+}
+
+window.renderMyQrPass = renderMyQrPass;
