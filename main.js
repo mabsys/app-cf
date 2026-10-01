@@ -1,4 +1,4 @@
-// main.js (3009_R073) - Main Application Entry Orchestrator (3-Tab Pilot Scan Hub)
+// main.js (3009_R074) - Main Application Entry Orchestrator (3-Tab Pilot Scan Hub)
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -604,26 +604,8 @@ async function processAndCacheProfileData(url, pdfFile) {
 
   mabResults = parseAttestationText(mabTextToParse || (existingProfile ? existingProfile.cachedMabResults : null) || sampleMabText, freshnessLimit, threshold);
 
-  // Preserve existing cached CAAM results if live fetch failed, or create valid profile fallback
-  let finalCaamResults = caamResults || (existingProfile ? existingProfile.cachedCaamResults : null);
-
-  if (!finalCaamResults && url && isValidCaamUrl(url)) {
-    finalCaamResults = {
-      overallStatus: "VALID",
-      scanTime: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).replace(',', ', '),
-      qrImageUrl: url,
-      pilotDetails: {
-        name: (mabResults && mabResults.pilotName && mabResults.pilotName !== "-") ? mabResults.pilotName : "MOHD SALLEHUDDIN BIN ZAIDY",
-        licenseType: "ATPL(A)",
-        licenseNo: (mabResults && mabResults.lineCheck && mabResults.lineCheck.licenseNo) ? mabResults.lineCheck.licenseNo : "A3115"
-      },
-      medicalLimitations: "NIL",
-      qualifications: [
-        { name: "Licence Validity Expiry", dateText: "31 Oct 2026", status: "VALID", daysRemaining: 30 },
-        { name: "Class 1 Medical Expiry", dateText: "30 Sep 2027", status: "VALID", daysRemaining: 365 }
-      ]
-    };
-  }
+  // Preserve existing cached CAAM results if live fetch failed
+  const finalCaamResults = caamResults || (existingProfile ? existingProfile.cachedCaamResults : null);
 
   saveProfileData({
     cachedCaamResults: finalCaamResults,
@@ -861,7 +843,12 @@ async function renderDashboardView() {
   const profile = getProfileData();
 
   if (profile.cachedCaamResults || profile.cachedMabResults) {
-    renderDashboardResults(profile.cachedCaamResults, profile.cachedMabResults);
+    try {
+      renderDashboardResults(profile.cachedCaamResults, profile.cachedMabResults);
+    } catch (err) {
+      console.error("Error rendering cached profile data:", err);
+      renderBlankDashboard();
+    }
   } else if (profile.url) {
     showLoading("Loading compliance dashboard...");
     try {
@@ -1028,7 +1015,13 @@ function renderDashboardResults(caamResults, mabResults = null) {
       const sortedEarliestQuals = sortCaamQualifications(caamResults.qualifications);
       sortedEarliestQuals.forEach(q => {
         if (q.dateText && !['NO EXPIRY', 'NIL', 'NA', 'N/A', '-'].includes(q.dateText.trim().toUpperCase())) {
-          const d = q.parsedDate || parseAnyDate(q.dateText);
+          let d = null;
+          if (q.parsedDate) {
+            d = (q.parsedDate instanceof Date) ? q.parsedDate : new Date(q.parsedDate);
+          }
+          if (!d || isNaN(d.getTime())) {
+            d = parseAnyDate(q.dateText);
+          }
           if (d && !isNaN(d.getTime())) {
             candidates.push({
               name: `${q.name} (${q.dateText})`,
@@ -1060,7 +1053,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
           const d = parseAnyDate(dateStr);
           if (d && !isNaN(d.getTime())) {
             candidates.push({
-              name: `${dr.name || dr.item || "Drill"} (${dateStr})`,
+              name: `${dr.name || dr.item || 'Safety Drill'} (${dateStr})`,
               sub: "MAB Safety & Recurrent Training • Next Renewal",
               date: d
             });
