@@ -1,4 +1,4 @@
-// main.js (3009_R076) - Main Application Entry Orchestrator (3-Tab Pilot Scan Hub)
+// main.js (3009_R078) - Main Application Entry Orchestrator (3-Tab Pilot Scan Hub - Dynamic Clean Fallbacks)
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -584,29 +584,16 @@ async function processAndCacheProfileData(url, pdfFile) {
     mabTextToParse = await extractTextFromPdfFile(selectedAttestationFile);
   }
 
-  const sampleMabText = `
-    Name                : MOHD SALLEHUDDIN BIN ZAIDY
-    Staff No            : 2108337
-    Designation         : Captain.OPS - Flight Crew(FC)
-    Department          : MAB - Fleet Operations (EVA5DEPT194)
-    BY THE AUTHORITY OF CHIEF PILOT TRAINING : 14 SEP 2026 10:00:52 PM
-    FO/TRNG/ATT/MAR25
-    B738 KUL/BKI/KUL 13 Oct 2025 31 Oct 2026 A3115 VIDP 28 9 Sep 2026 SIM2TEW III
-    ACTUAL DFE 11635 9 Sep 2026
-    AIRCRAFT TYPE: B737 27 Jul 2026 30 Sep 2027
-    AIRCRAFT TYPE: A330 NIL NIL
-    AIRCRAFT TYPE: A350 NIL NIL
-    PRACTICAL DRILL - DOOR DRILL 27 Jul 2026 30 Sep 2027
-    PRACTICAL DRILL - WET DRILL 27 Jul 2026 31 Jul 2029
-    PRACTICAL DRILL - FIRE DRILL 24 Jul 2024 31 Jul 2027
-    CRM 6 May 2026 31 May 2027
-    SMS 6 May 2026 31 May 2029
-    FIRST AID 18 Mar 2008 NIL
-    AVSEC 28 Jul 2026 30 Sep 2027
-    DG FUNCTION 7 21 May 2025 30 Jun 2027
-  `;
+  const sampleMabText = "";
 
-  mabResults = parseAttestationText(mabTextToParse || (existingProfile ? existingProfile.cachedMabResults : null) || sampleMabText, freshnessLimit, threshold);
+  let mabTextToUse = mabTextToParse;
+  if (mabTextToUse) {
+    mabResults = parseAttestationText(mabTextToUse, freshnessLimit, threshold);
+  } else if (existingProfile && existingProfile.cachedMabResults) {
+    mabResults = existingProfile.cachedMabResults;
+  } else {
+    mabResults = null;
+  }
 
   // Preserve existing cached CAAM results if live fetch failed
   const finalCaamResults = caamResults || (existingProfile ? existingProfile.cachedCaamResults : null);
@@ -721,28 +708,16 @@ async function processLicenseUrl(url) {
       } catch (e) {}
     }
 
-    const sampleMabText = `
-      Name                : MOHD SALLEHUDDIN BIN ZAIDY
-      Staff No            : 2108337
-      Designation         : Captain.OPS - Flight Crew(FC)
-      BY THE AUTHORITY OF CHIEF PILOT TRAINING : 14 SEP 2026 10:00:52 PM
-      FO/TRNG/ATT/MAR25
-      B738 KUL/BKI/KUL 13 Oct 2025 31 Oct 2026 A3115 VIDP 28 9 Sep 2026 SIM2TEW III
-      ACTUAL DFE 11635 9 Sep 2026
-      AIRCRAFT TYPE: B737 27 Jul 2026 30 Sep 2027
-      AIRCRAFT TYPE: A330 NIL NIL
-      AIRCRAFT TYPE: A350 NIL NIL
-      PRACTICAL DRILL - DOOR DRILL 27 Jul 2026 30 Sep 2027
-      PRACTICAL DRILL - WET DRILL 27 Jul 2026 31 Jul 2029
-      PRACTICAL DRILL - FIRE DRILL 24 Jul 2024 31 Jul 2027
-      CRM 6 May 2026 31 May 2027
-      SMS 6 May 2026 31 May 2029
-      FIRST AID 18 Mar 2008 NIL
-      AVSEC 28 Jul 2026 30 Sep 2027
-      DG FUNCTION 7 21 May 2025 30 Jun 2027
-    `;
+    const sampleMabText = "";
 
-    mabResults = parseAttestationText(mabTextToParse || (profile ? profile.cachedMabResults : null) || sampleMabText, freshnessLimit, threshold);
+    let mabTextToUse = mabTextToParse;
+    if (mabTextToUse) {
+      mabResults = parseAttestationText(mabTextToUse, freshnessLimit, threshold);
+    } else if (profile && profile.cachedMabResults) {
+      mabResults = profile.cachedMabResults;
+    } else {
+      mabResults = null;
+    }
   }
 
   try {
@@ -920,7 +895,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
     return document.getElementById(id);
   }
 
-  const displayName = (caamResults && caamResults.pilotDetails && caamResults.pilotDetails.name && caamResults.pilotDetails.name !== "-") ? caamResults.pilotDetails.name : "MOHD SALLEHUDDIN BIN ZAIDY";
+  const displayName = (caamResults && caamResults.pilotDetails && caamResults.pilotDetails.name && caamResults.pilotDetails.name !== "-") ? caamResults.pilotDetails.name : ((mabResults && mabResults.pilotName && mabResults.pilotName !== "-") ? mabResults.pilotName : "Crew Member");
 
   // 1. OVERVIEW TAB
   const heroTitle = getDashEl("overview-status-title");
@@ -1103,7 +1078,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
 
     if (nameEl) nameEl.innerText = displayName;
     if (typeEl) typeEl.innerText = caamResults.pilotDetails.licenseType || "ATPL(A)";
-    if (noEl) noEl.innerText = caamResults.pilotDetails.licenseNo || "A3115";
+    if (noEl) noEl.innerText = caamResults.pilotDetails.licenseNo || "-";
 
     const medLimitEl = getDashEl("dash-medical-limit");
     if (medLimitEl) {
@@ -1202,7 +1177,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
     const lcExp = getDashEl("mab-linecheck-expiry");
 
     if (lcTitle && mabResults.lineCheck) lcTitle.innerText = `${mabResults.lineCheck.fleet}`;
-    if (lcLicence && mabResults.lineCheck) lcLicence.innerText = mabResults.lineCheck.licenseNo || "A3115";
+    if (lcLicence && mabResults.lineCheck) lcLicence.innerText = mabResults.lineCheck.licenseNo || "-";
     if (lcRoute && mabResults.lineCheck) lcRoute.innerText = mabResults.lineCheck.route;
     if (lcDate && mabResults.lineCheck) lcDate.innerText = mabResults.lineCheck.checkDate;
     if (lcExp && mabResults.lineCheck) lcExp.innerText = mabResults.lineCheck.expiryDate;
@@ -1296,7 +1271,7 @@ function renderResults(caamResults, mabResults = null) {
 
   if (nameEl) nameEl.innerText = displayName;
   if (typeEl && caamResults && caamResults.pilotDetails) typeEl.innerText = caamResults.pilotDetails.licenseType || "ATPL(A)";
-  if (noEl && caamResults && caamResults.pilotDetails) noEl.innerText = caamResults.pilotDetails.licenseNo || "A3115";
+  if (noEl && caamResults && caamResults.pilotDetails) noEl.innerText = caamResults.pilotDetails.licenseNo || "-";
   if (scanTimeEl) scanTimeEl.innerText = (caamResults && caamResults.scanTime) ? `${caamResults.scanTime} LT` : "14 Sep 2026 LT";
 
   const medLimitEl = getResEl("res-medical-limit") || getResEl("dash-medical-limit");
@@ -1382,14 +1357,62 @@ window.loadHistoricalRecord = function(id) {
 };
 
 
+function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
+  if (!canvasElem) return;
+  const ctx = canvasElem.getContext("2d");
+  const size = 240;
+  canvasElem.width = size;
+  canvasElem.height = size;
+
+  // Clear and fill white background
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillRect(0, 0, size, size);
+
+  // Priority 1: If window.QRCode library exists with toCanvas
+  if (window.QRCode && typeof window.QRCode.toCanvas === 'function') {
+    try {
+      window.QRCode.toCanvas(canvasElem, qrUrlText, {
+        width: size,
+        margin: 2,
+        color: { dark: '#000000', light: '#FFFFFF' }
+      });
+      return;
+    } catch (e) {
+      console.warn("QRCode.toCanvas failed, using image draw fallback:", e);
+    }
+  }
+
+  // Priority 2: Draw QR image (cached QrServlet or QR API) onto Canvas
+  const imgSrc = qrImageUrl || `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrUrlText)}`;
+  const img = new Image();
+  img.crossOrigin = "Anonymous";
+  img.onload = () => {
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(0, 0, size, size);
+    ctx.drawImage(img, 10, 10, size - 20, size - 20);
+  };
+  img.onerror = () => {
+    // High contrast canvas text fallback if network fails
+    ctx.fillStyle = "#F8FAFC";
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = "#0F172A";
+    ctx.font = "bold 12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("CAAM eCLIPSE QR", size / 2, size / 2 - 10);
+    ctx.font = "10px sans-serif";
+    ctx.fillStyle = "#64748B";
+    ctx.fillText("Offline Pass Active", size / 2, size / 2 + 10);
+  };
+  img.src = imgSrc;
+}
+
 function renderMyQrPass() {
   const profile = getProfileData();
-  const passContainer = document.getElementById("pass-qr-canvas");
-  const nameEl = document.getElementById("pass-pilot-name");
-  const licenceTypeEl = document.getElementById("pass-licence-type");
-  const licenceNoEl = document.getElementById("pass-licence-number");
-  const badgeEl = document.getElementById("pass-status-badge");
-  const timestampEl = document.getElementById("pass-timestamp");
+  const canvas = document.getElementById("pass-qr-canvas");
+  const nameElem = document.getElementById("pass-pilot-name");
+  const licenceElem = document.getElementById("pass-licence-no") || document.getElementById("pass-licence-number");
+  const badgeElem = document.getElementById("pass-eligibility-badge") || document.getElementById("pass-status-badge");
+  const freshnessElem = document.getElementById("pass-freshness-tag") || document.getElementById("pass-timestamp");
   const verifyBtn = document.getElementById("verify-my-licence-btn");
 
   // Always hide the redundant "Verify My Licence" self-check button on Tab 2
@@ -1397,91 +1420,54 @@ function renderMyQrPass() {
     verifyBtn.classList.add("hidden");
   }
 
-  if (!passContainer) return;
-
   const url = (profile.url || "").trim();
   const caam = profile.cachedCaamResults || null;
   const mab = profile.cachedMabResults || null;
 
-  // Determine pilot name from cached CAAM or MAB or default profile
-  let displayName = "MOHD SALLEHUDDIN BIN ZAIDY";
+  // Determine pilot name from cached CAAM or MAB or stored profile
+  let displayName = "Unconfigured Profile";
   if (caam && caam.pilotDetails && caam.pilotDetails.name && caam.pilotDetails.name !== "-") {
     displayName = caam.pilotDetails.name;
   } else if (mab && mab.pilotName && mab.pilotName !== "-") {
     displayName = mab.pilotName;
+  } else if (profile && profile.url) {
+    displayName = "Crew Member";
   }
 
   // Determine licence type & number
-  let licenceType = (caam && caam.pilotDetails && caam.pilotDetails.licenseType) ? caam.pilotDetails.licenseType : "ATPL(A)";
+  let licenceType = (caam && caam.pilotDetails && caam.pilotDetails.licenseType) ? caam.pilotDetails.licenseType : "-";
   let licenceNo = (caam && caam.pilotDetails && caam.pilotDetails.licenseNo && caam.pilotDetails.licenseNo !== "-") 
     ? caam.pilotDetails.licenseNo 
-    : ((mab && mab.lineCheck && mab.lineCheck.licenseNo) ? mab.lineCheck.licenseNo : "A3115");
+    : ((mab && mab.lineCheck && mab.lineCheck.licenseNo && mab.lineCheck.licenseNo !== "-") ? mab.lineCheck.licenseNo : "-");
 
   // Determine scan timestamp
   let scanTimeStr = (caam && caam.scanTime) ? caam.scanTime : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
-  if (nameEl) nameEl.innerText = displayName;
-  if (licenceTypeEl) licenceTypeEl.innerText = licenceType;
-  if (licenceNoEl) licenceNoEl.innerText = licenceNo;
-  if (timestampEl) timestampEl.innerText = scanTimeStr;
+  if (nameElem) nameElem.innerText = displayName;
+  if (licenceElem) licenceElem.innerText = `${licenceType} • ${licenceNo}`;
+  if (freshnessElem) freshnessElem.innerText = scanTimeStr ? `Sync: ${scanTimeStr}` : "Offline Pass Ready (0ms delay)";
 
   // Update Flight Duty Compliance Badge
-  if (badgeEl) {
+  if (badgeElem) {
     const isCaamExpired = caam && caam.overallStatus === "EXPIRED";
     const isMabVoid = mab && mab.isVoid;
     const isCaution = caam && caam.overallStatus === "EXPIRING_SOON";
 
     if (isCaamExpired || isMabVoid) {
-      badgeEl.className = "px-4 py-1.5 rounded-full text-xs font-black uppercase bg-rose-600 text-white shadow-md inline-block";
-      badgeEl.innerText = "LAPSED / INELIGIBLE";
+      badgeElem.className = "mt-3 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 border border-red-200/80 inline-block";
+      badgeElem.innerText = "LAPSED / INELIGIBLE";
     } else if (isCaution) {
-      badgeEl.className = "px-4 py-1.5 rounded-full text-xs font-black uppercase bg-amber-500 text-white shadow-md inline-block";
-      badgeEl.innerText = "EXPIRING SOON";
+      badgeElem.className = "mt-3 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200/80 inline-block";
+      badgeElem.innerText = "EXPIRING SOON";
     } else {
-      badgeEl.className = "px-4 py-1.5 rounded-full text-xs font-black uppercase bg-emerald-600 text-white shadow-md inline-block";
-      badgeEl.innerText = "ELIGIBLE FOR FLIGHT DUTY";
+      badgeElem.className = "mt-3 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200/80 inline-block";
+      badgeElem.innerText = "ELIGIBLE FOR FLIGHT DUTY";
     }
   }
 
-  // Generate / Render QR Image on Canvas
-  passContainer.innerHTML = "";
-
-  if (url) {
-    // Priority 1: Check if window.QRCode library exists
-    if (window.QRCode) {
-      try {
-        new window.QRCode(passContainer, {
-          text: url,
-          width: 220,
-          height: 220,
-          colorDark: "#000000",
-          colorLight: "#ffffff",
-          correctLevel: window.QRCode.CorrectLevel.H
-        });
-        return;
-      } catch (e) {
-        console.warn("window.QRCode generation failed, falling back to image:", e);
-      }
-    }
-
-    // Priority 2: Use cached QRservlet / QR image URL if available or fall back to high-res QR API
-    const qrImgSrc = profile.qrImageUrl || `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
-    
-    passContainer.innerHTML = `
-      <div class="p-3 bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-200 dark:border-slate-800 inline-block">
-        <img src="${qrImgSrc}" alt="Licence QR Code" class="w-52 h-52 mx-auto rounded-xl object-contain" />
-      </div>
-    `;
-  } else {
-    passContainer.innerHTML = `
-      <div class="p-6 text-center space-y-2 my-4">
-        <div class="text-xs font-bold text-slate-500 dark:text-slate-400">No stored licence URL</div>
-        <p class="text-[11px] text-slate-400 max-w-xs mx-auto leading-relaxed">Please configure your official CAAM eCLIPSE URL in My Credentials to generate your digital QR pass.</p>
-        <button onclick="openProfileMenu()" class="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95">
-          Set Up Credentials
-        </button>
-      </div>
-    `;
+  // Render QR Code onto Canvas
+  if (canvas && url) {
+    drawQrToCanvas(canvas, url, profile.qrImageUrl);
   }
 }
 
