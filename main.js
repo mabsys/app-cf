@@ -18,11 +18,13 @@ async function extractTextFromPdfFile(file) {
     try {
       if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
         try {
-          const workerUrl = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+          //const workerUrl = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+          const workerUrl = "js/vendor/pdf.worker.min.js";
           const blob = new Blob([`importScripts("${workerUrl}");`], { type: "application/javascript" });
           window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
         } catch (e) {
-          window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+          //window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = "js/vendor/pdf.worker.min.js";
         }
       }
       const arrayBuffer = await file.arrayBuffer();
