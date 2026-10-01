@@ -1,4 +1,5 @@
-// main.js (3009_R083) - Main Application Entry Orchestrator (Offline Base64 Canvas Cache & Local Vendor Workers)
+// main.js (3009_R084) - Main Application Entry Orchestrator (Offline Base64 QR Pass & CDN PDF Worker)
+
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
 import { parseAttestationText, validateAttestationContent } from './js/attestationParser.js';
@@ -17,12 +18,10 @@ async function extractTextFromPdfFile(file) {
     try {
       if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
         try {
-          //const workerUrl = "js/vendor/pdf.worker.min.js";
           const workerUrl = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
           const blob = new Blob([`importScripts("${workerUrl}");`], { type: "application/javascript" });
           window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
         } catch (e) {
-          //window.pdfjsLib.GlobalWorkerOptions.workerSrc = "js/vendor/pdf.worker.min.js";
           window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
         }
       }
@@ -1491,7 +1490,7 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
   }
 
   // Engine 4: Online API Fallback (if network is available)
-  let imgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrUrlText)}`;
+  let imgSrc = "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=" + encodeURIComponent(qrUrlText);
   const img = new Image();
   img.onload = () => {
     ctx.fillStyle = "#FFFFFF";
@@ -1500,8 +1499,8 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
     cacheCanvasDataUrl();
   };
   img.onerror = () => {
-    if (qrImageUrl && imgSrc !== `${PROXY_URL}?url=${encodeURIComponent(qrImageUrl)}`) {
-      img.src = `${PROXY_URL}?url=${encodeURIComponent(qrImageUrl)}`;
+    if (qrImageUrl && imgSrc !== (PROXY_URL + "?url=" + encodeURIComponent(qrImageUrl))) {
+      img.src = PROXY_URL + "?url=" + encodeURIComponent(qrImageUrl);
     } else {
       ctx.fillStyle = "#F8FAFC";
       ctx.fillRect(0, 0, size, size);
