@@ -1,4 +1,4 @@
-// main.js (0210_R091) - Base R082 Orchestrator + Offline Base64 QR Cache & Dual QR Engine
+// main.js (0210_R092) - Base R082 Orchestrator + Offline Base64 QR Cache & R090 UI Safeguards
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -1476,7 +1476,7 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
     }
   }
 
-  // Engine 3: Check for cached Base64 Data URL stored in localStorage from previous session
+  // Engine 3 (100% Airplane Mode): Check for cached Base64 Data URL stored in localStorage from previous session
   const profile = (typeof getProfileData === "function") ? getProfileData() : {};
   if (profile && profile.cachedQrDataUrl) {
     const cachedImg = new Image();
@@ -1516,6 +1516,8 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
   img.src = imgSrc;
 }
 
+let initialMyQrPassTemplateHTML = "";
+
 function renderMyQrPass() {
   const tabQrPassBtn = document.getElementById("tab-qrpass-btn");
   if (tabQrPassBtn) {
@@ -1528,28 +1530,25 @@ function renderMyQrPass() {
   const hasUrl = profile && profile.url && profile.url.trim() !== "";
   const tabContainer = document.getElementById("my-qr-pass-tab");
 
+  // Tab 2 Unconfigured Empty-State Card
   if (tabContainer) {
     if (!initialMyQrPassTemplateHTML && tabContainer.querySelector("#pass-qr-canvas")) {
       initialMyQrPassTemplateHTML = tabContainer.innerHTML;
     }
 
-    if (!hasUrl) {
+    if (!hasUrl && !profile.cachedQrDataUrl && !profile.cachedCaamResults) {
       tabContainer.innerHTML = `
-        <div class="text-center py-10 px-4">
-          <div class="w-16 h-16 bg-blue-50 dark:bg-blue-950/60 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600 dark:text-blue-400">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m0 14v1m8-8h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
+        <div class="flex flex-col items-center justify-center p-6 text-center bg-slate-800/80 rounded-2xl border border-slate-700/80 shadow-lg my-4">
+          <div class="w-14 h-14 mb-3 rounded-full bg-slate-700/60 flex items-center justify-center text-slate-400">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 3l18 18"></path></svg>
           </div>
-          <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1">No Crew Credentials Configured</h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto mb-6">Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to view your digital QR pass.</p>
-          <button onclick="if(typeof openMenu==='function') openMenu(); if(typeof openProfileMenu==='function') openProfileMenu();" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-md active:scale-95 cursor-pointer">
-            Configure Licence Source
-          </button>
+          <h3 class="text-base font-bold text-white mb-1">No Digital QR Pass Configured</h3>
+          <p class="text-xs text-slate-400 mb-4 max-w-xs">Scan or enter your CAAM eCLIPSE licence URL to generate your personal digital flight pass.</p>
+          <button onclick="switchScanHubTab('manual')" class="px-4 py-2 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-md transition-all active:scale-95">Configure Licence URL</button>
         </div>
       `;
       return;
-    } else if (initialMyQrPassTemplateHTML && !tabContainer.querySelector("#pass-qr-canvas")) {
+    } else if (initialMyQrPassTemplateHTML) {
       tabContainer.innerHTML = initialMyQrPassTemplateHTML;
     }
   }
@@ -1561,20 +1560,16 @@ function renderMyQrPass() {
   const freshnessElem = document.getElementById("pass-freshness-tag") || document.getElementById("pass-timestamp");
   const verifyBtn = document.getElementById("verify-my-licence-btn");
 
+  // Redundant Self-Verify Button Hiding
   if (verifyBtn) {
     verifyBtn.classList.add("hidden");
-  }
-
-  // Remove flight eligibility badge under QR image as requested
-  if (badgeElem) {
-    badgeElem.classList.add("hidden");
-    badgeElem.style.display = "none";
   }
 
   const url = (profile.url || "").trim();
   const caam = profile.cachedCaamResults || null;
   const mab = profile.cachedMabResults || null;
 
+  // Determine pilot name from cached CAAM or MAB or stored profile
   let displayName = "Unconfigured Profile";
   if (caam && caam.pilotDetails && caam.pilotDetails.name && caam.pilotDetails.name !== "-") {
     displayName = caam.pilotDetails.name;
@@ -1582,23 +1577,47 @@ function renderMyQrPass() {
     displayName = mab.pilotName;
   }
 
+  // Determine licence type & number
   let licenceType = (caam && caam.pilotDetails && caam.pilotDetails.licenseType) ? caam.pilotDetails.licenseType : "ATPL(A)";
   let licenceNo = (caam && caam.pilotDetails && caam.pilotDetails.licenseNo && caam.pilotDetails.licenseNo !== "-") 
     ? caam.pilotDetails.licenseNo 
     : ((mab && mab.lineCheck && mab.lineCheck.licenseNo) ? mab.lineCheck.licenseNo : "-");
 
+  // Determine scan timestamp
   let scanTimeStr = (caam && caam.scanTime) ? caam.scanTime : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
   if (nameElem) nameElem.innerText = displayName;
   if (licenceElem) licenceElem.innerText = `${licenceType} • ${licenceNo}`;
   if (freshnessElem) freshnessElem.innerText = scanTimeStr;
 
+  // Eligibility Badge Hiding: Automatically hides badge when no licence URL or profile data exists
+  if (badgeElem) {
+    if (!hasUrl && !caam && !mab) {
+      badgeElem.classList.add("hidden");
+    } else {
+      badgeElem.classList.remove("hidden");
+      const isCaamExpired = caam && caam.overallStatus === "EXPIRED";
+      const isMabVoid = mab && mab.isVoid;
+      const isCaution = caam && caam.overallStatus === "EXPIRING_SOON";
+
+      if (isCaamExpired || isMabVoid) {
+        badgeElem.className = "px-4 py-1.5 rounded-full text-xs font-black uppercase bg-rose-600 text-white shadow-md inline-block";
+        badgeElem.innerText = "LAPSED / INELIGIBLE";
+      } else if (isCaution) {
+        badgeElem.className = "px-4 py-1.5 rounded-full text-xs font-black uppercase bg-amber-500 text-white shadow-md inline-block";
+        badgeElem.innerText = "EXPIRING SOON";
+      } else {
+        badgeElem.className = "px-4 py-1.5 rounded-full text-xs font-black uppercase bg-emerald-600 text-white shadow-md inline-block";
+        badgeElem.innerText = "ELIGIBLE FOR FLIGHT DUTY";
+      }
+    }
+  }
+
+  // Draw QR Code onto Canvas
   if (canvas) {
     drawQrToCanvas(canvas, url, profile.qrImageUrl || (caam ? caam.qrImageUrl : ""));
   }
 }
-
-window.renderMyQrPass = renderMyQrPass;
 
 function setupTab3ManualLayout() {
   try {
