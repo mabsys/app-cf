@@ -1,5 +1,4 @@
-// main.js (0210_R092) - Base R082 Orchestrator + Offline Base64 QR Cache & R090 UI Safeguards
-
+// main.js (0210_R093) - Base R082 Orchestrator + Offline Base64 QR Cache & CAAM-Style Tab 2 Empty State
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
 import { parseAttestationText, validateAttestationContent } from './js/attestationParser.js';
@@ -1538,13 +1537,17 @@ function renderMyQrPass() {
 
     if (!hasUrl && !profile.cachedQrDataUrl && !profile.cachedCaamResults) {
       tabContainer.innerHTML = `
-        <div class="flex flex-col items-center justify-center p-6 text-center bg-slate-800/80 rounded-2xl border border-slate-700/80 shadow-lg my-4">
-          <div class="w-14 h-14 mb-3 rounded-full bg-slate-700/60 flex items-center justify-center text-slate-400">
+        <div class="py-12 px-4 text-center flex flex-col items-center justify-center bg-slate-800/80 rounded-2xl border border-slate-700/80 shadow-lg my-4">
+          <div class="w-16 h-16 bg-slate-700/60 rounded-full flex items-center justify-center text-slate-400 mb-4 shadow-inner">
             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 3l18 18"></path></svg>
           </div>
           <h3 class="text-base font-bold text-white mb-1">No Digital QR Pass Configured</h3>
-          <p class="text-xs text-slate-400 mb-4 max-w-xs">Scan or enter your CAAM eCLIPSE licence URL to generate your personal digital flight pass.</p>
-          <button onclick="switchScanHubTab('manual')" class="px-4 py-2 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-md transition-all active:scale-95">Configure Licence URL</button>
+          <p class="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed mb-4">
+            Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to generate your personal digital flight pass.
+          </p>
+          <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+            Configure Licence Source
+          </button>
         </div>
       `;
       return;
@@ -1563,6 +1566,12 @@ function renderMyQrPass() {
   // Redundant Self-Verify Button Hiding
   if (verifyBtn) {
     verifyBtn.classList.add("hidden");
+  }
+
+  // Remove flight eligibility badge under QR image as requested
+  if (badgeElem) {
+    badgeElem.classList.add("hidden");
+    badgeElem.style.display = "none";
   }
 
   const url = (profile.url || "").trim();
@@ -1590,28 +1599,7 @@ function renderMyQrPass() {
   if (licenceElem) licenceElem.innerText = `${licenceType} • ${licenceNo}`;
   if (freshnessElem) freshnessElem.innerText = scanTimeStr;
 
-  // Eligibility Badge Hiding: Automatically hides badge when no licence URL or profile data exists
-  if (badgeElem) {
-    if (!hasUrl && !caam && !mab) {
-      badgeElem.classList.add("hidden");
-    } else {
-      badgeElem.classList.remove("hidden");
-      const isCaamExpired = caam && caam.overallStatus === "EXPIRED";
-      const isMabVoid = mab && mab.isVoid;
-      const isCaution = caam && caam.overallStatus === "EXPIRING_SOON";
 
-      if (isCaamExpired || isMabVoid) {
-        badgeElem.className = "px-4 py-1.5 rounded-full text-xs font-black uppercase bg-rose-600 text-white shadow-md inline-block";
-        badgeElem.innerText = "LAPSED / INELIGIBLE";
-      } else if (isCaution) {
-        badgeElem.className = "px-4 py-1.5 rounded-full text-xs font-black uppercase bg-amber-500 text-white shadow-md inline-block";
-        badgeElem.innerText = "EXPIRING SOON";
-      } else {
-        badgeElem.className = "px-4 py-1.5 rounded-full text-xs font-black uppercase bg-emerald-600 text-white shadow-md inline-block";
-        badgeElem.innerText = "ELIGIBLE FOR FLIGHT DUTY";
-      }
-    }
-  }
 
   // Draw QR Code onto Canvas
   if (canvas) {
