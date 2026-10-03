@@ -12,7 +12,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#172554">
 <title>CertiFly™</title>
-
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="css/style.css">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -35,7 +34,6 @@ if ('serviceWorker' in navigator) {
 <script src="js/vendor/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
-
 <body class="bg-slate-50 dark:bg-slate-950 min-h-screen font-sans text-slate-800 dark:text-slate-200 flex flex-col justify-between">
 
 <!-- Floating Top Overlay Alert -->
@@ -67,7 +65,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- SCANNER VIEW (PILOT SCAN HUB) -->
 <div id="scanner-view" class="app-view hidden flex flex-col gap-4">
-  <!-- 3-Pill Segmented Switcher Header (Matching Dashboard View Style) -->
+  <!-- 3-Pill Segmented Switcher Header -->
   <div class="bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl grid grid-cols-3 gap-1 text-center shadow-xs">
     <button id="tab-camera-btn" type="button" class="py-2 px-1 rounded-xl text-[11px] font-extrabold transition-all bg-blue-600 text-white shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
       <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -113,7 +111,7 @@ if ('serviceWorker' in navigator) {
 
     <div id="error-message" class="text-xs text-red-600 bg-red-50 dark:bg-red-950/40 p-3.5 rounded-xl font-semibold text-center empty:hidden border border-red-100 dark:border-red-900/50"></div>
 
-    <!-- Camera Toolbar Controls (2-Column: Switch Lens + Scan Photo) -->
+    <!-- Camera Toolbar Controls -->
     <div class="grid grid-cols-2 gap-3">
       <button id="camera-cycle-btn" type="button" class="bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold py-3 px-3 rounded-2xl text-xs transition duration-150 flex items-center justify-center gap-2 border border-slate-200/80 dark:border-slate-800 shadow-sm cursor-pointer">
         <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -128,7 +126,6 @@ if ('serviceWorker' in navigator) {
         </svg>
         <span>Scan Photo</span>
       </button>
-
       <input type="file" id="qr-file-input" accept="image/*" class="hidden" />
     </div>
 
@@ -159,7 +156,6 @@ if ('serviceWorker' in navigator) {
         <span id="pass-freshness-tag" class="text-blue-600 dark:text-blue-400">Cached</span>
       </div>
     </div>
-
     <button id="verify-my-licence-btn" type="button" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3.5 px-4 rounded-2xl transition duration-150 flex items-center justify-center gap-2 shadow-md cursor-pointer text-xs uppercase tracking-wider">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -182,48 +178,50 @@ if ('serviceWorker' in navigator) {
         Verify Manual URL
       </button>
     </div>
+  </div>
+</div>
 
-    <!-- TARGETED UPDATE 1: Recent Scans / Verified Crew Cards -> Compact History Directory -->
-    <div id="history-directory" class="bg-white dark:bg-slate-900 shadow-lg rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
-      <!-- Header with dynamic retention tag and Cache View badge -->
-      <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
-        <div class="flex items-center gap-2">
-          <h3 class="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">History</h3>
-          <span id="history-retention-tag" class="text-[10px] font-bold text-slate-400 dark:text-slate-500">(recent 10 checks)</span>
-        </div>
-        <span id="history-cache-badge" class="hidden text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-          Cache View
-        </span>
+<!-- STANDALONE HISTORY VIEW (#history-view) -->
+<div id="history-view" class="app-view hidden flex flex-col gap-4">
+  <div id="history-directory" class="bg-white dark:bg-slate-900 shadow-lg rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+    <!-- Header with dynamic retention tag and Cache View badge -->
+    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+      <div class="flex items-center gap-2">
+        <h3 class="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">History</h3>
+        <span id="history-retention-tag" class="text-[10px] font-bold text-slate-400 dark:text-slate-500">(recent 10 checks)</span>
       </div>
+      <span id="history-cache-badge" class="hidden text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+        Cache View
+      </span>
+    </div>
 
-      <!-- Full-Width Search Bar -->
-      <div class="relative flex items-center">
-        <input type="text" id="history-search-input" placeholder="Search Pilot Name, CAAM #, Rating..." class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs font-medium">
-        <svg class="w-4 h-4 text-slate-400 absolute left-2.5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-        </svg>
-      </div>
+    <!-- Full-Width Search Bar -->
+    <div class="relative flex items-center">
+      <input type="text" id="history-search-input" placeholder="Search Pilot Name, CAAM #, Rating..." class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs font-medium">
+      <svg class="w-4 h-4 text-slate-400 absolute left-2.5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+      </svg>
+    </div>
 
-      <!-- Combined Audit & Filter Pills -->
-      <div class="grid grid-cols-4 gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-center text-[10px] font-bold">
-        <button id="filter-all-btn" type="button" class="py-1.5 px-1 rounded-lg bg-blue-600 text-white shadow-xs transition-all">
-          All (<span id="count-all">0</span>)
-        </button>
-        <button id="filter-valid-btn" type="button" class="py-1.5 px-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all">
-          Valid (<span id="count-valid">0</span>)
-        </button>
-        <button id="filter-expiring-btn" type="button" class="py-1.5 px-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all">
-          Expiring (<span id="count-expiring">0</span>)
-        </button>
-        <button id="filter-expired-btn" type="button" class="py-1.5 px-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all">
-          Expired (<span id="count-expired">0</span>)
-        </button>
-      </div>
+    <!-- Combined Audit & Filter Pills -->
+    <div class="grid grid-cols-4 gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-center text-[10px] font-bold">
+      <button id="filter-all-btn" type="button" class="py-1.5 px-1 rounded-lg bg-blue-600 text-white shadow-xs transition-all">
+        All (<span id="count-all">0</span>)
+      </button>
+      <button id="filter-valid-btn" type="button" class="py-1.5 px-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all">
+        Valid (<span id="count-valid">0</span>)
+      </button>
+      <button id="filter-expiring-btn" type="button" class="py-1.5 px-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all">
+        Expiring (<span id="count-expiring">0</span>)
+      </button>
+      <button id="filter-expired-btn" type="button" class="py-1.5 px-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all">
+        Expired (<span id="count-expired">0</span>)
+      </button>
+    </div>
 
-      <!-- Compact High-Density History List -->
-      <div id="recent-pilots-list" class="flex flex-col divide-y divide-slate-100 dark:divide-slate-800">
-        <div class="text-[11px] text-slate-400 italic py-3 text-center">No recent verified crew yet.</div>
-      </div>
+    <!-- Compact High-Density History List -->
+    <div id="recent-pilots-list" class="flex flex-col divide-y divide-slate-100 dark:divide-slate-800">
+      <div class="text-[11px] text-slate-400 italic py-3 text-center">No recent verified crew yet.</div>
     </div>
   </div>
 </div>
@@ -237,7 +235,7 @@ if ('serviceWorker' in navigator) {
   <p id="loading-text" class="text-xs font-bold tracking-wide text-slate-700 dark:text-slate-300 uppercase">Fetching pilot credentials...</p>
 </div>
 
-<!-- DASHBOARD VIEW (Unified Personal Summary Dashboard + Dual Tabs) -->
+<!-- DASHBOARD VIEW -->
 <div id="dashboard-view" class="app-view hidden flex flex-col gap-4">
   <!-- 1. MANDATORY OPERATIONAL DISCLAIMER BANNER -->
   <div class="bg-amber-500/10 border-l-4 border-amber-500 p-3.5 rounded-r-2xl shadow-xs text-amber-950 dark:text-amber-200">
@@ -339,7 +337,6 @@ if ('serviceWorker' in navigator) {
           </svg>
           Crew Profile
         </span>
-        
       </div>
 
       <div class="flex flex-col gap-2.5">
@@ -448,7 +445,6 @@ if ('serviceWorker' in navigator) {
             LINE CHECK
           </span>
         </div>
-
         <div class="flex items-center justify-between gap-4 pt-1">
           <div class="shrink-0 flex items-center justify-center">
             <div class="px-3 py-3 rounded-xl dark:bg-blue-950/70 uppercase shadow-xs flex flex-col items-center leading-none min-w-[70px] border border-slate-300 dark:border-blue-900">
@@ -489,7 +485,6 @@ if ('serviceWorker' in navigator) {
             LVO AUTOLAND
           </span>
         </div>
-
         <div class="flex items-center justify-between gap-4 pt-1">
           <div class="shrink-0 flex items-center justify-center">
             <div class="px-3 py-2 rounded-xl dark:bg-blue-950/70 uppercase shadow-xs flex flex-col items-center leading-none min-w-[70px] border border-slate-300 dark:border-blue-900">
@@ -580,6 +575,7 @@ if ('serviceWorker' in navigator) {
         Crew Profile
       </span>
     </div>
+
     <div class="flex flex-col gap-2.5">
       <div>
         <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block">Full Name</span>
@@ -642,14 +638,15 @@ if ('serviceWorker' in navigator) {
       </button>
     </div>
   </div>
+</div>
 
 </main>
+
 <!-- Footer -->
 <footer class="text-center py-4 text-[9px] text-slate-500 dark:text-slate-400 mt-auto uppercase tracking-widest font-semibold">
   © 2026 CertiFly • v2.0 (beta)
 </footer>
 
 <script type="module" src="main.js"></script>
-
 </body>
 </html>
