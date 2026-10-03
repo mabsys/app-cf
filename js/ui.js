@@ -173,17 +173,21 @@ export function updateActiveDockState(activeViewId) {
     if (vId === 'scanner-view') {
       if (isSelected) {
         // Active Scan State: Solid elevated blue pill
-        btn.className = "dock-item-btn py-2 px-3 bg-blue-600 text-white font-extrabold rounded-2xl shadow-md transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
+        //btn.className = "dock-item-btn py-2 px-3 bg-blue-600 text-white font-extrabold rounded-2xl shadow-md transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
+        btn.className = "dock-item-btn w-full py-2 px-1.5 bg-blue-600 text-white font-extrabold rounded-2xl shadow-md transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
       } else {
         // Inactive Scan State: Vibrant blue accent label/icon WITHOUT heavy solid background fill
-        btn.className = "dock-item-btn py-2 px-3 text-blue-600 dark:text-blue-400 font-extrabold hover:bg-blue-50/80 dark:hover:bg-blue-950/40 rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
+        //btn.className = "dock-item-btn py-2 px-3 text-blue-600 dark:text-blue-400 font-extrabold hover:bg-blue-50/80 dark:hover:bg-blue-950/40 rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
+        btn.className = "dock-item-btn w-full py-2 px-1.5 text-blue-600 dark:text-blue-400 font-extrabold hover:bg-blue-50/80 dark:hover:bg-blue-950/40 rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
       }
     } else {
       // Secondary Tabs: Dynamic active highlight pill vs subtle inactive state
       if (isSelected) {
-        btn.className = "dock-item-btn py-2 px-3 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-extrabold rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
+        //btn.className = "dock-item-btn py-2 px-3 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-extrabold rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
+        btn.className = "dock-item-btn w-full py-2 px-1.5 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-extrabold rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
       } else {
-        btn.className = "dock-item-btn py-2 px-3 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 font-bold rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
+        //btn.className = "dock-item-btn py-2 px-3 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 font-bold rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
+        btn.className = "dock-item-btn w-full py-2 px-1.5 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 font-bold rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
       }
     }
   });
