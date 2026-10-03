@@ -171,8 +171,13 @@ export function updateActiveDockState(activeViewId) {
     const isSelected = (activeViewId === vId);
 
     if (vId === 'scanner-view') {
-      // Mainstay Hero CTA: Stays prominent solid blue camera button
-      btn.className = "dock-item-btn p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-lg transition-all active:scale-95 flex flex-col items-center justify-center gap-0.5 cursor-pointer";
+      if (isSelected) {
+        // Active Scan State: Solid elevated blue pill
+        btn.className = "dock-item-btn py-2 px-3 bg-blue-600 text-white font-extrabold rounded-2xl shadow-md transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
+      } else {
+        // Inactive Scan State: Vibrant blue accent label/icon WITHOUT heavy solid background fill
+        btn.className = "dock-item-btn py-2 px-3 text-blue-600 dark:text-blue-400 font-extrabold hover:bg-blue-50/80 dark:hover:bg-blue-950/40 rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
+      }
     } else {
       // Secondary Tabs: Dynamic active highlight pill vs subtle inactive state
       if (isSelected) {
