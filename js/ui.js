@@ -1,4 +1,4 @@
-// js/ui.js (0210_R098) - View State, Navigation & Network Controller
+// js/ui.js (0210_R098) - View State, Navigation, Dock Active Highlight & Network Controller
 
 import { stopScanner, switchScanHubTab } from './scanner.js';
 import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData } from './storage.js';
@@ -8,8 +8,8 @@ import { menuHTML } from './components/menu.js';
 
 const textSizeIcons = {
   std: `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 18H7.5m9-6h2.25m-2.25 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 12h9.75" /></svg>`,
-  lg: `<svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 10-3 0M3.75 18H7.5m9-6h2.25m-2.25 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 18H7.5m9-6h2.25m-2.25 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 12h9.75" /></svg>`,
-  xl: `<svg class="w-4 h-4 text-blue-800" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 18H7.5m9-6h2.25m-2.25 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 18H7.5m9-6h2.25m-2.25 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 12h9.75" /></svg>`
+  lg: `<svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 18H7.5m9-6h2.25m-2.25 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 12h9.75" /></svg>`,
+  xl: `<svg class="w-4 h-4 text-blue-800" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 18H7.5m9-6h2.25m-2.25 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 12h9.75" /></svg>`
 };
 
 let currentTextSize = localStorage.getItem("app_text_size") || "std";
@@ -156,6 +156,32 @@ export function updateHistoryLimitPills(limit = getHistoryLimit()) {
     h20.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 20 ? activeClass : inactiveClass}`;
     h30.className = `history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all ${limit === 30 ? activeClass : inactiveClass}`;
   }
+}
+
+export function updateActiveDockState(activeViewId) {
+  const navItems = {
+    'dashboard-view': document.getElementById('dock-dashboard-btn'),
+    'scanner-view': document.getElementById('dock-scan-btn'),
+    'history-view': document.getElementById('dock-history-btn'),
+    'menu-view': document.getElementById('dock-menu-btn')
+  };
+
+  Object.entries(navItems).forEach(([vId, btn]) => {
+    if (!btn) return;
+    const isSelected = (activeViewId === vId);
+
+    if (vId === 'scanner-view') {
+      // Mainstay Hero CTA: Stays prominent solid blue camera button
+      btn.className = "dock-item-btn p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-lg transition-all active:scale-95 flex flex-col items-center justify-center gap-0.5 cursor-pointer";
+    } else {
+      // Secondary Tabs: Dynamic active highlight pill vs subtle inactive state
+      if (isSelected) {
+        btn.className = "dock-item-btn py-2 px-3 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-extrabold rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
+      } else {
+        btn.className = "dock-item-btn py-2 px-3 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 font-bold rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
+      }
+    }
+  });
 }
 
 export function openMenu() {
@@ -499,6 +525,7 @@ export function showView(viewId, defaultTab = null) {
     switchResultTab(savedTab);
   }
 
+  updateActiveDockState(viewId);
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
