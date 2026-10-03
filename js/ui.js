@@ -1,7 +1,7 @@
-// js/ui.js (0210_R098) - View State, Navigation, and Network Controller
+// js/ui.js (2809_R059) - View State & Navigation Controller
 
-import { stopScanner } from './scanner.js';
-import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData } from './storage.js';
+import { stopScanner, switchScanHubTab } from './scanner.js';
+import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit } from './storage.js';
 import { topbarHTML } from './components/topbar.js';
 import { dockHTML } from './components/dock.js';
 import { menuHTML } from './components/menu.js';
@@ -37,6 +37,7 @@ export function applyTextSize(size = currentTextSize) {
   }
 
   document.documentElement.style.fontSize = "100%";
+
   let styleEl = document.getElementById("certifly-text-scale-style");
   if (!styleEl) {
     styleEl = document.createElement("style");
@@ -52,10 +53,10 @@ export function applyTextSize(size = currentTextSize) {
   const mult = size === "lg" ? 1.15 : 1.30;
   styleEl.textContent = `
     main { font-size: ${(mult * 100).toFixed(1)}% !important; }
-    main .text-\[9px\] { font-size: ${(9 * mult).toFixed(1)}px !important; }
-    main .text-\[10px\] { font-size: ${(10 * mult).toFixed(1)}px !important; }
-    main .text-\[11px\] { font-size: ${(11 * mult).toFixed(1)}px !important; }
-    main .text-\[13px\] { font-size: ${(13 * mult).toFixed(1)}px !important; }
+    main .text-\\[9px\\] { font-size: ${(9 * mult).toFixed(1)}px !important; }
+    main .text-\\[10px\\] { font-size: ${(10 * mult).toFixed(1)}px !important; }
+    main .text-\\[11px\\] { font-size: ${(11 * mult).toFixed(1)}px !important; }
+    main .text-\\[13px\\] { font-size: ${(13 * mult).toFixed(1)}px !important; }
     main .text-xxs { font-size: ${(0.625 * mult).toFixed(4)}rem !important; }
     main .text-xs { font-size: ${(0.75 * mult).toFixed(4)}rem !important; }
     main .text-sm { font-size: ${(0.875 * mult).toFixed(4)}rem !important; }
@@ -194,7 +195,7 @@ export function closeMenu() {
 
   if (!menu || !overlay) return;
 
-  try { stopScanner(); } catch(e) {}
+  stopScanner();
 
   overlay.classList.remove("opacity-100");
   overlay.classList.add("opacity-0");
@@ -273,6 +274,7 @@ function initGrabberGesture() {
     } else {
       menu.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
       menu.style.transform = 'translateY(0px)';
+
       setTimeout(() => {
         if (!isDragging) {
           menu.style.transition = '';
@@ -289,56 +291,21 @@ function initGrabberGesture() {
   window.addEventListener("mouseup", handleTouchEnd);
 }
 
-export function initScannerTabs() {
-  const cameraBtn = document.getElementById("tab-camera-btn");
-  const qrPassBtn = document.getElementById("tab-qrpass-btn");
-  const manualBtn = document.getElementById("tab-manual-btn");
-
-  const cameraTab = document.getElementById("camera-scan-tab");
-  const qrPassTab = document.getElementById("my-qr-pass-tab");
-  const manualTab = document.getElementById("manual-entry-tab");
-
-  const activeBtnClass = "py-2 px-1 rounded-xl text-[11px] font-extrabold transition-all bg-blue-600 text-white shadow-xs flex items-center justify-center gap-1.5 cursor-pointer";
-  const inactiveBtnClass = "py-2 px-1 rounded-xl text-[11px] font-extrabold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 flex items-center justify-center gap-1.5 cursor-pointer";
-
-  function switchScanTab(activeTab) {
-    if (cameraBtn) cameraBtn.className = (activeTab === "camera") ? activeBtnClass : inactiveBtnClass;
-    if (qrPassBtn) qrPassBtn.className = (activeTab === "qrpass") ? activeBtnClass : inactiveBtnClass;
-    if (manualBtn) manualBtn.className = (activeTab === "manual") ? activeBtnClass : inactiveBtnClass;
-
-    if (cameraTab) cameraTab.classList.toggle("hidden", activeTab !== "camera");
-    if (qrPassTab) qrPassTab.classList.toggle("hidden", activeTab !== "qrpass");
-    if (manualTab) manualTab.classList.toggle("hidden", activeTab !== "manual");
-
-    if (activeTab === "qrpass") {
-      if (window.renderMyQrPass) window.renderMyQrPass();
-    } else if (activeTab === "manual" || activeTab === "camera") {
-      try { stopScanner(); } catch(e) {}
-    }
-  }
-
-  cameraBtn?.addEventListener("click", () => switchScanTab("camera"));
-  qrPassBtn?.addEventListener("click", () => switchScanTab("qrpass"));
-  manualBtn?.addEventListener("click", () => switchScanTab("manual"));
-}
-
 export function initNavigationBars() {
   if (!document.getElementById("persistent-topbar")) {
     document.body.insertAdjacentHTML('afterbegin', topbarHTML);
   }
-
   if (!document.getElementById("persistent-dock")) {
     document.body.insertAdjacentHTML('beforeend', dockHTML);
   }
-
   if (!document.getElementById("bottom-sheet-menu")) {
     document.body.insertAdjacentHTML('beforeend', menuHTML);
   }
 
   const topbar = document.getElementById("persistent-topbar");
   const dock = document.getElementById("persistent-dock");
-  const topbarHeight = 48;
 
+  const topbarHeight = 48;
   if (topbar) {
     topbar.style.transform = "translateY(-100%)";
     topbar.style.opacity = "0";
@@ -347,6 +314,7 @@ export function initNavigationBars() {
   const dockMaxTravel = 80;
   let currentTranslateY = 0;
   const getMaxScrollY = () => Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+
   let lastClampedScrollY = Math.max(0, Math.min(window.scrollY, getMaxScrollY()));
 
   window.addEventListener("scroll", () => {
@@ -381,26 +349,20 @@ export function initNavigationBars() {
 
   document.getElementById("topbar-text-btn")?.addEventListener("click", cycleTextSize);
   document.getElementById("topbar-theme-btn")?.addEventListener("click", cycleThemeMode);
+
   document.getElementById("dock-menu-btn")?.addEventListener("click", openMenu);
   document.getElementById("dock-scan-btn")?.addEventListener("click", showScannerView);
   document.getElementById("dock-dashboard-btn")?.addEventListener("click", () => {
+    stopScanner();
+    switchResultTab("overview");
     if (window.renderDashboardView) {
       window.renderDashboardView();
-    } else {
-      showView("dashboard-view");
     }
+    showView("dashboard-view", "overview");
   });
-
   document.getElementById("dock-history-btn")?.addEventListener("click", () => {
-    showScannerView();
-    const historyDir = document.getElementById("history-directory");
-    if (historyDir) {
-      historyDir.scrollIntoView({ behavior: "smooth" });
-    }
-  });
-
-  document.getElementById("btn-result-back")?.addEventListener("click", () => {
-    showScannerView();
+    stopScanner();
+    showView("history-view");
   });
 
   document.getElementById("bottom-sheet-overlay")?.addEventListener("click", closeMenu);
@@ -415,6 +377,7 @@ export function initNavigationBars() {
       if (targetPane && paneMain) {
         paneMain.classList.add("opacity-0", "pointer-events-none");
         paneMain.classList.remove("opacity-100", "pointer-events-auto");
+
         targetPane.classList.remove("hidden", "translate-x-full", "opacity-0", "pointer-events-none");
         targetPane.classList.add("translate-x-0", "opacity-100", "pointer-events-auto");
       }
@@ -426,11 +389,12 @@ export function initNavigationBars() {
       const paneMain = document.getElementById("pane-main");
 
       if (subPane && paneMain) {
-        try { stopScanner(); } catch(e) {}
+        stopScanner();
         subPane.classList.remove("translate-x-0", "opacity-100", "pointer-events-auto");
         subPane.classList.add("translate-x-full", "opacity-0", "pointer-events-none");
         paneMain.classList.remove("opacity-0", "pointer-events-none");
         paneMain.classList.add("opacity-100", "pointer-events-auto");
+
         setTimeout(() => {
           subPane.classList.add("hidden");
         }, 300);
@@ -439,7 +403,6 @@ export function initNavigationBars() {
   });
 
   initGrabberGesture();
-  initScannerTabs();
   applyTextSize(currentTextSize);
   applyThemeMode(currentThemeMode);
   updateThresholdPills();
@@ -455,24 +418,12 @@ export function updateNetworkStatus() {
   const manualInput = document.getElementById("manual-url-input");
   const openOriginalBtn = document.getElementById("open-original-btn");
   const checkerBadge = document.getElementById("checker-status-badge");
-  const cacheBadge = document.getElementById("history-cache-badge");
 
   if (overlay) {
-    if (isOnline) {
-      overlay.classList.add("hidden");
-      overlay.classList.remove("flex");
-    } else {
+    if (isOnline) overlay.classList.add("hidden");
+    else {
       overlay.classList.remove("hidden");
-      overlay.classList.add("flex");
-      try { stopScanner(); } catch(e) {}
-    }
-  }
-
-  if (cacheBadge) {
-    if (isOnline) {
-      cacheBadge.classList.add("hidden");
-    } else {
-      cacheBadge.classList.remove("hidden");
+      stopScanner();
     }
   }
 
@@ -507,7 +458,11 @@ export function updateNetworkStatus() {
   }
 }
 
-export function showView(viewId) {
+export function showView(viewId, defaultTab = null) {
+  if (viewId !== "scanner-view") {
+    stopScanner();
+  }
+
   document.querySelectorAll(".app-view").forEach(view => {
     view.classList.add("hidden");
   });
@@ -515,27 +470,20 @@ export function showView(viewId) {
   const targetView = document.getElementById(viewId);
   if (targetView) targetView.classList.remove("hidden");
 
-  if (viewId === "result-view" || viewId === "dashboard-view") {
+  if (viewId === "dashboard-view") {
     let savedTab = localStorage.getItem("certifly_active_tab") || "overview";
-    if (viewId === "dashboard-view" && typeof hasProfileData === "function" && !hasProfileData()) {
+    if (typeof hasProfileData === "function" && !hasProfileData()) {
       savedTab = "overview";
     }
     switchResultTab(savedTab);
   }
 
-  const historyDir = document.getElementById("history-directory");
-  if (historyDir) {
-    if (viewId === "scanner-view") {
-      historyDir.classList.remove("hidden");
-    }
-  }
-
-  const historyDetails = document.getElementById("history-details");
-  if (historyDetails) historyDetails.removeAttribute("open");
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 export function showScannerView() {
-  try { stopScanner(); } catch(e) {}
+  stopScanner();
+
   const errorMsg = document.getElementById("error-message");
   if (errorMsg) errorMsg.innerText = "";
 
@@ -547,6 +495,11 @@ export function showScannerView() {
 
   renderHistoryList();
   showView("scanner-view");
+
+  if (typeof switchScanHubTab === "function") {
+    switchScanHubTab("camera");
+  }
+
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -557,7 +510,7 @@ export function showLoading(msg = "Fetching digital licence...") {
 }
 
 export function showError(msg) {
-  try { stopScanner(); } catch(e) {}
+  stopScanner();
 
   const errMsg = document.getElementById("error-message");
   if (errMsg) {
@@ -571,15 +524,13 @@ export function showError(msg) {
   if (manualInput) manualInput.value = "";
 
   showView("scanner-view");
+  // Restart scanner so the video feed is live and never pitch dark
   if (window.startScanner) {
     window.startScanner(window.processLicenseUrl, null);
   }
 }
 
 window.showScannerView = showScannerView;
-window.showView = showView;
-window.showLoading = showLoading;
-window.showError = showError;
 
 export function switchResultTab(tabName = 'overview') {
   const tabs = ['overview', 'caam', 'mab'];
