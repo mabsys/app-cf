@@ -1,15 +1,15 @@
-// js/ui.js (2809_R059) - View State & Navigation Controller
+// js/ui.js (0210_R098) - View State, Navigation & Network Controller
 
 import { stopScanner, switchScanHubTab } from './scanner.js';
-import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit } from './storage.js';
+import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData } from './storage.js';
 import { topbarHTML } from './components/topbar.js';
 import { dockHTML } from './components/dock.js';
 import { menuHTML } from './components/menu.js';
 
 const textSizeIcons = {
   std: `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 18H7.5m9-6h2.25m-2.25 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 12h9.75" /></svg>`,
-  lg: `<svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 18H7.5m9-6h2.25m-2.25 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 12h9.75" /></svg>`,
-  xl: `<svg class="w-4 h-4 text-blue-800" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 18H7.5m9-6h2.25m-2.25 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 12h9.75" /></svg>`
+  lg: `<svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 10-3 0M3.75 18H7.5m9-6h2.25m-2.25 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 18H7.5m9-6h2.25m-2.25 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 12h9.75" /></svg>`,
+  xl: `<svg class="w-4 h-4 text-blue-800" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 18H7.5m9-6h2.25m-2.25 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 18H7.5m9-6h2.25m-2.25 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 12h9.75" /></svg>`
 };
 
 let currentTextSize = localStorage.getItem("app_text_size") || "std";
@@ -53,10 +53,10 @@ export function applyTextSize(size = currentTextSize) {
   const mult = size === "lg" ? 1.15 : 1.30;
   styleEl.textContent = `
     main { font-size: ${(mult * 100).toFixed(1)}% !important; }
-    main .text-\\[9px\\] { font-size: ${(9 * mult).toFixed(1)}px !important; }
-    main .text-\\[10px\\] { font-size: ${(10 * mult).toFixed(1)}px !important; }
-    main .text-\\[11px\\] { font-size: ${(11 * mult).toFixed(1)}px !important; }
-    main .text-\\[13px\\] { font-size: ${(13 * mult).toFixed(1)}px !important; }
+    main .text-\[9px\] { font-size: ${(9 * mult).toFixed(1)}px !important; }
+    main .text-\[10px\] { font-size: ${(10 * mult).toFixed(1)}px !important; }
+    main .text-\[11px\] { font-size: ${(11 * mult).toFixed(1)}px !important; }
+    main .text-\[13px\] { font-size: ${(13 * mult).toFixed(1)}px !important; }
     main .text-xxs { font-size: ${(0.625 * mult).toFixed(4)}rem !important; }
     main .text-xs { font-size: ${(0.75 * mult).toFixed(4)}rem !important; }
     main .text-sm { font-size: ${(0.875 * mult).toFixed(4)}rem !important; }
@@ -360,8 +360,16 @@ export function initNavigationBars() {
     }
     showView("dashboard-view", "overview");
   });
+  
+  // Dock History Button -> Navigates to Standalone #history-view
   document.getElementById("dock-history-btn")?.addEventListener("click", () => {
     stopScanner();
+    renderHistoryList();
+    showView("history-view");
+  });
+
+  // Result View Back Button -> Returns to Standalone #history-view
+  document.getElementById("btn-result-back")?.addEventListener("click", () => {
     showView("history-view");
   });
 
@@ -418,6 +426,7 @@ export function updateNetworkStatus() {
   const manualInput = document.getElementById("manual-url-input");
   const openOriginalBtn = document.getElementById("open-original-btn");
   const checkerBadge = document.getElementById("checker-status-badge");
+  const historyCacheBadge = document.getElementById("history-cache-badge");
 
   if (overlay) {
     if (isOnline) overlay.classList.add("hidden");
@@ -434,6 +443,14 @@ export function updateNetworkStatus() {
     } else {
       checkerBadge.innerText = "Cached View";
       checkerBadge.className = "text-[10px] text-gray-50 bg-gray-500 px-2 py-0.5 rounded-md font-bold uppercase transition-all duration-300 ease-in-out";
+    }
+  }
+
+  if (historyCacheBadge) {
+    if (isOnline) {
+      historyCacheBadge.classList.add("hidden");
+    } else {
+      historyCacheBadge.classList.remove("hidden");
     }
   }
 
@@ -470,6 +487,10 @@ export function showView(viewId, defaultTab = null) {
   const targetView = document.getElementById(viewId);
   if (targetView) targetView.classList.remove("hidden");
 
+  if (viewId === "history-view") {
+    renderHistoryList();
+  }
+
   if (viewId === "dashboard-view") {
     let savedTab = localStorage.getItem("certifly_active_tab") || "overview";
     if (typeof hasProfileData === "function" && !hasProfileData()) {
@@ -493,7 +514,6 @@ export function showScannerView() {
   document.body.classList.remove("bg-green-100", "bg-orange-100", "bg-red-100");
   document.body.classList.add("bg-slate-50");
 
-  renderHistoryList();
   showView("scanner-view");
 
   if (typeof switchScanHubTab === "function") {
@@ -524,7 +544,6 @@ export function showError(msg) {
   if (manualInput) manualInput.value = "";
 
   showView("scanner-view");
-  // Restart scanner so the video feed is live and never pitch dark
   if (window.startScanner) {
     window.startScanner(window.processLicenseUrl, null);
   }
