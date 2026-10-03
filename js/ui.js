@@ -178,7 +178,7 @@ export function updateActiveDockState(activeViewId) {
       } else {
         // Inactive Scan State: Vibrant blue accent label/icon WITHOUT heavy solid background fill
         //btn.className = "dock-item-btn py-2 px-3 text-blue-600 dark:text-blue-400 font-extrabold hover:bg-blue-50/80 dark:hover:bg-blue-950/40 rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
-        btn.className = "dock-item-btn w-full py-2 px-1.5 text-blue-600 dark:text-blue-400 font-extrabold hover:bg-blue-50/80 dark:hover:bg-blue-950/40 rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
+        btn.className = "dock-item-btn w-full py-2 px-1.5 text-blue-600 dark:text-blue-400 font-extrabold hover:text-slate-800 dark:hover:text-slate-200 rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
       }
     } else {
       // Secondary Tabs: Dynamic active highlight pill vs subtle inactive state
