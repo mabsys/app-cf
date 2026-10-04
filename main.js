@@ -156,8 +156,18 @@ function isValidCaamUrl(urlStr) {
     const host = parsed.hostname.toLowerCase();
     const isValidProtocol = parsed.protocol === "http:" || parsed.protocol === "https:";
     const isCaamDomain = host.includes("caam.gov.my") || host.includes("eclipse.caam") || host === "eclipse.caam.gov.my";
-    const hasValidTld = host.includes(".");
-    return isValidProtocol && isCaamDomain && hasValidTld;
+    if (!isValidProtocol || !isCaamDomain) return false;
+
+    // Strict query parameter checks for official CAAM eCLIPSE Digital Licence URLs
+    const personId = parsed.searchParams.get("personid");
+    const key = parsed.searchParams.get("key");
+    const codekey = parsed.searchParams.get("codekey");
+
+    return Boolean(
+      personId && personId.trim().length > 0 &&
+      key && key.trim().length >= 8 &&
+      codekey && codekey.trim().length > 0
+    );
   } catch (e) {
     return false;
   }
@@ -578,10 +588,12 @@ function handleManualUrl() {
   const urlInput = document.getElementById("manual-url-input");
   const urlVal = urlInput ? urlInput.value.trim() : "";
   if (!urlVal || !isValidCaamUrl(urlVal)) {
+    updateManualUrlBadge(urlVal);
     showError("Please enter a valid CAAM eCLIPSE URL");
     return;
   }
   updateManualUrlBadge("");
+  if (typeof stopScanner === 'function') stopScanner();
   processLicenseUrl(urlVal);
 }
 
@@ -1875,8 +1887,10 @@ function setupTab3ManualLayout() {
 
     
     if (urlInput) {
-      urlInput.addEventListener("input", () => updateManualUrlBadge(urlInput.value.trim()));
-      urlInput.addEventListener("change", () => updateManualUrlBadge(urlInput.value.trim()));
+      urlInput.oninput = () => updateManualUrlBadge(urlInput.value.trim());
+      urlInput.onchange = () => updateManualUrlBadge(urlInput.value.trim());
+      urlInput.onkeyup = () => updateManualUrlBadge(urlInput.value.trim());
+      urlInput.onpaste = () => setTimeout(() => updateManualUrlBadge(urlInput.value.trim()), 50);
       updateManualUrlBadge(urlInput.value.trim());
     }
 
@@ -1905,7 +1919,6 @@ function setupTab3ManualLayout() {
         e.preventDefault();
         urlInput.value = "";
         urlInput.focus();
-        if (typeof updateProfileUrlBadge === 'function') updateProfileUrlBadge("");
         updateManualUrlBadge("");
       };
 
