@@ -1,4 +1,5 @@
-// main.js (0210_R093) - Base R082 Orchestrator + Offline Base64 QR Cache & CAAM-Style Tab 2 Empty State
+// js/main.js (0310_R098) - Main Application Controller & Orchestrator
+
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
 import { parseAttestationText, validateAttestationContent } from './js/attestationParser.js';
@@ -159,6 +160,21 @@ function isValidCaamUrl(urlStr) {
     return isValidProtocol && isCaamDomain && hasValidTld;
   } catch (e) {
     return false;
+  }
+}
+
+
+function updateManualUrlBadge(urlStr) {
+  const urlBadge = document.getElementById("manual-url-badge");
+  const urlText = document.getElementById("manual-url-status-text");
+  if (!urlBadge) return;
+
+  const cleanUrl = urlStr ? urlStr.trim() : "";
+  if (isValidCaamUrl(cleanUrl)) {
+    urlBadge.classList.remove("hidden");
+    if (urlText) urlText.innerText = "✓ Valid CAAM Licence URL captured";
+  } else {
+    urlBadge.classList.add("hidden");
   }
 }
 
@@ -544,6 +560,18 @@ function initApp() {
   });
 
   renderHistoryList();
+
+  initHistorySearchAndFilters();
+  customRenderHistoryList();
+
+  const toolsBtn = document.getElementById("dock-tools-btn");
+  if (toolsBtn) {
+    toolsBtn.addEventListener("click", () => {
+      stopScanner();
+      showProfileToast("Tools module coming soon in next release.");
+    });
+  }
+
 }
 
 function handleManualUrl() {
@@ -553,6 +581,7 @@ function handleManualUrl() {
     showError("Please enter a valid CAAM eCLIPSE URL");
     return;
   }
+  updateManualUrlBadge("");
   processLicenseUrl(urlVal);
 }
 
@@ -1257,6 +1286,204 @@ function renderDashboardResults(caamResults, mabResults = null) {
   showView("dashboard-view");
 }
 
+
+let currentHistoryFilter = "ALL";
+
+export function customRenderHistoryList() {
+  const container = document.getElementById("history-list");
+  const countBadge = document.getElementById("history-count-badge");
+  const clockIcon = document.getElementById("history-clock-icon");
+  const searchInput = document.getElementById("history-search-input");
+
+  if (!container) return;
+
+  let scanHistory = getScanHistory() || [];
+
+  const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : "";
+
+  // Apply Search Filter
+  if (searchQuery) {
+    scanHistory = scanHistory.filter(item => {
+      if (!item) return false;
+      const name = (item.name || "").toLowerCase();
+      const licType = (item.licenseType || "").toLowerCase();
+      const licNo = (item.id || "").toLowerCase();
+      return name.includes(searchQuery) || licType.includes(searchQuery) || licNo.includes(searchQuery);
+    });
+  }
+
+  // Apply Status Pill Filter
+  if (currentHistoryFilter && currentHistoryFilter !== "ALL") {
+    scanHistory = scanHistory.filter(item => {
+      if (!item) return false;
+      if (currentHistoryFilter === "VALID") return item.overallStatus === "VALID";
+      if (currentHistoryFilter === "EXPIRING_SOON") return item.overallStatus === "EXPIRING_SOON";
+      if (currentHistoryFilter === "EXPIRED") return item.overallStatus === "EXPIRED";
+      return true;
+    });
+  }
+
+  // Sort Pinned Items to Very Top
+  scanHistory = [...scanHistory].sort((a, b) => {
+    const aPinned = Boolean(a.isPinned || a.pinned);
+    const bPinned = Boolean(b.isPinned || b.pinned);
+    if (aPinned && !bPinned) return -1;
+    if (!aPinned && bPinned) return 1;
+    return 0;
+  });
+
+  if (clockIcon && countBadge) {
+    const totalScans = scanHistory.length;
+    countBadge.innerText = totalScans;
+    if (totalScans > 0) {
+      countBadge.classList.remove("hidden");
+      clockIcon.classList.add("hidden");
+    } else {
+      clockIcon.classList.remove("hidden");
+      countBadge.classList.add("hidden");
+    }
+  }
+
+  if (scanHistory.length === 0) {
+    container.innerHTML = `<div class="text-[10px] text-slate-400 italic py-4 text-center">No matching scans found.</div>`;
+    return;
+  }
+
+  container.innerHTML = scanHistory.map(item => {
+    if (!item) return '';
+    const isPinned = Boolean(item.isPinned || item.pinned);
+    const dotColor = item.overallStatus === "EXPIRED" ? "bg-rose-500" : (item.overallStatus === "EXPIRING_SOON" ? "bg-amber-500" : "bg-emerald-600");
+    const safeId = String(item.id || '').replace(/'/g, "\'");
+    const pinBadge = isPinned ? `<svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0 inline-block align-middle ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>` : '';
+    
+    return `
+      <div onclick="loadHistoricalRecord('${safeId}')" class="py-2 px-2.5 flex items-center justify-between cursor-pointer hover:bg-sky-50 dark:hover:bg-slate-800/60 rounded-xl transition-all border-b border-slate-100 dark:border-slate-800/50 last:border-b-0 ${isPinned ? 'bg-blue-50/40 dark:bg-blue-950/20' : ''}">
+        <div class="flex flex-col text-left">
+          <div class="flex items-center gap-1">
+            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">${item.name || 'Unknown'}</span>
+            ${pinBadge}
+          </div>
+          <span class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-tight mt-0.5">${item.licenseType || ''} ${item.licenseType ? '•' : ''} ${item.timestamp || ''} LT</span>
+        </div>
+        <span class="w-2.5 h-2.5 rounded-full ${dotColor} shrink-0 ml-2 shadow-xs"></span>
+      </div>
+    `;
+  }).join('');
+}
+
+window.renderHistoryList = customRenderHistoryList;
+
+function setupPinCardButton(caamResults) {
+  const resView = document.getElementById("result-view");
+  const pinBtn = (resView ? resView.querySelector("#btn-toggle-pin") : null) || document.getElementById("btn-toggle-pin");
+  if (!pinBtn || !caamResults) return;
+
+  const licNo = (caamResults.pilotDetails && caamResults.pilotDetails.licenseNo) || "";
+  let scanHistory = getScanHistory() || [];
+  const matchIndex = scanHistory.findIndex(item => item && (String(item.id) === String(licNo) || item.url === lastScannedUrl));
+
+  let isPinned = false;
+  if (matchIndex !== -1) {
+    isPinned = Boolean(scanHistory[matchIndex].isPinned || scanHistory[matchIndex].pinned);
+  }
+
+  const updatePinButtonUI = () => {
+    if (isPinned) {
+      pinBtn.className = "py-2 px-3 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 shadow-xs cursor-pointer";
+      pinBtn.innerHTML = `
+        <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+        </svg>
+        <span>Unpin Card</span>
+      `;
+    } else {
+      pinBtn.className = "py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer";
+      pinBtn.innerHTML = `
+        <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+        </svg>
+        <span>Pin Card</span>
+      `;
+    }
+  };
+
+  updatePinButtonUI();
+
+  pinBtn.onclick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    isPinned = !isPinned;
+    if (matchIndex !== -1) {
+      scanHistory[matchIndex].isPinned = isPinned;
+      scanHistory[matchIndex].pinned = isPinned;
+    } else {
+      const record = {
+        id: String(licNo || Date.now()),
+        name: (caamResults.pilotDetails && caamResults.pilotDetails.name) || "External Crew Member",
+        licenseType: (caamResults.pilotDetails && caamResults.pilotDetails.licenseType) || "ATPL(A)",
+        overallStatus: caamResults.overallStatus || "VALID",
+        url: lastScannedUrl || "",
+        resultsData: caamResults,
+        timestamp: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        isPinned: isPinned,
+        pinned: isPinned
+      };
+      scanHistory.unshift(record);
+    }
+
+    try {
+      localStorage.setItem("scan_history", JSON.stringify(scanHistory));
+    } catch (err) {
+      console.error("Failed to update pin state in scan history:", err);
+    }
+
+    updatePinButtonUI();
+    customRenderHistoryList();
+  };
+}
+
+function initHistorySearchAndFilters() {
+  const searchInput = document.getElementById("history-search-input");
+  if (searchInput) {
+    searchInput.addEventListener("input", () => customRenderHistoryList());
+    searchInput.addEventListener("change", () => customRenderHistoryList());
+  }
+
+  const pillAll = document.getElementById("filter-pill-all") || document.getElementById("history-filter-all");
+  const pillValid = document.getElementById("filter-pill-valid") || document.getElementById("history-filter-valid");
+  const pillExpiring = document.getElementById("filter-pill-expiring") || document.getElementById("history-filter-expiring");
+  const pillExpired = document.getElementById("filter-pill-expired") || document.getElementById("history-filter-expired");
+
+  const filterPills = [
+    { el: pillAll, value: "ALL" },
+    { el: pillValid, value: "VALID" },
+    { el: pillExpiring, value: "EXPIRING_SOON" },
+    { el: pillExpired, value: "EXPIRED" }
+  ];
+
+  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
+  const inactiveClass = "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200";
+
+  filterPills.forEach(({ el, value }) => {
+    if (!el) return;
+    el.addEventListener("click", () => {
+      currentHistoryFilter = value;
+      filterPills.forEach(p => {
+        if (p.el) {
+          if (p.value === currentHistoryFilter) {
+            p.el.className = p.el.className.replace(inactiveClass, activeClass);
+            if (!p.el.className.includes(activeClass)) p.el.className += " " + activeClass;
+          } else {
+            p.el.className = p.el.className.replace(activeClass, inactiveClass);
+          }
+        }
+      });
+      customRenderHistoryList();
+    });
+  });
+}
+
 function renderResults(caamResults, mabResults = null) {
   const profile = getProfileData();
   const resView = document.getElementById("result-view");
@@ -1354,6 +1581,7 @@ function renderResults(caamResults, mabResults = null) {
     };
   }
 
+  setupPinCardButton(caamResults);
   showView("result-view");
 }
 
@@ -1645,6 +1873,13 @@ function setupTab3ManualLayout() {
 
     if (!urlInput) return;
 
+    
+    if (urlInput) {
+      urlInput.addEventListener("input", () => updateManualUrlBadge(urlInput.value.trim()));
+      urlInput.addEventListener("change", () => updateManualUrlBadge(urlInput.value.trim()));
+      updateManualUrlBadge(urlInput.value.trim());
+    }
+
     // 2. Format urlInput as clean full-width input
     urlInput.className = "w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-xs";
 
@@ -1671,6 +1906,7 @@ function setupTab3ManualLayout() {
         urlInput.value = "";
         urlInput.focus();
         if (typeof updateProfileUrlBadge === 'function') updateProfileUrlBadge("");
+        updateManualUrlBadge("");
       };
 
       // Verify Button (Right) - re-uses or creates submitBtn
