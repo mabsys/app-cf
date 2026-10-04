@@ -1,4 +1,4 @@
-// js/ui.js (0210_R098) - View State, Navigation, Dock Active Highlight & Network Controller
+// js/ui.js (0310_R098) - View State, Navigation, Dock Active Highlight & Network Controller
 
 import { stopScanner, switchScanHubTab } from './scanner.js';
 import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData } from './storage.js';
@@ -580,9 +580,6 @@ export function showError(msg) {
   if (manualInput) manualInput.value = "";
 
   showView("scanner-view");
-  if (window.startScanner) {
-    window.startScanner(window.processLicenseUrl, null);
-  }
 }
 
 window.showScannerView = showScannerView;
