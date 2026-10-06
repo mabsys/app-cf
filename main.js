@@ -1,5 +1,4 @@
 // js/main.js (0310_R098) - Main Application Controller & Orchestrator
-
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
 import { parseAttestationText, validateAttestationContent } from './js/attestationParser.js';
@@ -160,17 +159,12 @@ function isValidCaamUrl(urlStr) {
 
     if (!isValidProtocol || !isCaamDomain || !hasValidTld) return false;
 
-    // Strict parameter check for official CAAM eCLIPSE QR / licence URLs
-    const searchParams = parsed.searchParams;
-    const personid = searchParams.get("personid");
-    const key = searchParams.get("key");
-    const codekey = searchParams.get("codekey");
+    // Strict eCLIPSE URL Parameter Validation (must contain personid, key, and codekey)
+    const personid = parsed.searchParams.get("personid");
+    const key = parsed.searchParams.get("key");
+    const codekey = parsed.searchParams.get("codekey");
 
-    if (!personid || !personid.trim() || !key || !key.trim() || !codekey || !codekey.trim()) {
-      return false;
-    }
-
-    return true;
+    return Boolean(personid && personid.trim() && key && key.trim() && codekey && codekey.trim());
   } catch (e) {
     return false;
   }
@@ -185,7 +179,7 @@ function updateManualUrlBadge(urlStr) {
   const cleanUrl = urlStr ? urlStr.trim() : "";
   if (isValidCaamUrl(cleanUrl)) {
     urlBadge.classList.remove("hidden");
-    if (urlText) urlText.innerText = "Valid CAAM Licence URL captured";
+    if (urlText) urlText.innerText = "✓ Valid CAAM Licence URL captured";
   } else {
     urlBadge.classList.add("hidden");
   }
@@ -591,12 +585,10 @@ function handleManualUrl() {
   const urlInput = document.getElementById("manual-url-input");
   const urlVal = urlInput ? urlInput.value.trim() : "";
   if (!urlVal || !isValidCaamUrl(urlVal)) {
-    updateManualUrlBadge(urlVal);
     showError("Please enter a valid CAAM eCLIPSE URL");
     return;
   }
   updateManualUrlBadge("");
-  if (typeof stopScanner === 'function') stopScanner();
   processLicenseUrl(urlVal);
 }
 
@@ -1304,6 +1296,34 @@ function renderDashboardResults(caamResults, mabResults = null) {
 
 let currentHistoryFilter = "ALL";
 
+function updateHistoryPillUI(targetFilter) {
+  const pillAll = document.getElementById("filter-pill-all") || document.getElementById("history-filter-all");
+  const pillValid = document.getElementById("filter-pill-valid") || document.getElementById("history-filter-valid");
+  const pillExpiring = document.getElementById("filter-pill-expiring") || document.getElementById("history-filter-expiring");
+  const pillExpired = document.getElementById("filter-pill-expired") || document.getElementById("history-filter-expired");
+
+  const filterPills = [
+    { el: pillAll, value: "ALL" },
+    { el: pillValid, value: "VALID" },
+    { el: pillExpiring, value: "EXPIRING_SOON" },
+    { el: pillExpired, value: "EXPIRED" }
+  ];
+
+  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
+  const inactiveClass = "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200";
+
+  filterPills.forEach(({ el, value }) => {
+    if (!el) return;
+    if (value === targetFilter) {
+      el.className = el.className.replace(inactiveClass, activeClass);
+      if (!el.className.includes(activeClass)) el.className += " " + activeClass;
+    } else {
+      el.className = el.className.replace(activeClass, inactiveClass);
+      if (!el.className.includes(inactiveClass)) el.className += " " + inactiveClass;
+    }
+  });
+}
+
 export function customRenderHistoryList() {
   const container = document.getElementById("history-list");
   const countBadge = document.getElementById("history-count-badge");
@@ -1314,7 +1334,6 @@ export function customRenderHistoryList() {
 
   let allHistory = getScanHistory() || [];
   const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : "";
-
   const clearBtn = document.getElementById("history-search-clear-btn");
   if (clearBtn && searchInput) {
     if (searchInput.value.trim().length > 0) clearBtn.classList.remove("hidden");
@@ -1324,7 +1343,7 @@ export function customRenderHistoryList() {
   let scanHistory = [];
 
   if (searchQuery) {
-    // 1. Option 3: Search globally across ALL history records regardless of active pill
+    // 1. Option 3: Search globally across ALL history records regardless of current pill
     const matchingItems = allHistory.filter(item => {
       if (!item) return false;
       const name = (item.name || "").toLowerCase();
@@ -1334,7 +1353,7 @@ export function customRenderHistoryList() {
     });
 
     if (matchingItems.length > 0) {
-      // 2. Option 3: Smart Auto-Switching based on match statuses
+      // 2. Option 3: Smart Auto-Switching pill highlight based on match statuses
       const uniqueStatuses = new Set(matchingItems.map(m => m.overallStatus));
       if (uniqueStatuses.size === 1) {
         const singleStatus = Array.from(uniqueStatuses)[0];
@@ -1350,7 +1369,7 @@ export function customRenderHistoryList() {
     updateHistoryPillUI(currentHistoryFilter);
     scanHistory = matchingItems;
   } else {
-    // 3. When search query is empty, filter by active status pill
+    // 3. When search query is empty, filter strictly by active status pill
     updateHistoryPillUI(currentHistoryFilter);
 
     if (currentHistoryFilter && currentHistoryFilter !== "ALL") {
@@ -1988,6 +2007,7 @@ function setupTab3ManualLayout() {
         e.preventDefault();
         urlInput.value = "";
         urlInput.focus();
+        if (typeof updateProfileUrlBadge === 'function') updateProfileUrlBadge("");
         updateManualUrlBadge("");
       };
 
