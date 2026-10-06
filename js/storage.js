@@ -121,8 +121,7 @@ export function saveToHistory(results, originalUrl) {
     : new Date().toLocaleString('en-GB', {
         day: '2-digit', month: 'short', year: 'numeric',
         hour: '2-digit', minute: '2-digit', hour12: false
-      }).replace(',', ', ').replace(' at ', ', ')
-        .replace(',', ', ');
+      }).replace(',', ', ');
 
   const licenseNo = (results.pilotDetails && results.pilotDetails.licenseNo) || "";
   const pilotName = (results.pilotDetails && results.pilotDetails.name && results.pilotDetails.name !== "-") 
@@ -219,6 +218,10 @@ function updateFilterBtnStyles(filterBtns, activeType) {
 }
 
 export function renderHistoryList() {
+  if (typeof window !== "undefined" && typeof window.renderHistoryList === "function" && window.renderHistoryList !== renderHistoryList) {
+    window.renderHistoryList();
+    return;
+  }
   initHistoryListControls();
 
   const container = document.getElementById("recent-pilots-list") || document.getElementById("history-list");
