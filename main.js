@@ -1463,7 +1463,7 @@ export function customRenderHistoryList() {
     const timestampStr = item.timestamp || '';
 
     return `
-      <div onclick="loadHistoricalRecord('${safeId}')" class="py-2.5 px-2 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 last:border-b-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-all active:scale-[0.99]">
+      <div onclick="loadHistoricalRecord('${safeId}')" class="py-2.5 px-2 flex items-center justify-between  cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-all active:scale-[0.99]">
         <div class="flex flex-col text-left pr-2 overflow-hidden">
           <div class="flex items-center gap-1">
             <span class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">${nameUpper}</span>
