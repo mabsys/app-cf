@@ -157,7 +157,20 @@ function isValidCaamUrl(urlStr) {
     const isValidProtocol = parsed.protocol === "http:" || parsed.protocol === "https:";
     const isCaamDomain = host.includes("caam.gov.my") || host.includes("eclipse.caam") || host === "eclipse.caam.gov.my";
     const hasValidTld = host.includes(".");
-    return isValidProtocol && isCaamDomain && hasValidTld;
+
+    if (!isValidProtocol || !isCaamDomain || !hasValidTld) return false;
+
+    // Strict parameter check for official CAAM eCLIPSE QR / licence URLs
+    const searchParams = parsed.searchParams;
+    const personid = searchParams.get("personid");
+    const key = searchParams.get("key");
+    const codekey = searchParams.get("codekey");
+
+    if (!personid || !personid.trim() || !key || !key.trim() || !codekey || !codekey.trim()) {
+      return false;
+    }
+
+    return true;
   } catch (e) {
     return false;
   }
@@ -172,7 +185,7 @@ function updateManualUrlBadge(urlStr) {
   const cleanUrl = urlStr ? urlStr.trim() : "";
   if (isValidCaamUrl(cleanUrl)) {
     urlBadge.classList.remove("hidden");
-    if (urlText) urlText.innerText = "✓ Valid CAAM Licence URL captured";
+    if (urlText) urlText.innerText = "Valid CAAM Licence URL captured";
   } else {
     urlBadge.classList.add("hidden");
   }
@@ -578,10 +591,12 @@ function handleManualUrl() {
   const urlInput = document.getElementById("manual-url-input");
   const urlVal = urlInput ? urlInput.value.trim() : "";
   if (!urlVal || !isValidCaamUrl(urlVal)) {
+    updateManualUrlBadge(urlVal);
     showError("Please enter a valid CAAM eCLIPSE URL");
     return;
   }
   updateManualUrlBadge("");
+  if (typeof stopScanner === 'function') stopScanner();
   processLicenseUrl(urlVal);
 }
 
@@ -1289,34 +1304,6 @@ function renderDashboardResults(caamResults, mabResults = null) {
 
 let currentHistoryFilter = "ALL";
 
-function updateHistoryPillUI(targetFilter) {
-  const pillAll = document.getElementById("filter-pill-all") || document.getElementById("history-filter-all");
-  const pillValid = document.getElementById("filter-pill-valid") || document.getElementById("history-filter-valid");
-  const pillExpiring = document.getElementById("filter-pill-expiring") || document.getElementById("history-filter-expiring");
-  const pillExpired = document.getElementById("filter-pill-expired") || document.getElementById("history-filter-expired");
-
-  const filterPills = [
-    { el: pillAll, value: "ALL" },
-    { el: pillValid, value: "VALID" },
-    { el: pillExpiring, value: "EXPIRING_SOON" },
-    { el: pillExpired, value: "EXPIRED" }
-  ];
-
-  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
-  const inactiveClass = "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200";
-
-  filterPills.forEach(({ el, value }) => {
-    if (!el) return;
-    if (value === targetFilter) {
-      el.className = el.className.replace(inactiveClass, activeClass);
-      if (!el.className.includes(activeClass)) el.className += " " + activeClass;
-    } else {
-      el.className = el.className.replace(activeClass, inactiveClass);
-      if (!el.className.includes(inactiveClass)) el.className += " " + inactiveClass;
-    }
-  });
-}
-
 export function customRenderHistoryList() {
   const container = document.getElementById("history-list");
   const countBadge = document.getElementById("history-count-badge");
@@ -1327,6 +1314,7 @@ export function customRenderHistoryList() {
 
   let allHistory = getScanHistory() || [];
   const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : "";
+
   const clearBtn = document.getElementById("history-search-clear-btn");
   if (clearBtn && searchInput) {
     if (searchInput.value.trim().length > 0) clearBtn.classList.remove("hidden");
@@ -1336,7 +1324,7 @@ export function customRenderHistoryList() {
   let scanHistory = [];
 
   if (searchQuery) {
-    // 1. Search globally across ALL history records
+    // 1. Option 3: Search globally across ALL history records regardless of active pill
     const matchingItems = allHistory.filter(item => {
       if (!item) return false;
       const name = (item.name || "").toLowerCase();
@@ -1968,8 +1956,10 @@ function setupTab3ManualLayout() {
 
     
     if (urlInput) {
-      urlInput.addEventListener("input", () => updateManualUrlBadge(urlInput.value.trim()));
-      urlInput.addEventListener("change", () => updateManualUrlBadge(urlInput.value.trim()));
+      urlInput.oninput = () => updateManualUrlBadge(urlInput.value.trim());
+      urlInput.onchange = () => updateManualUrlBadge(urlInput.value.trim());
+      urlInput.onkeyup = () => updateManualUrlBadge(urlInput.value.trim());
+      urlInput.onpaste = () => setTimeout(() => updateManualUrlBadge(urlInput.value.trim()), 50);
       updateManualUrlBadge(urlInput.value.trim());
     }
 
@@ -1998,7 +1988,6 @@ function setupTab3ManualLayout() {
         e.preventDefault();
         urlInput.value = "";
         urlInput.focus();
-        if (typeof updateProfileUrlBadge === 'function') updateProfileUrlBadge("");
         updateManualUrlBadge("");
       };
 
