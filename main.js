@@ -1440,19 +1440,10 @@ export function customRenderHistoryList() {
   container.innerHTML = scanHistory.map(item => {
     if (!item) return '';
     const isPinned = Boolean(item.isPinned || item.pinned);
+    const dotColor = item.overallStatus === "EXPIRED" ? "bg-rose-500" : (item.overallStatus === "EXPIRING_SOON" ? "bg-amber-500" : "bg-emerald-600");
     const safeId = String(item.id || '').replace(/'/g, "\'");
     const pinBadge = isPinned ? `<svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0 inline-block align-middle ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>` : '';
-
-    let statusText = "VALID";
-    let statusBadgeClass = "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400";
-    if (item.overallStatus === "EXPIRED") {
-      statusText = "EXPIRED";
-      statusBadgeClass = "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400";
-    } else if (item.overallStatus === "EXPIRING_SOON") {
-      statusText = "EXPIRING";
-      statusBadgeClass = "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400";
-    }
-
+    
     return `
       <div onclick="loadHistoricalRecord('${safeId}')" class="py-2 px-2.5 flex items-center justify-between cursor-pointer hover:bg-sky-50 dark:hover:bg-slate-800/60 rounded-xl transition-all border-b border-slate-100 dark:border-slate-800/50 last:border-b-0 ${isPinned ? 'bg-blue-50/40 dark:bg-blue-950/20' : ''}">
         <div class="flex flex-col text-left">
