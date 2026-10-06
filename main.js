@@ -156,18 +156,8 @@ function isValidCaamUrl(urlStr) {
     const host = parsed.hostname.toLowerCase();
     const isValidProtocol = parsed.protocol === "http:" || parsed.protocol === "https:";
     const isCaamDomain = host.includes("caam.gov.my") || host.includes("eclipse.caam") || host === "eclipse.caam.gov.my";
-    if (!isValidProtocol || !isCaamDomain) return false;
-
-    // Strict query parameter checks for official CAAM eCLIPSE Digital Licence URLs
-    const personId = parsed.searchParams.get("personid");
-    const key = parsed.searchParams.get("key");
-    const codekey = parsed.searchParams.get("codekey");
-
-    return Boolean(
-      personId && personId.trim().length > 0 &&
-      key && key.trim().length >= 8 &&
-      codekey && codekey.trim().length > 0
-    );
+    const hasValidTld = host.includes(".");
+    return isValidProtocol && isCaamDomain && hasValidTld;
   } catch (e) {
     return false;
   }
@@ -588,12 +578,10 @@ function handleManualUrl() {
   const urlInput = document.getElementById("manual-url-input");
   const urlVal = urlInput ? urlInput.value.trim() : "";
   if (!urlVal || !isValidCaamUrl(urlVal)) {
-    updateManualUrlBadge(urlVal);
     showError("Please enter a valid CAAM eCLIPSE URL");
     return;
   }
   updateManualUrlBadge("");
-  if (typeof stopScanner === 'function') stopScanner();
   processLicenseUrl(urlVal);
 }
 
@@ -1301,6 +1289,34 @@ function renderDashboardResults(caamResults, mabResults = null) {
 
 let currentHistoryFilter = "ALL";
 
+function updateHistoryPillUI(targetFilter) {
+  const pillAll = document.getElementById("filter-pill-all") || document.getElementById("history-filter-all");
+  const pillValid = document.getElementById("filter-pill-valid") || document.getElementById("history-filter-valid");
+  const pillExpiring = document.getElementById("filter-pill-expiring") || document.getElementById("history-filter-expiring");
+  const pillExpired = document.getElementById("filter-pill-expired") || document.getElementById("history-filter-expired");
+
+  const filterPills = [
+    { el: pillAll, value: "ALL" },
+    { el: pillValid, value: "VALID" },
+    { el: pillExpiring, value: "EXPIRING_SOON" },
+    { el: pillExpired, value: "EXPIRED" }
+  ];
+
+  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
+  const inactiveClass = "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200";
+
+  filterPills.forEach(({ el, value }) => {
+    if (!el) return;
+    if (value === targetFilter) {
+      el.className = el.className.replace(inactiveClass, activeClass);
+      if (!el.className.includes(activeClass)) el.className += " " + activeClass;
+    } else {
+      el.className = el.className.replace(activeClass, inactiveClass);
+      if (!el.className.includes(inactiveClass)) el.className += " " + inactiveClass;
+    }
+  });
+}
+
 export function customRenderHistoryList() {
   const container = document.getElementById("history-list");
   const countBadge = document.getElementById("history-count-badge");
@@ -1309,30 +1325,57 @@ export function customRenderHistoryList() {
 
   if (!container) return;
 
-  let scanHistory = getScanHistory() || [];
-
+  let allHistory = getScanHistory() || [];
   const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : "";
+  const clearBtn = document.getElementById("history-search-clear-btn");
+  if (clearBtn && searchInput) {
+    if (searchInput.value.trim().length > 0) clearBtn.classList.remove("hidden");
+    else clearBtn.classList.add("hidden");
+  }
 
-  // Apply Search Filter
+  let scanHistory = [];
+
   if (searchQuery) {
-    scanHistory = scanHistory.filter(item => {
+    // 1. Search globally across ALL history records
+    const matchingItems = allHistory.filter(item => {
       if (!item) return false;
       const name = (item.name || "").toLowerCase();
       const licType = (item.licenseType || "").toLowerCase();
       const licNo = (item.id || "").toLowerCase();
       return name.includes(searchQuery) || licType.includes(searchQuery) || licNo.includes(searchQuery);
     });
-  }
 
-  // Apply Status Pill Filter
-  if (currentHistoryFilter && currentHistoryFilter !== "ALL") {
-    scanHistory = scanHistory.filter(item => {
-      if (!item) return false;
-      if (currentHistoryFilter === "VALID") return item.overallStatus === "VALID";
-      if (currentHistoryFilter === "EXPIRING_SOON") return item.overallStatus === "EXPIRING_SOON";
-      if (currentHistoryFilter === "EXPIRED") return item.overallStatus === "EXPIRED";
-      return true;
-    });
+    if (matchingItems.length > 0) {
+      // 2. Option 3: Smart Auto-Switching based on match statuses
+      const uniqueStatuses = new Set(matchingItems.map(m => m.overallStatus));
+      if (uniqueStatuses.size === 1) {
+        const singleStatus = Array.from(uniqueStatuses)[0];
+        if (singleStatus === "VALID") currentHistoryFilter = "VALID";
+        else if (singleStatus === "EXPIRING_SOON") currentHistoryFilter = "EXPIRING_SOON";
+        else if (singleStatus === "EXPIRED") currentHistoryFilter = "EXPIRED";
+        else currentHistoryFilter = "ALL";
+      } else {
+        currentHistoryFilter = "ALL";
+      }
+    }
+    
+    updateHistoryPillUI(currentHistoryFilter);
+    scanHistory = matchingItems;
+  } else {
+    // 3. When search query is empty, filter by active status pill
+    updateHistoryPillUI(currentHistoryFilter);
+
+    if (currentHistoryFilter && currentHistoryFilter !== "ALL") {
+      scanHistory = allHistory.filter(item => {
+        if (!item) return false;
+        if (currentHistoryFilter === "VALID") return item.overallStatus === "VALID";
+        if (currentHistoryFilter === "EXPIRING_SOON") return item.overallStatus === "EXPIRING_SOON";
+        if (currentHistoryFilter === "EXPIRED") return item.overallStatus === "EXPIRED";
+        return true;
+      });
+    } else {
+      scanHistory = allHistory;
+    }
   }
 
   // Sort Pinned Items to Very Top
@@ -1458,8 +1501,58 @@ function setupPinCardButton(caamResults) {
 function initHistorySearchAndFilters() {
   const searchInput = document.getElementById("history-search-input");
   if (searchInput) {
-    searchInput.addEventListener("input", () => customRenderHistoryList());
-    searchInput.addEventListener("change", () => customRenderHistoryList());
+    const parent = searchInput.parentNode;
+    if (parent && !document.getElementById("history-search-clear-btn")) {
+      const pos = window.getComputedStyle ? window.getComputedStyle(parent).position : parent.style.position;
+      if (!pos || pos === 'static') {
+        parent.style.position = 'relative';
+      }
+
+      const clearBtn = document.createElement("button");
+      clearBtn.id = "history-search-clear-btn";
+      clearBtn.type = "button";
+      clearBtn.className = "absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors hidden cursor-pointer z-10";
+      clearBtn.setAttribute("aria-label", "Clear search");
+      clearBtn.innerHTML = `
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      `;
+
+      searchInput.classList.add("pr-9");
+
+      clearBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        searchInput.value = "";
+        clearBtn.classList.add("hidden");
+        searchInput.focus();
+        customRenderHistoryList();
+      };
+
+      parent.appendChild(clearBtn);
+    }
+
+    const syncClearBtn = () => {
+      const clearBtn = document.getElementById("history-search-clear-btn");
+      if (clearBtn) {
+        if (searchInput.value.trim().length > 0) {
+          clearBtn.classList.remove("hidden");
+        } else {
+          clearBtn.classList.add("hidden");
+        }
+      }
+    };
+
+    searchInput.addEventListener("input", () => {
+      syncClearBtn();
+      customRenderHistoryList();
+    });
+    searchInput.addEventListener("change", () => {
+      syncClearBtn();
+      customRenderHistoryList();
+    });
+    syncClearBtn();
   }
 
   const pillAll = document.getElementById("filter-pill-all") || document.getElementById("history-filter-all");
@@ -1474,23 +1567,11 @@ function initHistorySearchAndFilters() {
     { el: pillExpired, value: "EXPIRED" }
   ];
 
-  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
-  const inactiveClass = "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200";
-
   filterPills.forEach(({ el, value }) => {
     if (!el) return;
     el.addEventListener("click", () => {
       currentHistoryFilter = value;
-      filterPills.forEach(p => {
-        if (p.el) {
-          if (p.value === currentHistoryFilter) {
-            p.el.className = p.el.className.replace(inactiveClass, activeClass);
-            if (!p.el.className.includes(activeClass)) p.el.className += " " + activeClass;
-          } else {
-            p.el.className = p.el.className.replace(activeClass, inactiveClass);
-          }
-        }
-      });
+      updateHistoryPillUI(currentHistoryFilter);
       customRenderHistoryList();
     });
   });
@@ -1887,10 +1968,8 @@ function setupTab3ManualLayout() {
 
     
     if (urlInput) {
-      urlInput.oninput = () => updateManualUrlBadge(urlInput.value.trim());
-      urlInput.onchange = () => updateManualUrlBadge(urlInput.value.trim());
-      urlInput.onkeyup = () => updateManualUrlBadge(urlInput.value.trim());
-      urlInput.onpaste = () => setTimeout(() => updateManualUrlBadge(urlInput.value.trim()), 50);
+      urlInput.addEventListener("input", () => updateManualUrlBadge(urlInput.value.trim()));
+      urlInput.addEventListener("change", () => updateManualUrlBadge(urlInput.value.trim()));
       updateManualUrlBadge(urlInput.value.trim());
     }
 
@@ -1919,6 +1998,7 @@ function setupTab3ManualLayout() {
         e.preventDefault();
         urlInput.value = "";
         urlInput.focus();
+        if (typeof updateProfileUrlBadge === 'function') updateProfileUrlBadge("");
         updateManualUrlBadge("");
       };
 
