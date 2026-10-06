@@ -1,4 +1,4 @@
-// js/main.js (0310_R098) - Main Application Controller & Orchestrator
+// js/main.js (0310_R098_8) - Main Application Controller & Orchestrator
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
 import { parseAttestationText, validateAttestationContent } from './js/attestationParser.js';
@@ -1298,9 +1298,6 @@ function renderDashboardResults(caamResults, mabResults = null) {
 }
 
 
-
-let currentHistoryFilter = "ALL";
-
 function updateHistoryCounts(allHistory) {
   const cntAll = document.getElementById("count-all");
   const cntValid = document.getElementById("count-valid");
@@ -1330,19 +1327,20 @@ function updateHistoryPillUI(targetFilter) {
     { el: pillExpired, value: "EXPIRED" }
   ];
 
-  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
-  const inactiveClass = "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200";
+  const activeStyle = "py-1.5 px-1 rounded-lg bg-blue-600 text-white shadow-xs transition-all cursor-pointer font-extrabold";
+  const inactiveStyle = "py-1.5 px-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold transition-all cursor-pointer";
 
   filterPills.forEach(({ el, value }) => {
     if (!el) return;
     if (value === targetFilter) {
-      el.className = el.className.replace(inactiveClass, activeClass);
-      if (!el.className.includes("bg-blue-600")) el.className += " " + activeClass;
+      el.className = activeStyle;
     } else {
-      el.className = el.className.replace(activeClass, inactiveClass);
+      el.className = inactiveStyle;
     }
   });
 }
+
+let currentHistoryFilter = "ALL";
 
 export function customRenderHistoryList() {
   const container = document.getElementById("recent-pilots-list") || document.getElementById("history-list");
@@ -1356,16 +1354,23 @@ export function customRenderHistoryList() {
   updateHistoryCounts(allHistory);
 
   const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : "";
+
+  // Requirement 3: Resetting/clearing search input automatically switches filter back to "ALL"
+  if (prevSearchQueryState !== "" && searchQuery === "") {
+    currentHistoryFilter = "ALL";
+  }
+  prevSearchQueryState = searchQuery;
+
   const clearBtn = document.getElementById("history-search-clear-btn");
   if (clearBtn && searchInput) {
-    if (searchInput.value.trim().length > 0) clearBtn.classList.remove("hidden");
+    if (searchQuery.length > 0) clearBtn.classList.remove("hidden");
     else clearBtn.classList.add("hidden");
   }
 
   let scanHistory = [];
 
   if (searchQuery) {
-    // 1. Option 3: Search globally across ALL history records regardless of current pill
+    // 1. Requirement 2: Search globally across ALL history records regardless of active pill
     const matchingItems = allHistory.filter(item => {
       if (!item) return false;
       const name = (item.name || "").toLowerCase();
@@ -1375,8 +1380,9 @@ export function customRenderHistoryList() {
     });
 
     if (matchingItems.length > 0) {
-      // 2. Option 3: Smart Auto-Switching pill highlight based on match statuses
-      const uniqueStatuses = new Set(matchingItems.map(m => m.overallStatus));
+      // 2. Requirement 2: Option 3 Smart Auto-Switching based on match statuses
+      const uniqueStatuses = new Set(matchingItems.map(m => m ? m.overallStatus : null));
+      uniqueStatuses.delete(null);
       if (uniqueStatuses.size === 1) {
         const singleStatus = Array.from(uniqueStatuses)[0];
         if (singleStatus === "VALID") currentHistoryFilter = "VALID";
@@ -1391,7 +1397,7 @@ export function customRenderHistoryList() {
     updateHistoryPillUI(currentHistoryFilter);
     scanHistory = matchingItems;
   } else {
-    // 3. When search query is empty, filter strictly by active status pill
+    // 3. When search query is empty, filter by active status pill
     updateHistoryPillUI(currentHistoryFilter);
 
     if (currentHistoryFilter && currentHistoryFilter !== "ALL") {
@@ -1433,36 +1439,47 @@ export function customRenderHistoryList() {
     return;
   }
 
+  // Requirement 1: Exact 3-row card layout match
   container.innerHTML = scanHistory.map(item => {
     if (!item) return '';
     const isPinned = Boolean(item.isPinned || item.pinned);
     const safeId = String(item.id || '').replace(/'/g, "\'");
     const pinBadge = isPinned ? `<svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0 inline-block align-middle ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>` : '';
     
-    let statusBadgeClass = "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400";
-    let statusText = "Valid";
+    let badgeStyle = "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60";
+    let statusLabel = "Valid";
+
     if (item.overallStatus === "EXPIRED") {
-      statusBadgeClass = "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400";
-      statusText = "Expired";
+      statusLabel = "Expired";
+      badgeStyle = "bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60";
     } else if (item.overallStatus === "EXPIRING_SOON") {
-      statusBadgeClass = "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400";
-      statusText = "Expiring";
+      statusLabel = "Expiring";
+      badgeStyle = "bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60";
     }
 
+    const nameUpper = (item.name || 'UNKNOWN').toUpperCase();
+    const licType = item.licenseType || 'ATPL(A)';
+    const licNo = item.id || '-';
+    const timestampStr = item.timestamp || '';
+
     return `
-      <div onclick="loadHistoricalRecord('${safeId}')" class="py-2.5 px-3 flex flex-col justify-between cursor-pointer hover:bg-sky-50 dark:hover:bg-slate-800/60 rounded-xl transition-all border-b border-slate-100 dark:border-slate-800/50 last:border-b-0 ${isPinned ? 'bg-blue-50/40 dark:bg-blue-950/20' : ''}">
-        <div class="flex items-center justify-between w-full">
-          <div class="flex items-center gap-1 overflow-hidden">
-            <span class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate leading-tight">${item.name || 'Unknown'}</span>
+      <div onclick="loadHistoricalRecord('${safeId}')" class="py-2.5 px-2 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 last:border-b-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded-xl transition-all active:scale-[0.99]">
+        <div class="flex flex-col text-left pr-2 overflow-hidden">
+          <div class="flex items-center gap-1">
+            <span class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">${nameUpper}</span>
             ${pinBadge}
           </div>
+          <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5 tracking-tight truncate">
+            ${licType} • ${licNo}
+          </span>
+          <span class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
+            Checked: ${timestampStr}
+          </span>
         </div>
-        <div class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-tight mt-0.5">
-          ${item.licenseType || 'ATPL(A)'} ${item.id ? '• CAAM #' + item.id : ''}
-        </div>
-        <div class="flex items-center justify-between w-full mt-1.5">
-          <span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Checked: ${item.timestamp || ''} LT</span>
-          <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${statusBadgeClass}">${statusText}</span>
+        <div class="shrink-0">
+          <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${badgeStyle}">
+            ${statusLabel}
+          </span>
         </div>
       </div>
     `;
@@ -1541,6 +1558,8 @@ function setupPinCardButton(caamResults) {
   };
 }
 
+let prevSearchQueryState = "";
+
 function initHistorySearchAndFilters() {
   const searchInput = document.getElementById("history-search-input");
   if (searchInput) {
@@ -1564,10 +1583,13 @@ function initHistorySearchAndFilters() {
 
       searchInput.classList.add("pr-9");
 
+      // Requirement 3: Resetting clear button sets filter to "ALL"
       clearBtn.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
         searchInput.value = "";
+        prevSearchQueryState = "";
+        currentHistoryFilter = "ALL";
         clearBtn.classList.add("hidden");
         searchInput.focus();
         customRenderHistoryList();
@@ -1587,14 +1609,13 @@ function initHistorySearchAndFilters() {
       }
     };
 
-    searchInput.addEventListener("input", () => {
+    const handleSearchInput = () => {
       syncClearBtn();
       customRenderHistoryList();
-    });
-    searchInput.addEventListener("change", () => {
-      syncClearBtn();
-      customRenderHistoryList();
-    });
+    };
+
+    searchInput.addEventListener("input", handleSearchInput);
+    searchInput.addEventListener("change", handleSearchInput);
     syncClearBtn();
   }
 
@@ -1613,6 +1634,8 @@ function initHistorySearchAndFilters() {
   filterPills.forEach(({ el, value }) => {
     if (!el) return;
     el.addEventListener("click", () => {
+      if (searchInput) searchInput.value = ""; // Clear search when user explicitly taps a pill
+      prevSearchQueryState = "";
       currentHistoryFilter = value;
       updateHistoryPillUI(currentHistoryFilter);
       customRenderHistoryList();
