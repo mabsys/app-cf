@@ -155,16 +155,17 @@ function isValidCaamUrl(urlStr) {
     const host = parsed.hostname.toLowerCase();
     const isValidProtocol = parsed.protocol === "http:" || parsed.protocol === "https:";
     const isCaamDomain = host.includes("caam.gov.my") || host.includes("eclipse.caam") || host === "eclipse.caam.gov.my";
-    const hasValidTld = host.includes(".");
+    if (!isValidProtocol || !isCaamDomain) return false;
 
-    if (!isValidProtocol || !isCaamDomain || !hasValidTld) return false;
-
-    // Strict eCLIPSE URL Parameter Validation (must contain personid, key, and codekey)
-    const personid = parsed.searchParams.get("personid");
+    const personId = parsed.searchParams.get("personid");
     const key = parsed.searchParams.get("key");
     const codekey = parsed.searchParams.get("codekey");
 
-    return Boolean(personid && personid.trim() && key && key.trim() && codekey && codekey.trim());
+    return Boolean(
+      personId && personId.trim().length > 0 &&
+      key && key.trim().length >= 8 &&
+      codekey && codekey.trim().length > 0
+    );
   } catch (e) {
     return false;
   }
@@ -208,8 +209,18 @@ function updateProfileUrlBadge(urlStr) {
 }
 
 function showProfileToast(msg = "Crew credentials saved successfully!") {
-  const toast = document.getElementById("profile-toast");
-  const toastMsg = document.getElementById("profile-toast-msg");
+  let toast = document.getElementById("profile-toast");
+  let toastMsg = document.getElementById("profile-toast-msg");
+
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "profile-toast";
+    toast.className = "fixed bottom-20 left-1/2 -translate-x-1/2 bg-slate-900/90 dark:bg-slate-800/90 backdrop-blur-md text-white text-xs font-extrabold px-4 py-2.5 rounded-2xl shadow-xl z-50 flex items-center gap-2 hidden transition-all duration-300";
+    toast.innerHTML = `<span id="profile-toast-msg">${msg}</span>`;
+    document.body.appendChild(toast);
+    toastMsg = document.getElementById("profile-toast-msg");
+  }
+
   if (toast) {
     if (toastMsg) toastMsg.innerText = msg;
     toast.classList.remove("hidden");
@@ -585,10 +596,12 @@ function handleManualUrl() {
   const urlInput = document.getElementById("manual-url-input");
   const urlVal = urlInput ? urlInput.value.trim() : "";
   if (!urlVal || !isValidCaamUrl(urlVal)) {
+    updateManualUrlBadge(urlVal);
     showError("Please enter a valid CAAM eCLIPSE URL");
     return;
   }
   updateManualUrlBadge("");
+  if (typeof stopScanner === 'function') stopScanner();
   processLicenseUrl(urlVal);
 }
 
@@ -1296,11 +1309,27 @@ function renderDashboardResults(caamResults, mabResults = null) {
 
 let currentHistoryFilter = "ALL";
 
+function updateHistoryCounts(allHistory) {
+  const cntAll = document.getElementById("count-all");
+  const cntValid = document.getElementById("count-valid");
+  const cntExpiring = document.getElementById("count-expiring");
+  const cntExpired = document.getElementById("count-expired");
+
+  const validCount = allHistory.filter(i => i && i.overallStatus === "VALID").length;
+  const expiringCount = allHistory.filter(i => i && i.overallStatus === "EXPIRING_SOON").length;
+  const expiredCount = allHistory.filter(i => i && i.overallStatus === "EXPIRED").length;
+
+  if (cntAll) cntAll.innerText = allHistory.length;
+  if (cntValid) cntValid.innerText = validCount;
+  if (cntExpiring) cntExpiring.innerText = expiringCount;
+  if (cntExpired) cntExpired.innerText = expiredCount;
+}
+
 function updateHistoryPillUI(targetFilter) {
-  const pillAll = document.getElementById("filter-pill-all") || document.getElementById("history-filter-all");
-  const pillValid = document.getElementById("filter-pill-valid") || document.getElementById("history-filter-valid");
-  const pillExpiring = document.getElementById("filter-pill-expiring") || document.getElementById("history-filter-expiring");
-  const pillExpired = document.getElementById("filter-pill-expired") || document.getElementById("history-filter-expired");
+  const pillAll = document.getElementById("filter-all-btn") || document.getElementById("filter-pill-all") || document.getElementById("history-filter-all");
+  const pillValid = document.getElementById("filter-valid-btn") || document.getElementById("filter-pill-valid") || document.getElementById("history-filter-valid");
+  const pillExpiring = document.getElementById("filter-expiring-btn") || document.getElementById("filter-pill-expiring") || document.getElementById("history-filter-expiring");
+  const pillExpired = document.getElementById("filter-expired-btn") || document.getElementById("filter-pill-expired") || document.getElementById("history-filter-expired");
 
   const filterPills = [
     { el: pillAll, value: "ALL" },
@@ -1309,23 +1338,18 @@ function updateHistoryPillUI(targetFilter) {
     { el: pillExpired, value: "EXPIRED" }
   ];
 
-  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold";
-  const inactiveClass = "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200";
-
   filterPills.forEach(({ el, value }) => {
     if (!el) return;
     if (value === targetFilter) {
-      el.className = el.className.replace(inactiveClass, activeClass);
-      if (!el.className.includes(activeClass)) el.className += " " + activeClass;
+      el.className = "py-1.5 px-1 rounded-lg bg-blue-600 text-white shadow-xs transition-all cursor-pointer font-bold";
     } else {
-      el.className = el.className.replace(activeClass, inactiveClass);
-      if (!el.className.includes(inactiveClass)) el.className += " " + inactiveClass;
+      el.className = "py-1.5 px-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer font-bold";
     }
   });
 }
 
 export function customRenderHistoryList() {
-  const container = document.getElementById("history-list");
+  const container = document.getElementById("recent-pilots-list") || document.getElementById("history-list");
   const countBadge = document.getElementById("history-count-badge");
   const clockIcon = document.getElementById("history-clock-icon");
   const searchInput = document.getElementById("history-search-input");
@@ -1333,6 +1357,8 @@ export function customRenderHistoryList() {
   if (!container) return;
 
   let allHistory = getScanHistory() || [];
+  updateHistoryCounts(allHistory);
+
   const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : "";
   const clearBtn = document.getElementById("history-search-clear-btn");
   if (clearBtn && searchInput) {
@@ -1343,7 +1369,7 @@ export function customRenderHistoryList() {
   let scanHistory = [];
 
   if (searchQuery) {
-    // 1. Option 3: Search globally across ALL history records regardless of current pill
+    // 1. Option 3: Search globally across ALL history records regardless of active pill
     const matchingItems = allHistory.filter(item => {
       if (!item) return false;
       const name = (item.name || "").toLowerCase();
@@ -1353,7 +1379,7 @@ export function customRenderHistoryList() {
     });
 
     if (matchingItems.length > 0) {
-      // 2. Option 3: Smart Auto-Switching pill highlight based on match statuses
+      // 2. Option 3: Smart Auto-Switching based on match statuses
       const uniqueStatuses = new Set(matchingItems.map(m => m.overallStatus));
       if (uniqueStatuses.size === 1) {
         const singleStatus = Array.from(uniqueStatuses)[0];
@@ -1369,7 +1395,7 @@ export function customRenderHistoryList() {
     updateHistoryPillUI(currentHistoryFilter);
     scanHistory = matchingItems;
   } else {
-    // 3. When search query is empty, filter strictly by active status pill
+    // 3. When search query is empty, filter by active status pill
     updateHistoryPillUI(currentHistoryFilter);
 
     if (currentHistoryFilter && currentHistoryFilter !== "ALL") {
@@ -1461,7 +1487,7 @@ function setupPinCardButton(caamResults) {
     } else {
       pinBtn.className = "py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer";
       pinBtn.innerHTML = `
-        <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
         </svg>
         <span>Pin Card</span>
@@ -1562,10 +1588,10 @@ function initHistorySearchAndFilters() {
     syncClearBtn();
   }
 
-  const pillAll = document.getElementById("filter-pill-all") || document.getElementById("history-filter-all");
-  const pillValid = document.getElementById("filter-pill-valid") || document.getElementById("history-filter-valid");
-  const pillExpiring = document.getElementById("filter-pill-expiring") || document.getElementById("history-filter-expiring");
-  const pillExpired = document.getElementById("filter-pill-expired") || document.getElementById("history-filter-expired");
+  const pillAll = document.getElementById("filter-all-btn") || document.getElementById("filter-pill-all") || document.getElementById("history-filter-all");
+  const pillValid = document.getElementById("filter-valid-btn") || document.getElementById("filter-pill-valid") || document.getElementById("history-filter-valid");
+  const pillExpiring = document.getElementById("filter-expiring-btn") || document.getElementById("filter-pill-expiring") || document.getElementById("history-filter-expiring");
+  const pillExpired = document.getElementById("filter-expired-btn") || document.getElementById("filter-pill-expired") || document.getElementById("history-filter-expired");
 
   const filterPills = [
     { el: pillAll, value: "ALL" },
@@ -2007,7 +2033,6 @@ function setupTab3ManualLayout() {
         e.preventDefault();
         urlInput.value = "";
         urlInput.focus();
-        if (typeof updateProfileUrlBadge === 'function') updateProfileUrlBadge("");
         updateManualUrlBadge("");
       };
 
