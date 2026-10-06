@@ -1444,7 +1444,7 @@ export function customRenderHistoryList() {
     if (!item) return '';
     const isPinned = Boolean(item.isPinned || item.pinned);
     const safeId = String(item.id || '').replace(/'/g, "\'");
-    const pinBadge = isPinned ? `<svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0 inline-block align-middle ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>` : '';
+    const pinBadge = isPinned ? `<svg class="w-3.5 h-3.5 text-orange-400 dark:text-orange-400 shrink-0 inline-block align-middle ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>` : '';
     
     let badgeStyle = "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60";
     let statusLabel = "Valid";
