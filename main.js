@@ -1450,20 +1450,15 @@ export function customRenderHistoryList() {
     }
 
     return `
-      <div onclick="loadHistoricalRecord('${safeId}')" class="py-2.5 px-3 flex flex-col justify-between cursor-pointer hover:bg-sky-50 dark:hover:bg-slate-800/60 rounded-xl transition-all border-b border-slate-100 dark:border-slate-800/50 last:border-b-0 ${isPinned ? 'bg-blue-50/40 dark:bg-blue-950/20' : ''}">
-        <div class="flex items-center justify-between w-full">
-          <div class="flex items-center gap-1 overflow-hidden">
-            <span class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate leading-tight">${item.name || 'Unknown'}</span>
+            <div onclick="loadHistoricalRecord('${safeId}')" class="py-2 px-2.5 flex items-center justify-between cursor-pointer hover:bg-sky-50 dark:hover:bg-slate-800/60 rounded-xl transition-all border-b border-slate-100 dark:border-slate-800/50 last:border-b-0 ${isPinned ? 'bg-blue-50/40 dark:bg-blue-950/20' : ''}">
+        <div class="flex flex-col text-left">
+          <div class="flex items-center gap-1">
+            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">${item.name || 'Unknown'}</span>
             ${pinBadge}
           </div>
+          <span class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-tight mt-0.5">${item.licenseType || ''} ${item.licenseType ? '•' : ''} ${item.timestamp || ''} LT</span>
         </div>
-        <div class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-tight mt-0.5">
-          ${item.licenseType || 'ATPL(A)'} ${item.id ? '• CAAM #' + item.id : ''}
-        </div>
-        <div class="flex items-center justify-between w-full mt-1.5">
-          <span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Checked: ${item.timestamp || ''} LT</span>
-          <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${statusBadgeClass}">${statusText}</span>
-        </div>
+        <span class="w-2.5 h-2.5 rounded-full ${dotColor} shrink-0 ml-2 shadow-xs"></span>
       </div>
     `;
   }).join('');
