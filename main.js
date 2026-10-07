@@ -1,4 +1,4 @@
-// js/main.js (0710_R103) - Main Application Controller & Orchestrator
+// js/main.js (0710_R105) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -1346,6 +1346,8 @@ let currentHistoryFilter = "ALL";
 export 
 let activeSwipedCardId = null;
 
+let swipeAutoDismissTimer = null;
+
 function setupHistorySwipeListeners() {
   const containers = [
     document.getElementById("recent-pilots-list"),
@@ -1353,6 +1355,32 @@ function setupHistorySwipeListeners() {
   ].filter(Boolean);
 
   if (containers.length === 0) return;
+
+  if (!window.swipeTapOutsideInitialized) {
+    window.swipeTapOutsideInitialized = true;
+    const resetSwipedCard = () => {
+      if (activeSwipedCardId) {
+        const cardEl = document.getElementById("card-inner-" + activeSwipedCardId);
+        if (cardEl) {
+          cardEl.style.transition = "transform 0.2s ease-out";
+          cardEl.style.transform = "translateX(0px)";
+        }
+        activeSwipedCardId = null;
+        if (swipeAutoDismissTimer) {
+          clearTimeout(swipeAutoDismissTimer);
+          swipeAutoDismissTimer = null;
+        }
+      }
+    };
+    document.addEventListener("click", (e) => {
+      if (activeSwipedCardId) {
+        const activeCard = document.getElementById("card-inner-" + activeSwipedCardId);
+        if (activeCard && !activeCard.contains(e.target) && !e.target.closest("button")) {
+          resetSwipedCard();
+        }
+      }
+    }, { capture: true });
+  }
 
   containers.forEach(container => {
     if (container.dataset.swipeInitialized) return;
@@ -1384,6 +1412,10 @@ function setupHistorySwipeListeners() {
           prevEl.style.transform = "translateX(0px)";
         }
         activeSwipedCardId = null;
+        if (swipeAutoDismissTimer) {
+          clearTimeout(swipeAutoDismissTimer);
+          swipeAutoDismissTimer = null;
+        }
       }
     };
 
@@ -1427,12 +1459,37 @@ function setupHistorySwipeListeners() {
 
         const effectiveDiff = baseOffset + currentDiffX;
 
+        if (swipeAutoDismissTimer) {
+          clearTimeout(swipeAutoDismissTimer);
+          swipeAutoDismissTimer = null;
+        }
+
         if (effectiveDiff > 35) {
           targetCard.style.transform = "translateX(80px)";
           activeSwipedCardId = targetCard.dataset.cardId;
+          swipeAutoDismissTimer = setTimeout(() => {
+            if (activeSwipedCardId) {
+              const activeEl = document.getElementById("card-inner-" + activeSwipedCardId);
+              if (activeEl) {
+                activeEl.style.transition = "transform 0.2s ease-out";
+                activeEl.style.transform = "translateX(0px)";
+              }
+              activeSwipedCardId = null;
+            }
+          }, 3500);
         } else if (effectiveDiff < -35) {
           targetCard.style.transform = "translateX(-80px)";
           activeSwipedCardId = targetCard.dataset.cardId;
+          swipeAutoDismissTimer = setTimeout(() => {
+            if (activeSwipedCardId) {
+              const activeEl = document.getElementById("card-inner-" + activeSwipedCardId);
+              if (activeEl) {
+                activeEl.style.transition = "transform 0.2s ease-out";
+                activeEl.style.transform = "translateX(0px)";
+              }
+              activeSwipedCardId = null;
+            }
+          }, 3500);
         } else {
           targetCard.style.transform = "translateX(0px)";
           if (activeSwipedCardId === targetCard.dataset.cardId) {
@@ -1613,17 +1670,15 @@ function customRenderHistoryList() {
     return `
       <div class="relative overflow-hidden border-b border-slate-100 dark:border-slate-800/80 last:border-b-0">
         <!-- Left Underlay (Revealed on Swipe Right) -> Bookmark -->
-        <div class="absolute inset-y-0 left-0 flex items-center justify-start pl-3 bg-orange-200 dark:bg-orange-950/60 w-1/2 z-0">
-          <button onclick="event.stopPropagation(); toggleSingleBookmark('${safeId}')" class="flex items-center gap-1.5 text-xs font-bold text-orange-700 dark:text-orange-300" title="Bookmark">
-            <svg class="w-4 h-4 text-orange-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
-            <span>${isPinned ? 'Unbookmark' : 'Bookmark'}</span>
+        <div class="absolute inset-y-0 left-0 flex items-center justify-start pl-4 bg-orange-200 dark:bg-orange-950/60 w-1/2 z-0">
+          <button onclick="event.stopPropagation(); toggleSingleBookmark('${safeId}')" class="p-1.5 rounded-lg text-orange-600 dark:text-orange-400 hover:bg-orange-300/50 transition-all" title="Bookmark">
+            <svg class="w-5 h-5 text-orange-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
           </button>
         </div>
         <!-- Right Underlay (Revealed on Swipe Left) -> Delete -->
-        <div class="absolute inset-y-0 right-0 flex items-center justify-end pr-3 bg-red-200 dark:bg-red-950/60 w-1/2 z-0">
-          <button onclick="event.stopPropagation(); deleteSingleRecord('${safeId}')" class="flex items-center gap-1.5 text-xs font-bold text-red-700 dark:text-red-300" title="Delete">
-            <svg class="w-4 h-4 text-red-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-            <span>Delete</span>
+        <div class="absolute inset-y-0 right-0 flex items-center justify-end pr-4 bg-red-200 dark:bg-red-950/60 w-1/2 z-0">
+          <button onclick="event.stopPropagation(); deleteSingleRecord('${safeId}')" class="p-1.5 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-300/50 transition-all" title="Delete">
+            <svg class="w-5 h-5 text-red-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
           </button>
         </div>
         <div id="card-inner-${safeId}" data-card-id="${safeId}" onclick="handleCardClick(event, '${safeId}')" class="relative z-10 bg-white dark:bg-slate-900 py-2.5 px-2 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-transform duration-200 ease-out active:scale-[0.99]">
