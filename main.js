@@ -1,4 +1,4 @@
-// js/main.js (0710_R107) - Main Application Controller & Orchestrator
+// js/main.js (0710_R108) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -1442,14 +1442,20 @@ function initHistoryManageModeControls() {
       }
 
       const targetIds = Array.from(selectedRecordIds);
+      const allHistory = getScanHistory() || [];
+      const selectedItems = allHistory.filter(item => item && selectedRecordIds.has(String(item.id)));
+      const allSelectedArePinned = selectedItems.length > 0 && selectedItems.every(item => Boolean(item.isPinned || item.pinned));
+      const targetPinState = !allSelectedArePinned;
+
       if (typeof window.bulkPinHistoryRecords === "function") {
-        window.bulkPinHistoryRecords(targetIds, true);
+        window.bulkPinHistoryRecords(targetIds, targetPinState);
       } else if (typeof bulkPinHistoryRecords === "function") {
-        bulkPinHistoryRecords(targetIds, true);
+        bulkPinHistoryRecords(targetIds, targetPinState);
       }
 
       if (typeof showProfileToast === "function") {
-        showProfileToast(`${targetIds.length} cards bookmarked`);
+        const actionWord = targetPinState ? "bookmarked" : "unbookmarked";
+        showProfileToast(`${targetIds.length} cards ${actionWord}`);
       }
 
       updateBulkActionBarUI();
@@ -1832,7 +1838,7 @@ function customRenderHistoryList() {
       </div>
     ` : '';
 
-    const cardBgStyle = (isManageModeActive && isSelected) ? "bg-blue-50/80 dark:bg-blue-950/40" : "bg-white dark:bg-slate-900";
+    const cardBgStyle = (isManageModeActive && isSelected) ? "bg-blue-50 dark:bg-slate-800" : "bg-white dark:bg-slate-900";
 
     return `
       <div class="relative overflow-hidden border-b border-slate-100 dark:border-slate-800/80 last:border-b-0">
@@ -1848,26 +1854,28 @@ function customRenderHistoryList() {
             <svg class="w-5 h-5 text-red-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
           </button>
         </div>
-        <div id="card-inner-${safeId}" data-card-id="${safeId}" onclick="handleCardClick(event, '${safeId}')" class="relative z-10 ${cardBgStyle} py-2.5 px-2 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-transform duration-200 ease-out active:scale-[0.99]">
-          <div class="flex items-center gap-2 overflow-hidden flex-1 pr-2">
-            ${checkboxHtml}
-            <div class="flex flex-col text-left overflow-hidden flex-1">
-              <div class="flex items-center gap-1">
-                <span class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">${nameUpper}</span>
-                ${pinBadge}
+        <div id="card-inner-${safeId}" data-card-id="${safeId}" onclick="handleCardClick(event, '${safeId}')" class="relative z-10 ${cardBgStyle} py-2.5 px-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+          <div class="flex items-center justify-between w-full active:scale-[0.985] transition-transform duration-100 ease-out">
+            <div class="flex items-center gap-2 overflow-hidden flex-1 pr-2">
+              ${checkboxHtml}
+              <div class="flex flex-col text-left overflow-hidden flex-1">
+                <div class="flex items-center gap-1">
+                  <span class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">${nameUpper}</span>
+                  ${pinBadge}
+                </div>
+                <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5 tracking-tight truncate">
+                  ${licType} • ${licNo}
+                </span>
+                <span class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
+                  Checked: ${timestampStr}
+                </span>
               </div>
-              <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5 tracking-tight truncate">
-                ${licType} • ${licNo}
-              </span>
-              <span class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
-                Checked: ${timestampStr}
+            </div>
+            <div class="shrink-0">
+              <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${badgeStyle}">
+                ${statusLabel}
               </span>
             </div>
-          </div>
-          <div class="shrink-0">
-            <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${badgeStyle}">
-              ${statusLabel}
-            </span>
           </div>
         </div>
       </div>
