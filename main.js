@@ -1,4 +1,4 @@
-// js/main.js (0710_R101) - Main Application Controller & Orchestrator
+// js/main.js (0710_R102) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -1355,46 +1355,64 @@ function setupHistorySwipeListeners() {
   let targetCard = null;
   let isSwiping = false;
 
-  container.addEventListener("touchstart", (e) => {
+  const getClientX = (e) => (e.touches && e.touches.length > 0) ? e.touches[0].clientX : e.clientX;
+  const getClientY = (e) => (e.touches && e.touches.length > 0) ? e.touches[0].clientY : e.clientY;
+
+  const handleStart = (e) => {
+    if (e.target.closest("button")) return;
+
     const card = e.target.closest("[data-card-id]");
     if (!card) return;
+
     targetCard = card;
-    const touch = e.touches[0];
-    startX = touch.clientX;
-    startY = touch.clientY;
+    startX = getClientX(e);
+    startY = getClientY(e);
     currentDiffX = 0;
     isSwiping = false;
 
     if (activeSwipedCardId && activeSwipedCardId !== card.dataset.cardId) {
       const prevEl = document.getElementById("card-inner-" + activeSwipedCardId);
-      if (prevEl) prevEl.style.transform = "translateX(0px)";
+      if (prevEl) {
+        prevEl.style.transition = "transform 0.2s ease-out";
+        prevEl.style.transform = "translateX(0px)";
+      }
       activeSwipedCardId = null;
     }
-  }, { passive: true });
+  };
 
-  container.addEventListener("touchmove", (e) => {
+  const handleMove = (e) => {
     if (!targetCard) return;
-    const touch = e.touches[0];
-    const diffX = touch.clientX - startX;
-    const diffY = touch.clientY - startY;
+    const clientX = getClientX(e);
+    const clientY = getClientY(e);
+    const diffX = clientX - startX;
+    const diffY = clientY - startY;
 
-    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 8) {
       isSwiping = true;
       currentDiffX = diffX;
-      if (diffX < 0) {
-        const translateVal = Math.max(diffX, -110);
-        targetCard.style.transform = "translateX(" + translateVal + "px)";
-      } else if (activeSwipedCardId === targetCard.dataset.cardId && diffX > 0) {
-        const translateVal = Math.min(-100 + diffX, 0);
-        targetCard.style.transform = "translateX(" + translateVal + "px)";
-      }
-    }
-  }, { passive: true });
 
-  container.addEventListener("touchend", () => {
+      targetCard.style.transition = "none";
+
+      const isAlreadyOpen = (activeSwipedCardId === targetCard.dataset.cardId);
+      let translateVal = isAlreadyOpen ? (-100 + diffX) : diffX;
+
+      if (translateVal > 0) translateVal = 0;
+      if (translateVal < -120) translateVal = -120;
+
+      targetCard.style.transform = "translateX(" + translateVal + "px)";
+    }
+  };
+
+  const handleEnd = () => {
     if (!targetCard) return;
+
+    targetCard.style.transition = "transform 0.2s ease-out";
+
     if (isSwiping) {
-      if (currentDiffX < -40) {
+      const isAlreadyOpen = (activeSwipedCardId === targetCard.dataset.cardId);
+      const effectiveDiff = isAlreadyOpen ? (-100 + currentDiffX) : currentDiffX;
+
+      if (effectiveDiff < -40) {
         targetCard.style.transform = "translateX(-100px)";
         activeSwipedCardId = targetCard.dataset.cardId;
       } else {
@@ -1405,7 +1423,17 @@ function setupHistorySwipeListeners() {
       }
     }
     targetCard = null;
-  });
+    isSwiping = false;
+  };
+
+  container.addEventListener("touchstart", handleStart, { passive: true });
+  container.addEventListener("touchmove", handleMove, { passive: true });
+  container.addEventListener("touchend", handleEnd);
+  container.addEventListener("touchcancel", handleEnd);
+
+  container.addEventListener("mousedown", handleStart);
+  window.addEventListener("mousemove", (e) => { if (targetCard) handleMove(e); });
+  window.addEventListener("mouseup", () => { if (targetCard) handleEnd(); });
 }
 
 window.handleCardClick = function(event, safeId) {
@@ -1429,15 +1457,20 @@ window.toggleSingleBookmark = function(recordId) {
 
 window.deleteSingleRecord = function(recordId) {
   if (!recordId) return;
-  if (typeof deleteHistoryRecords === "function") {
-    deleteHistoryRecords([recordId]);
-  } else if (typeof window.deleteHistoryRecords === "function") {
+  activeSwipedCardId = null;
+  if (typeof window.deleteHistoryRecords === "function") {
     window.deleteHistoryRecords([recordId]);
+  } else if (typeof deleteHistoryRecords === "function") {
+    deleteHistoryRecords([recordId]);
+  }
+  if (typeof showProfileToast === "function") {
+    showProfileToast("Record removed");
   }
   customRenderHistoryList();
 };
 
 function customRenderHistoryList() {
+  activeSwipedCardId = null;
   const container = document.getElementById("recent-pilots-list") || document.getElementById("history-list");
   const countBadge = document.getElementById("history-count-badge");
   const clockIcon = document.getElementById("history-clock-icon");
