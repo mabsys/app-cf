@@ -1,4 +1,4 @@
-// js/ui.js (0310_R098) - View State, Navigation, Dock Active Highlight & Network Controller
+// js/ui.js (0710_R100) - View State, Navigation, Dock Active Highlight & Network Controller
 
 import { stopScanner, switchScanHubTab } from './scanner.js';
 import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData } from './storage.js';
@@ -521,6 +521,19 @@ export function showView(viewId, defaultTab = null) {
 
   const targetView = document.getElementById(viewId);
   if (targetView) targetView.classList.remove("hidden");
+
+  if (viewId === "result-view") {
+    const resHeaderNav = targetView ? (targetView.querySelector("header") || targetView.querySelector(".topbar") || targetView.querySelector("#result-view-header")) : null;
+    if (resHeaderNav) {
+      resHeaderNav.style.display = "none";
+      resHeaderNav.classList.add("hidden");
+    }
+    const backBtn = document.getElementById("btn-result-back");
+    if (backBtn) {
+      backBtn.style.display = "none";
+      backBtn.classList.add("hidden");
+    }
+  }
 
   if (viewId === "history-view") {
     renderHistoryList();
