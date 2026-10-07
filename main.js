@@ -1,4 +1,4 @@
-// js/main.js (0710_R108) - Main Application Controller & Orchestrator
+// js/main.js (0710_R109) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -1472,6 +1472,15 @@ function initHistoryManageModeControls() {
       }
 
       const targetIds = Array.from(selectedRecordIds);
+      const count = targetIds.length;
+      const confirmMsg = count === 1
+        ? "Are you sure you want to delete 1 selected crew record?"
+        : `Are you sure you want to delete ${count} selected crew records?`;
+
+      if (!window.confirm(confirmMsg)) {
+        return;
+      }
+
       if (typeof window.deleteHistoryRecords === "function") {
         window.deleteHistoryRecords(targetIds);
       } else if (typeof deleteHistoryRecords === "function") {
@@ -1482,11 +1491,18 @@ function initHistoryManageModeControls() {
       selectedRecordIds.clear();
 
       if (typeof showProfileToast === "function") {
-        showProfileToast(`${deletedCount} cards removed`);
+        showProfileToast(`${deletedCount} card${deletedCount > 1 ? 's' : ''} removed`);
       }
 
-      updateBulkActionBarUI();
-      customRenderHistoryList();
+      const remainingHistory = getScanHistory() || [];
+      if (remainingHistory.length === 0 && isManageModeActive) {
+        if (typeof window.exitHistoryManageMode === "function") {
+          window.exitHistoryManageMode();
+        }
+      } else {
+        updateBulkActionBarUI();
+        customRenderHistoryList();
+      }
     });
   }
 }
@@ -1689,6 +1705,9 @@ window.toggleSingleBookmark = function(recordId) {
 window.deleteSingleRecord = function(recordId) {
   if (!recordId) return;
   activeSwipedCardId = null;
+  if (selectedRecordIds && selectedRecordIds.has(String(recordId))) {
+    selectedRecordIds.delete(String(recordId));
+  }
   if (typeof window.deleteHistoryRecords === "function") {
     window.deleteHistoryRecords([recordId]);
   } else if (typeof deleteHistoryRecords === "function") {
@@ -1697,7 +1716,14 @@ window.deleteSingleRecord = function(recordId) {
   if (typeof showProfileToast === "function") {
     showProfileToast("Record removed");
   }
-  customRenderHistoryList();
+  const remaining = getScanHistory() || [];
+  if (remaining.length === 0 && isManageModeActive) {
+    if (typeof window.exitHistoryManageMode === "function") {
+      window.exitHistoryManageMode();
+    }
+  } else {
+    customRenderHistoryList();
+  }
 };
 
 function customRenderHistoryList() {
@@ -1715,6 +1741,18 @@ function customRenderHistoryList() {
 
   let allHistory = getScanHistory() || [];
   updateHistoryCounts(allHistory);
+
+  const validIdsSet = new Set(allHistory.map(item => String(item.id)));
+  selectedRecordIds.forEach(id => {
+    if (!validIdsSet.has(id)) selectedRecordIds.delete(id);
+  });
+
+  if (allHistory.length === 0 && isManageModeActive) {
+    if (typeof window.exitHistoryManageMode === "function") {
+      window.exitHistoryManageMode();
+    }
+    return;
+  }
 
   const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : "";
 
