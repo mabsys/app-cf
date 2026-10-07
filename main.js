@@ -1,4 +1,4 @@
-// js/main.js (0710_R105) - Main Application Controller & Orchestrator
+// js/main.js (0710_R106) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -1547,12 +1547,15 @@ window.deleteSingleRecord = function(recordId) {
 
 function customRenderHistoryList() {
   activeSwipedCardId = null;
-  const container = document.getElementById("recent-pilots-list") || document.getElementById("history-list");
+  const historyContainer = document.getElementById("history-list");
+  const recentContainer = document.getElementById("recent-pilots-list");
+  const targets = [historyContainer, recentContainer].filter(Boolean);
+
   const countBadge = document.getElementById("history-count-badge");
   const clockIcon = document.getElementById("history-clock-icon");
   const searchInput = document.getElementById("history-search-input");
 
-  if (!container) return;
+  if (targets.length === 0) return;
   setupHistorySwipeListeners();
 
   let allHistory = getScanHistory() || [];
@@ -1640,12 +1643,12 @@ function customRenderHistoryList() {
   }
 
   if (scanHistory.length === 0) {
-    container.innerHTML = `<div class="text-[10px] text-slate-400 italic py-4 text-center">No matching scans found.</div>`;
+    targets.forEach(t => { if (t) t.innerHTML = `<div class="text-[10px] text-slate-400 italic py-4 text-center">No matching scans found.</div>`; });
     return;
   }
 
   // Requirement 1: Exact 3-row card layout match
-  container.innerHTML = scanHistory.map(item => {
+  const cardsHtml = scanHistory.map(item => {
     if (!item) return '';
     const isPinned = Boolean(item.isPinned || item.pinned);
     const safeId = String(item.id || '').replace(/'/g, "\'");
@@ -1681,7 +1684,7 @@ function customRenderHistoryList() {
             <svg class="w-5 h-5 text-red-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
           </button>
         </div>
-        <div id="card-inner-${safeId}" data-card-id="${safeId}" onclick="handleCardClick(event, '${safeId}')" class="relative z-10 bg-white dark:bg-slate-900 py-2.5 px-2 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-transform duration-200 ease-out active:scale-[0.99]">
+        <div id="card-inner-${safeId}" data-card-id="${safeId}" onclick="handleCardClick(event, '${safeId}')" class="relative z-10 bg-white dark:bg-slate-900 py-2.5 px-2 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-transform duration-200 ease-out active:scale-[0.99]">
           <div class="flex flex-col text-left pr-2 overflow-hidden">
             <div class="flex items-center gap-1">
               <span class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">${nameUpper}</span>
@@ -1703,6 +1706,8 @@ function customRenderHistoryList() {
       </div>
     `;
   }).join('');
+
+  targets.forEach(t => { if (t) t.innerHTML = cardsHtml; });
 }
 
 window.renderHistoryList = customRenderHistoryList;
