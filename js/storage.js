@@ -1,4 +1,4 @@
-// js/storage.js (0210_R097) - LocalStorage Persistence, Crew Pinning & Compact History Filter Engine
+// js/storage.js (0210_R098) - LocalStorage Persistence, Crew Pinning & Compact History Filter Engine
 
 let scanHistory = [];
 try {
@@ -262,6 +262,10 @@ function updateFilterBtnStyles(filterBtns, activeType) {
 }
 
 export function renderHistoryList() {
+  if (typeof window !== "undefined" && typeof window.renderHistoryList === "function" && window.renderHistoryList !== renderHistoryList) {
+    window.renderHistoryList();
+    return;
+  }
   initHistoryListControls();
 
   const container = document.getElementById("recent-pilots-list") || document.getElementById("history-list");
