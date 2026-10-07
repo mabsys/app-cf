@@ -1,4 +1,4 @@
-// js/main.js (0710_R102) - Main Application Controller & Orchestrator
+// js/main.js (0710_R103) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -1347,93 +1347,112 @@ export
 let activeSwipedCardId = null;
 
 function setupHistorySwipeListeners() {
-  const container = document.getElementById("recent-pilots-list") || document.getElementById("history-list");
-  if (!container || container.dataset.swipeInitialized) return;
-  container.dataset.swipeInitialized = "true";
+  const containers = [
+    document.getElementById("recent-pilots-list"),
+    document.getElementById("history-list")
+  ].filter(Boolean);
 
-  let startX = 0, startY = 0, currentDiffX = 0;
-  let targetCard = null;
-  let isSwiping = false;
+  if (containers.length === 0) return;
 
-  const getClientX = (e) => (e.touches && e.touches.length > 0) ? e.touches[0].clientX : e.clientX;
-  const getClientY = (e) => (e.touches && e.touches.length > 0) ? e.touches[0].clientY : e.clientY;
+  containers.forEach(container => {
+    if (container.dataset.swipeInitialized) return;
+    container.dataset.swipeInitialized = "true";
 
-  const handleStart = (e) => {
-    if (e.target.closest("button")) return;
+    let startX = 0, startY = 0, currentDiffX = 0;
+    let targetCard = null;
+    let isSwiping = false;
 
-    const card = e.target.closest("[data-card-id]");
-    if (!card) return;
+    const getClientX = (e) => (e.touches && e.touches.length > 0) ? e.touches[0].clientX : e.clientX;
+    const getClientY = (e) => (e.touches && e.touches.length > 0) ? e.touches[0].clientY : e.clientY;
 
-    targetCard = card;
-    startX = getClientX(e);
-    startY = getClientY(e);
-    currentDiffX = 0;
-    isSwiping = false;
+    const handleStart = (e) => {
+      if (e.target.closest("button")) return;
 
-    if (activeSwipedCardId && activeSwipedCardId !== card.dataset.cardId) {
-      const prevEl = document.getElementById("card-inner-" + activeSwipedCardId);
-      if (prevEl) {
-        prevEl.style.transition = "transform 0.2s ease-out";
-        prevEl.style.transform = "translateX(0px)";
+      const card = e.target.closest("[data-card-id]");
+      if (!card) return;
+
+      targetCard = card;
+      startX = getClientX(e);
+      startY = getClientY(e);
+      currentDiffX = 0;
+      isSwiping = false;
+
+      if (activeSwipedCardId && activeSwipedCardId !== card.dataset.cardId) {
+        const prevEl = document.getElementById("card-inner-" + activeSwipedCardId);
+        if (prevEl) {
+          prevEl.style.transition = "transform 0.2s ease-out";
+          prevEl.style.transform = "translateX(0px)";
+        }
+        activeSwipedCardId = null;
       }
-      activeSwipedCardId = null;
-    }
-  };
+    };
 
-  const handleMove = (e) => {
-    if (!targetCard) return;
-    const clientX = getClientX(e);
-    const clientY = getClientY(e);
-    const diffX = clientX - startX;
-    const diffY = clientY - startY;
+    const handleMove = (e) => {
+      if (!targetCard) return;
+      const clientX = getClientX(e);
+      const clientY = getClientY(e);
+      const diffX = clientX - startX;
+      const diffY = clientY - startY;
 
-    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 8) {
-      isSwiping = true;
-      currentDiffX = diffX;
+      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 8) {
+        isSwiping = true;
+        currentDiffX = diffX;
 
-      targetCard.style.transition = "none";
+        targetCard.style.transition = "none";
 
-      const isAlreadyOpen = (activeSwipedCardId === targetCard.dataset.cardId);
-      let translateVal = isAlreadyOpen ? (-100 + diffX) : diffX;
+        const currentTransformStr = targetCard.style.transform || "";
+        let baseOffset = 0;
+        if (currentTransformStr.includes("translateX(80px)")) baseOffset = 80;
+        else if (currentTransformStr.includes("translateX(-80px)")) baseOffset = -80;
 
-      if (translateVal > 0) translateVal = 0;
-      if (translateVal < -120) translateVal = -120;
+        let translateVal = baseOffset + diffX;
 
-      targetCard.style.transform = "translateX(" + translateVal + "px)";
-    }
-  };
+        if (translateVal > 90) translateVal = 90;
+        if (translateVal < -90) translateVal = -90;
 
-  const handleEnd = () => {
-    if (!targetCard) return;
+        targetCard.style.transform = "translateX(" + translateVal + "px)";
+      }
+    };
 
-    targetCard.style.transition = "transform 0.2s ease-out";
+    const handleEnd = () => {
+      if (!targetCard) return;
 
-    if (isSwiping) {
-      const isAlreadyOpen = (activeSwipedCardId === targetCard.dataset.cardId);
-      const effectiveDiff = isAlreadyOpen ? (-100 + currentDiffX) : currentDiffX;
+      targetCard.style.transition = "transform 0.2s ease-out";
 
-      if (effectiveDiff < -40) {
-        targetCard.style.transform = "translateX(-100px)";
-        activeSwipedCardId = targetCard.dataset.cardId;
-      } else {
-        targetCard.style.transform = "translateX(0px)";
-        if (activeSwipedCardId === targetCard.dataset.cardId) {
-          activeSwipedCardId = null;
+      if (isSwiping) {
+        const currentTransformStr = targetCard.style.transform || "";
+        let baseOffset = 0;
+        if (currentTransformStr.includes("translateX(80px)")) baseOffset = 80;
+        else if (currentTransformStr.includes("translateX(-80px)")) baseOffset = -80;
+
+        const effectiveDiff = baseOffset + currentDiffX;
+
+        if (effectiveDiff > 35) {
+          targetCard.style.transform = "translateX(80px)";
+          activeSwipedCardId = targetCard.dataset.cardId;
+        } else if (effectiveDiff < -35) {
+          targetCard.style.transform = "translateX(-80px)";
+          activeSwipedCardId = targetCard.dataset.cardId;
+        } else {
+          targetCard.style.transform = "translateX(0px)";
+          if (activeSwipedCardId === targetCard.dataset.cardId) {
+            activeSwipedCardId = null;
+          }
         }
       }
-    }
-    targetCard = null;
-    isSwiping = false;
-  };
+      targetCard = null;
+      isSwiping = false;
+    };
 
-  container.addEventListener("touchstart", handleStart, { passive: true });
-  container.addEventListener("touchmove", handleMove, { passive: true });
-  container.addEventListener("touchend", handleEnd);
-  container.addEventListener("touchcancel", handleEnd);
+    container.addEventListener("touchstart", handleStart, { passive: true });
+    container.addEventListener("touchmove", handleMove, { passive: true });
+    container.addEventListener("touchend", handleEnd);
+    container.addEventListener("touchcancel", handleEnd);
 
-  container.addEventListener("mousedown", handleStart);
-  window.addEventListener("mousemove", (e) => { if (targetCard) handleMove(e); });
-  window.addEventListener("mouseup", () => { if (targetCard) handleEnd(); });
+    container.addEventListener("mousedown", handleStart);
+    container.addEventListener("mousemove", (e) => { if (targetCard) handleMove(e); });
+    container.addEventListener("mouseup", () => { if (targetCard) handleEnd(); });
+  });
 }
 
 window.handleCardClick = function(event, safeId) {
@@ -1592,13 +1611,19 @@ function customRenderHistoryList() {
     const timestampStr = item.timestamp || '';
 
     return `
-      <div class="relative overflow-hidden rounded-xl border-b border-slate-100 dark:border-slate-800/80 last:border-b-0 my-0.5">
-        <div class="absolute inset-y-0 right-0 flex items-center gap-1 pr-1 bg-slate-100 dark:bg-slate-900 z-0">
-          <button onclick="event.stopPropagation(); toggleSingleBookmark('${safeId}')" class="h-full px-3 bg-orange-400 hover:bg-orange-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-1 transition-all rounded-l-lg active:scale-95" title="Bookmark">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+      <div class="relative overflow-hidden border-b border-slate-100 dark:border-slate-800/80 last:border-b-0">
+        <!-- Left Underlay (Revealed on Swipe Right) -> Bookmark -->
+        <div class="absolute inset-y-0 left-0 flex items-center justify-start pl-3 bg-orange-200 dark:bg-orange-950/60 w-1/2 z-0">
+          <button onclick="event.stopPropagation(); toggleSingleBookmark('${safeId}')" class="flex items-center gap-1.5 text-xs font-bold text-orange-700 dark:text-orange-300" title="Bookmark">
+            <svg class="w-4 h-4 text-orange-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+            <span>${isPinned ? 'Unbookmark' : 'Bookmark'}</span>
           </button>
-          <button onclick="event.stopPropagation(); deleteSingleRecord('${safeId}')" class="h-full px-3 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center justify-center gap-1 transition-all rounded-r-lg active:scale-95" title="Delete">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        </div>
+        <!-- Right Underlay (Revealed on Swipe Left) -> Delete -->
+        <div class="absolute inset-y-0 right-0 flex items-center justify-end pr-3 bg-red-200 dark:bg-red-950/60 w-1/2 z-0">
+          <button onclick="event.stopPropagation(); deleteSingleRecord('${safeId}')" class="flex items-center gap-1.5 text-xs font-bold text-red-700 dark:text-red-300" title="Delete">
+            <svg class="w-4 h-4 text-red-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            <span>Delete</span>
           </button>
         </div>
         <div id="card-inner-${safeId}" data-card-id="${safeId}" onclick="handleCardClick(event, '${safeId}')" class="relative z-10 bg-white dark:bg-slate-900 py-2.5 px-2 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-transform duration-200 ease-out active:scale-[0.99]">
