@@ -1,4 +1,4 @@
-// js/storage.js (0210_R095) - LocalStorage Persistence, Crew Pinning & Compact History Filter Engine
+// js/storage.js (0210_R096) - LocalStorage Persistence, Crew Pinning & Compact History Filter Engine
 
 let scanHistory = [];
 try {
@@ -98,6 +98,7 @@ export function togglePinRecord(recordId) {
   const item = scanHistory.find(rec => rec && String(rec.id) === targetStr);
   if (item) {
     item.isPinned = !item.isPinned;
+    item.pinned = item.isPinned;
     try {
       localStorage.setItem("scan_history", JSON.stringify(scanHistory));
     } catch (e) {
@@ -107,6 +108,45 @@ export function togglePinRecord(recordId) {
     return item.isPinned;
   }
   return false;
+}
+
+export function deleteHistoryRecords(recordIds = []) {
+  if (!Array.isArray(recordIds) || recordIds.length === 0) return [];
+  const targetIds = new Set(recordIds.map(id => String(id)));
+
+  scanHistory = scanHistory.filter(item => item && !targetIds.has(String(item.id)));
+  try {
+    localStorage.setItem("scan_history", JSON.stringify(scanHistory));
+  } catch (e) {
+    console.error("Failed to update scan_history after deletion:", e);
+  }
+
+  if (typeof window !== "undefined" && typeof window.renderHistoryList === "function") {
+    window.renderHistoryList();
+  }
+  return scanHistory;
+}
+
+export function bulkPinHistoryRecords(recordIds = [], pinState = true) {
+  if (!Array.isArray(recordIds) || recordIds.length === 0) return;
+  const targetIds = new Set(recordIds.map(id => String(id)));
+
+  scanHistory.forEach(item => {
+    if (item && targetIds.has(String(item.id))) {
+      item.isPinned = pinState;
+      item.pinned = pinState;
+    }
+  });
+
+  try {
+    localStorage.setItem("scan_history", JSON.stringify(scanHistory));
+  } catch (e) {
+    console.error("Failed to update pin states in scan_history:", e);
+  }
+
+  if (typeof window !== "undefined" && typeof window.renderHistoryList === "function") {
+    window.renderHistoryList();
+  }
 }
 
 if (typeof window !== "undefined") {
@@ -218,10 +258,6 @@ function updateFilterBtnStyles(filterBtns, activeType) {
 }
 
 export function renderHistoryList() {
-  if (typeof window !== "undefined" && typeof window.renderHistoryList === "function" && window.renderHistoryList !== renderHistoryList) {
-    window.renderHistoryList();
-    return;
-  }
   initHistoryListControls();
 
   const container = document.getElementById("recent-pilots-list") || document.getElementById("history-list");
