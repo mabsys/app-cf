@@ -1,4 +1,4 @@
-// js/main.js (0710_R106) - Main Application Controller & Orchestrator
+// js/main.js (0710_R107) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -1348,6 +1348,143 @@ let activeSwipedCardId = null;
 
 let swipeAutoDismissTimer = null;
 
+
+// ----------------------------------------------------------------------------
+// PHASE 3: MANAGE MODE & VISIBLE-SCOPE BULK ACTIONS
+// ----------------------------------------------------------------------------
+let isManageModeActive = false;
+let selectedRecordIds = new Set();
+let currentlyVisibleHistoryItems = [];
+
+window.exitHistoryManageMode = function() {
+  if (!isManageModeActive) return;
+  isManageModeActive = false;
+  selectedRecordIds.clear();
+  const manageBtn = document.getElementById("btn-history-manage");
+  if (manageBtn) {
+    manageBtn.innerText = "Manage";
+    manageBtn.className = "py-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer";
+  }
+  const bulkBar = document.getElementById("history-bulk-action-bar");
+  if (bulkBar) bulkBar.classList.add("hidden");
+  if (typeof customRenderHistoryList === "function") {
+    customRenderHistoryList();
+  }
+};
+
+function updateBulkActionBarUI() {
+  const countBadge = document.getElementById("bulk-selected-count");
+  const selectAllBtnText = document.getElementById("btn-bulk-select-all-text");
+  
+  if (countBadge) {
+    countBadge.innerText = `${selectedRecordIds.size} selected`;
+  }
+
+  if (selectAllBtnText && currentlyVisibleHistoryItems.length > 0) {
+    const visibleIds = currentlyVisibleHistoryItems.map(item => String(item.id));
+    const allVisibleSelected = visibleIds.every(id => selectedRecordIds.has(id));
+    selectAllBtnText.innerText = allVisibleSelected ? "Deselect All" : "Select All";
+  }
+}
+
+function initHistoryManageModeControls() {
+  const manageBtn = document.getElementById("btn-history-manage");
+  const bulkBar = document.getElementById("history-bulk-action-bar");
+  const selectAllBtn = document.getElementById("btn-bulk-select-all");
+  const bookmarkBtn = document.getElementById("btn-bulk-bookmark");
+  const deleteBtn = document.getElementById("btn-bulk-delete");
+
+  if (manageBtn && !manageBtn.dataset.bound) {
+    manageBtn.dataset.bound = "true";
+    manageBtn.addEventListener("click", () => {
+      isManageModeActive = !isManageModeActive;
+      selectedRecordIds.clear();
+
+      if (isManageModeActive) {
+        manageBtn.innerText = "Done";
+        manageBtn.className = "py-1 px-2.5 rounded-lg bg-blue-600 text-white shadow-xs font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer";
+        if (bulkBar) bulkBar.classList.remove("hidden");
+      } else {
+        manageBtn.innerText = "Manage";
+        manageBtn.className = "py-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer";
+        if (bulkBar) bulkBar.classList.add("hidden");
+      }
+
+      updateBulkActionBarUI();
+      customRenderHistoryList();
+    });
+  }
+
+  if (selectAllBtn && !selectAllBtn.dataset.bound) {
+    selectAllBtn.dataset.bound = "true";
+    selectAllBtn.addEventListener("click", () => {
+      if (currentlyVisibleHistoryItems.length === 0) return;
+      const visibleIds = currentlyVisibleHistoryItems.map(item => String(item.id));
+      const allVisibleSelected = visibleIds.every(id => selectedRecordIds.has(id));
+
+      if (allVisibleSelected) {
+        visibleIds.forEach(id => selectedRecordIds.delete(id));
+      } else {
+        visibleIds.forEach(id => selectedRecordIds.add(id));
+      }
+
+      updateBulkActionBarUI();
+      customRenderHistoryList();
+    });
+  }
+
+  if (bookmarkBtn && !bookmarkBtn.dataset.bound) {
+    bookmarkBtn.dataset.bound = "true";
+    bookmarkBtn.addEventListener("click", () => {
+      if (selectedRecordIds.size === 0) {
+        if (typeof showProfileToast === "function") showProfileToast("No crew cards selected");
+        return;
+      }
+
+      const targetIds = Array.from(selectedRecordIds);
+      if (typeof window.bulkPinHistoryRecords === "function") {
+        window.bulkPinHistoryRecords(targetIds, true);
+      } else if (typeof bulkPinHistoryRecords === "function") {
+        bulkPinHistoryRecords(targetIds, true);
+      }
+
+      if (typeof showProfileToast === "function") {
+        showProfileToast(`${targetIds.length} cards bookmarked`);
+      }
+
+      updateBulkActionBarUI();
+      customRenderHistoryList();
+    });
+  }
+
+  if (deleteBtn && !deleteBtn.dataset.bound) {
+    deleteBtn.dataset.bound = "true";
+    deleteBtn.addEventListener("click", () => {
+      if (selectedRecordIds.size === 0) {
+        if (typeof showProfileToast === "function") showProfileToast("No crew cards selected");
+        return;
+      }
+
+      const targetIds = Array.from(selectedRecordIds);
+      if (typeof window.deleteHistoryRecords === "function") {
+        window.deleteHistoryRecords(targetIds);
+      } else if (typeof deleteHistoryRecords === "function") {
+        deleteHistoryRecords(targetIds);
+      }
+
+      const deletedCount = targetIds.length;
+      selectedRecordIds.clear();
+
+      if (typeof showProfileToast === "function") {
+        showProfileToast(`${deletedCount} cards removed`);
+      }
+
+      updateBulkActionBarUI();
+      customRenderHistoryList();
+    });
+  }
+}
+
 function setupHistorySwipeListeners() {
   const containers = [
     document.getElementById("recent-pilots-list"),
@@ -1394,6 +1531,7 @@ function setupHistorySwipeListeners() {
     const getClientY = (e) => (e.touches && e.touches.length > 0) ? e.touches[0].clientY : e.clientY;
 
     const handleStart = (e) => {
+      if (isManageModeActive) return;
       if (e.target.closest("button")) return;
 
       const card = e.target.closest("[data-card-id]");
@@ -1513,6 +1651,17 @@ function setupHistorySwipeListeners() {
 }
 
 window.handleCardClick = function(event, safeId) {
+  if (isManageModeActive) {
+    if (selectedRecordIds.has(safeId)) {
+      selectedRecordIds.delete(safeId);
+    } else {
+      selectedRecordIds.add(safeId);
+    }
+    updateBulkActionBarUI();
+    customRenderHistoryList();
+    return;
+  }
+
   const cardInner = document.getElementById("card-inner-" + safeId);
   if (cardInner && cardInner.style.transform && cardInner.style.transform !== "translateX(0px)") {
     cardInner.style.transform = "translateX(0px)";
@@ -1630,6 +1779,10 @@ function customRenderHistoryList() {
     return 0;
   });
 
+  currentlyVisibleHistoryItems = scanHistory;
+  initHistoryManageModeControls();
+  updateBulkActionBarUI();
+
   if (clockIcon && countBadge) {
     const totalScans = scanHistory.length;
     countBadge.innerText = totalScans;
@@ -1670,6 +1823,17 @@ function customRenderHistoryList() {
     const licNo = item.id || '-';
     const timestampStr = item.timestamp || '';
 
+    const isSelected = selectedRecordIds.has(safeId);
+    const checkboxHtml = isManageModeActive ? `
+      <div class="shrink-0 pl-1 pr-2 flex items-center justify-center">
+        <div class="w-4 h-4 rounded-md border ${isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800'} flex items-center justify-center transition-all">
+          ${isSelected ? '<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>' : ''}
+        </div>
+      </div>
+    ` : '';
+
+    const cardBgStyle = (isManageModeActive && isSelected) ? "bg-blue-50/80 dark:bg-blue-950/40" : "bg-white dark:bg-slate-900";
+
     return `
       <div class="relative overflow-hidden border-b border-slate-100 dark:border-slate-800/80 last:border-b-0">
         <!-- Left Underlay (Revealed on Swipe Right) -> Bookmark -->
@@ -1684,18 +1848,21 @@ function customRenderHistoryList() {
             <svg class="w-5 h-5 text-red-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
           </button>
         </div>
-        <div id="card-inner-${safeId}" data-card-id="${safeId}" onclick="handleCardClick(event, '${safeId}')" class="relative z-10 bg-white dark:bg-slate-900 py-2.5 px-2 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-transform duration-200 ease-out active:scale-[0.99]">
-          <div class="flex flex-col text-left pr-2 overflow-hidden">
-            <div class="flex items-center gap-1">
-              <span class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">${nameUpper}</span>
-              ${pinBadge}
+        <div id="card-inner-${safeId}" data-card-id="${safeId}" onclick="handleCardClick(event, '${safeId}')" class="relative z-10 ${cardBgStyle} py-2.5 px-2 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-transform duration-200 ease-out active:scale-[0.99]">
+          <div class="flex items-center gap-2 overflow-hidden flex-1 pr-2">
+            ${checkboxHtml}
+            <div class="flex flex-col text-left overflow-hidden flex-1">
+              <div class="flex items-center gap-1">
+                <span class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">${nameUpper}</span>
+                ${pinBadge}
+              </div>
+              <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5 tracking-tight truncate">
+                ${licType} • ${licNo}
+              </span>
+              <span class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
+                Checked: ${timestampStr}
+              </span>
             </div>
-            <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5 tracking-tight truncate">
-              ${licType} • ${licNo}
-            </span>
-            <span class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
-              Checked: ${timestampStr}
-            </span>
           </div>
           <div class="shrink-0">
             <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${badgeStyle}">
