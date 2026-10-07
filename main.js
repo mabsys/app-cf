@@ -1,4 +1,4 @@
-// js/main.js (0710_R109) - Main Application Controller & Orchestrator
+// js/main.js (0710_R110) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -1210,13 +1210,47 @@ function renderDashboardResults(caamResults, mabResults = null) {
 
     if (mabPilot) mabPilot.innerText = mabResults.pilotName;
     if (mabStaff) mabStaff.innerText = mabResults.staffNo;
-    if (mabDesig) mabDesig.innerText = mabResults.designation;
+    if (mabDesig) {
+      const rawDesig = mabResults.designation || "";
+      const cleanDesig = rawDesig.replace(/\.OPS.*$/i, "").trim();
+      mabDesig.innerText = cleanDesig || "-";
+    }
     if (mabPub) mabPub.innerText = mabResults.publishedDateStr;
     if (mabDocRef) mabDocRef.innerHTML = "";
 
     if (mabFresh) {
-      mabFresh.innerText = mabResults.isStale ? `Stale (>${mabResults.freshnessLimitDays}d)` : `Fresh (<${mabResults.freshnessLimitDays}d)`;
-      mabFresh.className = mabResults.isStale ? "text-rose-600 font-extrabold" : "text-emerald-600 dark:text-emerald-400 font-extrabold";
+      let ageDays = mabResults.ageInDays;
+      if (typeof ageDays !== 'number' && mabResults.publishedDateStr) {
+        try {
+          const pubDate = new Date(mabResults.publishedDateStr);
+          if (!isNaN(pubDate.getTime())) {
+            ageDays = Math.floor((new Date() - pubDate) / (1000 * 60 * 60 * 24));
+          }
+        } catch (e) {}
+      }
+      const limitDays = mabResults.freshnessLimitDays || (typeof getFreshnessLimit === 'function' ? getFreshnessLimit() : 30);
+      if (typeof ageDays === 'number' && !isNaN(ageDays)) {
+        const daysLeft = limitDays - ageDays;
+        if (daysLeft < 0) {
+          const overdue = Math.abs(daysLeft);
+          mabFresh.innerText = `Expired ${overdue}d ago`;
+          mabFresh.className = "text-rose-600 dark:text-rose-400 font-extrabold";
+        } else if (daysLeft <= 5) {
+          mabFresh.innerText = `${daysLeft}d Remaining`;
+          mabFresh.className = "text-amber-600 dark:text-amber-400 font-extrabold";
+        } else {
+          mabFresh.innerText = `${daysLeft}d Current`;
+          mabFresh.className = "text-emerald-600 dark:text-emerald-400 font-extrabold";
+        }
+      } else {
+        if (mabResults.isStale) {
+          mabFresh.innerText = `Stale (>${limitDays}d)`;
+          mabFresh.className = "text-rose-600 dark:text-rose-400 font-extrabold";
+        } else {
+          mabFresh.innerText = `Fresh (<${limitDays}d)`;
+          mabFresh.className = "text-emerald-600 dark:text-emerald-400 font-extrabold";
+        }
+      }
     }
 
     // Line Check Card
@@ -1925,6 +1959,35 @@ function customRenderHistoryList() {
 
 window.renderHistoryList = customRenderHistoryList;
 
+function setupReverifyOnlineButton() {
+  const reverifyBtn = document.getElementById("btn-reverify-online");
+  if (!reverifyBtn || reverifyBtn.dataset.bound) return;
+  reverifyBtn.dataset.bound = "true";
+
+  reverifyBtn.addEventListener("click", async () => {
+    if (!navigator.onLine) {
+      if (typeof showProfileToast === "function") {
+        showProfileToast("Cannot re-verify offline. Connect to internet.");
+      } else {
+        alert("Cannot re-verify offline. Please connect to the internet.");
+      }
+      return;
+    }
+
+    if (!lastScannedUrl) {
+      if (typeof showProfileToast === "function") {
+        showProfileToast("No licence URL available for re-verification.");
+      }
+      return;
+    }
+
+    await processLicenseUrl(lastScannedUrl);
+    if (typeof showProfileToast === "function") {
+      showProfileToast("Licence re-verified & updated!");
+    }
+  });
+}
+
 function setupPinCardButton(caamResults) {
   const resView = document.getElementById("result-view");
   const pinBtn = (resView ? resView.querySelector("#btn-toggle-pin") : null) || document.getElementById("btn-toggle-pin");
@@ -2208,6 +2271,7 @@ function renderResults(caamResults, mabResults = null) {
     };
   }
 
+  setupReverifyOnlineButton();
   setupPinCardButton(caamResults);
   showView("result-view");
 }
