@@ -1,4 +1,4 @@
-// js/storage.js (0210_R096) - LocalStorage Persistence, Crew Pinning & Compact History Filter Engine
+// js/storage.js (0210_R097) - LocalStorage Persistence, Crew Pinning & Compact History Filter Engine
 
 let scanHistory = [];
 try {
@@ -149,9 +149,13 @@ export function bulkPinHistoryRecords(recordIds = [], pinState = true) {
   }
 }
 
+
 if (typeof window !== "undefined") {
   window.togglePinRecord = togglePinRecord;
+  window.deleteHistoryRecords = deleteHistoryRecords;
+  window.bulkPinHistoryRecords = bulkPinHistoryRecords;
 }
+
 
 export function saveToHistory(results, originalUrl) {
   if (!results) return;
