@@ -1,4 +1,4 @@
-// js/main.js (0710_R100) - Main Application Controller & Orchestrator
+// js/main.js (0710_R101) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -1343,13 +1343,108 @@ function updateHistoryPillUI(targetFilter) {
 
 let currentHistoryFilter = "ALL";
 
-export function customRenderHistoryList() {
+export 
+let activeSwipedCardId = null;
+
+function setupHistorySwipeListeners() {
+  const container = document.getElementById("recent-pilots-list") || document.getElementById("history-list");
+  if (!container || container.dataset.swipeInitialized) return;
+  container.dataset.swipeInitialized = "true";
+
+  let startX = 0, startY = 0, currentDiffX = 0;
+  let targetCard = null;
+  let isSwiping = false;
+
+  container.addEventListener("touchstart", (e) => {
+    const card = e.target.closest("[data-card-id]");
+    if (!card) return;
+    targetCard = card;
+    const touch = e.touches[0];
+    startX = touch.clientX;
+    startY = touch.clientY;
+    currentDiffX = 0;
+    isSwiping = false;
+
+    if (activeSwipedCardId && activeSwipedCardId !== card.dataset.cardId) {
+      const prevEl = document.getElementById("card-inner-" + activeSwipedCardId);
+      if (prevEl) prevEl.style.transform = "translateX(0px)";
+      activeSwipedCardId = null;
+    }
+  }, { passive: true });
+
+  container.addEventListener("touchmove", (e) => {
+    if (!targetCard) return;
+    const touch = e.touches[0];
+    const diffX = touch.clientX - startX;
+    const diffY = touch.clientY - startY;
+
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
+      isSwiping = true;
+      currentDiffX = diffX;
+      if (diffX < 0) {
+        const translateVal = Math.max(diffX, -110);
+        targetCard.style.transform = "translateX(" + translateVal + "px)";
+      } else if (activeSwipedCardId === targetCard.dataset.cardId && diffX > 0) {
+        const translateVal = Math.min(-100 + diffX, 0);
+        targetCard.style.transform = "translateX(" + translateVal + "px)";
+      }
+    }
+  }, { passive: true });
+
+  container.addEventListener("touchend", () => {
+    if (!targetCard) return;
+    if (isSwiping) {
+      if (currentDiffX < -40) {
+        targetCard.style.transform = "translateX(-100px)";
+        activeSwipedCardId = targetCard.dataset.cardId;
+      } else {
+        targetCard.style.transform = "translateX(0px)";
+        if (activeSwipedCardId === targetCard.dataset.cardId) {
+          activeSwipedCardId = null;
+        }
+      }
+    }
+    targetCard = null;
+  });
+}
+
+window.handleCardClick = function(event, safeId) {
+  const cardInner = document.getElementById("card-inner-" + safeId);
+  if (cardInner && cardInner.style.transform && cardInner.style.transform !== "translateX(0px)") {
+    cardInner.style.transform = "translateX(0px)";
+    activeSwipedCardId = null;
+    return;
+  }
+  loadHistoricalRecord(safeId);
+};
+
+window.toggleSingleBookmark = function(recordId) {
+  if (typeof togglePinRecord === "function") {
+    togglePinRecord(recordId);
+  } else if (typeof window.togglePinRecord === "function") {
+    window.togglePinRecord(recordId);
+  }
+  customRenderHistoryList();
+};
+
+window.deleteSingleRecord = function(recordId) {
+  if (!recordId) return;
+  if (typeof deleteHistoryRecords === "function") {
+    deleteHistoryRecords([recordId]);
+  } else if (typeof window.deleteHistoryRecords === "function") {
+    window.deleteHistoryRecords([recordId]);
+  }
+  customRenderHistoryList();
+};
+
+function customRenderHistoryList() {
   const container = document.getElementById("recent-pilots-list") || document.getElementById("history-list");
   const countBadge = document.getElementById("history-count-badge");
   const clockIcon = document.getElementById("history-clock-icon");
   const searchInput = document.getElementById("history-search-input");
 
   if (!container) return;
+  setupHistorySwipeListeners();
 
   let allHistory = getScanHistory() || [];
   updateHistoryCounts(allHistory);
@@ -1464,23 +1559,33 @@ export function customRenderHistoryList() {
     const timestampStr = item.timestamp || '';
 
     return `
-      <div onclick="loadHistoricalRecord('${safeId}')" class="py-2.5 px-2 flex items-center justify-between  cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-all active:scale-[0.99]">
-        <div class="flex flex-col text-left pr-2 overflow-hidden">
-          <div class="flex items-center gap-1">
-            <span class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">${nameUpper}</span>
-            ${pinBadge}
-          </div>
-          <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5 tracking-tight truncate">
-            ${licType} • ${licNo}
-          </span>
-          <span class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
-            Checked: ${timestampStr}
-          </span>
+      <div class="relative overflow-hidden rounded-xl border-b border-slate-100 dark:border-slate-800/80 last:border-b-0 my-0.5">
+        <div class="absolute inset-y-0 right-0 flex items-center gap-1 pr-1 bg-slate-100 dark:bg-slate-900 z-0">
+          <button onclick="event.stopPropagation(); toggleSingleBookmark('${safeId}')" class="h-full px-3 bg-orange-400 hover:bg-orange-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-1 transition-all rounded-l-lg active:scale-95" title="Bookmark">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+          </button>
+          <button onclick="event.stopPropagation(); deleteSingleRecord('${safeId}')" class="h-full px-3 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center justify-center gap-1 transition-all rounded-r-lg active:scale-95" title="Delete">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          </button>
         </div>
-        <div class="shrink-0">
-          <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${badgeStyle}">
-            ${statusLabel}
-          </span>
+        <div id="card-inner-${safeId}" data-card-id="${safeId}" onclick="handleCardClick(event, '${safeId}')" class="relative z-10 bg-white dark:bg-slate-900 py-2.5 px-2 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-transform duration-200 ease-out active:scale-[0.99]">
+          <div class="flex flex-col text-left pr-2 overflow-hidden">
+            <div class="flex items-center gap-1">
+              <span class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">${nameUpper}</span>
+              ${pinBadge}
+            </div>
+            <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5 tracking-tight truncate">
+              ${licType} • ${licNo}
+            </span>
+            <span class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
+              Checked: ${timestampStr}
+            </span>
+          </div>
+          <div class="shrink-0">
+            <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${badgeStyle}">
+              ${statusLabel}
+            </span>
+          </div>
         </div>
       </div>
     `;
