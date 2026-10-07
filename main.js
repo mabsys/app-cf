@@ -1,4 +1,5 @@
-// js/main.js (0310_R098_8) - Main Application Controller & Orchestrator
+// js/main.js (0710_R100) - Main Application Controller & Orchestrator
+
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
 import { parseAttestationText, validateAttestationContent } from './js/attestationParser.js';
@@ -1504,20 +1505,20 @@ function setupPinCardButton(caamResults) {
 
   const updatePinButtonUI = () => {
     if (isPinned) {
-      pinBtn.className = "py-2 px-3 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 shadow-xs cursor-pointer";
+      pinBtn.className = "py-2 px-3 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 bg-orange-100 dark:bg-orange-950/80 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800/60 shadow-xs cursor-pointer";
       pinBtn.innerHTML = `
-        <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 text-orange-500 shrink-0" fill="currentColor" viewBox="0 0 24 24">
           <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
         </svg>
-        <span>Unpin Card</span>
+        <span>Unbookmark</span>
       `;
     } else {
       pinBtn.className = "py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer";
       pinBtn.innerHTML = `
-        <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 text-orange-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
         </svg>
-        <span>Pin Card</span>
+        <span>Bookmark</span>
       `;
     }
   };
@@ -1721,9 +1722,40 @@ function renderResults(caamResults, mabResults = null) {
     }
   }
 
-  // Attach button event handlers inside #result-view
+  // Phase 1: Hide/Remove top navigation header inside #result-view
+  const resHeaderNav = resView ? (resView.querySelector("header") || resView.querySelector(".topbar") || resView.querySelector("#result-view-header")) : null;
+  if (resHeaderNav) {
+    resHeaderNav.style.display = "none";
+    resHeaderNav.classList.add("hidden");
+  }
+  const backBtn = document.getElementById("btn-result-back");
+  if (backBtn) {
+    backBtn.style.display = "none";
+    backBtn.classList.add("hidden");
+    if (backBtn.parentNode && (backBtn.parentNode.tagName === "HEADER" || backBtn.parentNode.classList.contains("flex"))) {
+      backBtn.parentNode.style.display = "none";
+      backBtn.parentNode.classList.add("hidden");
+    }
+  }
+
+  // Phase 1: Attach button event handlers & format View Licence Page button (border removed, renamed label)
   const resOpenBtn = getResEl("res-open-original-btn") || getResEl("open-original-btn");
   if (resOpenBtn) {
+    resOpenBtn.classList.remove("border-t", "border-slate-100", "dark:border-slate-800", "border-slate-200", "dark:border-slate-700");
+    if (resOpenBtn.parentNode) {
+      resOpenBtn.parentNode.classList.remove("border-t", "border-slate-100", "dark:border-slate-800", "border-slate-200", "dark:border-slate-700");
+    }
+    const span = resOpenBtn.querySelector("span");
+    if (span) {
+      span.innerText = "View Licence Page";
+    } else {
+      const svg = resOpenBtn.querySelector("svg");
+      if (svg) {
+        resOpenBtn.innerHTML = `${svg.outerHTML} <span>View Licence Page</span>`;
+      } else {
+        resOpenBtn.innerText = "View Licence Page";
+      }
+    }
     resOpenBtn.onclick = () => {
       if (lastScannedUrl) {
         window.open(lastScannedUrl, "_blank");
