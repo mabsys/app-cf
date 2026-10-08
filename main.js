@@ -1,4 +1,4 @@
-// js/main.js (0810_R113) - Main Application Controller & Orchestrator
+// js/main.js (0810_R114) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -897,47 +897,93 @@ window.renderDashboardView = renderDashboardView;
 
 function sortCaamQualifications(quals) {
   if (!Array.isArray(quals) || quals.length === 0) return [];
-  const licenceItems = [];
-  const medicalItems = [];
-  const rtolItems = [];
-  const elpItems = [];
-  const restItems = [];
 
-  quals.forEach(q => {
+  function getTier(q) {
     const nameUpper = (q.name || '').toUpperCase();
+
+    // Tier 3: Radiotelephony Operator Licence
+    if (
+      nameUpper.includes('RADIO TELEPHONY') || 
+      nameUpper.includes('RADIOTELEPHONY') || 
+      nameUpper.includes('RTOL') || 
+      nameUpper.includes('TELEPHONY') || 
+      nameUpper.includes('R/T')
+    ) {
+      return 3;
+    }
+
+    // Tier 4: English Language Proficiency
+    if (
+      nameUpper.includes('ENGLISH') || 
+      nameUpper.includes('LANGUAGE') || 
+      nameUpper.includes('ELP')
+    ) {
+      return 4;
+    }
+
+    // Tier 2: Medical Class Certificate
+    if (
+      nameUpper.includes('MEDICAL') || 
+      nameUpper.includes('CLASS 1') || 
+      nameUpper.includes('CLASS 2') ||
+      nameUpper.includes('CLASS1') ||
+      nameUpper.includes('CLASS2')
+    ) {
+      return 2;
+    }
+
+    // Tier 1: Licence Type & Expiry
     if (
       nameUpper.includes('VALIDITY') || 
       nameUpper.includes('LICENCE') || 
       nameUpper.includes('ATPL') || 
       nameUpper.includes('CPL') || 
-      nameUpper.includes('PPL')
+      nameUpper.includes('PPL') || 
+      nameUpper.includes('MPL') ||
+      nameUpper.includes('AIRLINE TRANSPORT') ||
+      nameUpper.includes('COMMERCIAL PILOT') ||
+      nameUpper.includes('PRIVATE PILOT')
     ) {
-      licenceItems.push(q);
-    } else if (
-      nameUpper.includes('MEDICAL') || 
-      nameUpper.includes('CLASS 1') || 
-      nameUpper.includes('CLASS 2')
-    ) {
-      medicalItems.push(q);
-    } else if (
-      nameUpper.includes('RADIO TELEPHONY') || 
-      nameUpper.includes('RTOL') || 
-      nameUpper.includes('TELEPHONY') || 
-      nameUpper.includes('R/T')
-    ) {
-      rtolItems.push(q);
-    } else if (
-      nameUpper.includes('ENGLISH') || 
-      nameUpper.includes('LANGUAGE') || 
-      nameUpper.includes('ELP')
-    ) {
-      elpItems.push(q);
-    } else {
-      restItems.push(q);
+      return 1;
     }
-  });
 
-  return [...licenceItems, ...medicalItems, ...rtolItems, ...elpItems, ...restItems];
+    // Tier 5: Active Aircraft Ratings & Endorsements
+    if (
+      nameUpper.includes('A3') || 
+      nameUpper.includes('B7') || 
+      nameUpper.includes('ATR') || 
+      nameUpper.includes('DHC') || 
+      nameUpper.includes('B412') ||
+      nameUpper.includes('IR') || 
+      nameUpper.includes('INSTRUMENT') || 
+      nameUpper.includes('TYPE') || 
+      nameUpper.includes('RATING') || 
+      nameUpper.includes('PBN') || 
+      nameUpper.includes('PERFORMANCE') || 
+      nameUpper.includes('NIGHT') || 
+      nameUpper.includes('ENDORSEMENT') || 
+      nameUpper.includes('INSTRUCTOR') || 
+      nameUpper.includes('EXAMINER') || 
+      nameUpper.includes('CHECK PILOT') || 
+      nameUpper.includes('TRI') || 
+      nameUpper.includes('TRE') || 
+      nameUpper.includes('FI')
+    ) {
+      return 5;
+    }
+
+    // Tier 6: Other qualifications (if available)
+    return 6;
+  }
+
+  return [...quals].sort((a, b) => {
+    const tierA = getTier(a);
+    const tierB = getTier(b);
+    if (tierA !== tierB) return tierA - tierB;
+    const isLegacyA = a.isLegacy || a.status === 'INACTIVE_LEGACY' ? 1 : 0;
+    const isLegacyB = b.isLegacy || b.status === 'INACTIVE_LEGACY' ? 1 : 0;
+    return isLegacyA - isLegacyB;
+  });
 }
 
 function renderDashboardResults(caamResults, mabResults = null) {
