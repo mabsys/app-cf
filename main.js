@@ -1,4 +1,4 @@
-// js/main.js (0810_R119) - Main Application Controller & Orchestrator
+// js/main.js (0810_R116) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -175,7 +175,7 @@ function isValidCaamUrl(urlStr) {
     if (!isValidProtocol || !isCaamDomain) return false;
 
     // Strict query parameter checks for official CAAM eCLIPSE Digital Licence URLs
-    const personId = parsed.searchParams.get("pid") || parsed.searchParams.get("personid") || parsed.searchParams.get("personId");
+    const personId = parsed.searchParams.get("personid");
     const key = parsed.searchParams.get("key");
     const codekey = parsed.searchParams.get("codekey");
 
@@ -292,9 +292,7 @@ function initProfileUI() {
       modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
       modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
       profileQrScannerActive = true;
-      setTimeout(() => {
-        startScanner(handleProfileQrScanned, showError, "profile-qr-video");
-      }, 100);
+      startScanner(handleProfileQrScanned, showError, "profile-qr-video");
     }
   };
 
@@ -459,16 +457,10 @@ function handleProfileQrScanned(scannedUrl) {
   stopScanner();
   profileQrScannerActive = false;
 
-  let cleanUrl = scannedUrl.trim();
-  if (!cleanUrl.startsWith("http://") && !cleanUrl.startsWith("https://")) {
-    cleanUrl = "https://" + cleanUrl;
-  }
-
-  if (!isValidCaamUrl(cleanUrl)) {
-    alert("Invalid QR Code: Must be an official CAAM eCLIPSE QR URL.");
+  if (!isValidCaamUrl(scannedUrl)) {
+    alert("Invalid QR Code: Must be an official CAAM eCLIPSE QR.");
     return;
   }
-  scannedUrl = cleanUrl;
 
   // 1. Immediately switch UI view back to URL mode so input field & status badge are visible
   const qrBox = document.getElementById("profile-qr-box");
