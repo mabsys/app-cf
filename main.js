@@ -1,4 +1,4 @@
-// js/main.js (0810_R115) - Main Application Controller & Orchestrator
+// js/main.js (0810_R116) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -6,6 +6,22 @@ import { parseAttestationText, validateAttestationContent } from './js/attestati
 import { saveToHistory, renderHistoryList, getScanHistory, getProfileData, saveProfileData, clearProfileData, clearHistory, getThresholdDays, setThresholdDays, getHistoryLimit, setHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData } from './js/storage.js';
 import { startScanner, stopScanner, switchScanHubTab, renderRecentPilotsList, cycleCameraLens, toggleTorch, handleClipboardPaste } from './js/scanner.js';
 import { updateNetworkStatus, showScannerView, showLoading, showError, showView, initNavigationBars, closeMenu, applyThemeMode, applyTextSize, updateThresholdPills, updateHistoryLimitPills, updateFreshnessLimitPills, switchResultTab, openProfileMenu, openMenu } from './js/ui.js';
+
+
+function isSupervisoryQual(name) {
+  if (!name) return false;
+  return /\b(DFE|EXAMINER|CHECK PILOT|FI|FLIGHT INSTRUCTOR|INSTRUCTOR|TRI|TRE)\b/i.test(name) || /\bFI\(\d+\)/i.test(name) || /\bDFE\(\d+\)/i.test(name);
+}
+
+function isDfeQual(name) {
+  if (!name) return false;
+  return /\b(DFE|EXAMINER|CHECK PILOT)\b/i.test(name) || /\bDFE\(\d+\)/i.test(name);
+}
+
+function isFiQual(name) {
+  if (!name) return false;
+  return /\b(FI|FLIGHT INSTRUCTOR|INSTRUCTOR|TRI|TRE)\b/i.test(name) || /\bFI\(\d+\)/i.test(name);
+}
 
 let lastScannedUrl = "";
 let selectedAttestationFile = null;
@@ -1250,15 +1266,15 @@ function renderDashboardResults(caamResults, mabResults = null) {
           const row = document.createElement("div");
           row.className = "py-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 last:border-b-0";
           let badgeHtml = "";
-          const isSupervisory = q.isSupervisory || (q.name && (q.name.toUpperCase().includes("DFE") || q.name.toUpperCase().includes("EXAMINER") || q.name.toUpperCase().includes("FI") || q.name.toUpperCase().includes("INSTRUCTOR") || q.name.toUpperCase().includes("TRI") || q.name.toUpperCase().includes("TRE")));
+          const isSupervisory = Boolean(q.isSupervisory) || isSupervisoryQual(q.name);
           if (isSupervisory) {
             if (q.status === "EXPIRED" || q.status === "ROLE_EXPIRED") {
-              const label = (q.name.toUpperCase().includes("DFE") || q.name.toUpperCase().includes("EXAMINER")) ? "Examiner Lapsed" : ((q.name.toUpperCase().includes("FI") || q.name.toUpperCase().includes("INSTRUCTOR")) ? "Instructor Lapsed" : "Role Lapsed");
+              const label = isDfeQual(q.name) ? "Examiner Lapsed" : (isFiQual(q.name) ? "Instructor Lapsed" : "Role Lapsed");
               badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-700">${label}</span>`;
             } else if (q.status === "EXPIRING_SOON") {
               badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">${q.daysRemaining} days left</span>`;
             } else {
-              const label = (q.name.toUpperCase().includes("DFE") || q.name.toUpperCase().includes("EXAMINER")) ? "Valid (Examiner)" : ((q.name.toUpperCase().includes("FI") || q.name.toUpperCase().includes("INSTRUCTOR")) ? "Valid (Instructor)" : "Valid");
+              const label = isDfeQual(q.name) ? "Valid (Examiner)" : (isFiQual(q.name) ? "Valid (Instructor)" : "Valid");
               badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300">${label}</span>`;
             }
           } else {
@@ -1284,7 +1300,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
           const legacyHeader = document.createElement("div");
           legacyHeader.className = "mt-4 pt-1 flex items-center justify-between";
           legacyHeader.innerHTML = `
-            <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Previous / Legacy Endorsements</span>
+            <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Previous / Legacy Certifications</span>
           `;
           caamListContainer.appendChild(legacyHeader);
 
@@ -2370,15 +2386,15 @@ function renderResults(caamResults, mabResults = null) {
         const row = document.createElement("div");
         row.className = "py-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 last:border-b-0";
         let badgeHtml = "";
-        const isSupervisory = q.isSupervisory || (q.name && (q.name.toUpperCase().includes("DFE") || q.name.toUpperCase().includes("EXAMINER") || q.name.toUpperCase().includes("FI") || q.name.toUpperCase().includes("INSTRUCTOR") || q.name.toUpperCase().includes("TRI") || q.name.toUpperCase().includes("TRE")));
+        const isSupervisory = Boolean(q.isSupervisory) || isSupervisoryQual(q.name);
         if (isSupervisory) {
           if (q.status === "EXPIRED" || q.status === "ROLE_EXPIRED") {
-            const label = (q.name.toUpperCase().includes("DFE") || q.name.toUpperCase().includes("EXAMINER")) ? "Examiner Lapsed" : ((q.name.toUpperCase().includes("FI") || q.name.toUpperCase().includes("INSTRUCTOR")) ? "Instructor Lapsed" : "Role Lapsed");
+            const label = isDfeQual(q.name) ? "Examiner Lapsed" : (isFiQual(q.name) ? "Instructor Lapsed" : "Role Lapsed");
             badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-700">${label}</span>`;
           } else if (q.status === "EXPIRING_SOON") {
             badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">${q.daysRemaining} days left</span>`;
           } else {
-            const label = (q.name.toUpperCase().includes("DFE") || q.name.toUpperCase().includes("EXAMINER")) ? "Valid (Examiner)" : ((q.name.toUpperCase().includes("FI") || q.name.toUpperCase().includes("INSTRUCTOR")) ? "Valid (Instructor)" : "Valid");
+            const label = isDfeQual(q.name) ? "Valid (Examiner)" : (isFiQual(q.name) ? "Valid (Instructor)" : "Valid");
             badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300">${label}</span>`;
           }
         } else {
