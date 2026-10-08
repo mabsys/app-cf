@@ -1,6 +1,16 @@
-// js/caamParser.js (0810_R114) - Dedicated CAAM eCLIPSE Digital Licence Parser Engine
+// js/caamParser.js (0810_R115) - Dedicated CAAM eCLIPSE Digital Licence Parser Engine
 
 import { DEFAULT_THRESHOLD } from './config.js';
+
+export function isSupervisoryQualification(name) {
+  if (!name) return false;
+  return (
+    /(DFE|EXAMINER|CHECK PILOT|FI|FLIGHT INSTRUCTOR|INSTRUCTOR|TRI|TRE)/i.test(name) ||
+    /FI\(\d+\)/i.test(name) ||
+    /DFE\(\d+\)/i.test(name)
+  );
+}
+
 
 function parseLicenseDate(dateStr) {
   if (!dateStr) return null;
@@ -663,19 +673,97 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD, activeFl
     });
   });
 
-  // Calculate overallStatus ignoring INACTIVE_LEGACY
+  // Calculate overallStatus ignoring INACTIVE_LEGACY and excluding supervisory expirations from line grounding
   const finalQualsList = Object.values(qualificationData);
   let overallStatus = 'VALID';
   let expiredCount = 0;
   let expiringSoonCount = 0;
 
+  let activeSupervisoryList = [];
+
   finalQualsList.forEach(item => {
-    if (item.status === 'EXPIRED') expiredCount++;
-    else if (item.status === 'EXPIRING_SOON') expiringSoonCount++;
+    item.isSupervisory = isSupervisoryQualification(item.name);
+    const isLegacy = item.isLegacy || item.status === 'INACTIVE_LEGACY';
+    if (!isLegacy) {
+      if (item.isSupervisory) {
+        activeSupervisoryList.push(item);
+        if (item.status === 'EXPIRED') {
+          item.status = 'ROLE_EXPIRED';
+        }
+      } else {
+        if (item.status === 'EXPIRED') expiredCount++;
+        else if (item.status === 'EXPIRING_SOON') expiringSoonCount++;
+      }
+    }
   });
 
   if (expiredCount > 0) overallStatus = 'EXPIRED';
   else if (expiringSoonCount > 0) overallStatus = 'EXPIRING_SOON';
+
+  // Role Privilege Advisory Logic
+  let advisoryNotice = null;
+  if (activeSupervisoryList.length > 0) {
+    const activeDfes = activeSupervisoryList.filter(q => {
+      const u = q.name.toUpperCase();
+      return u.includes('DFE') || u.includes('EXAMINER');
+    });
+    const activeFis = activeSupervisoryList.filter(q => {
+      const u = q.name.toUpperCase();
+      return u.includes('FI') || u.includes('INSTRUCTOR') || u.includes('TRI') || u.includes('TRE');
+    });
+
+    const hasExpiredDfe = activeDfes.some(q => q.status === 'EXPIRED' || q.status === 'ROLE_EXPIRED');
+    const hasValidDfe = activeDfes.some(q => q.status === 'VALID');
+    const hasExpiredFi = activeFis.some(q => q.status === 'EXPIRED' || q.status === 'ROLE_EXPIRED');
+    const hasValidFi = activeFis.some(q => q.status === 'VALID');
+
+    if (hasExpiredDfe && hasExpiredFi) {
+      advisoryNotice = {
+        type: 'SUPERVISORY_LAPSED',
+        title: 'SPECIALIZED ROLE ADVISORY',
+        message: 'Supervisory privileges lapsed (DFE/FI expired). Cleared for Commercial Line Operations only.',
+        badgeText: 'PRIVILEGES LAPSED'
+      };
+    } else if (hasExpiredDfe && (hasValidFi || activeFis.length > 0)) {
+      advisoryNotice = {
+        type: 'DFE_LAPSED',
+        title: 'SPECIALIZED ROLE ADVISORY',
+        message: 'Examiner privilege lapsed (DFE(1) expired). Cleared for Line Operations & Flight Instruction (FI(1)) only.',
+        badgeText: 'EXAMINER LAPSED'
+      };
+    } else if (hasExpiredFi && (hasValidDfe || activeDfes.length > 0)) {
+      advisoryNotice = {
+        type: 'FI_LAPSED',
+        title: 'SPECIALIZED ROLE ADVISORY',
+        message: 'Flight Instructor privilege lapsed (FI(1) expired). Cleared for Line Operations & Examiner Checks (DFE(1)) only.',
+        badgeText: 'INSTRUCTOR LAPSED'
+      };
+    } else if (hasExpiredDfe) {
+      advisoryNotice = {
+        type: 'DFE_LAPSED',
+        title: 'SPECIALIZED ROLE ADVISORY',
+        message: 'Examiner privilege lapsed (DFE expired). Cleared for Commercial Line Operations only.',
+        badgeText: 'EXAMINER LAPSED'
+      };
+    } else if (hasExpiredFi) {
+      advisoryNotice = {
+        type: 'FI_LAPSED',
+        title: 'SPECIALIZED ROLE ADVISORY',
+        message: 'Flight Instructor privilege lapsed (FI expired). Cleared for Commercial Line Operations only.',
+        badgeText: 'INSTRUCTOR LAPSED'
+      };
+    } else {
+      const anyExpiredRole = activeSupervisoryList.some(q => q.status === 'EXPIRED' || q.status === 'ROLE_EXPIRED');
+      if (anyExpiredRole) {
+        advisoryNotice = {
+          type: 'ROLE_LAPSED',
+          title: 'SPECIALIZED ROLE ADVISORY',
+          message: 'Instructional/Examiner privilege lapsed. Cleared for Commercial Line Operations only.',
+          badgeText: 'ROLE LAPSED'
+        };
+      }
+    }
+  }
 
     // Extract QrServlet Image Endpoint
   let qrImageUrl = '';
@@ -701,6 +789,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD, activeFl
     expiredCount: expiredCount,
     expiringSoonCount: expiringSoonCount,
     activeFleetFamily: activeFamily,
-    hasLegacyRatings: hasLegacyRatings
+    hasLegacyRatings: hasLegacyRatings,
+    advisoryNotice: advisoryNotice
   };
 }
