@@ -1,4 +1,4 @@
-// js/main.js (0810_R118) - Main Application Controller & Orchestrator
+// js/main.js (0810_R119) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -175,7 +175,7 @@ function isValidCaamUrl(urlStr) {
     if (!isValidProtocol || !isCaamDomain) return false;
 
     // Strict query parameter checks for official CAAM eCLIPSE Digital Licence URLs
-    const personId = parsed.searchParams.get("personid");
+    const personId = parsed.searchParams.get("pid") || parsed.searchParams.get("personid") || parsed.searchParams.get("personId");
     const key = parsed.searchParams.get("key");
     const codekey = parsed.searchParams.get("codekey");
 
