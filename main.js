@@ -1,4 +1,4 @@
-// js/main.js (0810_R120) - Main Application Controller & Orchestrator
+// js/main.js (0810_R121) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -190,40 +190,39 @@ function isValidCaamUrl(urlStr) {
 }
 
 
-function updateManualUrlBadge(urlStr) {
-  const urlBadge = document.getElementById("manual-url-badge");
-  const urlText = document.getElementById("manual-url-status-text");
-  if (!urlBadge) return;
+function applyUrlInputValidationStyle(inputEl, cleanUrl) {
+  if (!inputEl) return;
+  inputEl.classList.remove(
+    "bg-emerald-50", "dark:bg-emerald-950/60", "border-emerald-500", "text-emerald-950", "dark:text-emerald-100", "focus:ring-emerald-500",
+    "bg-rose-50", "dark:bg-rose-950/60", "border-rose-500", "text-rose-950", "dark:text-rose-100", "focus:ring-rose-500",
+    "bg-white", "dark:bg-slate-900", "border-slate-200", "dark:border-slate-700", "text-slate-800", "dark:text-slate-100"
+  );
 
-  const cleanUrl = urlStr ? urlStr.trim() : "";
-  if (isValidCaamUrl(cleanUrl)) {
-    urlBadge.classList.remove("hidden");
-    if (urlText) urlText.innerText = "✓ Valid CAAM Licence URL captured";
+  if (!cleanUrl) {
+    inputEl.classList.add("bg-white", "dark:bg-slate-900", "border-slate-200", "dark:border-slate-700", "text-slate-800", "dark:text-slate-100");
+  } else if (isValidCaamUrl(cleanUrl)) {
+    inputEl.classList.add("bg-emerald-50", "dark:bg-emerald-950/60", "border-emerald-500", "text-emerald-950", "dark:text-emerald-100");
   } else {
-    urlBadge.classList.add("hidden");
+    inputEl.classList.add("bg-rose-50", "dark:bg-rose-950/60", "border-rose-500", "text-rose-950", "dark:text-rose-100");
   }
 }
 
-function updateProfileUrlBadge(urlStr) {
-  const urlBadge = document.getElementById("profile-url-status-badge") || document.getElementById("profile-url-badge");
-  const urlText = document.getElementById("profile-url-status-text") || document.getElementById("profile-url-badge-text") || (urlBadge ? urlBadge.querySelector("span") : null);
-
-  if (!urlBadge) return;
+function updateManualUrlBadge(urlStr) {
+  const urlInput = document.getElementById("manual-url-input");
+  const urlBadge = document.getElementById("manual-url-badge");
+  if (urlBadge) urlBadge.classList.add("hidden");
 
   const cleanUrl = urlStr ? urlStr.trim() : "";
-  if (isValidCaamUrl(cleanUrl)) {
-    urlBadge.classList.remove("hidden");
-    if (urlText) {
-      const storedProfile = getProfileData();
-      if (storedProfile && storedProfile.url && cleanUrl === storedProfile.url.trim()) {
-        urlText.innerText = "Stored licence URL";
-      } else {
-        urlText.innerText = "Valid CAAM Licence URL captured";
-      }
-    }
-  } else {
-    urlBadge.classList.add("hidden");
-  }
+  applyUrlInputValidationStyle(urlInput, cleanUrl);
+}
+
+function updateProfileUrlBadge(urlStr) {
+  const urlInput = document.getElementById("profile-url-input");
+  const urlBadge = document.getElementById("profile-url-status-badge") || document.getElementById("profile-url-badge");
+  if (urlBadge) urlBadge.classList.add("hidden");
+
+  const cleanUrl = urlStr ? urlStr.trim() : "";
+  applyUrlInputValidationStyle(urlInput, cleanUrl);
 }
 
 function showProfileToast(msg = "Crew credentials saved successfully!") {
@@ -283,18 +282,57 @@ function initProfileUI() {
     modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
   }
 
-  const activateQrMode = () => {
+  const scannerControlsBox = document.getElementById("profile-scanner-controls");
+  const profileCycleBtn = document.getElementById("profile-cycle-btn");
+  const profileUploadQrBtn = document.getElementById("profile-upload-qr-btn");
+  const profileQrFileInput = document.getElementById("profile-qr-file-input");
+  const profileTorchBtn = document.getElementById("profile-torch-btn");
+
+  if (profileCycleBtn) profileCycleBtn.onclick = () => cycleCameraLens("profile-qr-video");
+  if (profileTorchBtn) profileTorchBtn.onclick = () => toggleTorch();
+
+  if (profileUploadQrBtn && profileQrFileInput) {
+    profileUploadQrBtn.onclick = () => profileQrFileInput.click();
+    profileQrFileInput.onchange = async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (window.QrScanner) {
+        try {
+          showLoading("Processing QR code image...");
+          const result = await window.QrScanner.scanImage(file, { returnDetailedScanResult: true });
+          const decodedText = (typeof result === 'object' ? result.data : result) || "";
+          if (decodedText.trim()) {
+            handleProfileQrScanned(decodedText.trim());
+          } else {
+            showError("No valid QR code found in selected photo.");
+          }
+        } catch (err) {
+          showError("Could not decode QR code from image. Please ensure image is clear.");
+        }
+      }
+      profileQrFileInput.value = "";
+    };
+  }
+
+  const activateQrMode = async () => {
     if (profileQrScannerActive) return;
     if (qrBox && urlBox && modeQrBtn && modeUrlBtn) {
+      if (typeof stopScanner === 'function') await stopScanner();
+
       qrBox.classList.remove("hidden");
       urlBox.classList.add("hidden");
+      if (scannerControlsBox) {
+        scannerControlsBox.classList.remove("hidden");
+        scannerControlsBox.classList.add("flex");
+      }
       if (stopScanBtnProfile) stopScanBtnProfile.classList.remove("hidden");
+
       modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
       modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
       profileQrScannerActive = true;
       setTimeout(() => {
         startScanner(handleProfileQrScanned, showError, "profile-qr-video");
-      }, 100);
+      }, 150);
     }
   };
 
@@ -304,6 +342,10 @@ function initProfileUI() {
       profileQrScannerActive = false;
       urlBox.classList.remove("hidden");
       qrBox.classList.add("hidden");
+      if (scannerControlsBox) {
+        scannerControlsBox.classList.add("hidden");
+        scannerControlsBox.classList.remove("flex");
+      }
       if (stopScanBtnProfile) stopScanBtnProfile.classList.add("hidden");
       modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
       modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
