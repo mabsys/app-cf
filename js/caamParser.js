@@ -1,4 +1,4 @@
-// js/caamParser.js (0810_R112) - Dedicated CAAM eCLIPSE Digital Licence Parser Engine
+// js/caamParser.js (0810_R113) - Dedicated CAAM eCLIPSE Digital Licence Parser Engine
 
 import { DEFAULT_THRESHOLD } from './config.js';
 
@@ -618,6 +618,17 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD, activeFl
 
   if (expiredCount > 0) overallStatus = 'EXPIRED';
   else if (expiringSoonCount > 0) overallStatus = 'EXPIRING_SOON';
+
+    // Extract QrServlet Image Endpoint
+  let qrImageUrl = '';
+  const imgs = doc.querySelectorAll('img');
+  for (let i = 0; i < imgs.length; i++) {
+    const src = imgs[i].getAttribute('src') || '';
+    if (src.includes('QrServlet') || src.includes('m=viewMyDigitalLicenseQR')) {
+      qrImageUrl = src.startsWith('http') ? src : ('https://' + 'eclipse.caam.gov.my' + (src.startsWith('/') ? '' : '/') + src);
+      break;
+    }
+  }
 
   return {
     pilotDetails: {
