@@ -1,4 +1,4 @@
-// js/components/menu.js (0810_R121) - Sliding Floating Menu Component
+// js/components/menu.js (0810_R122) - Sliding Floating Menu Component
 
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
@@ -135,9 +135,11 @@ export const menuHTML = `
             </div>
 
             <div id="profile-url-box" class="flex flex-col gap-2">
-              <input type="url" id="profile-url-input" placeholder="https://eclipse.caam.gov.my/ELICENSING/..." class="w-full p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <div id="profile-url-badge" class="hidden text-[10px] text-emerald-600 font-extrabold flex items-center gap-1 mt-0.5">
-                <span id="profile-url-status-text">✓ Valid CAAM Licence URL captured</span>
+              <div class="relative w-full">
+                <input type="url" id="profile-url-input" placeholder="https://eclipse.caam.gov.my/ELICENSING/..." class="w-full p-2.5 pr-8 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none transition-all">
+                <button id="profile-url-clear-btn" type="button" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer" title="Clear URL">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
               </div>
               <p class="text-[9px] text-slate-400">Paste your official eCLIPSE URL directly if QR camera scanning is unavailable.</p>
             </div>
