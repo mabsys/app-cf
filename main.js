@@ -1,4 +1,4 @@
-// js/main.js (0810_R119) - Main Application Controller & Orchestrator
+// js/main.js (0810_R120) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -646,7 +646,7 @@ async function processAndCacheProfileData(url, pdfFile) {
         const htmlText = await response.text();
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlText, "text/html");
-        const profileMab = (isProfileUrlMatch && profile && profile.cachedMabResults) ? profile.cachedMabResults : null;
+        const profileMab = (existingProfile && existingProfile.cachedMabResults) ? existingProfile.cachedMabResults : null;
       const activeFleetCtx = (profileMab && profileMab.lineCheck) ? profileMab.lineCheck.fleet : null;
       caamResults = parseLicenseDOM(doc, threshold, activeFleetCtx);
         caamResults.scanTime = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).replace(',', ', ');
