@@ -1,4 +1,4 @@
-// js/main.js (0710_R110) - Main Application Controller & Orchestrator
+// js/main.js (0810_R112) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -622,7 +622,8 @@ async function processAndCacheProfileData(url, pdfFile) {
         const htmlText = await response.text();
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlText, "text/html");
-        caamResults = parseLicenseDOM(doc, threshold);
+        const activeFleetCtx = (mabResults && mabResults.lineCheck) ? mabResults.lineCheck.fleet : null;
+        caamResults = parseLicenseDOM(doc, threshold, activeFleetCtx);
         caamResults.scanTime = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).replace(',', ', ');
       }
     } catch (e) {
@@ -698,7 +699,8 @@ async function processLicenseUrl(url) {
       const htmlText = await response.text();
       const parser = new DOMParser();
       const doc = parser.parseFromString(htmlText, "text/html");
-      caamResults = parseLicenseDOM(doc, threshold);
+      const activeFleetCtx = (mabResults && mabResults.lineCheck) ? mabResults.lineCheck.fleet : null;
+        caamResults = parseLicenseDOM(doc, threshold, activeFleetCtx);
       if (caamResults) {
         caamResults.scanTime = scanTime;
       }
@@ -893,22 +895,47 @@ window.renderDashboardView = renderDashboardView;
 
 function sortCaamQualifications(quals) {
   if (!Array.isArray(quals) || quals.length === 0) return [];
-  const validityItems = [];
+  const licenceItems = [];
   const medicalItems = [];
-  const otherItems = [];
+  const rtolItems = [];
+  const elpItems = [];
+  const restItems = [];
 
   quals.forEach(q => {
     const nameUpper = (q.name || '').toUpperCase();
-    if (nameUpper.includes('VALIDITY EXPIR') || nameUpper.includes('LICENCE EXPIR') || nameUpper.includes('VALIDITY EXPIRE')) {
-      validityItems.push(q);
-    } else if (nameUpper.includes('MEDICAL EXPIR') || nameUpper.includes('MEDICAL VALIDITY') || nameUpper.includes('MEDICAL EXPIRE')) {
+    if (
+      nameUpper.includes('VALIDITY') || 
+      nameUpper.includes('LICENCE') || 
+      nameUpper.includes('ATPL') || 
+      nameUpper.includes('CPL') || 
+      nameUpper.includes('PPL')
+    ) {
+      licenceItems.push(q);
+    } else if (
+      nameUpper.includes('MEDICAL') || 
+      nameUpper.includes('CLASS 1') || 
+      nameUpper.includes('CLASS 2')
+    ) {
       medicalItems.push(q);
+    } else if (
+      nameUpper.includes('RADIO TELEPHONY') || 
+      nameUpper.includes('RTOL') || 
+      nameUpper.includes('TELEPHONY') || 
+      nameUpper.includes('R/T')
+    ) {
+      rtolItems.push(q);
+    } else if (
+      nameUpper.includes('ENGLISH') || 
+      nameUpper.includes('LANGUAGE') || 
+      nameUpper.includes('ELP')
+    ) {
+      elpItems.push(q);
     } else {
-      otherItems.push(q);
+      restItems.push(q);
     }
   });
 
-  return [...validityItems, ...medicalItems, ...otherItems];
+  return [...licenceItems, ...medicalItems, ...rtolItems, ...elpItems, ...restItems];
 }
 
 function renderDashboardResults(caamResults, mabResults = null) {
@@ -1142,16 +1169,19 @@ function renderDashboardResults(caamResults, mabResults = null) {
       if (!sortedCaamQuals || sortedCaamQuals.length === 0) {
         caamListContainer.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">No CAAM qualifications found on digital licence.</div>`;
       } else {
-        sortedCaamQuals.forEach(q => {
+        const activeQuals = sortedCaamQuals.filter(q => !q.isLegacy && q.status !== "INACTIVE_LEGACY");
+        const legacyQuals = sortedCaamQuals.filter(q => q.isLegacy || q.status === "INACTIVE_LEGACY");
+
+        activeQuals.forEach(q => {
           const row = document.createElement("div");
           row.className = "py-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 last:border-b-0";
           let badgeHtml = "";
           if (q.status === "EXPIRED") {
-            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-100 text-rose-700">Expired</span>`;
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300">Expired</span>`;
           } else if (q.status === "EXPIRING_SOON") {
-            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800">${q.daysRemaining} days left</span>`;
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">${q.daysRemaining} days left</span>`;
           } else {
-            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700">Valid</span>`;
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300">Valid</span>`;
           }
           row.innerHTML = `
             <div>
@@ -1162,6 +1192,29 @@ function renderDashboardResults(caamResults, mabResults = null) {
           `;
           caamListContainer.appendChild(row);
         });
+
+        if (legacyQuals.length > 0) {
+          const legacyHeader = document.createElement("div");
+          legacyHeader.className = "mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between";
+          legacyHeader.innerHTML = `
+            <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Previous / Legacy Endorsements</span>
+            <span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[9px] font-bold">Non-Penalizing</span>
+          `;
+          caamListContainer.appendChild(legacyHeader);
+
+          legacyQuals.forEach(q => {
+            const row = document.createElement("div");
+            row.className = "py-2.5 px-3 rounded-xl bg-slate-50/60 dark:bg-slate-900/40 my-1 flex items-center justify-between border border-slate-100 dark:border-slate-800/60";
+            row.innerHTML = `
+              <div>
+                <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">${q.name}</div>
+                <div class="text-[10px] text-slate-400">Lapsed: ${q.dateText || "Expired"}</div>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Legacy / Lapsed</span>
+            `;
+            caamListContainer.appendChild(row);
+          });
+        }
       }
     }
   } else {
@@ -2198,16 +2251,19 @@ function renderResults(caamResults, mabResults = null) {
     if (!sortedResQuals || sortedResQuals.length === 0) {
       caamListContainer.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">No CAAM qualifications found on digital licence.</div>`;
     } else {
-      sortedResQuals.forEach(q => {
+      const activeResQuals = sortedResQuals.filter(q => !q.isLegacy && q.status !== "INACTIVE_LEGACY");
+      const legacyResQuals = sortedResQuals.filter(q => q.isLegacy || q.status === "INACTIVE_LEGACY");
+
+      activeResQuals.forEach(q => {
         const row = document.createElement("div");
         row.className = "py-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 last:border-b-0";
         let badgeHtml = "";
         if (q.status === "EXPIRED") {
-          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-100 text-rose-700">Expired</span>`;
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300">Expired</span>`;
         } else if (q.status === "EXPIRING_SOON") {
-          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800">${q.daysRemaining} days left</span>`;
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">${q.daysRemaining} days left</span>`;
         } else {
-          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700">Valid</span>`;
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300">Valid</span>`;
         }
         row.innerHTML = `
           <div>
@@ -2218,6 +2274,29 @@ function renderResults(caamResults, mabResults = null) {
         `;
         caamListContainer.appendChild(row);
       });
+
+      if (legacyResQuals.length > 0) {
+        const legacyHeader = document.createElement("div");
+        legacyHeader.className = "mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between";
+        legacyHeader.innerHTML = `
+          <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Previous / Legacy Endorsements</span>
+          <span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[9px] font-bold">Non-Penalizing</span>
+        `;
+        caamListContainer.appendChild(legacyHeader);
+
+        legacyResQuals.forEach(q => {
+          const row = document.createElement("div");
+          row.className = "py-2.5 px-3 rounded-xl bg-slate-50/60 dark:bg-slate-900/40 my-1 flex items-center justify-between border border-slate-100 dark:border-slate-800/60";
+          row.innerHTML = `
+            <div>
+              <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">${q.name}</div>
+              <div class="text-[10px] text-slate-400">Lapsed: ${q.dateText || "Expired"}</div>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Legacy / Lapsed</span>
+          `;
+          caamListContainer.appendChild(row);
+        });
+      }
     }
   }
 
