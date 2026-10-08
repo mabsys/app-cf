@@ -1,4 +1,4 @@
-// js/main.js (0810_R114) - Main Application Controller & Orchestrator
+// js/main.js (0810_R115) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -1080,6 +1080,32 @@ function renderDashboardResults(caamResults, mabResults = null) {
       heroBadge.innerText = "ELIGIBLE FOR FLIGHT DUTY";
       heroMsg.innerText = "All CAAM licence checks and MAB company attestations are active.";
     }
+
+    // Role Privilege Advisory Box
+    let advisoryBox = getDashEl("overview-advisory-box");
+    if (caamResults && caamResults.advisoryNotice) {
+      if (!advisoryBox) {
+        advisoryBox = document.createElement("div");
+        advisoryBox.id = "overview-advisory-box";
+        if (heroMsg && heroMsg.parentElement) {
+          heroMsg.parentElement.appendChild(advisoryBox);
+        }
+      }
+      advisoryBox.className = "mt-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-left";
+      advisoryBox.innerHTML = `
+        <div class="flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-300">
+          <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+          </svg>
+          <span>SPECIALIZED ROLE ADVISORY</span>
+        </div>
+        <p class="mt-1 text-[11px] font-medium text-amber-700 dark:text-amber-400 leading-tight">
+          ${caamResults.advisoryNotice.message}
+        </p>
+      `;
+    } else if (advisoryBox) {
+      advisoryBox.remove();
+    }
   }
 
   function parseAnyDate(dateStr) {
@@ -1224,12 +1250,25 @@ function renderDashboardResults(caamResults, mabResults = null) {
           const row = document.createElement("div");
           row.className = "py-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 last:border-b-0";
           let badgeHtml = "";
-          if (q.status === "EXPIRED") {
-            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300">Expired</span>`;
-          } else if (q.status === "EXPIRING_SOON") {
-            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">${q.daysRemaining} days left</span>`;
+          const isSupervisory = q.isSupervisory || (q.name && (q.name.toUpperCase().includes("DFE") || q.name.toUpperCase().includes("EXAMINER") || q.name.toUpperCase().includes("FI") || q.name.toUpperCase().includes("INSTRUCTOR") || q.name.toUpperCase().includes("TRI") || q.name.toUpperCase().includes("TRE")));
+          if (isSupervisory) {
+            if (q.status === "EXPIRED" || q.status === "ROLE_EXPIRED") {
+              const label = (q.name.toUpperCase().includes("DFE") || q.name.toUpperCase().includes("EXAMINER")) ? "Examiner Lapsed" : ((q.name.toUpperCase().includes("FI") || q.name.toUpperCase().includes("INSTRUCTOR")) ? "Instructor Lapsed" : "Role Lapsed");
+              badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-700">${label}</span>`;
+            } else if (q.status === "EXPIRING_SOON") {
+              badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">${q.daysRemaining} days left</span>`;
+            } else {
+              const label = (q.name.toUpperCase().includes("DFE") || q.name.toUpperCase().includes("EXAMINER")) ? "Valid (Examiner)" : ((q.name.toUpperCase().includes("FI") || q.name.toUpperCase().includes("INSTRUCTOR")) ? "Valid (Instructor)" : "Valid");
+              badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300">${label}</span>`;
+            }
           } else {
-            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300">Valid</span>`;
+            if (q.status === "EXPIRED") {
+              badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300">Expired</span>`;
+            } else if (q.status === "EXPIRING_SOON") {
+              badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">${q.daysRemaining} days left</span>`;
+            } else {
+              badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300">Valid</span>`;
+            }
           }
           row.innerHTML = `
             <div>
@@ -1243,10 +1282,9 @@ function renderDashboardResults(caamResults, mabResults = null) {
 
         if (legacyQuals.length > 0) {
           const legacyHeader = document.createElement("div");
-          legacyHeader.className = "mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between";
+          legacyHeader.className = "mt-4 pt-1 flex items-center justify-between";
           legacyHeader.innerHTML = `
             <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Previous / Legacy Endorsements</span>
-            <span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[9px] font-bold">Non-Penalizing</span>
           `;
           caamListContainer.appendChild(legacyHeader);
 
@@ -2290,6 +2328,32 @@ function renderResults(caamResults, mabResults = null) {
       overallBadge.className = "status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-xs tracking-wider mt-4 shadow-md bg-emerald-600";
       overallBadge.innerText = "VALID";
     }
+
+    // Role Privilege Advisory Box in result view
+    let resAdvisoryBox = getResEl("res-advisory-box");
+    if (caamResults && caamResults.advisoryNotice) {
+      if (!resAdvisoryBox) {
+        resAdvisoryBox = document.createElement("div");
+        resAdvisoryBox.id = "res-advisory-box";
+        if (overallBadge && overallBadge.parentElement) {
+          overallBadge.parentElement.appendChild(resAdvisoryBox);
+        }
+      }
+      resAdvisoryBox.className = "mt-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-left";
+      resAdvisoryBox.innerHTML = `
+        <div class="flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-300">
+          <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+          </svg>
+          <span>SPECIALIZED ROLE ADVISORY</span>
+        </div>
+        <p class="mt-1 text-[11px] font-medium text-amber-700 dark:text-amber-400 leading-tight">
+          ${caamResults.advisoryNotice.message}
+        </p>
+      `;
+    } else if (resAdvisoryBox) {
+      resAdvisoryBox.remove();
+    }
   }
 
   const caamListContainer = getResEl("res-qualifications-list") || getResEl("qualifications-list");
@@ -2306,12 +2370,25 @@ function renderResults(caamResults, mabResults = null) {
         const row = document.createElement("div");
         row.className = "py-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 last:border-b-0";
         let badgeHtml = "";
-        if (q.status === "EXPIRED") {
-          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300">Expired</span>`;
-        } else if (q.status === "EXPIRING_SOON") {
-          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">${q.daysRemaining} days left</span>`;
+        const isSupervisory = q.isSupervisory || (q.name && (q.name.toUpperCase().includes("DFE") || q.name.toUpperCase().includes("EXAMINER") || q.name.toUpperCase().includes("FI") || q.name.toUpperCase().includes("INSTRUCTOR") || q.name.toUpperCase().includes("TRI") || q.name.toUpperCase().includes("TRE")));
+        if (isSupervisory) {
+          if (q.status === "EXPIRED" || q.status === "ROLE_EXPIRED") {
+            const label = (q.name.toUpperCase().includes("DFE") || q.name.toUpperCase().includes("EXAMINER")) ? "Examiner Lapsed" : ((q.name.toUpperCase().includes("FI") || q.name.toUpperCase().includes("INSTRUCTOR")) ? "Instructor Lapsed" : "Role Lapsed");
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-700">${label}</span>`;
+          } else if (q.status === "EXPIRING_SOON") {
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">${q.daysRemaining} days left</span>`;
+          } else {
+            const label = (q.name.toUpperCase().includes("DFE") || q.name.toUpperCase().includes("EXAMINER")) ? "Valid (Examiner)" : ((q.name.toUpperCase().includes("FI") || q.name.toUpperCase().includes("INSTRUCTOR")) ? "Valid (Instructor)" : "Valid");
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300">${label}</span>`;
+          }
         } else {
-          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300">Valid</span>`;
+          if (q.status === "EXPIRED") {
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300">Expired</span>`;
+          } else if (q.status === "EXPIRING_SOON") {
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">${q.daysRemaining} days left</span>`;
+          } else {
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300">Valid</span>`;
+          }
         }
         row.innerHTML = `
           <div>
@@ -2325,10 +2402,9 @@ function renderResults(caamResults, mabResults = null) {
 
       if (legacyResQuals.length > 0) {
         const legacyHeader = document.createElement("div");
-        legacyHeader.className = "mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between";
+        legacyHeader.className = "mt-4 pt-1 flex items-center justify-between";
         legacyHeader.innerHTML = `
           <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Previous / Legacy Endorsements</span>
-          <span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[9px] font-bold">Non-Penalizing</span>
         `;
         caamListContainer.appendChild(legacyHeader);
 
