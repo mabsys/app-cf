@@ -1,4 +1,4 @@
-// js/main.js (0810_R121) - Main Application Controller & Orchestrator
+// js/main.js (0810_R122) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -190,20 +190,59 @@ function isValidCaamUrl(urlStr) {
 }
 
 
-function applyUrlInputValidationStyle(inputEl, cleanUrl) {
+function applyUrlInputValidationStyle(inputEl, urlStr) {
   if (!inputEl) return;
+
+  const cleanUrl = urlStr ? urlStr.trim() : "";
+  const isFocused = (document.activeElement === inputEl);
+
+  // Manage "X" clear button
+  const clearBtn = document.getElementById(inputEl.id === "profile-url-input" ? "profile-url-clear-btn" : "manual-url-clear-btn");
+  if (clearBtn) {
+    if (cleanUrl.length > 0) {
+      clearBtn.classList.remove("hidden");
+    } else {
+      clearBtn.classList.add("hidden");
+    }
+  }
+
+  // Strip all dynamic border, ring, background, and text color state classes
   inputEl.classList.remove(
-    "bg-emerald-50", "dark:bg-emerald-950/60", "border-emerald-500", "text-emerald-950", "dark:text-emerald-100", "focus:ring-emerald-500",
-    "bg-rose-50", "dark:bg-rose-950/60", "border-rose-500", "text-rose-950", "dark:text-rose-100", "focus:ring-rose-500",
-    "bg-white", "dark:bg-slate-900", "border-slate-200", "dark:border-slate-700", "text-slate-800", "dark:text-slate-100"
+    "bg-emerald-50", "dark:bg-emerald-950/60", "border-emerald-500", "text-emerald-950", "dark:text-emerald-100",
+    "bg-rose-50", "dark:bg-rose-950/60", "border-rose-500", "text-rose-950", "dark:text-rose-100",
+    "bg-white", "dark:bg-slate-900", "bg-slate-100", "dark:bg-slate-800",
+    "border-slate-200", "dark:border-slate-700", "border-blue-500", "ring-2", "ring-blue-500",
+    "text-slate-800", "dark:text-slate-100"
   );
 
-  if (!cleanUrl) {
-    inputEl.classList.add("bg-white", "dark:bg-slate-900", "border-slate-200", "dark:border-slate-700", "text-slate-800", "dark:text-slate-100");
+  if (isFocused) {
+    // Editing Mode / Focused -> Pure Blue Focus Ring, hide emerald/rose
+    inputEl.classList.add(
+      "bg-white", "dark:bg-slate-900",
+      "border-blue-500", "ring-2", "ring-blue-500",
+      "text-slate-800", "dark:text-slate-100"
+    );
+  } else if (!cleanUrl) {
+    // Empty -> Neutral Slate State
+    inputEl.classList.add(
+      "bg-white", "dark:bg-slate-900",
+      "border-slate-200", "dark:border-slate-700",
+      "text-slate-800", "dark:text-slate-100"
+    );
   } else if (isValidCaamUrl(cleanUrl)) {
-    inputEl.classList.add("bg-emerald-50", "dark:bg-emerald-950/60", "border-emerald-500", "text-emerald-950", "dark:text-emerald-100");
+    // Valid eCLIPSE URL -> Opaque Emerald
+    inputEl.classList.add(
+      "bg-emerald-50", "dark:bg-emerald-950/60",
+      "border-emerald-500",
+      "text-emerald-950", "dark:text-emerald-100"
+    );
   } else {
-    inputEl.classList.add("bg-rose-50", "dark:bg-rose-950/60", "border-rose-500", "text-rose-950", "dark:text-rose-100");
+    // Invalid Format -> Opaque Rose
+    inputEl.classList.add(
+      "bg-rose-50", "dark:bg-rose-950/60",
+      "border-rose-500",
+      "text-rose-950", "dark:text-rose-100"
+    );
   }
 }
 
@@ -364,8 +403,21 @@ function initProfileUI() {
   }
 
   if (urlInput) {
-    urlInput.oninput = () => updateProfileUrlBadge(urlInput.value.trim());
-    urlInput.onchange = () => updateProfileUrlBadge(urlInput.value.trim());
+    urlInput.oninput = () => updateProfileUrlBadge(urlInput.value);
+    urlInput.onchange = () => updateProfileUrlBadge(urlInput.value);
+    urlInput.onkeyup = () => updateProfileUrlBadge(urlInput.value);
+    urlInput.onpaste = () => setTimeout(() => updateProfileUrlBadge(urlInput.value), 50);
+    urlInput.onfocus = () => updateProfileUrlBadge(urlInput.value);
+    urlInput.onblur = () => updateProfileUrlBadge(urlInput.value);
+  }
+
+  const profileUrlClearBtn = document.getElementById("profile-url-clear-btn");
+  if (profileUrlClearBtn && urlInput) {
+    profileUrlClearBtn.onclick = () => {
+      urlInput.value = "";
+      updateProfileUrlBadge("");
+      urlInput.focus();
+    };
   }
 
   if (pdfFileInput) {
@@ -485,7 +537,10 @@ function initProfileUI() {
         clearProfileData();
         selectedAttestationFile = null;
         selectedAttestationText = "";
-        if (urlInput) urlInput.value = "";
+        if (urlInput) {
+          urlInput.value = "";
+          updateProfileUrlBadge("");
+        }
         if (pdfLabel) pdfLabel.innerText = "Select PDF attestation file...";
         if (urlStatusBadge) urlStatusBadge.classList.add("hidden");
         if (pdfStatusBadge) pdfStatusBadge.classList.add("hidden");
@@ -2835,11 +2890,13 @@ function setupTab3ManualLayout() {
 
     
     if (urlInput) {
-      urlInput.oninput = () => updateManualUrlBadge(urlInput.value.trim());
-      urlInput.onchange = () => updateManualUrlBadge(urlInput.value.trim());
-      urlInput.onkeyup = () => updateManualUrlBadge(urlInput.value.trim());
-      urlInput.onpaste = () => setTimeout(() => updateManualUrlBadge(urlInput.value.trim()), 50);
-      updateManualUrlBadge(urlInput.value.trim());
+      urlInput.oninput = () => updateManualUrlBadge(urlInput.value);
+      urlInput.onchange = () => updateManualUrlBadge(urlInput.value);
+      urlInput.onkeyup = () => updateManualUrlBadge(urlInput.value);
+      urlInput.onpaste = () => setTimeout(() => updateManualUrlBadge(urlInput.value), 50);
+      urlInput.onfocus = () => updateManualUrlBadge(urlInput.value);
+      urlInput.onblur = () => updateManualUrlBadge(urlInput.value);
+      updateManualUrlBadge(urlInput.value);
     }
 
     // 2. Format urlInput as clean full-width input
