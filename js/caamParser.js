@@ -1,4 +1,4 @@
-// js/caamParser.js (0810_R115) - Dedicated CAAM eCLIPSE Digital Licence Parser Engine
+// js/caamParser.js (0810_R116) - Dedicated CAAM eCLIPSE Digital Licence Parser Engine
 
 import { DEFAULT_THRESHOLD } from './config.js';
 
@@ -290,7 +290,8 @@ export function sortCaamQualifications(quals) {
       nameUpper.includes('CHECK PILOT') || 
       nameUpper.includes('TRI') || 
       nameUpper.includes('TRE') || 
-      nameUpper.includes('FI')
+      /FI/i.test(nameUpper) ||
+      /FI\(\d+\)/i.test(nameUpper)
     ) {
       return 5;
     }
@@ -709,7 +710,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD, activeFl
     });
     const activeFis = activeSupervisoryList.filter(q => {
       const u = q.name.toUpperCase();
-      return u.includes('FI') || u.includes('INSTRUCTOR') || u.includes('TRI') || u.includes('TRE');
+      return /(FI|FLIGHT INSTRUCTOR|INSTRUCTOR|TRI|TRE)/i.test(u) || /FI\(\d+\)/i.test(u);
     });
 
     const hasExpiredDfe = activeDfes.some(q => q.status === 'EXPIRED' || q.status === 'ROLE_EXPIRED');
