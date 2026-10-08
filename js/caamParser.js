@@ -1,4 +1,4 @@
-// js/caamParser.js - Dedicated CAAM eCLIPSE Digital Licence Parser Engine
+// js/caamParser.js (0810_R112) - Dedicated CAAM eCLIPSE Digital Licence Parser Engine
 
 import { DEFAULT_THRESHOLD } from './config.js';
 
@@ -10,15 +10,18 @@ function parseLicenseDate(dateStr) {
   }
   const match = trimmed.match(/^(\d{1,2})\s+([a-zA-Z]{3,10})\s+(\d{4})$/);
   if (!match) return null;
+
   const day = parseInt(match[1], 10);
   const monthStr = match[2].toUpperCase();
   const year = parseInt(match[3], 10);
 
   const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
   const monthsMalay = ['JAN', 'FEB', 'MAC', 'APR', 'MEI', 'JUN', 'JUL', 'OGOS', 'SEP', 'OKT', 'NOV', 'DIS'];
+
   let monthIdx = months.indexOf(monthStr);
   if (monthIdx === -1) monthIdx = monthsMalay.indexOf(monthStr);
   if (monthIdx === -1) return null;
+
   return new Date(year, monthIdx, day);
 }
 
@@ -31,6 +34,7 @@ function isUnderPg2(el) {
       if (match && parseInt(match[1], 10) >= 2) return true;
     }
   }
+
   let curr = el;
   while (curr) {
     if (curr.id && typeof curr.id === 'string') {
@@ -73,10 +77,12 @@ function shouldIgnore(el) {
   if (!el || isUnderPg2(el)) return true;
   const text = el.textContent.trim();
   if (!text) return true;
+
   const upperText = text.toUpperCase();
   if (upperText.includes('INITIAL GRANT') || upperText.includes('INITIAL_GRANT')) return true;
   if (upperText.includes('7 DECEMBER 1944') || upperText.includes('7 DISEMBER 1944') || upperText.includes('DECEMBER 1944') || upperText.includes('DISEMBER 1944')) return true;
   if (/\d{1,2}:\d{2}:\d{2}/.test(text)) return true;
+
   let curr = el;
   for (let i = 0; i < 5; i++) {
     if (!curr || !curr.tagName) break;
@@ -94,6 +100,7 @@ function shouldIgnore(el) {
     if (currText.includes('CHICAGO CONVENTION') || currText.includes('ANNEX 1') || currText.includes('ANEKS 1')) return true;
     curr = curr.parentElement;
   }
+
   const tr = el.closest ? el.closest('tr') : null;
   if (tr) {
     const rowText = tr.textContent.toUpperCase();
@@ -113,6 +120,7 @@ function isRedOrExpired(el) {
   if (!el) return false;
   const text = el.textContent.trim().toUpperCase();
   if (text === 'EXPIRED') return true;
+
   const inlineStyle = (el.getAttribute('style') || '').toLowerCase();
   return (
     inlineStyle.includes('color: red') ||
@@ -131,16 +139,14 @@ function extractNestedLimitations(docObj, itemCode) {
   if (!docObj) return [];
   const items = [];
   const targetCode = itemCode.toUpperCase();
-
   const candidates = docObj.querySelectorAll('.licenceNumbering, td, th, div, span, b');
 
   for (let i = 0; i < candidates.length; i++) {
     const el = candidates[i];
     if (isUnderPg2(el)) continue;
-
     const elText = el.textContent.trim().toUpperCase();
-
     let isMatch = false;
+
     if (targetCode === 'XVC') {
       if (elText === 'XVC' || elText === 'XVC.' || elText === 'XVC:' || elText.includes('SPECIAL MEDICAL LIMITATIONS') || elText.includes('HAD HADAN PERUBATAN KHAS')) {
         isMatch = true;
@@ -155,7 +161,6 @@ function extractNestedLimitations(docObj, itemCode) {
 
     const tr = el.closest ? el.closest('tr') : null;
     if (!tr) continue;
-
     const nextTr = tr.nextElementSibling;
     if (!nextTr) continue;
 
@@ -168,11 +173,8 @@ function extractNestedLimitations(docObj, itemCode) {
           const rawVal = cells[cells.length - 1].textContent.trim();
           const clean = rawVal.replace(/^[•\s\-\*\&\#8226\;]+/, '').replace(/\s+/g, ' ').trim();
           const upper = clean.toUpperCase();
-
           if (clean && clean !== '•' && upper !== 'XVC' && upper !== 'XVD' && !upper.includes('SPECIAL MEDICAL LIMITATIONS') && !upper.includes('OTHER MEDICAL LIMITATIONS') && !upper.includes('HAD HADAN')) {
-            if (!items.includes(clean)) {
-              items.push(clean);
-            }
+            if (!items.includes(clean)) items.push(clean);
           }
         }
       }
@@ -183,53 +185,76 @@ function extractNestedLimitations(docObj, itemCode) {
         const sText = spans[s].textContent.trim();
         const clean = sText.replace(/^[•\s\-\*\&\#8226\;]+/, '').replace(/\s+/g, ' ').trim();
         const upper = clean.toUpperCase();
-
         if (clean && clean !== '•' && upper !== 'XVC' && upper !== 'XVD' && !upper.includes('SPECIAL MEDICAL LIMITATIONS') && !upper.includes('OTHER MEDICAL LIMITATIONS') && !upper.includes('HAD HADAN')) {
-          if (!items.includes(clean)) {
-            items.push(clean);
-          }
+          if (!items.includes(clean)) items.push(clean);
         }
       }
     }
-
     if (items.length > 0) break;
   }
-
   return items;
 }
 
+// Fleet Family Normalizer Utility
+export function normalizeFleetFamily(ratingName) {
+  if (!ratingName) return 'OTHER';
+  const name = ratingName.toUpperCase();
+  if (name.includes('A330') || name.includes('A350') || name.includes('A338') || name.includes('A339') || name.includes('A359') || name.includes('AIRBUS WIDEBODY')) return 'AIRBUS_WIDEBODY';
+  if (name.includes('A320') || name.includes('A321') || name.includes('A319') || name.includes('AIRBUS NARROWBODY')) return 'AIRBUS_NARROWBODY';
+  if (name.includes('B737') || name.includes('737') || name.includes('B738') || name.includes('B739') || name.includes('BOEING 737')) return 'BOEING_737';
+  if (name.includes('B777') || name.includes('B787') || name.includes('B747') || name.includes('BOEING WIDEBODY')) return 'BOEING_WIDEBODY';
+  if (name.includes('ATR') || name.includes('ATR72') || name.includes('ATR42')) return 'ATR_TURBOPROP';
+  return 'OTHER';
+}
 
-function sortCaamQualifications(quals) {
+// 5-Tier Hierarchy Qualification Sorting Function
+export function sortCaamQualifications(quals) {
   if (!Array.isArray(quals) || quals.length === 0) return [];
-  const validityItems = [];
+
+  const licenceItems = [];
   const medicalItems = [];
-  const otherItems = [];
+  const rtolItems = [];
+  const elpItems = [];
+  const activeFleetItems = [];
+  const legacyItems = [];
 
   quals.forEach(q => {
+    if (q.isLegacy || q.status === 'INACTIVE_LEGACY') {
+      legacyItems.push(q);
+      return;
+    }
+
     const nameUpper = (q.name || '').toUpperCase();
-    if (nameUpper.includes('VALIDITY EXPIR') || nameUpper.includes('LICENCE EXPIR') || nameUpper.includes('VALIDITY EXPIRE')) {
-      validityItems.push(q);
-    } else if (nameUpper.includes('MEDICAL EXPIR') || nameUpper.includes('MEDICAL VALIDITY') || nameUpper.includes('MEDICAL EXPIRE')) {
+    if (nameUpper.includes('VALIDITY') || nameUpper.includes('LICENCE') || nameUpper.includes('ATPL') || nameUpper.includes('CPL') || nameUpper.includes('PPL') || nameUpper.includes('MPL')) {
+      licenceItems.push(q);
+    } else if (nameUpper.includes('MEDICAL') || nameUpper.includes('CLASS 1') || nameUpper.includes('CLASS 2')) {
       medicalItems.push(q);
+    } else if (nameUpper.includes('RADIO TELEPHONY') || nameUpper.includes('RTOL') || nameUpper.includes('TELEPHONY') || nameUpper.includes('R/T')) {
+      rtolItems.push(q);
+    } else if (nameUpper.includes('ENGLISH') || nameUpper.includes('LANGUAGE') || nameUpper.includes('ELP')) {
+      elpItems.push(q);
     } else {
-      otherItems.push(q);
+      activeFleetItems.push(q);
     }
   });
 
-  return [...validityItems, ...medicalItems, ...otherItems];
+  return [...licenceItems, ...medicalItems, ...rtolItems, ...elpItems, ...activeFleetItems, ...legacyItems];
 }
 
-export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
+export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD, activeFleetContext = null) {
   const refDate = new Date();
   const qualificationData = {};
 
   function processQualification(labelText, dateText, parsedDate, isVisuallyExpired) {
     const name = labelText || 'Qualification';
     const key = name.toUpperCase().replace(/\s+/g, '');
+
     if (key.includes('CLASS1(SC)') || key.includes('CLASS1SC') || key.includes('CLASS1(S.C.)')) return;
+
     const cleanName = name.replace('•', '').trim();
     let status = 'VALID';
     let daysRemaining = null;
+
     if (isVisuallyExpired) {
       status = 'EXPIRED';
     } else if (parsedDate) {
@@ -241,13 +266,16 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
         status = 'EXPIRING_SOON';
       }
     }
+
     if (qualificationData[key] && qualificationData[key].status === 'EXPIRED') return;
+
     qualificationData[key] = {
       name: cleanName,
       dateText: dateText,
       parsedDate: parsedDate,
       daysRemaining: daysRemaining,
-      status: status
+      status: status,
+      isLegacy: false
     };
   }
 
@@ -257,6 +285,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
   let licenseNo = '';
 
   const allElements = doc.querySelectorAll('td, th, b, span, div, p');
+
   for (let i = 0; i < allElements.length; i++) {
     if (isUnderPg2(allElements[i])) continue;
     const text = allElements[i].textContent.toUpperCase();
@@ -302,6 +331,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
         }
       }
     }
+
     if (text === 'III') {
       const tr = allElements[i].closest ? allElements[i].closest('tr') : null;
       if (tr) {
@@ -347,6 +377,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
     const headers = table.querySelectorAll('th, td');
     let isFclTable = false;
     let licenceTypeColIndex = -1;
+
     for (let h = 0; h < headers.length; h++) {
       const headerText = headers[h].textContent.toUpperCase();
       if (headerText.includes('LICENCE TYPE') || headerText.includes('JENIS LESEN')) {
@@ -359,6 +390,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
         break;
       }
     }
+
     if (isFclTable && licenceTypeColIndex !== -1) {
       const rows = table.querySelectorAll('tr');
       for (let r = 0; r < rows.length; r++) {
@@ -396,24 +428,18 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
   // Medical Limitations Extraction (Item XVc & Item XVd)
   const xvcRaw = extractNestedLimitations(doc, 'XVC');
   const xvdRaw = extractNestedLimitations(doc, 'XVD');
-
-  const xvcFiltered = xvcRaw.filter(function(item) {
+  const xvcFiltered = xvcRaw.filter(item => {
     const u = item.toUpperCase();
     return u !== 'NIL' && u !== 'NONE' && u !== '-' && u !== 'N/A';
   });
-
-  const xvdFiltered = xvdRaw.filter(function(item) {
+  const xvdFiltered = xvdRaw.filter(item => {
     const u = item.toUpperCase();
     return u !== 'NIL' && u !== 'NONE' && u !== '-' && u !== 'N/A';
   });
-
   const allActiveLimitations = xvcFiltered.concat(xvdFiltered);
-
   let medicalLimitationsFormatted = 'NIL';
   if (allActiveLimitations.length > 0) {
-    medicalLimitationsFormatted = allActiveLimitations.map(function(item) {
-      return '• ' + item;
-    }).join('\n');
+    medicalLimitationsFormatted = allActiveLimitations.map(item => '• ' + item).join('\n');
   }
 
   // Pass 1: Card Extraction
@@ -453,6 +479,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
 
     const labelText = getLabelFromRow(tr);
     if (!labelText) continue;
+
     const tds = getDirectChildCells(tr);
     for (let j = 0; j < tds.length; j++) {
       const tdText = tds[j].textContent.trim();
@@ -478,6 +505,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
         let dateText = el.textContent.trim();
         const tr = el.closest ? el.closest('tr') : null;
         const card = el.closest ? el.closest('.card') : null;
+
         if (tr) {
           const rowNormalized = tr.textContent.toUpperCase().replace(/\s+/g, '');
           if (rowNormalized.includes('CLASS1(SC)') || rowNormalized.includes('CLASS1SC') || rowNormalized.includes('CLASS1(S.C.)')) continue;
@@ -491,6 +519,7 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
           const dateEl = card.querySelector('.text-uppercase b') || card.querySelector('.fs-4 b, .fs-3 b');
           if (dateEl) dateText = dateEl.textContent.trim();
         }
+
         if (!labelText) labelText = 'Qualification';
         const key = labelText.toUpperCase().replace(/\s+/g, '');
         if (!qualificationData[key]) {
@@ -503,23 +532,86 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
     }
   }
 
-  // Extract QrServlet Image Endpoint
-  let qrImageUrl = '';
-  const imgs = doc.querySelectorAll('img');
-  for (let i = 0; i < imgs.length; i++) {
-    const src = imgs[i].getAttribute('src') || '';
-    if (src.includes('QrServlet') || src.includes('m=viewMyDigitalLicenseQR')) {
-      qrImageUrl = src.startsWith('http') ? src : ('https://eclipse.caam.gov.my' + (src.startsWith('/') ? '' : '/') + src);
-      break;
+  const rawQualsList = Object.values(qualificationData);
+
+  // -------------------------------------------------------------
+  // Smart Fleet Resolution & Legacy Fleet Classification Engine
+  // -------------------------------------------------------------
+  const fleetQualsGrouped = {};
+  const universalQuals = [];
+
+  rawQualsList.forEach(q => {
+    const nameUpper = (q.name || '').toUpperCase();
+    const isUniversal = nameUpper.includes('MEDICAL') || nameUpper.includes('LANGUAGE') || nameUpper.includes('ELP') || nameUpper.includes('RADIO TELEPHONY') || nameUpper.includes('RTOL') || nameUpper.includes('VALIDITY') || nameUpper.includes('LICENCE') || nameUpper.includes('PBN');
+    if (isUniversal) {
+      universalQuals.push(q);
+    } else {
+      const family = normalizeFleetFamily(q.name);
+      if (!fleetQualsGrouped[family]) fleetQualsGrouped[family] = [];
+      fleetQualsGrouped[family].push(q);
+    }
+  });
+
+  // Determine Active Fleet Family
+  let activeFamily = null;
+  if (activeFleetContext) {
+    activeFamily = normalizeFleetFamily(activeFleetContext);
+  } else {
+    // Auto-detect active fleet family: family with most recent valid / non-expired rating
+    let latestValidExpiry = -Infinity;
+    Object.entries(fleetQualsGrouped).forEach(([family, quals]) => {
+      quals.forEach(q => {
+        if (q.status !== 'EXPIRED' && q.parsedDate) {
+          const t = q.parsedDate.getTime();
+          if (t > latestValidExpiry) {
+            latestValidExpiry = t;
+            activeFamily = family;
+          }
+        }
+      });
+    });
+
+    // If all ratings in all families are expired, pick family with most recent expiry
+    if (!activeFamily) {
+      let latestAnyExpiry = -Infinity;
+      Object.entries(fleetQualsGrouped).forEach(([family, quals]) => {
+        quals.forEach(q => {
+          if (q.parsedDate) {
+            const t = q.parsedDate.getTime();
+            if (t > latestAnyExpiry) {
+              latestAnyExpiry = t;
+              activeFamily = family;
+            }
+          }
+        });
+      });
     }
   }
 
-  const qualificationsList = Object.values(qualificationData);
+  let hasLegacyRatings = false;
+
+  // Classify ratings: inactive fleet expired ratings become legacy
+  Object.entries(fleetQualsGrouped).forEach(([family, quals]) => {
+    const isActive = (family === activeFamily);
+    quals.forEach(q => {
+      if (!isActive && q.status === 'EXPIRED') {
+        q.isLegacy = true;
+        q.status = 'INACTIVE_LEGACY';
+        q.statusLabel = 'Legacy / Lapsed';
+        hasLegacyRatings = true;
+      } else {
+        q.isLegacy = false;
+      }
+    });
+  });
+
+  // Calculate overallStatus ignoring INACTIVE_LEGACY
+  const finalQualsList = Object.values(qualificationData);
   let overallStatus = 'VALID';
   let expiredCount = 0;
   let expiringSoonCount = 0;
 
-  qualificationsList.forEach(item => {
+  finalQualsList.forEach(item => {
     if (item.status === 'EXPIRED') expiredCount++;
     else if (item.status === 'EXPIRING_SOON') expiringSoonCount++;
   });
@@ -533,11 +625,13 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD) {
       licenseType: licenseType || 'ATPL(A)',
       licenseNo: licenseNo || '-'
     },
-    qualifications: sortCaamQualifications(qualificationsList),
+    qualifications: sortCaamQualifications(finalQualsList),
     medicalLimitations: medicalLimitationsFormatted,
     qrImageUrl: qrImageUrl,
     overallStatus: overallStatus,
     expiredCount: expiredCount,
-    expiringSoonCount: expiringSoonCount
+    expiringSoonCount: expiringSoonCount,
+    activeFleetFamily: activeFamily,
+    hasLegacyRatings: hasLegacyRatings
   };
 }
