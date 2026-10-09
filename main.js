@@ -1,4 +1,4 @@
-// js/main.js (0810_R124) - Main Application Controller & Orchestrator
+// js/main.js (0810_R125) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -174,7 +174,7 @@ function isValidCaamUrl(urlStr) {
 
     const isValidProtocol = parsed.protocol === "http:" || parsed.protocol === "https:";
     const isCaamDomain = host.includes("caam.gov.my") || host.includes("eclipse.caam") || host === "eclipse.caam.gov.my";
-    const isValidEndpoint = path.includes("/userprofileqr.do") || path.includes("/info.do") || path.endsWith(".do");
+    const isValidEndpoint = path.endsWith("/elicensing/userprofileqr.do") || path.endsWith("/digitallicence/info.do");
 
     if (!isValidProtocol || !isCaamDomain || !isValidEndpoint) return false;
 
