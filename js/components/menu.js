@@ -163,7 +163,7 @@ export const menuHTML = `
         </div>
 
         <!-- Action Buttons -->
-        <div class="px-1 flex flex-col gap-2.5 pt-1 pb-3">
+        <div class="px-1 flex flex-col gap-2.5 pt-1 py-3">
           <button id="profile-save-btn" type="button" class="w-full p-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5">
             Save Credentials
           </button>
@@ -214,7 +214,7 @@ export const menuHTML = `
     </div>
 
     <!-- SUB-PANE 2: DATA & STORAGE -->
-    <div id="pane-storage" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
+    <div id="pane-storage" class="sub-pane absolute top-5 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
       <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
