@@ -1,4 +1,4 @@
-// js/main.js (0810_R126) - Main Application Controller & Orchestrator
+// js/main.js (0810_R127) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -1281,7 +1281,8 @@ function renderDashboardResults(caamResults, mabResults = null) {
             candidates.push({
               name: `${q.name} (${q.dateText})`,
               sub: "CAAM Licence Qualification • Next Renewal",
-              date: d
+              date: d,
+              targetTab: 'caam'
             });
           }
         }
@@ -1295,7 +1296,8 @@ function renderDashboardResults(caamResults, mabResults = null) {
         candidates.push({
           name: `${mabResults.lineCheck.fleet || 'B738'} Line Check (${mabResults.lineCheck.expiryDate})`,
           sub: "MAB Operational Flight Check • Next Renewal",
-          date: d
+          date: d,
+          targetTab: 'mab'
         });
       }
     }
@@ -1310,7 +1312,8 @@ function renderDashboardResults(caamResults, mabResults = null) {
             candidates.push({
               name: `${dr.name || dr.item || 'Safety Drill'} (${dateStr})`,
               sub: "MAB Safety & Recurrent Training • Next Renewal",
-              date: d
+              date: d,
+              targetTab: 'mab'
             });
           }
         }
@@ -1320,13 +1323,31 @@ function renderDashboardResults(caamResults, mabResults = null) {
     // Sort candidates chronologically ascending (earliest date first)
     candidates.sort((a, b) => a.date.getTime() - b.date.getTime());
 
+    const cardContainer = earliestName.closest('div.bg-slate-50') || earliestName.closest('div.rounded-2xl') || earliestName.parentElement;
+
     if (candidates.length > 0) {
       const earliest = candidates[0];
       earliestName.innerText = earliest.name;
       earliestSub.innerText = earliest.sub;
+
+      if (cardContainer) {
+        cardContainer.style.cursor = 'pointer';
+        cardContainer.classList.add('cursor-pointer', 'active:scale-[0.99]', 'transition-all', 'hover:border-blue-400');
+        cardContainer.onclick = () => {
+          if (typeof switchResultTab === 'function') {
+            switchResultTab(earliest.targetTab);
+          }
+        };
+      }
     } else {
       earliestName.innerText = "All Items Valid";
       earliestSub.innerText = "No immediate renewals required.";
+
+      if (cardContainer) {
+        cardContainer.style.cursor = 'default';
+        cardContainer.classList.remove('cursor-pointer', 'active:scale-[0.99]', 'hover:border-blue-400');
+        cardContainer.onclick = null;
+      }
     }
   }
 
