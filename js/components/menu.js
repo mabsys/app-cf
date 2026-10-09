@@ -89,7 +89,7 @@ export const menuHTML = `
       
 
         <!-- Digital Licence Source -->
-        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
+        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs my-2">
           <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2.5">Digital Licence Source</label>
           
           <div class="grid grid-cols-2 gap-2 mb-3">
