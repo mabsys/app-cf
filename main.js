@@ -1,4 +1,4 @@
-// js/main.js (0810_R122) - Main Application Controller & Orchestrator
+// js/main.js (0810_R123) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -170,20 +170,24 @@ function isValidCaamUrl(urlStr) {
   try {
     const parsed = new URL(trimmed);
     const host = parsed.hostname.toLowerCase();
+    const path = parsed.pathname.toLowerCase();
+
     const isValidProtocol = parsed.protocol === "http:" || parsed.protocol === "https:";
     const isCaamDomain = host.includes("caam.gov.my") || host.includes("eclipse.caam") || host === "eclipse.caam.gov.my";
-    if (!isValidProtocol || !isCaamDomain) return false;
+    const isValidEndpoint = path.includes("/userprofileqr.do") || path.includes("/info.do") || path.endsWith(".do");
+
+    if (!isValidProtocol || !isCaamDomain || !isValidEndpoint) return false;
 
     // Strict query parameter checks for official CAAM eCLIPSE Digital Licence URLs
     const personId = parsed.searchParams.get("pid") || parsed.searchParams.get("personid") || parsed.searchParams.get("personId");
     const key = parsed.searchParams.get("key");
     const codekey = parsed.searchParams.get("codekey");
 
-    return Boolean(
-      personId && personId.trim().length > 0 &&
-      key && key.trim().length >= 8 &&
-      codekey && codekey.trim().length > 0
-    );
+    const isPersonIdValid = Boolean(personId && /^\d{10,}$/.test(personId.trim()));
+    const isKeyValid = Boolean(key && /^[a-fA-F0-9]{32}$/.test(key.trim()));
+    const isCodekeyValid = Boolean(codekey && /^\d{2}$/.test(codekey.trim()));
+
+    return isPersonIdValid && isKeyValid && isCodekeyValid;
   } catch (e) {
     return false;
   }
@@ -2611,7 +2615,7 @@ window.loadHistoricalRecord = function(id) {
 
 function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
   if (!canvasElem) return;
-  const ctx = canvasElem.getContext("2d");
+  const ctx = canvasElem.getContext("2d", { willReadFrequently: true });
   const size = 240;
   canvasElem.width = size;
   canvasElem.height = size;
