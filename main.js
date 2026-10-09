@@ -1,4 +1,4 @@
-// js/main.js (0810_R125) - Main Application Controller & Orchestrator
+// js/main.js (0810_R126) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -223,7 +223,7 @@ function applyUrlInputValidationStyle(inputEl, urlStr) {
     // Empty -> Neutral Slate State
     inputEl.classList.add(
       "bg-white", "dark:bg-slate-900",
-      "border-slate-200", "dark:border-slate-700",
+      "border", "border-slate-200", "dark:border-slate-700",
       "text-slate-800", "dark:text-slate-100"
     );
     if (isFocused) {
@@ -233,7 +233,7 @@ function applyUrlInputValidationStyle(inputEl, urlStr) {
     // Valid eCLIPSE URL -> Opaque Emerald
     inputEl.classList.add(
       "bg-emerald-50", "dark:bg-emerald-950/60",
-      "border-emerald-500", "text-emerald-950", "dark:text-emerald-100"
+      "border", "border-emerald-500", "text-emerald-950", "dark:text-emerald-100"
     );
     if (isFocused) {
       inputEl.classList.add("ring-2", "ring-emerald-500/40");
@@ -242,7 +242,7 @@ function applyUrlInputValidationStyle(inputEl, urlStr) {
     // Invalid Format -> Opaque Rose
     inputEl.classList.add(
       "bg-rose-50", "dark:bg-rose-950/60",
-      "border-rose-500", "text-rose-950", "dark:text-rose-100"
+      "border", "border-rose-500", "text-rose-950", "dark:text-rose-100"
     );
     if (isFocused) {
       inputEl.classList.add("ring-2", "ring-rose-500/40");
@@ -2904,7 +2904,7 @@ function setupTab3ManualLayout() {
     }
 
     // 2. Format urlInput as clean full-width input
-    urlInput.className = "w-full px-4 py-3 rounded-xl text-xs font-medium placeholder-slate-400 focus:outline-none transition-all shadow-xs";
+    urlInput.className = "w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none transition-all shadow-xs";
 
     // 3. Create or update Action Button Row (Reset on Left, Verify on Right)
     let btnRow = document.getElementById("manual-action-btn-row");
