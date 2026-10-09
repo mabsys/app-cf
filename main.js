@@ -1,4 +1,4 @@
-// js/main.js (0810_R123) - Main Application Controller & Orchestrator
+// js/main.js (0810_R124) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -212,41 +212,41 @@ function applyUrlInputValidationStyle(inputEl, urlStr) {
 
   // Strip all dynamic border, ring, background, and text color state classes
   inputEl.classList.remove(
-    "bg-emerald-50", "dark:bg-emerald-950/60", "border-emerald-500", "text-emerald-950", "dark:text-emerald-100",
-    "bg-rose-50", "dark:bg-rose-950/60", "border-rose-500", "text-rose-950", "dark:text-rose-100",
+    "bg-emerald-50", "dark:bg-emerald-950/60", "border-emerald-500", "text-emerald-950", "dark:text-emerald-100", "ring-emerald-500/40",
+    "bg-rose-50", "dark:bg-rose-950/60", "border-rose-500", "text-rose-950", "dark:text-rose-100", "ring-rose-500/40",
     "bg-white", "dark:bg-slate-900", "bg-slate-100", "dark:bg-slate-800",
-    "border-slate-200", "dark:border-slate-700", "border-blue-500", "ring-2", "ring-blue-500",
-    "text-slate-800", "dark:text-slate-100"
+    "border-slate-200", "dark:border-slate-700", "border-blue-500", "ring-2", "ring-blue-500", "ring-blue-500/40",
+    "text-slate-800", "dark:text-slate-100", "focus:ring-2", "focus:ring-blue-500"
   );
 
-  if (isFocused) {
-    // Editing Mode / Focused -> Pure Blue Focus Ring, hide emerald/rose
-    inputEl.classList.add(
-      "bg-white", "dark:bg-slate-900",
-      "border-blue-500", "ring-2", "ring-blue-500",
-      "text-slate-800", "dark:text-slate-100"
-    );
-  } else if (!cleanUrl) {
+  if (!cleanUrl) {
     // Empty -> Neutral Slate State
     inputEl.classList.add(
       "bg-white", "dark:bg-slate-900",
       "border-slate-200", "dark:border-slate-700",
       "text-slate-800", "dark:text-slate-100"
     );
+    if (isFocused) {
+      inputEl.classList.add("border-blue-500", "ring-2", "ring-blue-500/40");
+    }
   } else if (isValidCaamUrl(cleanUrl)) {
     // Valid eCLIPSE URL -> Opaque Emerald
     inputEl.classList.add(
       "bg-emerald-50", "dark:bg-emerald-950/60",
-      "border-emerald-500",
-      "text-emerald-950", "dark:text-emerald-100"
+      "border-emerald-500", "text-emerald-950", "dark:text-emerald-100"
     );
+    if (isFocused) {
+      inputEl.classList.add("ring-2", "ring-emerald-500/40");
+    }
   } else {
     // Invalid Format -> Opaque Rose
     inputEl.classList.add(
       "bg-rose-50", "dark:bg-rose-950/60",
-      "border-rose-500",
-      "text-rose-950", "dark:text-rose-100"
+      "border-rose-500", "text-rose-950", "dark:text-rose-100"
     );
+    if (isFocused) {
+      inputEl.classList.add("ring-2", "ring-rose-500/40");
+    }
   }
 }
 
@@ -2904,7 +2904,7 @@ function setupTab3ManualLayout() {
     }
 
     // 2. Format urlInput as clean full-width input
-    urlInput.className = "w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-xs";
+    urlInput.className = "w-full px-4 py-3 rounded-xl text-xs font-medium placeholder-slate-400 focus:outline-none transition-all shadow-xs";
 
     // 3. Create or update Action Button Row (Reset on Left, Verify on Right)
     let btnRow = document.getElementById("manual-action-btn-row");
