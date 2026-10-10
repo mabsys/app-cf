@@ -1,4 +1,4 @@
-// js/attestationParser.js - Dedicated MAB E-Attestation PDF Text Parser Engine
+// js/attestationParser.js (0810_R129) - Dedicated MAB E-Attestation PDF Text Parser Engine
 
 export function validateAttestationContent(pdfText) {
   if (!pdfText || typeof pdfText !== 'string' || !pdfText.trim()) {
@@ -24,7 +24,6 @@ export function validateAttestationContent(pdfText) {
   }
 
   const hasOpsData = /(LINE\s+CHECK|AIRCRAFT\s+TYPE|PRACTICAL\s+DRILL|DOOR\s+DRILL|WET\s+DRILL|FIRE\s+DRILL|CRM|SMS|AVSEC|LVO)/i.test(cleanText);
-
   if (!hasOpsData) {
     return { isValid: false, reason: "PDF lacks mandatory flight qualification tables (Line Check / Drills)." };
   }
@@ -41,18 +40,14 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
     if (!str) return null;
     const clean = str.trim().toUpperCase();
     if (clean === 'NIL' || clean === 'NO EXPIRY' || clean === '-') return null;
-
     const match = clean.match(/^(\d{1,2})\s+([A-Z]{3,10})\s+(\d{4})/);
     if (!match) return null;
-
     const day = parseInt(match[1], 10);
     const mStr = match[2];
     const year = parseInt(match[3], 10);
-
     const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
     const mIdx = months.indexOf(mStr);
     if (mIdx === -1) return null;
-
     return new Date(year, mIdx, day);
   }
 
@@ -66,7 +61,6 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
   const staffNo = staffMatch ? staffMatch[1].trim() : "2108337";
   const designation = desigMatch ? desigMatch[1].trim() : "Captain.OPS - Flight Crew(FC)";
   const publishedDateStr = pubMatch ? pubMatch[1].trim() : "14 SEP 2026";
-
   const publishedDate = parsePdfDate(publishedDateStr) || new Date("2026-09-14");
 
   // Document Freshness
@@ -76,6 +70,7 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
 
   // 2. Line Check Qualification
   const lineCheckMatch = pdfText.match(/LINE\s+CHECK[\s\S]*?1\s+([A-Z0-9]+)\s+([A-Z\/]+)\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+([A-Z0-9]+)/i);
+
   let lineCheck = {
     fleet: lineCheckMatch ? lineCheckMatch[1] : "B738",
     route: lineCheckMatch ? lineCheckMatch[2] : "KUL/BKI/KUL",
@@ -90,8 +85,9 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
     lineCheck.status = "EXPIRED";
   }
 
-  // 3. LVO Autoland Recency
-  const lvoMatch = pdfText.match(/LVO\s+AUTOLAND[\s\S]*?1\s+([A-Z0-9]+)\s+(\d{1,2})\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+([A-Z0-9]+)\s+(I{1,3})\s+(ACTUAL|PRACTICE)\s+(DFE\s+\d+|\d+)/i);
+  // 3. LVO Autoland Recency - Enhanced flexible regex for SIM2TEW and SIM 2TEW formats
+  const lvoMatch = pdfText.match(/LVO\s+AUTOLAND[\s\S]*?1\s+([A-Z0-9]+)\s+(\d{1,2})\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+(SIM\s*\w+|\S+)\s+(CAT\s*[I|V|X]+|[I|V|X]+)\s*(ACTUAL|SIMULATED|SIM|PRACTICE)?\s*(DFE\s*\d+|\d+)?/i);
+
   let lvo = {
     airport: lvoMatch ? lvoMatch[1] : "VIDP",
     runway: lvoMatch ? lvoMatch[2] : "28",
@@ -107,6 +103,7 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
   const drills = [];
 
   const tableSection = pdfText.match(/NO\s+TRAINING\s+START\s+DATE\s+VALID\s+UNTIL([\s\S]*?)LINE\s+CHECK/i);
+
   if (tableSection) {
     const rowMatches = [...tableSection[1].matchAll(/(\d{1,2})\s+([A-Z0-9\:\-\s]+?)\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4}|NIL)\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4}|NIL)/gi)];
     rowMatches.forEach(m => {
@@ -172,8 +169,9 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
 
     knownTitles.forEach((title, idx) => {
       const escaped = title.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-      const pat = new RegExp(`${escaped}\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4}|NIL)\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4}|NIL)`, 'i');
+      const pat = new RegExp(`${escaped}\\s+(\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4}|NIL)\\s+(\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4}|NIL)`, 'i');
       const m = pdfText.match(pat);
+
       if (m) {
         const doneDate = m[1].trim();
         const expiryDate = m[2].trim();
