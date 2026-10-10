@@ -1,4 +1,4 @@
-// js/main.js (0810_R127) - Main Application Controller & Orchestrator
+// js/main.js (0810_R130) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -2052,6 +2052,18 @@ function customRenderHistoryList() {
   const targets = [historyContainer, recentContainer].filter(Boolean);
 
   const countBadge = document.getElementById("history-count-badge");
+  const retentionTag = document.getElementById("history-retention-tag");
+
+  const limit = (typeof getHistoryLimit === "function") ? getHistoryLimit() : 10;
+  if (retentionTag) {
+    retentionTag.innerText = `${limit} scans`;
+    retentionTag.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 text-xs font-bold transition-all cursor-pointer shadow-2xs active:scale-95";
+    retentionTag.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleHistoryLimitQuickPicker(retentionTag);
+    };
+  }
   const clockIcon = document.getElementById("history-clock-icon");
   const searchInput = document.getElementById("history-search-input");
 
@@ -2991,4 +3003,60 @@ function setupTab3ManualLayout() {
   } catch (e) {
     console.warn("setupTab3ManualLayout error:", e);
   }
+}
+
+
+function toggleHistoryLimitQuickPicker(anchorEl) {
+  if (!anchorEl) return;
+  let picker = document.getElementById("history-limit-quick-picker");
+  if (picker) {
+    picker.remove();
+    return;
+  }
+
+  picker = document.createElement("div");
+  picker.id = "history-limit-quick-picker";
+  picker.className = "absolute left-4 top-12 z-50 p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl flex items-center gap-2 transition-all animate-in fade-in slide-in-from-top-2 duration-150";
+
+  const currentLimit = (typeof getHistoryLimit === "function") ? getHistoryLimit() : 10;
+  const options = [10, 20, 30];
+
+  options.forEach(opt => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    const isActive = (opt === currentLimit);
+    btn.className = `px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+      isActive 
+        ? "bg-blue-600 text-white shadow-xs" 
+        : "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600"
+    }`;
+    btn.innerText = `${opt} Scans`;
+    btn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof setHistoryLimit === "function") setHistoryLimit(opt);
+      if (typeof updateHistoryLimitPills === "function") updateHistoryLimitPills(opt);
+      picker.remove();
+      if (window.renderHistoryList) window.renderHistoryList();
+    };
+    picker.appendChild(btn);
+  });
+
+  const headerContainer = anchorEl.closest(".sticky") || anchorEl.parentElement;
+  if (headerContainer) {
+    if (window.getComputedStyle(headerContainer).position === "static") {
+      headerContainer.style.position = "relative";
+    }
+    headerContainer.appendChild(picker);
+  }
+
+  const closeOnOutsideClick = (evt) => {
+    if (picker && !picker.contains(evt.target) && evt.target !== anchorEl && !anchorEl.contains(evt.target)) {
+      picker.remove();
+      document.removeEventListener("click", closeOnOutsideClick);
+    }
+  };
+  setTimeout(() => {
+    document.addEventListener("click", closeOnOutsideClick);
+  }, 10);
 }
