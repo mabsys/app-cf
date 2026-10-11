@@ -1,4 +1,4 @@
-// js/qsParser.js (1110_R131) - MAB Qualification Slip PDF Text Parser & Validator
+// js/qsParser.js (1110_R134) - MAB Qualification Slip PDF Text Parser & Validator
 
 export function validateQualificationSlipContent(text) {
   if (!text || typeof text !== 'string') return false;
@@ -51,9 +51,22 @@ export function parseQualificationSlipText(text) {
   }
 
   // 4. Extract Cert No
-  const certMatch = cleanText.match(/CERT NO\s*[:\-]?\s*([A-Z0-9\-]+)/i);
-  if (certMatch) {
-    result.certNo = certMatch[1].trim();
+  const patterns = [
+    /CERT(?:IFICATE)?\s*(?:NO|N0|NUM|NUMBER)?\.?\s*[:\-]?\s*([A-Z0-9\-\/]{3,20})/i,
+    /CERT\.?\s*N[O0]\.?\s*[:\-]?\s*([A-Z0-9\-\/]{3,20})/i,
+    /FO\/TRNG\/FCCERT\/?([A-Z0-9\-\/]{3,20})/i,
+    /CERT\s*NO\s*[:\-]?\s*([A-Z0-9\-\/]{3,20})/i
+  ];
+  const ignored = ['OF', 'THIS', 'IS', 'TO', 'CERTIFY', 'CARD', 'QUALIFICATION', 'LICENCE', 'LICENSE', 'NUMBER'];
+  for (const p of patterns) {
+    const m = cleanText.match(p);
+    if (m && m[1]) {
+      const val = m[1].trim();
+      if (!ignored.includes(val.toUpperCase()) && !val.toUpperCase().startsWith('OF')) {
+        result.certNo = val;
+        break;
+      }
+    }
   }
 
   // 5. Extract Fleet / Aircraft Type
