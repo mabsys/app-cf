@@ -1,4 +1,4 @@
-// js/ui.js (0710_R101) - View State, Navigation, Dock Active Highlight & Network Controller
+// js/ui.js (1110_R131) - View State, Navigation, Dock Active Highlight & Network Controller
 
 import { stopScanner, switchScanHubTab } from './scanner.js';
 import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData } from './storage.js';
@@ -12,10 +12,11 @@ const textSizeIcons = {
   xl: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l3-7 3 7M5 15h4"/><path d="M13 18l4-11 4 11M14 14h6"/><path d="M11 6l1-1 1 1M11 3l1-1 1 1"/></svg>`
 };
 
-let currentTextSize = localStorage.getItem("app_text_size") || "std";
+let currentTextSize = localStorage.getItem("certifly_text_size") || localStorage.getItem("app_text_size") || "std";
 
 export function applyTextSize(size = currentTextSize) {
   currentTextSize = size;
+  localStorage.setItem("certifly_text_size", size);
   localStorage.setItem("app_text_size", size);
 
   const topbarTextBtn = document.getElementById("topbar-text-btn");
@@ -81,10 +82,11 @@ const themeSolidIcons = {
   dark: `<svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" /></svg>`
 };
 
-let currentThemeMode = localStorage.getItem("app_theme_mode") || "light";
+let currentThemeMode = localStorage.getItem("certifly_theme_mode") || localStorage.getItem("app_theme_mode") || "system";
 
 export function applyThemeMode(mode = currentThemeMode) {
   currentThemeMode = mode;
+  localStorage.setItem("certifly_theme_mode", mode);
   localStorage.setItem("app_theme_mode", mode);
 
   const topbarBtn = document.getElementById("topbar-theme-btn");
@@ -158,6 +160,25 @@ export function updateHistoryLimitPills(limit = getHistoryLimit()) {
   }
 }
 
+export function updateQsPdfBadge(fileName) {
+  const qsLabel = document.getElementById("profile-qs-pdf-label");
+  const qsBadge = document.getElementById("profile-qs-pdf-badge");
+  const qsStatusText = document.getElementById("profile-qs-pdf-status-text");
+
+  if (qsLabel) {
+    qsLabel.innerText = fileName || "Select PDF qualification slip file...";
+  }
+
+  if (qsBadge && qsStatusText) {
+    if (fileName) {
+      qsBadge.classList.remove("hidden");
+      qsStatusText.innerText = "Stored Qualification Slip (QS) file";
+    } else {
+      qsBadge.classList.add("hidden");
+    }
+  }
+}
+
 export function updateActiveDockState(activeViewId) {
   const navItems = {
     'dashboard-view': document.getElementById('dock-dashboard-btn'),
@@ -173,20 +194,16 @@ export function updateActiveDockState(activeViewId) {
     if (vId === 'scanner-view') {
       if (isSelected) {
         // Active Scan State: Solid elevated blue pill
-        //btn.className = "dock-item-btn py-2 px-3 bg-blue-600 text-white font-extrabold rounded-2xl shadow-md transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
         btn.className = "dock-item-btn w-full py-2 px-1.5 bg-blue-600 text-white font-extrabold rounded-2xl shadow-md transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
       } else {
         // Inactive Scan State: Vibrant blue accent label/icon WITHOUT heavy solid background fill
-        //btn.className = "dock-item-btn py-2 px-3 text-blue-600 dark:text-blue-400 font-extrabold hover:bg-blue-50/80 dark:hover:bg-blue-950/40 rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
         btn.className = "dock-item-btn w-full py-2 px-1.5 text-blue-600 dark:text-blue-400 font-extrabold hover:text-slate-800 dark:hover:text-slate-200 rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
       }
     } else {
-      // Secondary Tabs: Dynamic active highlight pill vs subtle inactive state
+        // Secondary Tabs: Dynamic active highlight pill vs subtle inactive state
       if (isSelected) {
-        //btn.className = "dock-item-btn py-2 px-3 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-extrabold rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
         btn.className = "dock-item-btn w-full py-2 px-1.5 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-extrabold rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
       } else {
-        //btn.className = "dock-item-btn py-2 px-3 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 font-bold rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
         btn.className = "dock-item-btn w-full py-2 px-1.5 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 font-bold rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
       }
     }
@@ -396,14 +413,12 @@ export function initNavigationBars() {
     showView("dashboard-view", "overview");
   });
   
-  // Dock History Button -> Navigates to Standalone #history-view
   document.getElementById("dock-history-btn")?.addEventListener("click", () => {
     stopScanner();
     renderHistoryList();
     showView("history-view");
   });
 
-  // Result View Back Button -> Returns to Standalone #history-view
   document.getElementById("btn-result-back")?.addEventListener("click", () => {
     showView("history-view");
   });
@@ -585,8 +600,6 @@ export function showError(msg) {
   showView("scanner-view");
 }
 
-window.showScannerView = showScannerView;
-
 export function switchResultTab(tabName = 'overview') {
   const tabs = ['overview', 'caam', 'mab'];
   const activeTab = tabs.includes(tabName) ? tabName : 'overview';
@@ -614,8 +627,6 @@ export function switchResultTab(tabName = 'overview') {
   });
 }
 
-window.switchResultTab = switchResultTab;
-
 export function openProfileMenu() {
   openMenu();
   setTimeout(() => {
@@ -624,6 +635,12 @@ export function openProfileMenu() {
   }, 150);
 }
 
-window.openMenu = openMenu;
-window.closeMenu = closeMenu;
-window.openProfileMenu = openProfileMenu;
+if (typeof window !== 'undefined') {
+  window.showScannerView = showScannerView;
+  window.switchResultTab = switchResultTab;
+  window.openMenu = openMenu;
+  window.closeMenu = closeMenu;
+  window.openProfileMenu = openProfileMenu;
+  window.applyThemeMode = applyThemeMode;
+  window.applyTextSize = applyTextSize;
+}
