@@ -1,20 +1,169 @@
-// js/storage.js (0210_R098) - LocalStorage Persistence, Crew Pinning & Compact History Filter Engine
+// js/storage.js (1110_R131) - CertiFly Storage Engine (LocalStorage & IndexedDB)
 
+const DB_NAME = 'CertiFlyDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'pdf_blobs';
+
+// IndexedDB Helper Initialization
+function openDB() {
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) {
+      reject(new Error('IndexedDB is not supported in this environment.'));
+      return;
+    }
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+    request.onsuccess = (event) => resolve(event.target.result);
+    request.onerror = (event) => reject(event.target.error);
+  });
+}
+
+// Low-level Blob Storage Operations
+export async function getIndexedDBBlob(key) {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.get(key);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) {
+    console.error('Error getting IndexedDB Blob:', e);
+    return null;
+  }
+}
+
+export async function setIndexedDBBlob(key, blob) {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.put(blob, key);
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) {
+    console.error('Error saving IndexedDB Blob:', e);
+    return false;
+  }
+}
+
+export async function removeIndexedDBBlob(key) {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.delete(key);
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) {
+    console.error('Error removing IndexedDB Blob:', e);
+    return false;
+  }
+}
+
+// MAB Attestation PDF & JSON Local Storage Helpers
+export async function getAttestationPdf() {
+  return await getIndexedDBBlob('attestation_pdf_blob');
+}
+
+export async function setAttestationPdf(blob) {
+  return await setIndexedDBBlob('attestation_pdf_blob', blob);
+}
+
+export async function removeAttestationPdf() {
+  return await removeIndexedDBBlob('attestation_pdf_blob');
+}
+
+export function getAttestationData() {
+  try {
+    const raw = localStorage.getItem('certifly_attestation_data');
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+export function setAttestationData(data) {
+  try {
+    if (data) {
+      localStorage.setItem('certifly_attestation_data', JSON.stringify(data));
+    } else {
+      localStorage.removeItem('certifly_attestation_data');
+    }
+  } catch (e) {}
+}
+
+export function clearAttestationData() {
+  try {
+    localStorage.removeItem('certifly_attestation_data');
+  } catch (e) {}
+}
+
+// MAB Qualification Slip (QS) PDF & JSON Local Storage Helpers
+export async function getQualificationSlipPdf() {
+  return await getIndexedDBBlob('qualification_slip_pdf_blob');
+}
+
+export async function setQualificationSlipPdf(blob) {
+  return await setIndexedDBBlob('qualification_slip_pdf_blob', blob);
+}
+
+export async function removeQualificationSlipPdf() {
+  return await removeIndexedDBBlob('qualification_slip_pdf_blob');
+}
+
+export function getQualificationSlipData() {
+  try {
+    const raw = localStorage.getItem('certifly_qs_data');
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+export function setQualificationSlipData(data) {
+  try {
+    if (data) {
+      localStorage.setItem('certifly_qs_data', JSON.stringify(data));
+    } else {
+      localStorage.removeItem('certifly_qs_data');
+    }
+  } catch (e) {}
+}
+
+export function clearQualificationSlipData() {
+  try {
+    localStorage.removeItem('certifly_qs_data');
+  } catch (e) {}
+}
+
+// Scan History & LocalStorage Constants
 let scanHistory = [];
 try {
-  const raw = localStorage.getItem("scan_history");
+  const raw = localStorage.getItem('scan_history');
   scanHistory = raw ? JSON.parse(raw) : [];
   if (!Array.isArray(scanHistory)) scanHistory = [];
 } catch (e) {
   scanHistory = [];
 }
 
-export const PROFILE_KEY = "certifly_profile_data";
-export const THRESHOLD_KEY = "certifly_threshold_days";
-export const HISTORY_LIMIT_KEY = "certifly_history_limit";
-export const FRESHNESS_LIMIT_KEY = "certifly_freshness_limit";
+export const PROFILE_KEY = 'certifly_profile_data';
+export const THRESHOLD_KEY = 'certifly_threshold_days';
+export const HISTORY_LIMIT_KEY = 'certifly_history_limit';
+export const FRESHNESS_LIMIT_KEY = 'certifly_freshness_limit';
 
-let currentHistoryFilter = "ALL";
+let currentHistoryFilter = 'ALL';
 let historyFilterInitialized = false;
 
 export function getFreshnessLimit() {
@@ -30,7 +179,7 @@ export function setFreshnessLimit(days) {
   try {
     localStorage.setItem(FRESHNESS_LIMIT_KEY, days.toString());
   } catch (e) {
-    console.error("Failed to save freshness limit:", e);
+    console.error('Failed to save freshness limit:', e);
   }
 }
 
@@ -47,7 +196,7 @@ export function setThresholdDays(days) {
   try {
     localStorage.setItem(THRESHOLD_KEY, days.toString());
   } catch (e) {
-    console.error("Failed to save threshold days:", e);
+    console.error('Failed to save threshold days:', e);
   }
 }
 
@@ -66,7 +215,7 @@ export function setHistoryLimit(limit) {
     enforceHistoryLimit();
     renderHistoryList();
   } catch (e) {
-    console.error("Failed to save history limit:", e);
+    console.error('Failed to save history limit:', e);
   }
 }
 
@@ -86,9 +235,9 @@ function enforceHistoryLimit() {
 
   scanHistory = [...pinned, ...trimmedUnpinned];
   try {
-    localStorage.setItem("scan_history", JSON.stringify(scanHistory));
+    localStorage.setItem('scan_history', JSON.stringify(scanHistory));
   } catch (e) {
-    console.error("Failed to persist trimmed history:", e);
+    console.error('Failed to persist trimmed history:', e);
   }
 }
 
@@ -100,9 +249,9 @@ export function togglePinRecord(recordId) {
     item.isPinned = !item.isPinned;
     item.pinned = item.isPinned;
     try {
-      localStorage.setItem("scan_history", JSON.stringify(scanHistory));
+      localStorage.setItem('scan_history', JSON.stringify(scanHistory));
     } catch (e) {
-      console.error("Failed to update pin state in localStorage:", e);
+      console.error('Failed to update pin state in localStorage:', e);
     }
     renderHistoryList();
     return item.isPinned;
@@ -116,12 +265,12 @@ export function deleteHistoryRecords(recordIds = []) {
 
   scanHistory = scanHistory.filter(item => item && !targetIds.has(String(item.id)));
   try {
-    localStorage.setItem("scan_history", JSON.stringify(scanHistory));
+    localStorage.setItem('scan_history', JSON.stringify(scanHistory));
   } catch (e) {
-    console.error("Failed to update scan_history after deletion:", e);
+    console.error('Failed to update scan_history after deletion:', e);
   }
 
-  if (typeof window !== "undefined" && typeof window.renderHistoryList === "function") {
+  if (typeof window !== 'undefined' && typeof window.renderHistoryList === 'function') {
     window.renderHistoryList();
   }
   return scanHistory;
@@ -139,23 +288,21 @@ export function bulkPinHistoryRecords(recordIds = [], pinState = true) {
   });
 
   try {
-    localStorage.setItem("scan_history", JSON.stringify(scanHistory));
+    localStorage.setItem('scan_history', JSON.stringify(scanHistory));
   } catch (e) {
-    console.error("Failed to update pin states in scan_history:", e);
+    console.error('Failed to update pin states in scan_history:', e);
   }
 
-  if (typeof window !== "undefined" && typeof window.renderHistoryList === "function") {
+  if (typeof window !== 'undefined' && typeof window.renderHistoryList === 'function') {
     window.renderHistoryList();
   }
 }
 
-
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   window.togglePinRecord = togglePinRecord;
   window.deleteHistoryRecords = deleteHistoryRecords;
   window.bulkPinHistoryRecords = bulkPinHistoryRecords;
 }
-
 
 export function saveToHistory(results, originalUrl) {
   if (!results) return;
@@ -167,11 +314,11 @@ export function saveToHistory(results, originalUrl) {
         hour: '2-digit', minute: '2-digit', hour12: false
       }).replace(',', ', ');
 
-  const licenseNo = (results.pilotDetails && results.pilotDetails.licenseNo) || "";
-  const pilotName = (results.pilotDetails && results.pilotDetails.name && results.pilotDetails.name !== "-") 
+  const licenseNo = (results.pilotDetails && results.pilotDetails.licenseNo) || '';
+  const pilotName = (results.pilotDetails && results.pilotDetails.name && results.pilotDetails.name !== '-') 
     ? results.pilotDetails.name 
-    : "External Crew Member";
-  const licenseType = (results.pilotDetails && results.pilotDetails.licenseType) || "ATPL(A)";
+    : 'External Crew Member';
+  const licenseType = (results.pilotDetails && results.pilotDetails.licenseType) || 'ATPL(A)';
 
   const id = String(licenseNo || (originalUrl ? originalUrl.trim() : Date.now()));
 
@@ -187,9 +334,9 @@ export function saveToHistory(results, originalUrl) {
     id: id,
     name: pilotName,
     licenseType: licenseType,
-    licenseNo: licenseNo || "-",
-    overallStatus: results.overallStatus || "VALID",
-    url: originalUrl || "",
+    licenseNo: licenseNo || '-',
+    overallStatus: results.overallStatus || 'VALID',
+    url: originalUrl || '',
     resultsData: results,
     timestamp: fullDateTime,
     isPinned: isPinned
@@ -199,9 +346,9 @@ export function saveToHistory(results, originalUrl) {
   enforceHistoryLimit();
 
   try {
-    localStorage.setItem("scan_history", JSON.stringify(scanHistory));
+    localStorage.setItem('scan_history', JSON.stringify(scanHistory));
   } catch (e) {
-    console.error("Failed to save scan history:", e);
+    console.error('Failed to save scan history:', e);
   }
 
   renderHistoryList();
@@ -210,7 +357,7 @@ export function saveToHistory(results, originalUrl) {
 export function clearHistory() {
   scanHistory = [];
   try {
-    localStorage.removeItem("scan_history");
+    localStorage.removeItem('scan_history');
   } catch (e) {}
   renderHistoryList();
 }
@@ -218,28 +365,28 @@ export function clearHistory() {
 export function initHistoryListControls() {
   if (historyFilterInitialized) return;
 
-  const searchInput = document.getElementById("history-search-input");
+  const searchInput = document.getElementById('history-search-input');
   if (searchInput) {
-    searchInput.addEventListener("input", () => {
+    searchInput.addEventListener('input', () => {
       renderHistoryList();
     });
   }
 
-  const filterAllBtn = document.getElementById("filter-all-btn");
-  const filterValidBtn = document.getElementById("filter-valid-btn");
-  const filterExpiringBtn = document.getElementById("filter-expiring-btn");
-  const filterExpiredBtn = document.getElementById("filter-expired-btn");
+  const filterAllBtn = document.getElementById('filter-all-btn');
+  const filterValidBtn = document.getElementById('filter-valid-btn');
+  const filterExpiringBtn = document.getElementById('filter-expiring-btn');
+  const filterExpiredBtn = document.getElementById('filter-expired-btn');
 
   const filterBtns = [
-    { btn: filterAllBtn, type: "ALL" },
-    { btn: filterValidBtn, type: "VALID" },
-    { btn: filterExpiringBtn, type: "EXPIRING" },
-    { btn: filterExpiredBtn, type: "EXPIRED" }
+    { btn: filterAllBtn, type: 'ALL' },
+    { btn: filterValidBtn, type: 'VALID' },
+    { btn: filterExpiringBtn, type: 'EXPIRING' },
+    { btn: filterExpiredBtn, type: 'EXPIRED' }
   ];
 
   filterBtns.forEach(({ btn, type }) => {
     if (btn) {
-      btn.addEventListener("click", () => {
+      btn.addEventListener('click', () => {
         currentHistoryFilter = type;
         updateFilterBtnStyles(filterBtns, type);
         renderHistoryList();
@@ -254,27 +401,27 @@ function updateFilterBtnStyles(filterBtns, activeType) {
   filterBtns.forEach(({ btn, type }) => {
     if (!btn) return;
     if (type === activeType) {
-      btn.className = "py-1.5 px-1 rounded-lg bg-blue-600 text-white shadow-xs transition-all cursor-pointer font-bold";
+      btn.className = 'py-1.5 px-1 rounded-lg bg-blue-600 text-white shadow-xs transition-all cursor-pointer font-bold';
     } else {
-      btn.className = "py-1.5 px-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer font-semibold";
+      btn.className = 'py-1.5 px-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer font-semibold';
     }
   });
 }
 
 export function renderHistoryList() {
-  if (typeof window !== "undefined" && typeof window.renderHistoryList === "function" && window.renderHistoryList !== renderHistoryList) {
+  if (typeof window !== 'undefined' && typeof window.renderHistoryList === 'function' && window.renderHistoryList !== renderHistoryList) {
     window.renderHistoryList();
     return;
   }
   initHistoryListControls();
 
-  const container = document.getElementById("recent-pilots-list") || document.getElementById("history-list");
-  const countAllEl = document.getElementById("count-all");
-  const countValidEl = document.getElementById("count-valid");
-  const countExpiringEl = document.getElementById("count-expiring");
-  const countExpiredEl = document.getElementById("count-expired");
-  const retentionTag = document.getElementById("history-retention-tag");
-  const cacheBadge = document.getElementById("history-cache-badge");
+  const container = document.getElementById('recent-pilots-list') || document.getElementById('history-list');
+  const countAllEl = document.getElementById('count-all');
+  const countValidEl = document.getElementById('count-valid');
+  const countExpiringEl = document.getElementById('count-expiring');
+  const countExpiredEl = document.getElementById('count-expired');
+  const retentionTag = document.getElementById('history-retention-tag');
+  const cacheBadge = document.getElementById('history-cache-badge');
 
   const limit = getHistoryLimit();
   if (retentionTag) {
@@ -283,9 +430,9 @@ export function renderHistoryList() {
 
   if (cacheBadge) {
     if (!navigator.onLine) {
-      cacheBadge.classList.remove("hidden");
+      cacheBadge.classList.remove('hidden');
     } else {
-      cacheBadge.classList.add("hidden");
+      cacheBadge.classList.add('hidden');
     }
   }
 
@@ -296,8 +443,8 @@ export function renderHistoryList() {
   scanHistory.forEach(item => {
     if (!item) return;
     const status = item.overallStatus;
-    if (status === "EXPIRED") expiredCount++;
-    else if (status === "EXPIRING_SOON") expiringCount++;
+    if (status === 'EXPIRED') expiredCount++;
+    else if (status === 'EXPIRING_SOON') expiringCount++;
     else validCount++;
   });
 
@@ -313,20 +460,20 @@ export function renderHistoryList() {
     return;
   }
 
-  const searchInput = document.getElementById("history-search-input");
-  const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
+  const searchInput = document.getElementById('history-search-input');
+  const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
   let filtered = scanHistory.filter(item => {
     if (!item) return false;
 
-    if (currentHistoryFilter === "VALID" && item.overallStatus !== "VALID") return false;
-    if (currentHistoryFilter === "EXPIRING" && item.overallStatus !== "EXPIRING_SOON") return false;
-    if (currentHistoryFilter === "EXPIRED" && item.overallStatus !== "EXPIRED") return false;
+    if (currentHistoryFilter === 'VALID' && item.overallStatus !== 'VALID') return false;
+    if (currentHistoryFilter === 'EXPIRING' && item.overallStatus !== 'EXPIRING_SOON') return false;
+    if (currentHistoryFilter === 'EXPIRED' && item.overallStatus !== 'EXPIRED') return false;
 
     if (query) {
-      const name = (item.name || "").toLowerCase();
-      const licNo = (item.licenseNo || "").toLowerCase();
-      const licType = (item.licenseType || "").toLowerCase();
+      const name = (item.name || '').toLowerCase();
+      const licNo = (item.licenseNo || '').toLowerCase();
+      const licType = (item.licenseType || '').toLowerCase();
       return name.includes(query) || licNo.includes(query) || licType.includes(query);
     }
 
@@ -349,15 +496,15 @@ export function renderHistoryList() {
     if (!item) return '';
 
     const safeId = String(item.id || '').replace(/'/g, "\'");
-    let badgeClass = "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60";
-    let badgeText = "Valid";
+    let badgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60';
+    let badgeText = 'Valid';
 
-    if (item.overallStatus === "EXPIRED") {
-      badgeClass = "bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60";
-      badgeText = "Expired";
-    } else if (item.overallStatus === "EXPIRING_SOON") {
-      badgeClass = "bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60";
-      badgeText = "Expiring";
+    if (item.overallStatus === 'EXPIRED') {
+      badgeClass = 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60';
+      badgeText = 'Expired';
+    } else if (item.overallStatus === 'EXPIRING_SOON') {
+      badgeClass = 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60';
+      badgeText = 'Expiring';
     }
 
     const pinSvg = item.isPinned ? `
@@ -393,19 +540,19 @@ export function renderHistoryList() {
 export function getProfileData() {
   try {
     const data = localStorage.getItem(PROFILE_KEY);
-    if (!data) return { url: "", attestationFileName: "", cachedCaamResults: null, cachedMabResults: null, qrImageUrl: "", cachedQrDataUrl: "" };
+    if (!data) return { url: '', attestationFileName: '', cachedCaamResults: null, cachedMabResults: null, qrImageUrl: '', cachedQrDataUrl: '' };
     const parsed = JSON.parse(data);
     return {
-      url: (parsed.url || "").trim(),
-      attestationFileName: (parsed.attestationFileName || "").trim(),
+      url: (parsed.url || '').trim(),
+      attestationFileName: (parsed.attestationFileName || '').trim(),
       cachedCaamResults: parsed.cachedCaamResults || null,
       cachedMabResults: parsed.cachedMabResults || null,
-      qrImageUrl: parsed.qrImageUrl || "",
-      cachedQrDataUrl: parsed.cachedQrDataUrl || ""
+      qrImageUrl: parsed.qrImageUrl || '',
+      cachedQrDataUrl: parsed.cachedQrDataUrl || ''
     };
   } catch (err) {
-    console.error("Failed to read profile data from storage:", err);
-    return { url: "", attestationFileName: "", cachedCaamResults: null, cachedMabResults: null, qrImageUrl: "", cachedQrDataUrl: "" };
+    console.error('Failed to read profile data from storage:', err);
+    return { url: '', attestationFileName: '', cachedCaamResults: null, cachedMabResults: null, qrImageUrl: '', cachedQrDataUrl: '' };
   }
 }
 
@@ -413,8 +560,8 @@ export function saveProfileData(profile = {}) {
   try {
     const existing = getProfileData();
     const sanitized = {
-      url: profile.url !== undefined ? (profile.url || "").trim() : existing.url,
-      attestationFileName: profile.attestationFileName !== undefined ? (profile.attestationFileName || "").trim() : existing.attestationFileName,
+      url: profile.url !== undefined ? (profile.url || '').trim() : existing.url,
+      attestationFileName: profile.attestationFileName !== undefined ? (profile.attestationFileName || '').trim() : existing.attestationFileName,
       cachedCaamResults: profile.cachedCaamResults !== undefined ? profile.cachedCaamResults : existing.cachedCaamResults,
       cachedMabResults: profile.cachedMabResults !== undefined ? profile.cachedMabResults : existing.cachedMabResults,
       qrImageUrl: profile.qrImageUrl !== undefined ? profile.qrImageUrl : existing.qrImageUrl,
@@ -422,7 +569,7 @@ export function saveProfileData(profile = {}) {
     };
     localStorage.setItem(PROFILE_KEY, JSON.stringify(sanitized));
   } catch (err) {
-    console.error("Failed to save profile data to storage:", err);
+    console.error('Failed to save profile data to storage:', err);
   }
 }
 
@@ -430,11 +577,52 @@ export function clearProfileData() {
   try {
     localStorage.removeItem(PROFILE_KEY);
   } catch (err) {
-    console.error("Failed to clear profile data from storage:", err);
+    console.error('Failed to clear profile data from storage:', err);
   }
 }
 
 export function hasProfileData() {
   const profile = getProfileData();
   return Boolean(profile && profile.url);
+}
+
+export function getThemeMode() {
+  try {
+    return localStorage.getItem('certifly_theme_mode') || 'system';
+  } catch (e) {
+    return 'system';
+  }
+}
+
+export function setThemeMode(mode) {
+  try {
+    localStorage.setItem('certifly_theme_mode', mode);
+  } catch (e) {}
+}
+
+export function getTextSize() {
+  try {
+    return localStorage.getItem('certifly_text_size') || 'normal';
+  } catch (e) {
+    return 'normal';
+  }
+}
+
+export function setTextSize(size) {
+  try {
+    localStorage.setItem('certifly_text_size', size);
+  } catch (e) {}
+}
+
+// Reset / Clear All App Storage
+export async function clearAllAppData() {
+  try {
+    localStorage.clear();
+    await removeAttestationPdf();
+    await removeQualificationSlipPdf();
+    return true;
+  } catch (e) {
+    console.error('Error clearing all app data:', e);
+    return false;
+  }
 }
