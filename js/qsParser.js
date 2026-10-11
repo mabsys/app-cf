@@ -1,4 +1,4 @@
-// js/qsParser.js (1110_R136) - MAB Qualification Slip PDF Text Parser & Validator
+// js/qsParser.js (1110_R137) - MAB Qualification Slip PDF Text Parser & Validator
 
 export function validateQualificationSlipContent(text) {
   if (!text || typeof text !== 'string') return false;
@@ -51,7 +51,7 @@ export function parseQualificationSlipText(text) {
   }
 
   // 4. Extract Cert No (Strictly target strings following CERT NO or CERTIFICATE NO)
-  const certMatch = cleanText.match(/CERT(?:IFICATE)?\s*\.?\s*NO\.?\s*[:\-]?\s*([A-Z0-9\-\/]+)/i);
+  const certMatch = cleanText.match(/(?:CERT|CERTIFICATE)\s*\.?\s*NO\.?\s*[:\-]?\s*([A-Z0-9\-\/]+)/i);
   if (certMatch && certMatch[1]) {
     const val = certMatch[1].trim();
     const ignored = ['OF', 'THIS', 'IS', 'TO', 'CERTIFY', 'CARD', 'QUALIFICATION', 'LICENCE', 'LICENSE', 'NUMBER'];
@@ -77,7 +77,7 @@ export function parseQualificationSlipText(text) {
   
   opsList.forEach(item => {
     const escaped = item.replace(/\//g, '\\/');
-    const regex = new RegExp('(?:' + escaped + ')\s+(\\d{1,2}\s+[A-Za-z]{3}\s+\\d{4})', 'i');
+    const regex = new RegExp('(?:' + escaped + ')\\s+(\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4})', 'i');
     const match = cleanText.match(regex);
     if (match) {
       if (item.startsWith('RNP') || item.startsWith('RNAV') || item.startsWith('LNAV')) {
