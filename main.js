@@ -1,4 +1,4 @@
-// js/main.js (1110_R141) - Main Application Controller & Orchestrator
+// js/main.js (1110_R142) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
