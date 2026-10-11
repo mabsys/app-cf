@@ -1,4 +1,4 @@
-// js/main.js (1110_R132) - Main Application Controller & Orchestrator
+// js/main.js (1110_R133) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -891,7 +891,7 @@ async function processAndCacheProfileData(url, pdfFile) {
     qrImageUrl: finalCaamResults ? finalCaamResults.qrImageUrl : ""
   });
 
-  return { caamResults, mabResults };
+  return { caamResults: finalCaamResults, mabResults };
 }
 
 async function processLicenseUrl(url) {
@@ -1016,6 +1016,14 @@ async function processLicenseUrl(url) {
   renderResults(caamResults, mabResults);
 }
 
+function getDashEl(id) {
+  const dashView = document.getElementById("dashboard-view");
+  if (dashView) {
+    const el = dashView.querySelector("#" + id);
+    if (el) return el;
+  }
+  return document.getElementById(id);
+}
 let initialOverviewTemplateHTML = "";
 let initialCaamTemplateHTML = "";
 let initialMabTemplateHTML = "";
@@ -1246,13 +1254,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     mabPane.innerHTML = initialMabTemplateHTML;
   }
 
-  function getDashEl(id) {
-    if (dashView) {
-      const el = dashView.querySelector("#" + id);
-      if (el) return el;
-    }
-    return document.getElementById(id);
-  }
+
 
   const displayName = (caamResults && caamResults.pilotDetails && caamResults.pilotDetails.name && caamResults.pilotDetails.name !== "-")
     ? caamResults.pilotDetails.name
@@ -1431,24 +1433,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
       });
     }
 
-    // Collect Qualification Slip items (PBN & Operational Endorsements)
-    const storedQsDataForEarliest = getQualificationSlipData() || selectedQsParsed;
-    if (storedQsDataForEarliest) {
-      const allQsQuals = [...(storedQsDataForEarliest.pbnQuals || []), ...(storedQsDataForEarliest.opsQuals || [])];
-      allQsQuals.forEach(q => {
-        if (q.dateText && !['NO EXPIRY', 'NIL', 'NA', 'N/A', '-'].includes(q.dateText.trim().toUpperCase())) {
-          const d = parseAnyDate(q.dateText);
-          if (d && !isNaN(d.getTime())) {
-            candidates.push({
-              name: `${q.name} (${q.dateText})`,
-              sub: "MAB Qualification Slip • Next Renewal",
-              date: d,
-              targetTab: 'mab'
-            });
-          }
-        }
-      });
-    }
+
 
     // Sort candidates chronologically ascending (earliest date first)
     candidates.sort((a, b) => a.date.getTime() - b.date.getTime());
