@@ -1,9 +1,9 @@
-// js/main.js (1110_R131) - Main Application Controller & Orchestrator
+// js/main.js (0810_R130) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
-import { parseAttestationText, validateAttestationContent, parseQualificationSlipText, validateQualificationSlipContent } from './js/parser.js';
-import { saveToHistory, renderHistoryList, getScanHistory, getProfileData, saveProfileData, clearProfileData, clearHistory, getThresholdDays, setThresholdDays, getHistoryLimit, setHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData, getAttestationPdf, setAttestationPdf, removeAttestationPdf, getAttestationData, setAttestationData, clearAttestationData, getQualificationSlipPdf, setQualificationSlipPdf, removeQualificationSlipPdf, getQualificationSlipData, setQualificationSlipData, clearQualificationSlipData, getThemeMode, setThemeMode, getTextSize, setTextSize, clearAllAppData } from './js/storage.js';
+import { parseAttestationText, validateAttestationContent } from './js/attestationParser.js';
+import { saveToHistory, renderHistoryList, getScanHistory, getProfileData, saveProfileData, clearProfileData, clearHistory, getThresholdDays, setThresholdDays, getHistoryLimit, setHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData } from './js/storage.js';
 import { startScanner, stopScanner, switchScanHubTab, renderRecentPilotsList, cycleCameraLens, toggleTorch, handleClipboardPaste } from './js/scanner.js';
 import { updateNetworkStatus, showScannerView, showLoading, showError, showView, initNavigationBars, closeMenu, applyThemeMode, applyTextSize, updateThresholdPills, updateHistoryLimitPills, updateFreshnessLimitPills, switchResultTab, openProfileMenu, openMenu } from './js/ui.js';
 
@@ -26,9 +26,6 @@ function isFiQual(name) {
 let lastScannedUrl = "";
 let selectedAttestationFile = null;
 let selectedAttestationText = "";
-let selectedQsFile = null;
-let selectedQsText = "";
-let selectedQsParsed = null;
 let profileQrScannerActive = false;
 
 async function extractTextFromPdfFile(file) {
@@ -300,25 +297,6 @@ function initProfileUI() {
   const pdfStatusBadge = document.getElementById("profile-pdf-status-badge") || document.getElementById("profile-pdf-badge");
   const pdfStatusText = document.getElementById("profile-pdf-status-text") || document.getElementById("profile-pdf-badge-text") || (pdfStatusBadge ? pdfStatusBadge.querySelector("span") : null);
 
-  const qsPdfFileInput = document.getElementById("profile-qs-pdf-file");
-  const qsPdfLabel = document.getElementById("profile-qs-pdf-label");
-  const qsPdfStatusBadge = document.getElementById("profile-qs-pdf-badge");
-  const qsPdfStatusText = document.getElementById("profile-qs-pdf-status-text") || (qsPdfStatusBadge ? qsPdfStatusBadge.querySelector("span") : null);
-  const storedQsData = getQualificationSlipData();
-
-  if (qsPdfLabel) {
-    qsPdfLabel.innerText = (storedQsData && storedQsData.fileName) || "Select PDF qualification slip file...";
-  }
-
-  if (qsPdfStatusBadge) {
-    if (storedQsData) {
-      qsPdfStatusBadge.classList.remove("hidden");
-      if (qsPdfStatusText) qsPdfStatusText.innerText = "Stored Qualification Slip (QS) file";
-    } else {
-      qsPdfStatusBadge.classList.add("hidden");
-    }
-  }
-
   if (urlInput) {
     urlInput.value = profile.url || "";
     updateProfileUrlBadge(profile.url || "");
@@ -513,82 +491,6 @@ function initProfileUI() {
     };
   }
 
-  if (qsPdfFileInput) {
-    qsPdfFileInput.onchange = async (e) => {
-      selectedQsFile = null;
-      selectedQsText = "";
-      selectedQsParsed = null;
-      const file = e.target.files && e.target.files[0];
-      const currentQsData = getQualificationSlipData();
-
-      const resetQsToStoredOrEmpty = () => {
-        qsPdfFileInput.value = "";
-        if (qsPdfLabel) {
-          qsPdfLabel.innerText = (currentQsData && currentQsData.fileName) || "Select PDF qualification slip file...";
-        }
-        if (qsPdfStatusBadge) {
-          if (currentQsData) {
-            qsPdfStatusBadge.classList.remove("hidden");
-            if (qsPdfStatusText) qsPdfStatusText.innerText = "Stored Qualification Slip (QS) file";
-          } else {
-            qsPdfStatusBadge.classList.add("hidden");
-          }
-        }
-      };
-
-      if (!file) {
-        resetQsToStoredOrEmpty();
-        return;
-      }
-
-      try {
-        const buffer = await file.slice(0, 5).arrayBuffer();
-        const header = new TextDecoder().decode(buffer);
-        if (header !== "%PDF-") {
-          alert("Invalid File Format: Selected file is not a valid PDF document.");
-          resetQsToStoredOrEmpty();
-          return;
-        }
-      } catch (err) {
-        alert("Failed to read file header. Please try again.");
-        resetQsToStoredOrEmpty();
-        return;
-      }
-
-      try {
-        const extractedText = await extractTextFromPdfFile(file);
-        const isValid = validateQualificationSlipContent(extractedText);
-        if (!isValid) {
-          alert("Validation Failed: Selected PDF is not a valid MAB Qualification Slip document.");
-          resetQsToStoredOrEmpty();
-          return;
-        }
-
-        const parsedData = parseQualificationSlipText(extractedText);
-        if (!parsedData) {
-          alert("Parsing Failed: Could not extract qualification data from the PDF.");
-          resetQsToStoredOrEmpty();
-          return;
-        }
-
-        parsedData.fileName = file.name;
-        selectedQsFile = file;
-        selectedQsText = extractedText;
-        selectedQsParsed = parsedData;
-
-        if (qsPdfLabel) qsPdfLabel.innerText = file.name;
-        if (qsPdfStatusBadge) {
-          qsPdfStatusBadge.classList.remove("hidden");
-          if (qsPdfStatusText) qsPdfStatusText.innerText = "Valid Qualification Slip (QS) file";
-        }
-        showProfileToast("Qualification Slip PDF verified!");
-      } catch (err) {
-        alert("Could not process PDF contents. Please ensure the file is not corrupted or password-protected.");
-        resetQsToStoredOrEmpty();
-      }
-    };
-  }
-
   if (saveBtn) {
     saveBtn.onclick = async () => {
       stopScanner();
@@ -607,10 +509,6 @@ function initProfileUI() {
         return;
       }
 
-      if (selectedQsFile && selectedQsParsed) {
-        await setQualificationSlipPdf(selectedQsFile);
-        setQualificationSlipData(selectedQsParsed);
-      }
       saveProfileData({ url: urlVal, attestationFileName: attestationName });
       updateProfileUrlBadge(urlVal);
       if (pdfStatusBadge && pdfStatusText) {
@@ -641,16 +539,8 @@ function initProfileUI() {
       profileQrScannerActive = false;
       if (confirm("Clear saved crew profile data from this device?")) {
         clearProfileData();
-        clearQualificationSlipData();
-        await removeQualificationSlipPdf();
-        await removeAttestationPdf();
         selectedAttestationFile = null;
         selectedAttestationText = "";
-        selectedQsFile = null;
-        selectedQsText = "";
-        selectedQsParsed = null;
-        if (qsPdfLabel) qsPdfLabel.innerText = "Select PDF qualification slip file...";
-        if (qsPdfStatusBadge) qsPdfStatusBadge.classList.add("hidden");
         if (urlInput) {
           urlInput.value = "";
           updateProfileUrlBadge("");
@@ -1099,70 +989,7 @@ function renderBlankDashboard() {
     `;
   }
 
-  await setupDocumentViewers();
   showView("dashboard-view");
-}
-
-async function setupDocumentViewers() {
-  const attestationBtn = getDashEl("mab-view-attestation-btn");
-  const qsBtn = getDashEl("mab-view-qs-btn");
-  const qsBadgeText = getDashEl("mab-qs-status-text");
-  const qsCertNo = getDashEl("mab-qs-cert-no");
-
-  const qsData = getQualificationSlipData() || selectedQsParsed;
-  if (qsBadgeText && qsCertNo) {
-    if (qsData) {
-      qsBadgeText.innerText = "Qualification Slip: Stored & Valid";
-      qsCertNo.innerText = `CERT ${qsData.certNo || '-'}`;
-    } else {
-      qsBadgeText.innerText = "Qualification Slip: Not Configured";
-      qsCertNo.innerText = "CERT -";
-    }
-  }
-
-  if (attestationBtn) {
-    const attBlob = await getAttestationPdf();
-    if (attBlob || selectedAttestationFile) {
-      attestationBtn.disabled = false;
-      attestationBtn.className = "w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]";
-      attestationBtn.onclick = async () => {
-        let blob = attBlob;
-        if (!blob && selectedAttestationFile) blob = selectedAttestationFile;
-        if (blob) {
-          const blobUrl = URL.createObjectURL(blob);
-          window.open(blobUrl, "_blank");
-        } else {
-          alert("Attestation PDF file not found in local storage.");
-        }
-      };
-    } else {
-      attestationBtn.disabled = true;
-      attestationBtn.className = "w-full h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-extrabold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-not-allowed border border-slate-200 dark:border-slate-700/60";
-      attestationBtn.onclick = null;
-    }
-  }
-
-  if (qsBtn) {
-    const qsBlob = await getQualificationSlipPdf();
-    if (qsBlob || selectedQsFile) {
-      qsBtn.disabled = false;
-      qsBtn.className = "w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]";
-      qsBtn.onclick = async () => {
-        let blob = qsBlob;
-        if (!blob && selectedQsFile) blob = selectedQsFile;
-        if (blob) {
-          const blobUrl = URL.createObjectURL(blob);
-          window.open(blobUrl, "_blank");
-        } else {
-          alert("Qualification Slip PDF file not found in local storage.");
-        }
-      };
-    } else {
-      qsBtn.disabled = true;
-      qsBtn.className = "w-full h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-extrabold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-not-allowed border border-slate-200 dark:border-slate-700/60";
-      qsBtn.onclick = null;
-    }
-  }
 }
 
 async function renderDashboardView() {
@@ -1453,7 +1280,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
           if (d && !isNaN(d.getTime())) {
             candidates.push({
               name: `${q.name} (${q.dateText})`,
-              sub: "CAAM Licence Qualification • Next Renewal",
+              sub: "CAAM Licence Qualification â¢ Next Renewal",
               date: d,
               targetTab: 'caam'
             });
@@ -1468,7 +1295,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
       if (d && !isNaN(d.getTime())) {
         candidates.push({
           name: `${mabResults.lineCheck.fleet || 'B738'} Line Check (${mabResults.lineCheck.expiryDate})`,
-          sub: "MAB Operational Flight Check • Next Renewal",
+          sub: "MAB Operational Flight Check â¢ Next Renewal",
           date: d,
           targetTab: 'mab'
         });
@@ -1484,26 +1311,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
           if (d && !isNaN(d.getTime())) {
             candidates.push({
               name: `${dr.name || dr.item || 'Safety Drill'} (${dateStr})`,
-              sub: "MAB Safety & Recurrent Training • Next Renewal",
-              date: d,
-              targetTab: 'mab'
-            });
-          }
-        }
-      });
-    }
-
-    // Collect Qualification Slip items (PBN & Operational Endorsements)
-    const storedQsDataForEarliest = getQualificationSlipData() || selectedQsParsed;
-    if (storedQsDataForEarliest) {
-      const allQsQuals = [...(storedQsDataForEarliest.pbnQuals || []), ...(storedQsDataForEarliest.opsQuals || [])];
-      allQsQuals.forEach(q => {
-        if (q.dateText && !['NO EXPIRY', 'NIL', 'NA', 'N/A', '-'].includes(q.dateText.trim().toUpperCase())) {
-          const d = parseAnyDate(q.dateText);
-          if (d && !isNaN(d.getTime())) {
-            candidates.push({
-              name: `${q.name} (${q.dateText})`,
-              sub: "MAB Qualification Slip • Next Renewal",
+              sub: "MAB Safety & Recurrent Training â¢ Next Renewal",
               date: d,
               targetTab: 'mab'
             });
@@ -1806,70 +1614,7 @@ function renderDashboardResults(caamResults, mabResults = null) {
     }
   }
 
-  await setupDocumentViewers();
   showView("dashboard-view");
-}
-
-async function setupDocumentViewers() {
-  const attestationBtn = getDashEl("mab-view-attestation-btn");
-  const qsBtn = getDashEl("mab-view-qs-btn");
-  const qsBadgeText = getDashEl("mab-qs-status-text");
-  const qsCertNo = getDashEl("mab-qs-cert-no");
-
-  const qsData = getQualificationSlipData() || selectedQsParsed;
-  if (qsBadgeText && qsCertNo) {
-    if (qsData) {
-      qsBadgeText.innerText = "Qualification Slip: Stored & Valid";
-      qsCertNo.innerText = `CERT ${qsData.certNo || '-'}`;
-    } else {
-      qsBadgeText.innerText = "Qualification Slip: Not Configured";
-      qsCertNo.innerText = "CERT -";
-    }
-  }
-
-  if (attestationBtn) {
-    const attBlob = await getAttestationPdf();
-    if (attBlob || selectedAttestationFile) {
-      attestationBtn.disabled = false;
-      attestationBtn.className = "w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]";
-      attestationBtn.onclick = async () => {
-        let blob = attBlob;
-        if (!blob && selectedAttestationFile) blob = selectedAttestationFile;
-        if (blob) {
-          const blobUrl = URL.createObjectURL(blob);
-          window.open(blobUrl, "_blank");
-        } else {
-          alert("Attestation PDF file not found in local storage.");
-        }
-      };
-    } else {
-      attestationBtn.disabled = true;
-      attestationBtn.className = "w-full h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-extrabold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-not-allowed border border-slate-200 dark:border-slate-700/60";
-      attestationBtn.onclick = null;
-    }
-  }
-
-  if (qsBtn) {
-    const qsBlob = await getQualificationSlipPdf();
-    if (qsBlob || selectedQsFile) {
-      qsBtn.disabled = false;
-      qsBtn.className = "w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]";
-      qsBtn.onclick = async () => {
-        let blob = qsBlob;
-        if (!blob && selectedQsFile) blob = selectedQsFile;
-        if (blob) {
-          const blobUrl = URL.createObjectURL(blob);
-          window.open(blobUrl, "_blank");
-        } else {
-          alert("Qualification Slip PDF file not found in local storage.");
-        }
-      };
-    } else {
-      qsBtn.disabled = true;
-      qsBtn.className = "w-full h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-extrabold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-not-allowed border border-slate-200 dark:border-slate-700/60";
-      qsBtn.onclick = null;
-    }
-  }
 }
 
 
@@ -2488,7 +2233,7 @@ function customRenderHistoryList() {
                   ${pinBadge}
                 </div>
                 <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5 tracking-tight truncate">
-                  ${licType} • ${licNo}
+                  ${licType} â¢ ${licNo}
                 </span>
                 <span class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
                   Checked: ${timestampStr}
@@ -3131,7 +2876,7 @@ function renderMyQrPass() {
   let scanTimeStr = (caam && caam.scanTime) ? caam.scanTime : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
   if (nameElem) nameElem.innerText = displayName;
-  if (licenceElem) licenceElem.innerText = `${licenceType} • ${licenceNo}`;
+  if (licenceElem) licenceElem.innerText = `${licenceType} â¢ ${licenceNo}`;
   if (freshnessElem) freshnessElem.innerText = scanTimeStr;
 
 
