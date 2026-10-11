@@ -1,4 +1,4 @@
-// js/main.js (1110_R142) - Main Application Controller & Orchestrator
+// js/main.js (1110_R143) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -1740,17 +1740,18 @@ async function setupDocumentViewers() {
   const attestationBtn = getDashEl("mab-view-attestation-btn");
   const qsBtn = getDashEl("mab-view-qs-btn");
   const qsBadgeText = getDashEl("mab-qs-status-text");
-  const qsCertNo = getDashEl("mab-qs-cert-no");
+  const qsBadgePill = getDashEl("mab-qs-cert-no");
 
   const qsData = getQualificationSlipData() || selectedQsParsed;
-  if (qsBadgeText && qsCertNo) {
+  if (qsBadgeText && qsBadgePill) {
     if (qsData) {
       qsBadgeText.innerText = "Qualification Slip: Stored & Valid";
-      const certVal = (qsData && qsData.certNo && qsData.certNo.trim()) ? qsData.certNo.trim() : '-';
-      qsCertNo.innerText = `CERT ${certVal}`;
+      qsBadgePill.innerText = "Verified";
+      qsBadgePill.className = "text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md uppercase";
     } else {
       qsBadgeText.innerText = "Qualification Slip: Not Configured";
-      qsCertNo.innerText = "CERT -";
+      qsBadgePill.innerText = "Not Set";
+      qsBadgePill.className = "text-[10px] font-extrabold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md uppercase";
     }
   }
 
