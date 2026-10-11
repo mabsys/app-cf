@@ -1,4 +1,4 @@
-// js/main.js (1110_R133) - Main Application Controller & Orchestrator
+// js/main.js (1110_R134) - Main Application Controller & Orchestrator
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -607,6 +607,9 @@ function initProfileUI() {
         return;
       }
 
+      if (selectedAttestationFile) {
+        await setAttestationPdf(selectedAttestationFile);
+      }
       if (selectedQsFile && selectedQsParsed) {
         await setQualificationSlipPdf(selectedQsFile);
         setQualificationSlipData(selectedQsParsed);
@@ -1743,7 +1746,8 @@ async function setupDocumentViewers() {
   if (qsBadgeText && qsCertNo) {
     if (qsData) {
       qsBadgeText.innerText = "Qualification Slip: Stored & Valid";
-      qsCertNo.innerText = `CERT ${qsData.certNo || '-'}`;
+      const displayCert = qsData.certNo || (qsData.staffNo ? `STAFF-${qsData.staffNo}` : 'ACTIVE');
+      qsCertNo.innerText = `CERT ${displayCert}`;
     } else {
       qsBadgeText.innerText = "Qualification Slip: Not Configured";
       qsCertNo.innerText = "CERT -";
