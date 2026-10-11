@@ -1,4 +1,4 @@
-// js/components/menu.js (0810_R122) - Sliding Floating Menu Component
+// js/components/menu.js (1110_R131) - Slide-over Menu Navigation & Sub-pane Drawer Engine
 
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
@@ -146,7 +146,7 @@ export const menuHTML = `
           </div>
         </div>
 
-        <!-- PDF Upload -->
+        <!-- Attestation PDF Upload -->
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs mb-2">
           <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-1">Company Attestation Document (PDF)</label>
           <div class="flex items-center gap-2 mt-1">
@@ -160,6 +160,22 @@ export const menuHTML = `
             <span id="profile-pdf-status-text">✓ Valid Attestation PDF file</span>
           </div>
           <p class="text-[9px] text-slate-400 mt-1">Upload MAB company attestations PDF for compliance checks on Dashboard.</p>
+        </div>
+
+                <!-- Qualification Slip PDF Upload -->
+        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs mb-2">
+          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-1">Qualification Slip Document (PDF)</label>
+          <div class="flex items-center gap-2 mt-1">
+            <label for="profile-qs-pdf-file" class="flex-1 cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-blue-500 transition-colors">
+              <span id="profile-qs-pdf-label" class="truncate">Select PDF qualification slip file...</span>
+              <svg class="w-4 h-4 text-blue-600 shrink-0 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
+            </label>
+            <input type="file" id="profile-qs-pdf-file" accept=".pdf" class="hidden">
+          </div>
+          <div id="profile-qs-pdf-badge" class="hidden text-[10px] text-emerald-600 font-extrabold flex items-center gap-1 mt-1">
+            <span id="profile-qs-pdf-status-text">✓ Valid Qualification Slip (QS) file</span>
+          </div>
+          <p class="text-[9px] text-slate-400 mt-1">Upload MAB Qualification Slip for PBN & operational ratings checks.</p>
         </div>
 
         <!-- Action Buttons -->
@@ -176,7 +192,7 @@ export const menuHTML = `
     </div>
 
     <!-- SUB-PANE 1: APP SETTINGS -->
-    <div id="pane-settings" class="sub-pane absolute top-6 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
+    <div id="pane-settings" class="sub-pane absolute top-8 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
       <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
@@ -214,7 +230,7 @@ export const menuHTML = `
     </div>
 
     <!-- SUB-PANE 2: DATA & STORAGE -->
-    <div id="pane-storage" class="sub-pane absolute top-6 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
+    <div id="pane-storage" class="sub-pane absolute top-8 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
       <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
@@ -247,7 +263,7 @@ export const menuHTML = `
     </div>
 
     <!-- SUB-PANE 3: ABOUT CERTIFLY -->
-    <div id="pane-about" class="sub-pane absolute top-6 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
+    <div id="pane-about" class="sub-pane absolute top-8 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
       <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
