@@ -1,4 +1,4 @@
-// js/qsParser.js (1110_R134) - MAB Qualification Slip PDF Text Parser & Validator
+// js/qsParser.js (1110_R135) - MAB Qualification Slip PDF Text Parser & Validator
 
 export function validateQualificationSlipContent(text) {
   if (!text || typeof text !== 'string') return false;
@@ -52,12 +52,11 @@ export function parseQualificationSlipText(text) {
 
   // 4. Extract Cert No
   const patterns = [
-    /CERT(?:IFICATE)?\s*(?:NO|N0|NUM|NUMBER)?\.?\s*[:\-]?\s*([A-Z0-9\-\/]{3,20})/i,
-    /CERT\.?\s*N[O0]\.?\s*[:\-]?\s*([A-Z0-9\-\/]{3,20})/i,
-    /FO\/TRNG\/FCCERT\/?([A-Z0-9\-\/]{3,20})/i,
-    /CERT\s*NO\s*[:\-]?\s*([A-Z0-9\-\/]{3,20})/i
+    /CERT(?:IFICATE)?\.?\s*(?:NO|N0|NUM|NUMBER)\.?\s*[:\-]?\s*([A-Z0-9\-\/]{3,20})/i,
+    /CERT(?:IFICATE)?\s*[:\-#]\s*([A-Z0-9\-\/]{3,20})/i,
+    /FO\/TRNG\/FCCERT\/?([A-Z0-9\-\/]{3,20})/i
   ];
-  const ignored = ['OF', 'THIS', 'IS', 'TO', 'CERTIFY', 'CARD', 'QUALIFICATION', 'LICENCE', 'LICENSE', 'NUMBER'];
+  const ignored = ['OF', 'THIS', 'IS', 'TO', 'CERTIFY', 'CARD', 'QUALIFICATION', 'LICENCE', 'LICENSE', 'NUMBER', 'IFY'];
   for (const p of patterns) {
     const m = cleanText.match(p);
     if (m && m[1]) {
