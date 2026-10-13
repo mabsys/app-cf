@@ -1,4 +1,4 @@
-// js/ui.js (1310_R147) - View State, Navigation, Dock Active Highlight & Network Controller
+// js/ui.js (1310_R151) - View State, Navigation, Dock Active Highlight & Network Controller
 
 import { initToolsModule } from './tools.js';
 import { stopScanner, switchScanHubTab } from './scanner.js';
@@ -416,6 +416,11 @@ export function initNavigationBars() {
     stopScanner();
     renderHistoryList();
     showView("history-view");
+  });
+
+  document.getElementById("dock-tools-btn")?.addEventListener("click", () => {
+    stopScanner();
+    showView("tools-view");
   });
 
   document.getElementById("btn-result-back")?.addEventListener("click", () => {
