@@ -1,6 +1,6 @@
 // js/main.js (1310_R147) - Main Application Controller & Orchestrator
 
-import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, setSectorCount, getSectorCount, renderSectorCardsUI, clearSignatureCanvas, draftFtlEmail, populateCommanderSelect } from '.js/tools.js';
+import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, setSectorCount, getSectorCount, renderSectorCardsUI, clearSignatureCanvas, draftFtlEmail, populateCommanderSelect } from './js/tools.js';
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
