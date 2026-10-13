@@ -1,4 +1,4 @@
-// js/main.js (1310_R147) - Main Application Controller & Orchestrator
+// js/main.js (1310_R151) - Main Application Controller & Orchestrator
 
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, setSectorCount, getSectorCount, renderSectorCardsUI, clearSignatureCanvas, draftFtlEmail, populateCommanderSelect } from './js/tools.js';
 
@@ -820,7 +820,8 @@ function initApp() {
   if (toolsBtn) {
     toolsBtn.addEventListener("click", () => {
       stopScanner();
-      showProfileToast("Tools module coming soon in next release.");
+      showView("tools-view");
+
     });
   }
 
