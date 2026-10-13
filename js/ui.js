@@ -1,5 +1,6 @@
-// js/ui.js (1110_R131) - View State, Navigation, Dock Active Highlight & Network Controller
+// js/ui.js (1310_R147) - View State, Navigation, Dock Active Highlight & Network Controller
 
+import { initToolsModule } from './tools.js';
 import { stopScanner, switchScanHubTab } from './scanner.js';
 import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData } from './storage.js';
 import { topbarHTML } from './components/topbar.js';
@@ -184,6 +185,7 @@ export function updateActiveDockState(activeViewId) {
     'dashboard-view': document.getElementById('dock-dashboard-btn'),
     'scanner-view': document.getElementById('dock-scan-btn'),
     'history-view': document.getElementById('dock-history-btn'),
+    'tools-view': document.getElementById('dock-tools-btn'),
     'menu-view': document.getElementById('dock-menu-btn')
   };
 
@@ -193,14 +195,11 @@ export function updateActiveDockState(activeViewId) {
 
     if (vId === 'scanner-view') {
       if (isSelected) {
-        // Active Scan State: Solid elevated blue pill
         btn.className = "dock-item-btn w-full py-2 px-1.5 bg-blue-600 text-white font-extrabold rounded-2xl shadow-md transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
       } else {
-        // Inactive Scan State: Vibrant blue accent label/icon WITHOUT heavy solid background fill
         btn.className = "dock-item-btn w-full py-2 px-1.5 text-blue-600 dark:text-blue-400 font-extrabold hover:text-slate-800 dark:hover:text-slate-200 rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
       }
     } else {
-        // Secondary Tabs: Dynamic active highlight pill vs subtle inactive state
       if (isSelected) {
         btn.className = "dock-item-btn w-full py-2 px-1.5 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-extrabold rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer";
       } else {
@@ -539,6 +538,10 @@ export function showView(viewId, defaultTab = null) {
 
   const targetView = document.getElementById(viewId);
   if (targetView) targetView.classList.remove("hidden");
+
+  if (viewId === "tools-view") {
+    if (typeof window.initToolsModule === "function") window.initToolsModule();
+  }
 
   if (viewId === "history-view") {
     renderHistoryList();
