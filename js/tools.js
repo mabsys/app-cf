@@ -1,4 +1,4 @@
-// js/tools.js (1410_R152) - Flight Deck Compliance Tools Module
+// js/tools.js (1410_R154) - Flight Deck Compliance Tools Module
 // Implements Hub 1 (Universal Validity Accordion Cards) & Hub 2 (FDP & CAAM/BOP/FTL/1 Discretion Engine)
 
 import { MAB_AIRPORTS, searchAirports, findAirport } from './data/airports.js';
@@ -502,21 +502,21 @@ function initAccordionEngine() {
     });
   }
 
-  // Generic Accordion Card Toggle Handler
-  const accordionCards = document.querySelectorAll(".accordion-card");
-  accordionCards.forEach(card => {
-    const header = card.querySelector(".accordion-header");
-    const body = card.querySelector(".accordion-body");
-    const chevron = card.querySelector(".accordion-chevron");
+  // Single-Parent Accordion Item Toggle Handler
+  const accordionItems = document.querySelectorAll(".accordion-item, .accordion-card");
+  accordionItems.forEach(item => {
+    const header = item.querySelector(".accordion-header");
+    const body = item.querySelector(".accordion-body");
+    const chevron = item.querySelector(".accordion-chevron");
 
     if (header && body) {
       header.addEventListener("click", () => {
         const isOpen = !body.classList.contains("hidden");
 
-        // Collapse all sibling cards in the same pane
-        const parentPane = card.parentElement;
-        if (parentPane) {
-          parentPane.querySelectorAll(".accordion-card").forEach(sibling => {
+        // Collapse all sibling items in the same parent container
+        const parentContainer = item.parentElement;
+        if (parentContainer) {
+          parentContainer.querySelectorAll(".accordion-item, .accordion-card").forEach(sibling => {
             const sibBody = sibling.querySelector(".accordion-body");
             const sibChevron = sibling.querySelector(".accordion-chevron");
             if (sibBody) sibBody.classList.add("hidden");
@@ -524,7 +524,7 @@ function initAccordionEngine() {
           });
         }
 
-        // Toggle clicked card
+        // Toggle clicked item
         if (!isOpen) {
           body.classList.remove("hidden");
           if (chevron) chevron.style.transform = "rotate(180deg)";
