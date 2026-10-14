@@ -1,6 +1,6 @@
-// js/main.js (1310_R151) - Main Application Controller & Orchestrator
+// js/main.js (1410_R152) - Main Application Controller & Orchestrator
 
-import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, setSectorCount, getSectorCount, renderSectorCardsUI, clearSignatureCanvas, draftFtlEmail, populateCommanderSelect } from './js/tools.js';
+import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -821,7 +821,6 @@ function initApp() {
     toolsBtn.addEventListener("click", () => {
       stopScanner();
       showView("tools-view");
-
     });
   }
 
@@ -3257,19 +3256,104 @@ window.initToolsModule = function() {
 };
 
 
+
 function initToolsUI() {
-  // 1. Hub Switcher (Validity vs FDP)
-  const tabValBtn = document.getElementById('tools-tab-validity-btn');
-  const tabFdpBtn = document.getElementById('tools-tab-fdp-btn');
-  const paneVal = document.getElementById('hub-validity-pane');
-  const paneFdp = document.getElementById('hub-fdp-pane');
+  initToolsModule();
 
-  const activeTabCls = 'bg-blue-600 text-white shadow-xs';
-  const inactiveTabCls = 'text-slate-600 dark:text-slate-300 hover:text-slate-900';
+  // PPC Calculate Button
+  document.getElementById("btn-calc-ppc")?.addEventListener("click", () => {
+    const conduct = document.getElementById("ppc-conduct-date")?.value;
+    const expiry = document.getElementById("ppc-expiry-date")?.value;
+    const res = calculatePpcWindows(conduct, expiry);
+    const resBox = document.getElementById("ppc-results-box");
+    if (!res) {
+      alert("Please select a valid LPC Expiry Date.");
+      return;
+    }
+    document.getElementById("ppc-res-expiry").innerText = res.newLpcExpiry;
+    document.getElementById("ppc-res-opc-start").innerText = res.opcEarliest;
+    document.getElementById("ppc-res-opc-end").innerText = res.opcLatest;
+    if (resBox) resBox.classList.remove("hidden");
+  });
 
-  if (tabValBtn && tabFdpBtn && paneVal && paneFdp) {
-    tabValBtn.addEventListener('click', () => {
-      tabValBtn.className = `tools-tab-btn py-2 px-1 rounded-xl text-[11px] font-extrabold transition-all ${activeTabCls} flex items-center justify-center gap-1.5 cursor-pointer`;
+  // Recurrent Calculate Button
+  document.getElementById("btn-calc-recurrent")?.addEventListener("click", () => {
+    const type = document.getElementById("recurrent-drill-type")?.value || "linecheck";
+    const conduct = document.getElementById("recurrent-conduct-date")?.value;
+    const res = calculateCourseExpiry(type, conduct);
+    const resBox = document.getElementById("recurrent-results-box");
+    if (!res) {
+      alert("Please select a valid Conducted Date.");
+      return;
+    }
+    document.getElementById("recurrent-res-expiry").innerText = res.expiryDate;
+    if (resBox) resBox.classList.remove("hidden");
+  });
+
+  // Medical Calculate Button
+  document.getElementById("btn-calc-medical")?.addEventListener("click", () => {
+    const last = document.getElementById("medical-last-date")?.value;
+    const age = document.getElementById("medical-pilot-age")?.value;
+    const res = calculateMedicalWindow(last, age);
+    const resBox = document.getElementById("medical-results-box");
+    if (!res) {
+      alert("Please select a valid Medical Expiry Date.");
+      return;
+    }
+    document.getElementById("medical-res-expiry").innerText = res.expiryDate;
+    document.getElementById("medical-res-dame").innerText = res.dameEarliest;
+    const ageText = document.getElementById("medical-res-age-text");
+    if (ageText) ageText.innerText = res.ageNotice;
+    if (resBox) resBox.classList.remove("hidden");
+  });
+
+  // Preflight FDP Calculate Button
+  document.getElementById("btn-calc-preflight")?.addEventListener("click", () => {
+    const report = document.getElementById("fdp-report-time")?.value;
+    const count = getSectorCount();
+    const maxHours = getMaxAllowableFdp(report, count);
+    const resBox = document.getElementById("preflight-results-box");
+    if (!report) {
+      alert("Please enter a Report Time (e.g. 08:00).");
+      return;
+    }
+    const h = Math.floor(maxHours);
+    const m = Math.round((maxHours % 1) * 60);
+    document.getElementById("fdp-res-max").innerText = `${h} Hours ${m > 0 ? m + ' Mins' : ''}`;
+    
+    // Compute LOBT
+    const [rH, rM] = report.replace(/[^\d:]/g, "").split(":").map(n => parseInt(n, 10));
+    if (!isNaN(rH)) {
+      let lobtH = rH + h;
+      let lobtM = (rM || 0) + m;
+      if (lobtM >= 60) { lobtH += 1; lobtM -= 60; }
+      if (lobtH >= 24) lobtH %= 24;
+      document.getElementById("fdp-res-lobt").innerText = `${lobtH.toString().padStart(2, '0')}:${lobtM.toString().padStart(2, '0')} UTC`;
+    }
+    if (resBox) resBox.classList.remove("hidden");
+  });
+
+  // FDP Sector Count Incrementation / Decrementation
+  document.getElementById("btn-fdp-dec")?.addEventListener("click", () => {
+    const count = getSectorCount();
+    setSectorCount(count - 1);
+    const badge = document.getElementById("fdp-sector-count");
+    if (badge) badge.innerText = getSectorCount();
+  });
+
+  document.getElementById("btn-fdp-inc")?.addEventListener("click", () => {
+    const count = getSectorCount();
+    setSectorCount(count + 1);
+    const badge = document.getElementById("fdp-sector-count");
+    if (badge) badge.innerText = getSectorCount();
+  });
+
+  // Email Draft CTA
+  document.getElementById("btn-draft-ftl-email")?.addEventListener("click", () => {
+    draftFtlEmail();
+  });
+}
+ flex items-center justify-center gap-1.5 cursor-pointer`;
       tabFdpBtn.className = `tools-tab-btn py-2 px-1 rounded-xl text-[11px] font-extrabold transition-all ${inactiveTabCls} flex items-center justify-center gap-1.5 cursor-pointer`;
       paneVal.classList.remove('hidden');
       paneFdp.classList.add('hidden');
