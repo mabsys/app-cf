@@ -1,5 +1,5 @@
-// js/tools.js (1310_R147) - Flight Deck Compliance Tools Module
-// Implements Hub 1 (Universal Validity) & Hub 2 (FDP & CAAM/BOP/FTL/1 Discretion Engine)
+// js/tools.js (1410_R152) - Flight Deck Compliance Tools Module
+// Implements Hub 1 (Universal Validity Accordion Cards) & Hub 2 (FDP & CAAM/BOP/FTL/1 Discretion Engine)
 
 import { MAB_AIRPORTS, searchAirports, findAirport } from './data/airports.js';
 import { getScanHistory, getProfileData } from './storage.js';
@@ -8,75 +8,53 @@ import { getScanHistory, getProfileData } from './storage.js';
 // UTILITY: AVIATION TIME PARSER & TIMEZONE CONVERTER
 // ----------------------------------------------------------------------------
 
-/**
- * Parses raw time inputs ('0000', '0815', '815', '08:15') into clean 'HH:MM'
- */
 export function parseAviationTime(input) {
-  if (!input) return '';
-  let clean = input.toString().trim().replace(/[^\d:]/g, '');
-  if (!clean.includes(':')) {
+  if (!input) return "";
+  let clean = String(input).replace(/[^\d:]/g, "");
+  if (!clean.includes(":")) {
     if (clean.length === 4) {
       clean = `${clean.slice(0, 2)}:${clean.slice(2, 4)}`;
     } else if (clean.length === 3) {
       clean = `0${clean.slice(0, 1)}:${clean.slice(1, 3)}`;
-    } else if (clean.length === 2) {
-      clean = `${clean}:00`;
-    } else if (clean.length === 1) {
-      clean = `0${clean}:00`;
     }
   }
-  const parts = clean.split(':');
-  let hh = parseInt(parts[0] || '0', 10);
-  let mm = parseInt(parts[1] || '0', 10);
-  if (isNaN(hh)) hh = 0;
-  if (isNaN(mm)) mm = 0;
-  hh = Math.max(0, Math.min(23, hh));
-  mm = Math.max(0, Math.min(59, mm));
-  return `${hh.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')}`;
+  return clean;
 }
 
-/**
- * Calculates Local Time from UTC Time and Airport tzOffset (in hours)
- */
-export function calculateLocalFromUtc(utcTimeStr, tzOffset = 8) {
-  if (!utcTimeStr) return '';
+export function calculateLocalFromUtc(utcTimeStr, tzOffsetHours = 8) {
   const parsed = parseAviationTime(utcTimeStr);
-  if (!parsed.includes(':')) return '';
-  const [hh, mm] = parsed.split(':').map(n => parseInt(n, 10));
-  
-  let totalMinutes = (hh * 60) + mm + Math.round(tzOffset * 60);
-  while (totalMinutes < 0) totalMinutes += 1440;
-  totalMinutes = totalMinutes % 1440;
-
-  const localH = Math.floor(totalMinutes / 60);
-  const localM = totalMinutes % 60;
+  if (!parsed.includes(":")) return "";
+  const [hh, mm] = parsed.split(":").map(n => parseInt(n, 10));
+  let localH = hh + Math.floor(tzOffsetHours);
+  let localM = mm + Math.round((tzOffsetHours % 1) * 60);
+  if (localM >= 60) { localH += 1; localM -= 60; }
+  if (localH >= 24) localH %= 24;
+  if (localH < 0) localH = (localH + 24) % 24;
   return `${localH.toString().padStart(2, '0')}:${localM.toString().padStart(2, '0')}`;
 }
 
-/**
- * Calculates UTC Time from Local Time and Airport tzOffset
- */
-export function calculateUtcFromLocal(localTimeStr, tzOffset = 8) {
-  return calculateLocalFromUtc(localTimeStr, -tzOffset);
+export function calculateUtcFromLocal(localTimeStr, tzOffsetHours = 8) {
+  const parsed = parseAviationTime(localTimeStr);
+  if (!parsed.includes(":")) return "";
+  const [hh, mm] = parsed.split(":").map(n => parseInt(n, 10));
+  let utcH = hh - Math.floor(tzOffsetHours);
+  let utcM = mm - Math.round((tzOffsetHours % 1) * 60);
+  if (utcM < 0) { utcH -= 1; utcM += 60; }
+  if (utcH < 0) utcH = (utcH + 24) % 24;
+  if (utcH >= 24) utcH %= 24;
+  return `${utcH.toString().padStart(2, '0')}:${utcM.toString().padStart(2, '0')}`;
 }
 
 // ----------------------------------------------------------------------------
-// HUB 1: UNIVERSAL VALIDITY CALCULATOR ENGINES
+// HUB 1: UNIVERSAL QUALIFICATION & VALIDITY CALCULATORS
 // ----------------------------------------------------------------------------
 
-/**
- * PPC Dual-Window Calculator (LPC & OPC) - CAD 6 Part 1 & OM-A 5.1.6
- */
 export function calculatePpcWindows(conductDateStr, expiryDateStr) {
   if (!expiryDateStr) return null;
-  
   const expiry = new Date(expiryDateStr);
   if (isNaN(expiry.getTime())) return null;
 
-  // Last day of expiry month
   const lastDayExpiry = new Date(expiry.getFullYear(), expiry.getMonth() + 1, 0);
-
-  // LPC 3-Month Anniversary Protection Window
   const lpcWindowStart = new Date(lastDayExpiry.getFullYear(), lastDayExpiry.getMonth() - 2, 1);
   const lpcWindowEnd = new Date(lastDayExpiry);
 
@@ -84,10 +62,6 @@ export function calculatePpcWindows(conductDateStr, expiryDateStr) {
   if (isNaN(conductDate.getTime())) conductDate = new Date();
 
   const newLpcExpiry = new Date(conductDate.getFullYear() + 1, conductDate.getMonth() + 1, 0);
-
-  // OPC Conduct Window:
-  // - No earlier than 4 months post-LPC conduct
-  // - No later than 4 months pre-LPC expiry
   const opcEarliest = new Date(conductDate.getFullYear(), conductDate.getMonth() + 4, 1);
   const opcLatest = new Date(lastDayExpiry.getFullYear(), lastDayExpiry.getMonth() - 4, 0);
 
@@ -105,9 +79,6 @@ export function calculatePpcWindows(conductDateStr, expiryDateStr) {
   };
 }
 
-/**
- * Recurrent Course / Line Check Expiry Calculator
- */
 export function calculateCourseExpiry(courseType, conductDateStr) {
   if (!conductDateStr) return null;
   const conduct = new Date(conductDateStr);
@@ -128,22 +99,20 @@ export function calculateCourseExpiry(courseType, conductDateStr) {
   return {
     expiryDate: formatDate(expiry),
     revalWindowStart: formatDate(revalStart),
-    revalWindowEnd: formatDate(expiry)
+    revalWindowEnd: formatDate(expiry),
+    monthsValidity
   };
 }
 
-/**
- * CAAM Class 1 Medical & DAME 45-Day Exam Window Calculator
- */
 export function calculateMedicalWindow(expiryDateStr, dobStr) {
   if (!expiryDateStr) return null;
   const expiry = new Date(expiryDateStr);
   if (isNaN(expiry.getTime())) return null;
 
-  // Earliest DAME Exam = Expiry - 45 days
   const dameEarliest = new Date(expiry.getTime() - (45 * 24 * 60 * 60 * 1000));
-
   let ageNotice = 'Standard 12-Month Medical Validity';
+  let isAge60Plus = false;
+
   if (dobStr) {
     const dob = new Date(dobStr);
     if (!isNaN(dob.getTime())) {
@@ -151,6 +120,7 @@ export function calculateMedicalWindow(expiryDateStr, dobStr) {
       const ageDate = new Date(ageDiffMs);
       const age = Math.abs(ageDate.getUTCFullYear() - 1970);
       if (age >= 60) {
+        isAge60Plus = true;
         ageNotice = `Age ${age} (60+ Threshold) - Mandatory 6-Month Medical Renewal Cycle`;
       } else {
         ageNotice = `Age ${age} - Standard 12-Month Medical Renewal Cycle`;
@@ -166,7 +136,8 @@ export function calculateMedicalWindow(expiryDateStr, dobStr) {
   return {
     dameEarliest: formatDate(dameEarliest),
     expiryDate: formatDate(expiry),
-    ageNotice
+    ageNotice,
+    isAge60Plus
   };
 }
 
@@ -174,9 +145,6 @@ export function calculateMedicalWindow(expiryDateStr, dobStr) {
 // HUB 2: FDP & DISCRETION COMPLIANCE ENGINE (CAD 1901 TABLE A)
 // ----------------------------------------------------------------------------
 
-/**
- * Look up Max Allowable FDP (CAD 1901 Table A for Acclimatised Crew)
- */
 export function getMaxAllowableFdp(reportTimeStr, sectorCount = 1) {
   const parsed = parseAviationTime(reportTimeStr);
   if (!parsed.includes(':')) return 12.0;
@@ -186,24 +154,21 @@ export function getMaxAllowableFdp(reportTimeStr, sectorCount = 1) {
 
   const count = Math.max(1, Math.min(6, sectorCount));
 
-  if (timeNum >= 6.0 && timeNum < 13.5) { // 0600 - 1329
+  if (timeNum >= 6.0 && timeNum < 13.5) {
     const limits = [13.0, 12.25, 11.50, 10.75, 10.0, 10.0];
     return limits[count - 1];
-  } else if (timeNum >= 13.5 && timeNum < 18.0) { // 1330 - 1759
+  } else if (timeNum >= 13.5 && timeNum < 18.0) {
     const limits = [12.50, 11.75, 11.0, 10.25, 9.50, 9.50];
     return limits[count - 1];
-  } else if (timeNum >= 18.0 && timeNum < 22.0) { // 1800 - 2159
+  } else if (timeNum >= 18.0 && timeNum < 22.0) {
     const limits = [12.0, 11.25, 10.50, 9.75, 9.0, 9.0];
     return limits[count - 1];
-  } else { // 2200 - 0559 (WOCL Encroachment)
+  } else {
     const limits = [11.0, 10.25, 9.50, 8.75, 8.0, 8.0];
     return limits[count - 1];
   }
 }
 
-/**
- * Calculates Actual Duty, Max FDP, and Discretion Exercised
- */
 export function calculateFdpAndDiscretion(reportTimeStr, sectorCount, actualEndTimeStr) {
   if (!reportTimeStr || !actualEndTimeStr) return null;
 
@@ -215,13 +180,11 @@ export function calculateFdpAndDiscretion(reportTimeStr, sectorCount, actualEndT
 
   let reportMin = (rH * 60) + rM;
   let endMin = (eH * 60) + eM;
-
-  if (endMin < reportMin) endMin += 1440; // Overnight duty
+  if (endMin < reportMin) endMin += 1440;
 
   const actualFdpMinutes = endMin - reportMin;
   const maxFdpHours = getMaxAllowableFdp(reportTimeStr, sectorCount);
   const maxFdpMinutes = Math.round(maxFdpHours * 60);
-
   const discretionMinutes = Math.max(0, actualFdpMinutes - maxFdpMinutes);
 
   const formatHoursMin = (totalMin) => {
@@ -257,67 +220,63 @@ export function getSectorCount() {
 }
 
 export function renderSectorCardsUI() {
-  const container = document.getElementById('ftl-sectors-container');
+  const container = document.getElementById("ftl-sectors-container");
   if (!container) return;
 
-  let html = '';
+  let html = "";
   for (let i = 1; i <= currentSectorCount; i++) {
     html += `
       <div class="ftl-sector-card bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col gap-3 relative" data-sector="${i}">
-        <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800/80 pb-2">
-          <span class="text-[10px] font-extrabold uppercase tracking-wider text-blue-600 dark:text-blue-400">
-            Sector ${i}
-          </span>
-          <span class="text-[9px] font-bold text-slate-400 uppercase">Aviation 4-Digit Time Active</span>
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 pb-2">
+          <span class="text-[10px] font-black text-slate-500 uppercase tracking-wider">Sector ${i}</span>
+          <span class="text-[9px] text-slate-400 font-bold">CAAM/BOP/FTL/1</span>
         </div>
 
-        <!-- AIRPORT AUTOCOMPLETE PAIR -->
         <div class="grid grid-cols-2 gap-2.5">
+          <!-- Departure Airport -->
           <div class="relative">
-            <label class="text-[9px] font-bold text-slate-400 block mb-1 uppercase">Depart Station</label>
-            <input type="text" id="sector-${i}-depart" placeholder="e.g. KUL" maxlength="4"
-                   class="sector-airport-input uppercase w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-black p-2 rounded-xl text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500"
-                   data-sector="${i}" data-field="depart">
-            <div id="sector-${i}-depart-popup" class="airport-popup hidden absolute top-full left-0 right-0 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl mt-1 max-h-40 overflow-y-auto"></div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Depart Station</label>
+            <input type="text" id="sector-${i}-dept-input" class="sector-apt-input w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-black p-2.5 rounded-xl uppercase" placeholder="e.g. KUL" autocomplete="off" data-sector="${i}" data-type="dept">
+            <div id="sector-${i}-dept-popover" class="apt-popover hidden absolute top-full left-0 right-0 z-30 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl max-h-40 overflow-y-auto mt-1 text-xs"></div>
           </div>
+
+          <!-- Arrival Airport -->
           <div class="relative">
-            <label class="text-[9px] font-bold text-slate-400 block mb-1 uppercase">Arrive Station</label>
-            <input type="text" id="sector-${i}-arrive" placeholder="e.g. BKI" maxlength="4"
-                   class="sector-airport-input uppercase w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-black p-2 rounded-xl text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500"
-                   data-sector="${i}" data-field="arrive">
-            <div id="sector-${i}-arrive-popup" class="airport-popup hidden absolute top-full left-0 right-0 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl mt-1 max-h-40 overflow-y-auto"></div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Arrive Station</label>
+            <input type="text" id="sector-${i}-arr-input" class="sector-apt-input w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-black p-2.5 rounded-xl uppercase" placeholder="e.g. BKI" autocomplete="off" data-sector="${i}" data-type="arr">
+            <div id="sector-${i}-arr-popover" class="apt-popover hidden absolute top-full left-0 right-0 z-30 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl max-h-40 overflow-y-auto mt-1 text-xs"></div>
           </div>
         </div>
 
-        <!-- SCHEDULED TIMES (UTC & LOCAL) -->
         <div class="grid grid-cols-2 gap-2.5">
-          <div>
-            <label class="text-[9px] font-bold text-slate-400 block mb-1 uppercase">Sch Depart (UTC)</label>
-            <input type="text" id="sector-${i}-sch-utc" placeholder="0000" maxlength="5" inputmode="numeric"
-                   class="time-utc-input w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold p-2 rounded-xl text-slate-800 dark:text-slate-100"
-                   data-sector="${i}" data-type="sch">
+          <!-- Planned Depart UTC & Local -->
+          <div class="bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 flex flex-col gap-1.5">
+            <span class="text-[9px] font-extrabold text-slate-400 uppercase">Sched Depart Time</span>
+            <div class="grid grid-cols-2 gap-1.5">
+              <div>
+                <span class="text-[8px] font-bold text-slate-400 uppercase block">UTC</span>
+                <input type="text" id="sector-${i}-utc-dept" class="sector-time-input w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-extrabold p-1.5 rounded-lg text-slate-800 dark:text-slate-100" placeholder="00:15" data-sector="${i}" data-field="utc-dept">
+              </div>
+              <div>
+                <span class="text-[8px] font-bold text-slate-400 uppercase block">Local</span>
+                <input type="text" id="sector-${i}-local-dept" class="sector-time-input w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-extrabold p-1.5 rounded-lg text-slate-800 dark:text-slate-100" placeholder="08:15" data-sector="${i}" data-field="local-dept">
+              </div>
+            </div>
           </div>
-          <div>
-            <label class="text-[9px] font-bold text-slate-400 block mb-1 uppercase">Sch Depart (Local)</label>
-            <input type="text" id="sector-${i}-sch-local" placeholder="0800" maxlength="5" inputmode="numeric"
-                   class="time-local-input w-full bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-xs font-bold p-2 rounded-xl text-slate-600 dark:text-slate-300"
-                   data-sector="${i}" data-type="sch">
-          </div>
-        </div>
 
-        <!-- ACTUAL TIMES (UTC & LOCAL) -->
-        <div class="grid grid-cols-2 gap-2.5">
-          <div>
-            <label class="text-[9px] font-bold text-slate-400 block mb-1 uppercase">Act Depart (UTC)</label>
-            <input type="text" id="sector-${i}-act-utc" placeholder="0045" maxlength="5" inputmode="numeric"
-                   class="time-utc-input w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold p-2 rounded-xl text-slate-800 dark:text-slate-100"
-                   data-sector="${i}" data-type="act">
-          </div>
-          <div>
-            <label class="text-[9px] font-bold text-slate-400 block mb-1 uppercase">Act Depart (Local)</label>
-            <input type="text" id="sector-${i}-act-local" placeholder="0845" maxlength="5" inputmode="numeric"
-                   class="time-local-input w-full bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-xs font-bold p-2 rounded-xl text-slate-600 dark:text-slate-300"
-                   data-sector="${i}" data-type="act">
+          <!-- Actual Depart UTC & Local -->
+          <div class="bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 flex flex-col gap-1.5">
+            <span class="text-[9px] font-extrabold text-slate-400 uppercase">Actual Depart Time</span>
+            <div class="grid grid-cols-2 gap-1.5">
+              <div>
+                <span class="text-[8px] font-bold text-slate-400 uppercase block">UTC</span>
+                <input type="text" id="sector-${i}-act-utc-dept" class="sector-time-input w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-extrabold p-1.5 rounded-lg text-slate-800 dark:text-slate-100" placeholder="00:45" data-sector="${i}" data-field="act-utc-dept">
+              </div>
+              <div>
+                <span class="text-[8px] font-bold text-slate-400 uppercase block">Local</span>
+                <input type="text" id="sector-${i}-act-local-dept" class="sector-time-input w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-extrabold p-1.5 rounded-lg text-slate-800 dark:text-slate-100" placeholder="08:45" data-sector="${i}" data-field="act-local-dept">
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -328,102 +287,101 @@ export function renderSectorCardsUI() {
   bindSectorEvents();
 }
 
-/**
- * Binds Airport Autocomplete, Time Auto-Conversion, and Sector Auto-Chaining
- */
 function bindSectorEvents() {
-  const container = document.getElementById('ftl-sectors-container');
-  if (!container) return;
+  const aptInputs = document.querySelectorAll(".sector-apt-input");
+  aptInputs.forEach(input => {
+    input.addEventListener("input", (e) => {
+      const q = e.target.value.trim().toUpperCase();
+      const secIndex = e.target.getAttribute("data-sector");
+      const type = e.target.getAttribute("data-type");
+      const popover = document.getElementById(`sector-${secIndex}-${type}-popover`);
 
-  // 1. AIRPORT INPUT AUTOCOMPLETE & SECTOR CHAINING
-  container.querySelectorAll('.sector-airport-input').forEach(input => {
-    const sectorNum = parseInt(input.getAttribute('data-sector'), 10);
-    const fieldType = input.getAttribute('data-field');
-    const popup = document.getElementById(`sector-${sectorNum}-${fieldType}-popup`);
-
-    input.addEventListener('input', (e) => {
-      const q = e.target.value.trim();
-      if (q.length === 0) {
-        if (popup) popup.classList.add('hidden');
+      if (!popover) return;
+      if (q.length < 1) {
+        popover.classList.add("hidden");
         return;
       }
 
-      const matches = searchAirports(q, 5);
-      if (matches.length > 0 && popup) {
-        popup.innerHTML = matches.map(a => `
-          <div class="airport-option p-2 hover:bg-blue-50 dark:hover:bg-blue-950/60 cursor-pointer flex justify-between items-center text-xs border-b border-slate-100 dark:border-slate-800/60 last:border-0" data-iata="${a.iata}">
-            <strong class="text-blue-600 dark:text-blue-400 font-black">${a.iata}</strong>
-            <span class="text-[10px] text-slate-500 font-medium truncate max-w-[140px]">${a.name} (${a.icao})</span>
-          </div>
-        `).join('');
-        popup.classList.remove('hidden');
-
-        popup.querySelectorAll('.airport-option').forEach(opt => {
-          opt.addEventListener('click', () => {
-            const iata = opt.getAttribute('data-iata');
-            input.value = iata;
-            popup.classList.add('hidden');
-
-            // SECTOR AUTO-CHAINING: Arrive Station Sector N -> Depart Station Sector N+1
-            if (fieldType === 'arrive' && sectorNum < currentSectorCount) {
-              const nextDepartInput = document.getElementById(`sector-${sectorNum + 1}-depart`);
-              if (nextDepartInput) {
-                nextDepartInput.value = iata;
-              }
-            }
-          });
-        });
-      } else if (popup) {
-        popup.classList.add('hidden');
+      const matches = searchAirports(q);
+      if (matches.length === 0) {
+        popover.classList.add("hidden");
+        return;
       }
-    });
 
-    input.addEventListener('blur', () => {
-      setTimeout(() => { if (popup) popup.classList.add('hidden'); }, 200);
+      let popHtml = "";
+      matches.slice(0, 5).forEach(apt => {
+        popHtml += `
+          <div class="apt-item p-2 hover:bg-blue-50 dark:hover:bg-slate-800 cursor-pointer flex justify-between items-center border-b border-slate-100 dark:border-slate-800/60 last:border-none" data-iata="${apt.iata}" data-sector="${secIndex}" data-type="${type}">
+            <span class="font-black text-blue-600 dark:text-blue-400">${apt.iata}</span>
+            <span class="text-[10px] text-slate-500 truncate ml-2">${apt.name} (${apt.icao})</span>
+          </div>
+        `;
+      });
+
+      popover.innerHTML = popHtml;
+      popover.classList.remove("hidden");
+
+      popover.querySelectorAll(".apt-item").forEach(item => {
+        item.addEventListener("click", (evt) => {
+          const selectedIata = evt.currentTarget.getAttribute("data-iata");
+          input.value = selectedIata;
+          popover.classList.add("hidden");
+
+          // Auto-chaining: if Sector N arrival station is set, set Sector N+1 departure station
+          if (type === "arr") {
+            const nextSecIndex = parseInt(secIndex, 10) + 1;
+            const nextDeptInput = document.getElementById(`sector-${nextSecIndex}-dept-input`);
+            if (nextDeptInput) {
+              nextDeptInput.value = selectedIata;
+            }
+          }
+        });
+      });
     });
   });
 
-  // 2. TIME AUTO-CONVERSION (UTC <-> LOCAL & '0000' RAW DIGIT SANITIZER)
-  container.querySelectorAll('.time-utc-input').forEach(input => {
-    input.addEventListener('change', (e) => {
-      const sectorNum = input.getAttribute('data-sector');
-      const timeType = input.getAttribute('data-type');
-      const rawVal = e.target.value;
-
-      const formatted = parseAviationTime(rawVal);
+  const timeInputs = document.querySelectorAll(".sector-time-input");
+  timeInputs.forEach(input => {
+    input.addEventListener("blur", (e) => {
+      const raw = e.target.value;
+      const formatted = parseAviationTime(raw);
       e.target.value = formatted;
 
-      const departInput = document.getElementById(`sector-${sectorNum}-depart`);
-      const airport = departInput ? findAirport(departInput.value) : null;
-      const tzOffset = airport ? airport.tzOffset : 8;
+      const secIndex = e.target.getAttribute("data-sector");
+      const field = e.target.getAttribute("data-field");
+      const deptApt = document.getElementById(`sector-${secIndex}-dept-input`)?.value || "KUL";
+      const aptObj = findAirport(deptApt) || { tzOffset: 8 };
 
-      const localInput = document.getElementById(`sector-${sectorNum}-${timeType}-local`);
-      if (localInput && formatted) {
-        localInput.value = calculateLocalFromUtc(formatted, tzOffset);
+      if (field === "utc-dept" && formatted) {
+        const localField = document.getElementById(`sector-${secIndex}-local-dept`);
+        if (localField) localField.value = calculateLocalFromUtc(formatted, aptObj.tzOffset);
+      } else if (field === "act-utc-dept" && formatted) {
+        const actLocalField = document.getElementById(`sector-${secIndex}-act-local-dept`);
+        if (actLocalField) actLocalField.value = calculateLocalFromUtc(formatted, aptObj.tzOffset);
       }
     });
   });
 }
 
 // ----------------------------------------------------------------------------
-// TOUCH SIGNATURE CANVAS HANDLERS
+// TOUCH CANVAS SIGNATURE PAD CONTROLLER
 // ----------------------------------------------------------------------------
 
-let sigCanvas = null;
-let sigCtx = null;
+let signatureCanvas = null;
+let signatureCtx = null;
 let isDrawing = false;
 
 export function initSignatureCanvas() {
-  sigCanvas = document.getElementById('ftl-sig-canvas');
-  if (!sigCanvas) return;
+  signatureCanvas = document.getElementById("ftl-signature-canvas");
+  if (!signatureCanvas) return;
 
-  sigCtx = sigCanvas.getContext('2d');
-  sigCtx.strokeStyle = '#0284c7'; // Sky Blue
-  sigCtx.lineWidth = 2.5;
-  sigCtx.lineCap = 'round';
+  signatureCtx = signatureCanvas.getContext("2d");
+  signatureCtx.strokeStyle = "#1e3a8a";
+  signatureCtx.lineWidth = 2.5;
+  signatureCtx.lineCap = "round";
 
   const getPos = (e) => {
-    const rect = sigCanvas.getBoundingClientRect();
+    const rect = signatureCanvas.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     return {
@@ -435,82 +393,184 @@ export function initSignatureCanvas() {
   const startDraw = (e) => {
     isDrawing = true;
     const pos = getPos(e);
-    sigCtx.beginPath();
-    sigCtx.moveTo(pos.x, pos.y);
+    signatureCtx.beginPath();
+    signatureCtx.moveTo(pos.x, pos.y);
   };
 
-  const moveDraw = (e) => {
+  const draw = (e) => {
     if (!isDrawing) return;
     const pos = getPos(e);
-    sigCtx.lineTo(pos.x, pos.y);
-    sigCtx.stroke();
+    signatureCtx.lineTo(pos.x, pos.y);
+    signatureCtx.stroke();
   };
 
-  const endDraw = () => {
+  const stopDraw = () => {
     isDrawing = false;
   };
 
-  sigCanvas.addEventListener('touchstart', startDraw, { passive: true });
-  sigCanvas.addEventListener('touchmove', moveDraw, { passive: true });
-  sigCanvas.addEventListener('touchend', endDraw);
-  sigCanvas.addEventListener('mousedown', startDraw);
-  sigCanvas.addEventListener('mousemove', moveDraw);
-  sigCanvas.addEventListener('mouseup', endDraw);
+  signatureCanvas.addEventListener("mousedown", startDraw);
+  signatureCanvas.addEventListener("mousemove", draw);
+  signatureCanvas.addEventListener("mouseup", stopDraw);
+
+  signatureCanvas.addEventListener("touchstart", startDraw, { passive: true });
+  signatureCanvas.addEventListener("touchmove", draw, { passive: true });
+  signatureCanvas.addEventListener("touchend", stopDraw);
+
+  const clearBtn = document.getElementById("btn-clear-signature");
+  if (clearBtn) {
+    clearBtn.addEventListener("click", clearSignatureCanvas);
+  }
 }
 
 export function clearSignatureCanvas() {
-  if (sigCanvas && sigCtx) {
-    sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+  if (signatureCanvas && signatureCtx) {
+    signatureCtx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
   }
 }
 
-// ----------------------------------------------------------------------------
-// FORM EXPORT & EMAIL DRAFT GENERATOR
-// ----------------------------------------------------------------------------
-
 export function populateCommanderSelect() {
-  const select = document.getElementById('ftl-commander-select');
+  const select = document.getElementById("ftl-commander-select");
   if (!select) return;
 
-  const historyList = getScanHistory() || [];
-  const profile = getProfileData();
-
-  let optionsHtml = '<option value="">-- Select Commander --</option>';
-
-  if (profile && profile.pilotName) {
-    optionsHtml += `<option value="${profile.pilotName}">${profile.pilotName} (My Profile)</option>`;
+  const history = getScanHistory();
+  let html = `<option value="">Select Commander from Scan History...</option>`;
+  if (history && history.length > 0) {
+    history.forEach(item => {
+      if (item.name) {
+        html += `<option value="${item.name}">${item.name} (${item.caamNo || 'CAAM'})</option>`;
+      }
+    });
   }
-
-  historyList.forEach(item => {
-    if (item && item.pilotName) {
-      optionsHtml += `<option value="${item.pilotName}">${item.pilotName} (${item.licenceNumber || 'Crew'})</option>`;
-    }
-  });
-
-  select.innerHTML = optionsHtml;
+  select.innerHTML = html;
 }
 
 export function draftFtlEmail() {
-  const commanderSelect = document.getElementById('ftl-commander-select');
-  const commanderName = commanderSelect ? commanderSelect.value : 'Commander';
-  const flightNo = document.getElementById('ftl-flight-no')?.value || 'MH---';
+  const commander = document.getElementById("ftl-commander-select")?.value || "Commander";
+  const reportTime = document.getElementById("fdp-report-time")?.value || "08:00";
+  const narrative = document.getElementById("ftl-narrative")?.value || "Operational extension under Commander Discretion.";
 
-  const subject = encodeURIComponent(`CAAM/BOP/FTL/1 Report - ${flightNo} - ${commanderName}`);
+  const subject = encodeURIComponent(`CAAM/BOP/FTL/1 Discretion Report - Capt. ${commander}`);
   const body = encodeURIComponent(
-    `CAAM/BOP/FTL/1 COMMANDER DISCRETION REPORT\n` +
-    `==========================================\n` +
-    `Flight Number: ${flightNo}\n` +
-    `Commander Name: ${commanderName}\n` +
-    `Date Submitted: ${new Date().toLocaleDateString()}\n\n` +
-    `This report has been generated via CertiFly Flight Deck Compliance Tools.\n` +
-    `Attached report data confirms regulatory compliance under CAAM CAD 1901.\n`
+    `FLIGHT SAFETY & COMPLIANCE REPORT\n` +
+    `----------------------------------------\n` +
+    `Document: CAAM/BOP/FTL/1 Discretion Extension\n` +
+    `Commander: ${commander}\n` +
+    `Report Time: ${reportTime} UTC\n` +
+    `Sectors Flown: ${currentSectorCount}\n\n` +
+    `Commander Justification Narrative:\n${narrative}\n\n` +
+    `Signed electronically via CertiFly PWA Compliance Checker.`
   );
 
   window.location.href = `mailto:FLT_SAFETY@malaysiaairlines.com?subject=${subject}&body=${body}`;
 }
 
+// ----------------------------------------------------------------------------
+// ACCORDION ENGINE & INITIALIZATION HOOKS
+// ----------------------------------------------------------------------------
+
 export function initToolsModule() {
   renderSectorCardsUI();
   populateCommanderSelect();
   initSignatureCanvas();
+  initAccordionEngine();
+  initCalculatorResetHandlers();
+}
+
+function initAccordionEngine() {
+  // Hub 1 vs Hub 2 Category Filter Switcher
+  const btnValidity = document.getElementById("tools-tab-validity-btn");
+  const btnFdp = document.getElementById("tools-tab-fdp-btn");
+  const paneValidity = document.getElementById("hub-validity-pane");
+  const paneFdp = document.getElementById("hub-fdp-pane");
+
+  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold cursor-pointer";
+  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-extrabold cursor-pointer";
+
+  if (btnValidity && btnFdp && paneValidity && paneFdp) {
+    btnValidity.addEventListener("click", () => {
+      btnValidity.className = `tools-tab-btn py-2.5 px-2 rounded-xl text-[11px] transition-all flex items-center justify-center gap-1.5 ${activeClass}`;
+      btnFdp.className = `tools-tab-btn py-2.5 px-2 rounded-xl text-[11px] transition-all flex items-center justify-center gap-1.5 ${inactiveClass}`;
+      paneValidity.classList.remove("hidden");
+      paneFdp.classList.add("hidden");
+    });
+
+    btnFdp.addEventListener("click", () => {
+      btnFdp.className = `tools-tab-btn py-2.5 px-2 rounded-xl text-[11px] transition-all flex items-center justify-center gap-1.5 ${activeClass}`;
+      btnValidity.className = `tools-tab-btn py-2.5 px-2 rounded-xl text-[11px] transition-all flex items-center justify-center gap-1.5 ${inactiveClass}`;
+      paneFdp.classList.remove("hidden");
+      paneValidity.classList.add("hidden");
+    });
+  }
+
+  // Generic Accordion Card Toggle Handler
+  const accordionCards = document.querySelectorAll(".accordion-card");
+  accordionCards.forEach(card => {
+    const header = card.querySelector(".accordion-header");
+    const body = card.querySelector(".accordion-body");
+    const chevron = card.querySelector(".accordion-chevron");
+
+    if (header && body) {
+      header.addEventListener("click", () => {
+        const isOpen = !body.classList.contains("hidden");
+
+        // Collapse all sibling cards in the same pane
+        const parentPane = card.parentElement;
+        if (parentPane) {
+          parentPane.querySelectorAll(".accordion-card").forEach(sibling => {
+            const sibBody = sibling.querySelector(".accordion-body");
+            const sibChevron = sibling.querySelector(".accordion-chevron");
+            if (sibBody) sibBody.classList.add("hidden");
+            if (sibChevron) sibChevron.style.transform = "rotate(0deg)";
+          });
+        }
+
+        // Toggle clicked card
+        if (!isOpen) {
+          body.classList.remove("hidden");
+          if (chevron) chevron.style.transform = "rotate(180deg)";
+        }
+      });
+    }
+  });
+}
+
+function initCalculatorResetHandlers() {
+  // Reset PPC
+  document.getElementById("btn-reset-ppc")?.addEventListener("click", () => {
+    const conduct = document.getElementById("ppc-conduct-date");
+    const expiry = document.getElementById("ppc-expiry-date");
+    const resBox = document.getElementById("ppc-results-box");
+    if (conduct) conduct.value = "";
+    if (expiry) expiry.value = "";
+    if (resBox) resBox.classList.add("hidden");
+  });
+
+  // Reset Recurrent
+  document.getElementById("btn-reset-recurrent")?.addEventListener("click", () => {
+    const conduct = document.getElementById("recurrent-conduct-date");
+    const resBox = document.getElementById("recurrent-results-box");
+    if (conduct) conduct.value = "";
+    if (resBox) resBox.classList.add("hidden");
+  });
+
+  // Reset Medical
+  document.getElementById("btn-reset-medical")?.addEventListener("click", () => {
+    const expiry = document.getElementById("medical-last-date");
+    const age = document.getElementById("medical-pilot-age");
+    const resBox = document.getElementById("medical-results-box");
+    if (expiry) expiry.value = "";
+    if (age) age.value = "";
+    if (resBox) resBox.classList.add("hidden");
+  });
+
+  // Reset Preflight FDP
+  document.getElementById("btn-reset-preflight")?.addEventListener("click", () => {
+    const report = document.getElementById("fdp-report-time");
+    const check = document.getElementById("fdp-acclimatised-check");
+    const resBox = document.getElementById("preflight-results-box");
+    if (report) report.value = "";
+    if (check) check.checked = true;
+    setSectorCount(2);
+    if (resBox) resBox.classList.add("hidden");
+  });
 }
