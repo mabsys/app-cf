@@ -1,4 +1,4 @@
-// main.js (1810_R162) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (1810_R163) - CertiFly Application Shell & Bento Dashboard Controller
 
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
 
@@ -1054,7 +1054,7 @@ function saveDashboardTemplates() {
   if (!dashView) return;
 
   const overviewPane = dashView.querySelector("#tab-overview-content") || document.getElementById("tab-overview-content");
-  if (overviewPane && !initialOverviewTemplateHTML && overviewPane.querySelector("#overview-status-title")) {
+  if (overviewPane && !initialOverviewTemplateHTML && (overviewPane.querySelector("#overview-hero-card") || overviewPane.querySelector("#ov-caam-expiry"))) {
     initialOverviewTemplateHTML = overviewPane.innerHTML;
   }
 
@@ -1265,7 +1265,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   const caamPane = dashView ? (dashView.querySelector("#tab-caam-content") || document.getElementById("tab-caam-content")) : null;
   const mabPane = dashView ? (dashView.querySelector("#tab-mab-content") || document.getElementById("tab-mab-content")) : null;
 
-  if (overviewPane && initialOverviewTemplateHTML && !overviewPane.querySelector("#overview-status-title")) {
+  if (overviewPane && initialOverviewTemplateHTML && !(overviewPane.querySelector("#overview-hero-card") || overviewPane.querySelector("#ov-caam-expiry"))) {
     overviewPane.innerHTML = initialOverviewTemplateHTML;
   }
   if (caamPane && initialCaamTemplateHTML && !caamPane.querySelector("#pilot-name")) {
@@ -1482,6 +1482,10 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     { key: "supervisory", name: ["DFE", "FI", "EXAMINER", "INSTRUCTOR"], label: "DFE / FI" }
   ];
 
+  let minDrillDays = null;
+  let avgDrillDays = null;
+  const collectedDrillDays = [];
+
   if (mabResults && Array.isArray(mabResults.drills)) {
     drillItems.forEach(item => {
       const matched = mabResults.drills.find(d => {
@@ -1497,12 +1501,18 @@ async function renderDashboardResults(caamResults, mabResults = null) {
         const dDays = getDaysUntil(matched.nextDue || matched.expiryDate);
         applyStatusTheme(dDays, null, txtEl, ledEl, pillEl, item.key === "lvo" ? "CAT III" : "VALID");
         if (dDays !== null) {
+          collectedDrillDays.push(dDays);
           allCandidates.push({ name: item.label, days: dDays, tab: "mab" });
         }
       } else {
         applyStatusTheme(365, null, txtEl, ledEl, pillEl, item.key === "lvo" ? "CAT III" : "VALID");
       }
     });
+  }
+
+  if (collectedDrillDays.length > 0) {
+    minDrillDays = Math.min(...collectedDrillDays);
+    avgDrillDays = collectedDrillDays.reduce((a, b) => a + b, 0) / collectedDrillDays.length;
   }
 
   // F. Passport & Profile Footer
