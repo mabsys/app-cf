@@ -1,7 +1,6 @@
-// main.js (1810_R164) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (1810_R165) - CertiFly Application Shell & Bento Dashboard Controller
 
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
-
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -1629,7 +1628,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   if (ringCaam) {
     const caamOffset = Math.round(188.50 * (1 - caamScore / 100));
     const isCaamWarning = caamItems.some(d => d <= userThreshold && d >= 0);
-    const caamColor = isCaamLapsed ? "#EF4444" : (isCaamWarning ? "#F59E0B" : "#10B981");
+    const caamColor = isCaamLapsed ? "#EF4444" : (isCaamWarning ? "#F59E0B" : "#3B82F6");
     ringCaam.setAttribute("stroke", caamColor);
     ringCaam.setAttribute("stroke-dashoffset", String(caamOffset));
   }
