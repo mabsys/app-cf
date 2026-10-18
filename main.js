@@ -1,4 +1,4 @@
-// main.js (1810_R159) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (1810_R161) - CertiFly Application Shell & Bento Dashboard Controller
 
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
 
@@ -633,14 +633,15 @@ function initProfileUI() {
         const res = await processAndCacheProfileData(urlVal, selectedAttestationFile);
         if (res && (res.caamResults || res.mabResults)) {
           renderDashboardResults(res.caamResults, res.mabResults);
-          showView("dashboard-view");
-          switchResultTab("overview");
         } else {
           renderDashboardView();
         }
       } catch (err) {
         console.error("Error processing profile data on save:", err);
         renderDashboardView();
+      } finally {
+        showView("dashboard-view");
+        switchResultTab("overview");
       }
     };
   }
@@ -1370,8 +1371,8 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     const caamDaysEl = getDashEl("ov-caam-days");
     const caamBadgeEl = getDashEl("ov-caam-badge");
 
-    if (caamExpEl) caamExpEl.innerText = caamExpDate || "31 OCT 2026";
-    if (caamDaysEl) caamDaysEl.innerText = caamDays !== null ? (caamDays < 0 ? "Expired" : `${caamDays} Days Remaining`) : "Valid";
+    if (caamExpEl) caamExpEl.innerText = caamExpDate || "N/A";
+    if (caamDaysEl) caamDaysEl.innerText = caamDays !== null ? (caamDays < 0 ? "Lapsed" : `${caamDays} Days Remaining`) : "N/A";
     applyStatusTheme(caamDays, caamBadgeEl, null, null, null, "Valid");
 
     if (caamDays !== null) {
@@ -1382,7 +1383,11 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   // B. Class 1 Medical
   let medDays = null;
   if (caamResults) {
-    const medQual = (caamResults.qualifications || []).find(q => q.name && q.name.toUpperCase().includes("MEDICAL"));
+    const medQual = (caamResults.qualifications || []).find(q => {
+      if (!q || !q.name) return false;
+      const u = q.name.toUpperCase();
+      return u.includes("MEDICAL") || u.includes("CLASS 1") || u.includes("CLASS1") || u.includes("PERUBATAN") || u.includes("CLASS 2") || u.includes("CLASS2");
+    });
     const medExpDate = caamResults.medicalExpiry || (medQual ? medQual.dateText : null);
     medDays = getDaysUntil(medExpDate);
 
@@ -1390,8 +1395,8 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     const medDaysEl = getDashEl("ov-medical-days");
     const medBadgeEl = getDashEl("ov-medical-badge");
 
-    if (medExpEl) medExpEl.innerText = medExpDate || "31 OCT 2026";
-    if (medDaysEl) medDaysEl.innerText = medDays !== null ? (medDays < 0 ? "Expired" : `${medDays} Days Remaining`) : "Valid";
+    if (medExpEl) medExpEl.innerText = medExpDate || "N/A";
+    if (medDaysEl) medDaysEl.innerText = medDays !== null ? (medDays < 0 ? "Lapsed" : `${medDays} Days Remaining`) : "N/A";
     applyStatusTheme(medDays, medBadgeEl, null, null, null, "Valid");
 
     if (medDays !== null) {
@@ -1402,7 +1407,11 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   // C. B737 Type Rating & IR
   let typeDays = null;
   if (caamResults) {
-    const typeQual = (caamResults.qualifications || []).find(q => q.name && (q.name.includes("B737") || q.name.includes("TYPE RATING") || q.name.includes("IR")));
+    const typeQual = (caamResults.qualifications || []).find(q => {
+      if (!q || !q.name) return false;
+      const u = q.name.toUpperCase();
+      return u.includes("B737") || u.includes("B738") || u.includes("B7M8") || u.includes("TYPE RATING") || u.includes("PPC") || u.includes("IR");
+    });
     const typeExpDate = typeQual ? typeQual.dateText : null;
     typeDays = getDaysUntil(typeExpDate);
 
@@ -1410,19 +1419,19 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     const typeDaysEl = getDashEl("ov-type-days");
     const typeBadgeEl = getDashEl("ov-type-badge");
 
-    if (typeExpEl) typeExpEl.innerText = typeExpDate || "31 AUG 2027";
-    if (typeDaysEl) typeDaysEl.innerText = typeDays !== null ? (typeDays < 0 ? "Expired" : `${typeDays} Days Remaining`) : "Valid";
+    if (typeExpEl) typeExpEl.innerText = typeExpDate || "N/A";
+    if (typeDaysEl) typeDaysEl.innerText = typeDays !== null ? (typeDays < 0 ? "Lapsed" : `${typeDays} Days Remaining`) : "N/A";
     applyStatusTheme(typeDays, typeBadgeEl, null, null, null, "Valid");
 
     if (typeDays !== null) {
-      allCandidates.push({ name: "B737 LPC / IR", days: typeDays, tab: "caam" });
+      allCandidates.push({ name: "B737 Type Rating & IR", days: typeDays, tab: "caam" });
     }
   }
 
   // D. MAB Line Check
   let lcDays = null;
   if (mabResults && mabResults.lineCheck) {
-    const lcRoute = mabResults.lineCheck.route || (mabResults.lineCheck.fleet ? `${mabResults.lineCheck.fleet} Check` : "B738 KUL/BKI/KUL");
+    const lcRoute = mabResults.lineCheck.route || (mabResults.lineCheck.fleet ? `${mabResults.lineCheck.fleet} Check` : "Line Check");
     const lcExpDate = mabResults.lineCheck.expiryDate || mabResults.lineCheck.nextDue;
     lcDays = getDaysUntil(lcExpDate);
 
@@ -1430,8 +1439,8 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     const lcRouteEl = getDashEl("ov-linecheck-route");
     const lcBadgeEl = getDashEl("ov-linecheck-badge");
 
-    if (lcExpEl) lcExpEl.innerText = lcExpDate || "31 OCT 2026";
-    if (lcRouteEl) lcRouteEl.innerText = `Route: ${lcRoute}`;
+    if (lcExpEl) lcExpEl.innerText = lcExpDate || "N/A";
+    if (lcRouteEl) lcRouteEl.innerText = lcDays !== null ? (lcDays < 0 ? "Lapsed" : `${lcDays} Days Remaining`) : "N/A";
     applyStatusTheme(lcDays, lcBadgeEl, null, null, null, "Valid");
 
     if (lcDays !== null) {
@@ -1698,37 +1707,40 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     if (mabDocRef) mabDocRef.innerHTML = "";
 
     if (mabFresh) {
-      let ageDays = mabResults.ageInDays;
-      if (typeof ageDays !== 'number' && mabResults.publishedDateStr) {
-        try {
-          const pubDate = new Date(mabResults.publishedDateStr);
-          if (!isNaN(pubDate.getTime())) {
-            ageDays = Math.floor((new Date() - pubDate) / (1000 * 60 * 60 * 24));
-          }
-        } catch (e) {}
+      const freshnessLimit = typeof getFreshnessLimit === 'function' ? getFreshnessLimit() : 30;
+      let ageInDays = null;
+
+      if (mabResults && mabResults.publishedDateStr) {
+        const pubDate = parseAnyDate(mabResults.publishedDateStr);
+        if (pubDate && !isNaN(pubDate.getTime())) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          pubDate.setHours(0, 0, 0, 0);
+          ageInDays = Math.floor((today.getTime() - pubDate.getTime()) / (1000 * 60 * 60 * 24));
+        }
       }
-      const limitDays = mabResults.freshnessLimitDays || (typeof getFreshnessLimit === 'function' ? getFreshnessLimit() : 30);
-      if (typeof ageDays === 'number' && !isNaN(ageDays)) {
-        const daysLeft = limitDays - ageDays;
+
+      if (ageInDays === null && mabResults && typeof mabResults.ageInDays === 'number') {
+        ageInDays = mabResults.ageInDays;
+      }
+
+      if (typeof ageInDays === 'number' && !isNaN(ageInDays)) {
+        const daysLeft = freshnessLimit - ageInDays;
         if (daysLeft < 0) {
           const overdue = Math.abs(daysLeft);
-          mabFresh.innerText = `Expired ${overdue}d ago`;
+          mabFresh.innerText = `Lapsed (${overdue}d overdue)`;
           mabFresh.className = "text-rose-600 dark:text-rose-400 font-extrabold";
+          if (mabResults) mabResults.isStale = true;
         } else if (daysLeft <= 5) {
           mabFresh.innerText = `${daysLeft}d Remaining`;
           mabFresh.className = "text-amber-600 dark:text-amber-400 font-extrabold";
         } else {
-          mabFresh.innerText = `${daysLeft}d Current`;
+          mabFresh.innerText = `${daysLeft}d Remaining`;
           mabFresh.className = "text-emerald-600 dark:text-emerald-400 font-extrabold";
         }
       } else {
-        if (mabResults.isStale) {
-          mabFresh.innerText = `Stale (>${limitDays}d)`;
-          mabFresh.className = "text-rose-600 dark:text-rose-400 font-extrabold";
-        } else {
-          mabFresh.innerText = `Fresh (<${limitDays}d)`;
-          mabFresh.className = "text-emerald-600 dark:text-emerald-400 font-extrabold";
-        }
+        mabFresh.innerText = "Unknown Freshness";
+        mabFresh.className = "text-slate-500 font-extrabold";
       }
     }
 
