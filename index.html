@@ -1,4 +1,4 @@
-<!-- index.html (1810_R168) - CertiFly PWA Application Shell & Core Layout -->
+<!-- index.html (1810_R169) - CertiFly PWA Application Shell & Core Layout -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -114,12 +114,12 @@ if ('serviceWorker' in navigator) {
                                     <!-- Outer Ring Track (MAB Attestation - Company Currency) r=42 -->
                                     <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
                                     <!-- Outer Ring Progress (MAB) -->
-                                    <circle id="ring-mab" cx="50" cy="50" r="42" fill="none" stroke="#10B981" stroke-width="7" stroke-dasharray="263.89" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
+                                    <circle id="ring-mab" cx="50" cy="50" r="42" fill="none" stroke="#8B5CF6" stroke-width="7" stroke-dasharray="263.89" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
 
                                     <!-- Inner Ring Track (CAAM Licence - Statutory Authority) r=30 -->
                                     <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
                                     <!-- Inner Ring Progress (CAAM) -->
-                                    <circle id="ring-caam" cx="50" cy="50" r="30" fill="none" stroke="#10B981" stroke-width="7" stroke-dasharray="188.50" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
+                                    <circle id="ring-caam" cx="50" cy="50" r="30" fill="none" stroke="#3B82F6" stroke-width="7" stroke-dasharray="188.50" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
                                 </svg>
                                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
                                     <span id="ov-ring-percent" class="text-xs font-black text-slate-900 dark:text-slate-100 tracking-tight">100%</span>
@@ -127,8 +127,8 @@ if ('serviceWorker' in navigator) {
                             </div>
                             <!-- Ring Legend -->
                             <div class="flex items-center gap-2.5 text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                                <span class="flex items-center gap-1"><span id="legend-dot-caam" class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>CAAM</span>
-                                <span class="flex items-center gap-1"><span id="legend-dot-mab" class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>MAB</span>
+                                <span class="flex items-center gap-1"><span id="legend-dot-caam" class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>CAAM</span>
+                                <span class="flex items-center gap-1"><span id="legend-dot-mab" class="w-1.5 h-1.5 rounded-full bg-violet-500"></span>MAB</span>
                             </div>
                         </div>
 
@@ -144,9 +144,9 @@ if ('serviceWorker' in navigator) {
                                 <span id="ov-bottleneck-text" class="truncate">All Items Valid</span>
                             </div>
 
-                            <div class="mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[9px] text-slate-400">
-                                <span>Crew: <strong id="overview-pilot-name" class="text-slate-800 dark:text-slate-200 font-extrabold">--</strong></span>
-                                <span>Checked: <strong id="overview-scan-timestamp" class="text-slate-800 dark:text-slate-200 font-extrabold">--:--</strong></span>
+                            <div class="mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-800/80 flex flex-col gap-0.5 text-[9px] text-slate-400">
+                                <span class="leading-snug break-words">Crew: <strong id="overview-pilot-name" class="text-slate-800 dark:text-slate-200 font-extrabold">--</strong></span>
+                                <span class="leading-snug">Last Synced: <strong id="overview-scan-timestamp" class="text-slate-800 dark:text-slate-200 font-extrabold">--:--</strong></span>
                             </div>
                         </div>
 
