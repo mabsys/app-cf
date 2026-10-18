@@ -1,4 +1,4 @@
-// main.js (1810_R158) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (1810_R159) - CertiFly Application Shell & Bento Dashboard Controller
 
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
 
@@ -633,6 +633,8 @@ function initProfileUI() {
         const res = await processAndCacheProfileData(urlVal, selectedAttestationFile);
         if (res && (res.caamResults || res.mabResults)) {
           renderDashboardResults(res.caamResults, res.mabResults);
+          showView("dashboard-view");
+          switchResultTab("overview");
         } else {
           renderDashboardView();
         }
@@ -879,6 +881,16 @@ async function processAndCacheProfileData(url, pdfFile) {
   let mabTextToParse = selectedAttestationText;
   if (!mabTextToParse && selectedAttestationFile) {
     mabTextToParse = await extractTextFromPdfFile(selectedAttestationFile);
+  }
+  if (!mabTextToParse) {
+    try {
+      const storedPdf = await getAttestationPdf();
+      if (storedPdf) {
+        mabTextToParse = await extractTextFromPdfFile(storedPdf);
+      }
+    } catch (err) {
+      console.warn("Could not read stored attestation PDF from IndexedDB:", err);
+    }
   }
 
   let mabTextToUse = mabTextToParse;
