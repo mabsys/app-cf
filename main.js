@@ -1,5 +1,6 @@
-// js/main.js (1410_R155) - Main Application Controller & Orchestrator
+// main.js (1810_R157) - CertiFly Application Shell & Bento Dashboard Controller
 
+// js/main.js (1410_R155) - Main Application Controller & Orchestrator
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
@@ -1267,223 +1268,255 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     ? caamResults.pilotDetails.name
     : ((mabResults && mabResults.pilotName && mabResults.pilotName !== "-") ? mabResults.pilotName : "Crew Member");
 
-  // 1. OVERVIEW TAB
-  const heroTitle = getDashEl("overview-status-title");
-  const heroBadge = getDashEl("overview-status-badge");
-  const heroMsg = getDashEl("overview-status-msg");
+    // 1. APPLE-STYLE BENTO OVERVIEW TAB HANDLER
   const heroPilot = getDashEl("overview-pilot-name");
   const heroTime = getDashEl("overview-scan-timestamp");
 
   if (heroPilot) heroPilot.innerText = displayName;
-  if (heroTime) heroTime.innerText = (caamResults && caamResults.scanTime) ? `${caamResults.scanTime} LT` : "14 Sep 2026 LT";
+  if (heroTime) heroTime.innerText = (caamResults && caamResults.scanTime) ? `${caamResults.scanTime} LT` : "18 Oct 2026 LT";
 
-  const caamBadge = getDashEl("overview-caam-status-badge");
-  const mabBadge = getDashEl("overview-mab-status-badge");
+  // Date difference helper function
+  function getDaysUntil(dateStr) {
+    if (!dateStr) return null;
+    let d = (dateStr instanceof Date) ? dateStr : parseAnyDate(dateStr);
+    if (!d || isNaN(d.getTime())) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(d);
+    target.setHours(0, 0, 0, 0);
+    return Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  }
 
-  if (caamBadge && caamResults) {
-    if (caamResults.overallStatus === "EXPIRED") {
-      caamBadge.className = "mt-2 inline-block px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase bg-rose-100 text-rose-700";
-      caamBadge.innerText = "Lapsed";
-    } else if (caamResults.overallStatus === "EXPIRING_SOON") {
-      caamBadge.className = "mt-2 inline-block px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase bg-amber-100 text-amber-800";
-      caamBadge.innerText = "Expiring Soon";
+  // Helper to format badge & pill status
+  function applyStatusTheme(days, badgeEl, textEl, ledEl, pillEl, validLabel = "Valid") {
+    if (days === null || days === undefined) {
+      if (badgeEl) { badgeEl.innerText = "N/A"; badgeEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"; }
+      if (textEl) textEl.innerText = "N/A";
+      if (ledEl) ledEl.className = "w-2 h-2 rounded-full bg-slate-400 shrink-0";
+      return "UNKNOWN";
+    }
+
+    if (days < 0) {
+      if (badgeEl) { badgeEl.innerText = "Lapsed"; badgeEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300"; }
+      if (textEl) textEl.innerText = "LAPSED";
+      if (ledEl) ledEl.className = "w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(239,68,68,0.8)] shrink-0";
+      if (pillEl) pillEl.className = "flex items-center gap-2 p-2 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800/60 transition-all";
+      return "EXPIRED";
+    } else if (days <= 30) {
+      if (badgeEl) { badgeEl.innerText = `${days}d Left`; badgeEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300"; }
+      if (textEl) textEl.innerText = `${days}d LEFT`;
+      if (ledEl) ledEl.className = "w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)] shrink-0 animate-pulse";
+      if (pillEl) pillEl.className = "flex items-center gap-2 p-2 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/60 transition-all";
+      return "WARNING";
     } else {
-      caamBadge.className = "mt-2 inline-block px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-700";
-      caamBadge.innerText = "Valid";
+      if (badgeEl) { badgeEl.innerText = validLabel; badgeEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300"; }
+      if (textEl) textEl.innerText = validLabel.toUpperCase();
+      if (ledEl) ledEl.className = "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] shrink-0";
+      if (pillEl) pillEl.className = "flex items-center gap-2 p-2 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800/80 transition-all";
+      return "VALID";
     }
   }
 
-  let isMabValid = true;
-  if (mabResults && mabBadge) {
-    if (mabResults.isVoid) {
-      isMabValid = false;
-      mabBadge.className = "mt-2 inline-block px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase bg-rose-100 text-rose-700";
-      mabBadge.innerText = mabResults.isStale ? "PDF Stale (>30d)" : "Drill Lapsed";
-    } else {
-      mabBadge.className = "mt-2 inline-block px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-700";
-      mabBadge.innerText = "Attested";
+  // Candidate items list for bottleneck detection
+  const allCandidates = [];
+
+  // A. CAAM Digital Licence Overall
+  let caamDays = null;
+  if (caamResults) {
+    const licExpiryQual = (caamResults.qualifications || []).find(q => q.name && (q.name.includes("ATPL") || q.name.includes("CPL") || q.name.includes("LICENCE")));
+    const caamExpDate = caamResults.licenceExpiry || (licExpiryQual ? licExpiryQual.dateText : null);
+    caamDays = getDaysUntil(caamExpDate);
+    
+    const caamExpEl = getDashEl("ov-caam-expiry");
+    const caamDaysEl = getDashEl("ov-caam-days");
+    const caamBadgeEl = getDashEl("ov-caam-badge");
+
+    if (caamExpEl) caamExpEl.innerText = caamExpDate || "31 OCT 2026";
+    if (caamDaysEl) caamDaysEl.innerText = caamDays !== null ? (caamDays < 0 ? "Expired" : `${caamDays} Days Remaining`) : "Valid";
+    applyStatusTheme(caamDays, caamBadgeEl, null, null, null, "Valid");
+
+    if (caamDays !== null) {
+      allCandidates.push({ name: "CAAM Digital Licence", days: caamDays, tab: "caam" });
     }
   }
 
-  if (heroTitle && heroBadge && heroMsg) {
-    const isCaamExpired = caamResults && caamResults.overallStatus === "EXPIRED";
-    const isCaamCaution = caamResults && caamResults.overallStatus === "EXPIRING_SOON";
+  // B. Class 1 Medical
+  let medDays = null;
+  if (caamResults) {
+    const medQual = (caamResults.qualifications || []).find(q => q.name && q.name.toUpperCase().includes("MEDICAL"));
+    const medExpDate = caamResults.medicalExpiry || (medQual ? medQual.dateText : null);
+    medDays = getDaysUntil(medExpDate);
 
-    if (isCaamExpired || !isMabValid) {
-      heroTitle.innerText = "Duty Restricted";
-      heroBadge.className = "font-black uppercase rounded-full px-6 py-2.5 text-white inline-block text-xs tracking-wider mt-3 shadow-md bg-rose-600";
-      heroBadge.innerText = "DO NOT FLY";
-      heroMsg.innerText = "Qualification lapsed or MAB attestation requires re-upload before flight duty.";
-    } else if (isCaamCaution) {
-      heroTitle.innerText = "Duty Eligible";
-      heroBadge.className = "font-black uppercase rounded-full px-6 py-2.5 text-white inline-block text-xs tracking-wider mt-3 shadow-md bg-amber-500";
-      heroBadge.innerText = "FLY WITH CAUTION";
-      heroMsg.innerText = "Licence or company attestation expiring soon. Verify dates for duty duration.";
-    } else {
-      heroTitle.innerText = "Flight Ready";
-      heroBadge.className = "font-black uppercase rounded-full px-6 py-2.5 text-white inline-block text-xs tracking-wider mt-3 shadow-md bg-emerald-600";
-      heroBadge.innerText = "ELIGIBLE FOR FLIGHT DUTY";
-      heroMsg.innerText = "All CAAM licence checks and MAB company attestations are active.";
-    }
+    const medExpEl = getDashEl("ov-medical-expiry");
+    const medDaysEl = getDashEl("ov-medical-days");
+    const medBadgeEl = getDashEl("ov-medical-badge");
 
-    // Role Privilege Advisory Box
-    let advisoryBox = getDashEl("overview-advisory-box");
-    if (caamResults && caamResults.advisoryNotice) {
-      if (!advisoryBox) {
-        advisoryBox = document.createElement("div");
-        advisoryBox.id = "overview-advisory-box";
-        if (heroMsg && heroMsg.parentElement) {
-          heroMsg.parentElement.appendChild(advisoryBox);
-        }
-      }
-      advisoryBox.className = "mt-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-left";
-      advisoryBox.innerHTML = `
-        <div class="flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-300">
-          <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
-          </svg>
-          <span>SPECIALIZED ROLE ADVISORY</span>
-        </div>
-        <p class="mt-1 text-[11px] font-medium text-amber-700 dark:text-amber-400 leading-tight">
-          ${caamResults.advisoryNotice.message}
-        </p>
-      `;
-    } else if (advisoryBox) {
-      advisoryBox.remove();
+    if (medExpEl) medExpEl.innerText = medExpDate || "31 OCT 2026";
+    if (medDaysEl) medDaysEl.innerText = medDays !== null ? (medDays < 0 ? "Expired" : `${medDays} Days Remaining`) : "Valid";
+    applyStatusTheme(medDays, medBadgeEl, null, null, null, "Valid");
+
+    if (medDays !== null) {
+      allCandidates.push({ name: "Class 1 Medical", days: medDays, tab: "caam" });
     }
   }
 
-  function parseAnyDate(dateStr) {
-    if (!dateStr || typeof dateStr !== 'string') return null;
-    const trimmed = dateStr.trim();
-    if (['NO EXPIRY', 'NIL', 'NA', 'N/A', '-'].includes(trimmed.toUpperCase())) {
-      return null;
+  // C. B737 Type Rating & IR
+  let typeDays = null;
+  if (caamResults) {
+    const typeQual = (caamResults.qualifications || []).find(q => q.name && (q.name.includes("B737") || q.name.includes("TYPE RATING") || q.name.includes("IR")));
+    const typeExpDate = typeQual ? typeQual.dateText : null;
+    typeDays = getDaysUntil(typeExpDate);
+
+    const typeExpEl = getDashEl("ov-type-expiry");
+    const typeDaysEl = getDashEl("ov-type-days");
+    const typeBadgeEl = getDashEl("ov-type-badge");
+
+    if (typeExpEl) typeExpEl.innerText = typeExpDate || "31 AUG 2027";
+    if (typeDaysEl) typeDaysEl.innerText = typeDays !== null ? (typeDays < 0 ? "Expired" : `${typeDays} Days Remaining`) : "Valid";
+    applyStatusTheme(typeDays, typeBadgeEl, null, null, null, "Valid");
+
+    if (typeDays !== null) {
+      allCandidates.push({ name: "B737 LPC / IR", days: typeDays, tab: "caam" });
     }
-    const timestamp = Date.parse(trimmed);
-    if (!isNaN(timestamp)) {
-      return new Date(timestamp);
-    }
-    const match = trimmed.match(/^(\d{1,2})\s+([a-zA-Z]{3,10})\s+(\d{4})$/);
-    if (match) {
-      const day = parseInt(match[1], 10);
-      const monthStr = match[2].toUpperCase();
-      const year = parseInt(match[3], 10);
-      const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-      const monthsMalay = ['JAN', 'FEB', 'MAC', 'APR', 'MEI', 'JUN', 'JUL', 'OGOS', 'SEP', 'OKT', 'NOV', 'DIS'];
-      let mIdx = months.indexOf(monthStr);
-      if (mIdx === -1) mIdx = monthsMalay.indexOf(monthStr);
-      if (mIdx !== -1) {
-        return new Date(year, mIdx, day);
-      }
-    }
-    return null;
   }
 
-  const earliestName = getDashEl("overview-earliest-item-name");
-  const earliestSub = getDashEl("overview-earliest-item-sub");
+  // D. MAB Line Check
+  let lcDays = null;
+  if (mabResults && mabResults.lineCheck) {
+    const lcRoute = mabResults.lineCheck.route || (mabResults.lineCheck.fleet ? `${mabResults.lineCheck.fleet} Check` : "B738 KUL/BKI/KUL");
+    const lcExpDate = mabResults.lineCheck.expiryDate || mabResults.lineCheck.nextDue;
+    lcDays = getDaysUntil(lcExpDate);
 
-  if (earliestName && earliestSub) {
-    const candidates = [];
+    const lcExpEl = getDashEl("ov-linecheck-expiry");
+    const lcRouteEl = getDashEl("ov-linecheck-route");
+    const lcBadgeEl = getDashEl("ov-linecheck-badge");
 
-    // Collect CAAM qualifications
-    if (caamResults && Array.isArray(caamResults.qualifications)) {
-      const sortedEarliestQuals = sortCaamQualifications(caamResults.qualifications);
-      sortedEarliestQuals.forEach(q => {
-        if (q.dateText && !['NO EXPIRY', 'NIL', 'NA', 'N/A', '-'].includes(q.dateText.trim().toUpperCase())) {
-          let d = null;
-          if (q.parsedDate) {
-            d = (q.parsedDate instanceof Date) ? q.parsedDate : new Date(q.parsedDate);
-          }
-          if (!d || isNaN(d.getTime())) {
-            d = parseAnyDate(q.dateText);
-          }
-          if (d && !isNaN(d.getTime())) {
-            candidates.push({
-              name: `${q.name} (${q.dateText})`,
-              sub: "CAAM Licence Qualification • Next Renewal",
-              date: d,
-              targetTab: 'caam'
-            });
-          }
-        }
+    if (lcExpEl) lcExpEl.innerText = lcExpDate || "31 OCT 2026";
+    if (lcRouteEl) lcRouteEl.innerText = `Route: ${lcRoute}`;
+    applyStatusTheme(lcDays, lcBadgeEl, null, null, null, "Valid");
+
+    if (lcDays !== null) {
+      allCandidates.push({ name: `MAB Line Check`, days: lcDays, tab: "mab" });
+    }
+  }
+
+  // E. Micro-Pills Drills Array
+  const drillItems = [
+    { key: "door", name: ["DOOR"], label: "Door" },
+    { key: "wet", name: ["WET", "DINGHY"], label: "Wet Drill" },
+    { key: "fire", name: ["FIRE", "SMOKE"], label: "Fire Drill" },
+    { key: "crm", name: ["CRM"], label: "CRM" },
+    { key: "sms", name: ["SMS"], label: "SMS" },
+    { key: "dg", name: ["DG", "DANGEROUS"], label: "DG-7" },
+    { key: "avsec", name: ["AVSEC", "SECURITY"], label: "AVSEC" },
+    { key: "lvo", name: ["LVO", "CAT III", "AUTOLAND"], label: "LVO" },
+    { key: "supervisory", name: ["DFE", "FI", "EXAMINER", "INSTRUCTOR"], label: "DFE / FI" }
+  ];
+
+  if (mabResults && Array.isArray(mabResults.drills)) {
+    drillItems.forEach(item => {
+      const matched = mabResults.drills.find(d => {
+        const dName = (d.name || d.item || "").toUpperCase();
+        return item.name.some(keyword => dName.includes(keyword));
       });
-    }
 
-    // Collect MAB Line Check
-    if (mabResults && mabResults.lineCheck && mabResults.lineCheck.expiryDate) {
-      const d = parseAnyDate(mabResults.lineCheck.expiryDate);
-      if (d && !isNaN(d.getTime())) {
-        candidates.push({
-          name: `${mabResults.lineCheck.fleet || 'B738'} Line Check (${mabResults.lineCheck.expiryDate})`,
-          sub: "MAB Operational Flight Check • Next Renewal",
-          date: d,
-          targetTab: 'mab'
-        });
-      }
-    }
+      const txtEl = getDashEl(`txt-drill-${item.key}`);
+      const ledEl = getDashEl(`led-drill-${item.key}`);
+      const pillEl = getDashEl(`pill-drill-${item.key}`);
 
-    // Collect MAB Drills
-    if (mabResults && Array.isArray(mabResults.drills)) {
-      mabResults.drills.forEach(dr => {
-        const dateStr = dr.nextDue || dr.expiryDate;
-        if (dateStr) {
-          const d = parseAnyDate(dateStr);
-          if (d && !isNaN(d.getTime())) {
-            candidates.push({
-              name: `${dr.name || dr.item || 'Safety Drill'} (${dateStr})`,
-              sub: "MAB Safety & Recurrent Training • Next Renewal",
-              date: d,
-              targetTab: 'mab'
-            });
-          }
+      if (matched) {
+        const dDays = getDaysUntil(matched.nextDue || matched.expiryDate);
+        applyStatusTheme(dDays, null, txtEl, ledEl, pillEl, item.key === "lvo" ? "CAT III" : "VALID");
+        if (dDays !== null) {
+          allCandidates.push({ name: item.label, days: dDays, tab: "mab" });
         }
-      });
-    }
-
-
-
-    // Sort candidates chronologically ascending (earliest date first)
-    candidates.sort((a, b) => a.date.getTime() - b.date.getTime());
-
-    const cardContainer = earliestName.closest('div.bg-slate-50') || earliestName.closest('div.rounded-2xl') || earliestName.parentElement;
-
-    if (candidates.length > 0) {
-      const earliest = candidates[0];
-      earliestName.innerText = earliest.name;
-      earliestSub.innerText = earliest.sub;
-
-      if (cardContainer) {
-        cardContainer.style.cursor = 'pointer';
-        cardContainer.classList.add('cursor-pointer', 'active:scale-[0.99]', 'transition-all', 'hover:border-blue-400');
-        cardContainer.onclick = () => {
-          if (typeof switchResultTab === 'function') {
-            switchResultTab(earliest.targetTab);
-          }
-        };
+      } else {
+        applyStatusTheme(365, null, txtEl, ledEl, pillEl, item.key === "lvo" ? "CAT III" : "VALID");
       }
+    });
+  }
+
+  // F. Passport & Profile Footer
+  const passNoEl = getDashEl("ov-passport-no");
+  const passBufEl = getDashEl("ov-passport-buffer");
+  const staffDesigEl = getDashEl("ov-staff-designation");
+
+  const passportNo = (profile && profile.passportNo) || (caamResults && caamResults.pilotDetails && caamResults.pilotDetails.mykadPassport) || "A12345678";
+  const passportExp = (profile && profile.passportExpiry) || "15 NOV 2028";
+  const passDays = getDaysUntil(passportExp);
+
+  if (passNoEl) passNoEl.innerText = `${passportNo} (${passportExp})`;
+  if (passBufEl) {
+    if (passDays !== null && passDays < 180) {
+      passBufEl.innerText = "Layover Buffer (<6 Mo)";
+      passBufEl.className = "mt-0.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold inline-block bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 w-fit";
     } else {
-      earliestName.innerText = "All Items Valid";
-      earliestSub.innerText = "No immediate renewals required.";
-
-      if (cardContainer) {
-        cardContainer.style.cursor = 'default';
-        cardContainer.classList.remove('cursor-pointer', 'active:scale-[0.99]', 'hover:border-blue-400');
-        cardContainer.onclick = null;
-      }
+      passBufEl.innerText = "6-Mo Layover OK";
+      passBufEl.className = "mt-0.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold inline-block bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 w-fit";
     }
   }
 
-  // Hide open-original-btn in CAAM tab if profile is stored/loaded, or if nil info / no credentials
-  const openOriginalBtn = getDashEl("open-original-btn");
-  if (openOriginalBtn) {
-    const hasStoredCredentials = hasProfileData();
-    const hasValidCaamData = caamResults && caamResults.pilotDetails && caamResults.pilotDetails.licenseNo && caamResults.pilotDetails.licenseNo !== "-";
-    if (hasStoredCredentials || !hasValidCaamData || !lastScannedUrl) {
-      openOriginalBtn.classList.add("hidden");
-    } else {
-      openOriginalBtn.classList.remove("hidden");
-    }
+  if (staffDesigEl) {
+    const staffNo = (profile && profile.staffNo) || "84102";
+    const desig = (profile && profile.designation) || "CAPT";
+    staffDesigEl.innerText = `${desig} • #${staffNo}`;
   }
+
+  // G. Legality Rings Arc Computation & Bottleneck Detection
+  allCandidates.sort((a, b) => a.days - b.days);
+
+  const ringPercentEl = getDashEl("ov-ring-percent");
+  const ringLabelEl = getDashEl("ov-ring-label");
+  const bottleneckTextEl = getDashEl("ov-bottleneck-text");
+  const bottleneckLedEl = getDashEl("ov-bottleneck-led");
+
+  const ringStatutory = getDashEl("ring-statutory");
+  const ringCurrency = getDashEl("ring-currency");
+  const ringDrills = getDashEl("ring-drills");
+
+  let minDays = allCandidates.length > 0 ? allCandidates[0].days : 365;
+
+  if (minDays < 0) {
+    if (ringPercentEl) ringPercentEl.innerText = "EXPIRED";
+    if (ringLabelEl) { ringLabelEl.innerText = "RESTRICTED"; ringLabelEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300"; }
+  } else if (minDays <= 30) {
+    if (ringPercentEl) ringPercentEl.innerText = "92%";
+    if (ringLabelEl) { ringLabelEl.innerText = "ATTENTION"; ringLabelEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300"; }
+  } else {
+    if (ringPercentEl) ringPercentEl.innerText = "100%";
+    if (ringLabelEl) { ringLabelEl.innerText = "OPERATIONAL"; ringLabelEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300"; }
+  }
+
+  if (allCandidates.length > 0 && allCandidates[0].days <= 30) {
+    const b = allCandidates[0];
+    if (bottleneckTextEl) bottleneckTextEl.innerText = `Next Expiry: ${b.name} (${b.days < 0 ? 'Lapsed' : b.days + 'd'})`;
+    if (bottleneckLedEl) {
+      bottleneckLedEl.className = b.days < 0 
+        ? "w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(239,68,68,0.8)] shrink-0"
+        : "w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)] shrink-0 animate-pulse";
+    }
+  } else {
+    if (bottleneckTextEl) bottleneckTextEl.innerText = "All Credentials Active";
+    if (bottleneckLedEl) bottleneckLedEl.className = "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] shrink-0";
+  }
+
+  // Set Ring Stroke Offsets (251.32, 175.93, 100.53)
+  if (ringStatutory) {
+    const isStatOk = (caamDays === null || caamDays > 0) && (medDays === null || medDays > 0);
+    ringStatutory.setAttribute("stroke", isStatOk ? "#10B981" : "#EF4444");
+    ringStatutory.setAttribute("stroke-dashoffset", isStatOk ? "0" : "50");
+  }
+  if (ringCurrency) {
+    const isCurrOk = (typeDays === null || typeDays > 0) && (lcDays === null || lcDays > 0);
+    ringCurrency.setAttribute("stroke", isCurrOk ? (lcDays <= 30 ? "#F59E0B" : "#10B981") : "#EF4444");
+    ringCurrency.setAttribute("stroke-dashoffset", isCurrOk ? "0" : "35");
+  }
+  if (ringDrills) {
+    const isDrillsOk = minDays > 0;
+    ringDrills.setAttribute("stroke", isDrillsOk ? "#10B981" : "#EF4444");
+    ringDrills.setAttribute("stroke-dashoffset", "0");
+  }
+
 
   // 2. CAAM TAB
   if (caamResults && caamResults.pilotDetails) {
