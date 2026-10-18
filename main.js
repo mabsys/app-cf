@@ -1,4 +1,4 @@
-// main.js (1810_R168) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (1810_R169) - CertiFly Application Shell & Bento Dashboard Controller
 
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
 
@@ -1680,7 +1680,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   if (ringCaam) {
     const caamOffset = Math.round(188.50 * (1 - caamScore / 100));
     const isCaamWarning = caamItems.some(d => d <= userThreshold && d >= 0);
-    const caamColor = isCaamLapsed ? "#EF4444" : (isCaamWarning ? "#F59E0B" : "#10B981");
+    const caamColor = isCaamLapsed ? "#EF4444" : (isCaamWarning ? "#F59E0B" : "#3B82F6");
     ringCaam.setAttribute("stroke", caamColor);
     const dotCaam = getDashEl("legend-dot-caam"); if (dotCaam) dotCaam.style.backgroundColor = caamColor;
     ringCaam.setAttribute("stroke-dashoffset", String(caamOffset));
@@ -1690,7 +1690,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   if (ringMab) {
     const mabOffset = Math.round(263.89 * (1 - mabScore / 100));
     const isMabWarning = (lcDays !== null && lcDays <= userThreshold && lcDays >= 0) || (minDrillDays !== null && minDrillDays <= userThreshold && minDrillDays >= 0);
-    const mabColor = isMabLapsed ? "#EF4444" : (isMabWarning ? "#F59E0B" : "#10B981");
+    const mabColor = isMabLapsed ? "#EF4444" : (isMabWarning ? "#F59E0B" : "#8B5CF6");
     ringMab.setAttribute("stroke", mabColor);
     const dotMab = getDashEl("legend-dot-mab"); if (dotMab) dotMab.style.backgroundColor = mabColor;
     ringMab.setAttribute("stroke-dashoffset", String(mabOffset));
