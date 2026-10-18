@@ -1,6 +1,7 @@
-// main.js (1810_R165) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (1810_R166) - CertiFly Application Shell & Bento Dashboard Controller
 
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
+
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -1488,7 +1489,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     }
   }
 
-  // E. Micro-Pills Drills Array
+  // E. Vertical Sparkline Histogram Drills Array
   const drillItems = [
     { key: "door", name: ["DOOR"], label: "Door" },
     { key: "wet", name: ["WET", "DINGHY"], label: "Wet Drill" },
@@ -1504,30 +1505,71 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   let minDrillDays = null;
   let avgDrillDays = null;
   const collectedDrillDays = [];
+  const drillThreshold = (typeof getThresholdDays === 'function') ? getThresholdDays() : 30;
 
-  if (mabResults && Array.isArray(mabResults.drills)) {
-    drillItems.forEach(item => {
-      const matched = mabResults.drills.find(d => {
+  drillItems.forEach(item => {
+    const colEl = getDashEl(`vbar-col-${item.key}`);
+    const vBarEl = getDashEl(`vbar-drill-${item.key}`);
+    const dotEl = getDashEl(`dot-drill-${item.key}`);
+    const legendEl = getDashEl(`legend-drill-${item.key}`);
+
+    let matched = null;
+    if (mabResults && Array.isArray(mabResults.drills)) {
+      matched = mabResults.drills.find(d => {
         const dName = (d.name || d.item || "").toUpperCase();
+        if (item.key === "supervisory") {
+          return /\b(DFE|FI|FLIGHT\s+INSTRUCTOR|EXAMINER|CHECK\s+PILOT|TRI|TRE)\b/i.test(dName);
+        }
         return item.name.some(keyword => dName.includes(keyword));
       });
+    }
 
-      const txtEl = getDashEl(`txt-drill-${item.key}`);
-      const ledEl = getDashEl(`led-drill-${item.key}`);
-      const pillEl = getDashEl(`pill-drill-${item.key}`);
-
-      if (matched) {
-        const dDays = getDaysUntil(matched.nextDue || matched.expiryDate);
-        applyStatusTheme(dDays, null, txtEl, ledEl, pillEl, item.key === "lvo" ? "CAT III" : "VALID");
-        if (dDays !== null) {
-          collectedDrillDays.push(dDays);
-          allCandidates.push({ name: item.label, days: dDays, tab: "mab" });
-        }
-      } else {
-        applyStatusTheme(365, null, txtEl, ledEl, pillEl, item.key === "lvo" ? "CAT III" : "VALID");
+    if (!matched && item.key === "supervisory" && caamResults && Array.isArray(caamResults.qualifications)) {
+      const supCaam = caamResults.qualifications.find(q => q.name && isSupervisoryQual(q.name));
+      if (supCaam) {
+        matched = { name: supCaam.name, expiryDate: supCaam.dateText };
       }
-    });
-  }
+    }
+
+    if (item.key === "supervisory" && !matched) {
+      if (colEl) colEl.style.display = "none";
+      if (legendEl) legendEl.style.display = "none";
+    } else {
+      if (colEl) colEl.style.display = "flex";
+      if (legendEl) legendEl.style.display = "flex";
+
+      let dDays = matched ? getDaysUntil(matched.nextDue || matched.expiryDate) : 365;
+      if (dDays === null && matched) dDays = 365;
+
+      if (dDays !== null) {
+        collectedDrillDays.push(dDays);
+        allCandidates.push({ name: item.label, days: dDays, tab: "mab" });
+
+        const pct = Math.min(100, Math.max(4, Math.round((dDays / 365.25) * 100)));
+
+        if (vBarEl) {
+          vBarEl.style.height = `${pct}%`;
+          if (dDays < 0) {
+            vBarEl.className = "w-full max-w-[14px] bg-rose-500 rounded-t-sm transition-all duration-500";
+          } else if (dDays <= drillThreshold) {
+            vBarEl.className = "w-full max-w-[14px] bg-amber-400 animate-pulse rounded-t-sm transition-all duration-500";
+          } else {
+            vBarEl.className = "w-full max-w-[14px] bg-emerald-500 rounded-t-sm transition-all duration-500";
+          }
+        }
+
+        if (dotEl) {
+          if (dDays < 0) {
+            dotEl.className = "w-2 h-2 rounded-full bg-rose-500 shrink-0";
+          } else if (dDays <= drillThreshold) {
+            dotEl.className = "w-2 h-2 rounded-full bg-amber-400 shrink-0 animate-pulse";
+          } else {
+            dotEl.className = "w-2 h-2 rounded-full bg-emerald-500 shrink-0";
+          }
+        }
+      }
+    }
+  });
 
   if (collectedDrillDays.length > 0) {
     minDrillDays = Math.min(...collectedDrillDays);
@@ -1628,8 +1670,9 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   if (ringCaam) {
     const caamOffset = Math.round(188.50 * (1 - caamScore / 100));
     const isCaamWarning = caamItems.some(d => d <= userThreshold && d >= 0);
-    const caamColor = isCaamLapsed ? "#EF4444" : (isCaamWarning ? "#F59E0B" : "#3B82F6");
+    const caamColor = isCaamLapsed ? "#EF4444" : (isCaamWarning ? "#F59E0B" : "#10B981");
     ringCaam.setAttribute("stroke", caamColor);
+    const dotCaam = getDashEl("legend-dot-caam"); if (dotCaam) dotCaam.style.backgroundColor = caamColor;
     ringCaam.setAttribute("stroke-dashoffset", String(caamOffset));
   }
 
@@ -1639,6 +1682,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     const isMabWarning = (lcDays !== null && lcDays <= userThreshold && lcDays >= 0) || (minDrillDays !== null && minDrillDays <= userThreshold && minDrillDays >= 0);
     const mabColor = isMabLapsed ? "#EF4444" : (isMabWarning ? "#F59E0B" : "#10B981");
     ringMab.setAttribute("stroke", mabColor);
+    const dotMab = getDashEl("legend-dot-mab"); if (dotMab) dotMab.style.backgroundColor = mabColor;
     ringMab.setAttribute("stroke-dashoffset", String(mabOffset));
   }
 
