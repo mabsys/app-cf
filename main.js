@@ -1,4 +1,4 @@
-// main.js (1810_R166) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (1810_R168) - CertiFly Application Shell & Bento Dashboard Controller
 
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
 
@@ -1275,7 +1275,10 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   saveDashboardTemplates();
   const profile = getProfileData();
 
-  if (!caamResults && !mabResults) {
+  const hasValidCaam = caamResults && caamResults.pilotDetails && caamResults.pilotDetails.name && caamResults.pilotDetails.name !== "-";
+  const hasValidMab = mabResults && (mabResults.pilotName || mabResults.lineCheck || (mabResults.drills && mabResults.drills.length > 0));
+
+  if (!hasValidCaam && !hasValidMab) {
     renderBlankDashboard();
     return;
   }
@@ -1491,15 +1494,15 @@ async function renderDashboardResults(caamResults, mabResults = null) {
 
   // E. Vertical Sparkline Histogram Drills Array
   const drillItems = [
-    { key: "door", name: ["DOOR"], label: "Door" },
-    { key: "wet", name: ["WET", "DINGHY"], label: "Wet Drill" },
-    { key: "fire", name: ["FIRE", "SMOKE"], label: "Fire Drill" },
-    { key: "crm", name: ["CRM"], label: "CRM" },
-    { key: "sms", name: ["SMS"], label: "SMS" },
-    { key: "dg", name: ["DG", "DANGEROUS"], label: "DG-7" },
-    { key: "avsec", name: ["AVSEC", "SECURITY"], label: "AVSEC" },
-    { key: "lvo", name: ["LVO", "CAT III", "AUTOLAND"], label: "LVO" },
-    { key: "supervisory", name: ["DFE", "FI", "EXAMINER", "INSTRUCTOR"], label: "DFE / FI" }
+    { key: "door", name: ["DOOR"], label: "Door", defaultBg: "bg-cyan-500" },
+    { key: "wet", name: ["WET", "DINGHY"], label: "Wet Drill", defaultBg: "bg-sky-500" },
+    { key: "fire", name: ["FIRE", "SMOKE"], label: "Fire Drill", defaultBg: "bg-violet-500" },
+    { key: "crm", name: ["CRM"], label: "CRM", defaultBg: "bg-purple-500" },
+    { key: "sms", name: ["SMS"], label: "SMS", defaultBg: "bg-fuchsia-500" },
+    { key: "dg", name: ["DG", "DANGEROUS"], label: "DG-7", defaultBg: "bg-pink-500" },
+    { key: "avsec", name: ["AVSEC", "SECURITY"], label: "AVSEC", defaultBg: "bg-indigo-500" },
+    { key: "lvo", name: ["LVO", "CAT III", "AUTOLAND"], label: "LVO", defaultBg: "bg-teal-500" },
+    { key: "supervisory", name: ["DFE", "FI", "EXAMINER", "INSTRUCTOR"], label: "DFE / FI", defaultBg: "bg-blue-500" }
   ];
 
   let minDrillDays = null;
@@ -1508,17 +1511,17 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   const drillThreshold = (typeof getThresholdDays === 'function') ? getThresholdDays() : 30;
 
   drillItems.forEach(item => {
-    const colEl = getDashEl(`vbar-col-${item.key}`);
-    const vBarEl = getDashEl(`vbar-drill-${item.key}`);
-    const dotEl = getDashEl(`dot-drill-${item.key}`);
-    const legendEl = getDashEl(`legend-drill-${item.key}`);
+    const colEl = getDashEl("vbar-col-" + item.key);
+    const vBarEl = getDashEl("vbar-drill-" + item.key);
+    const dotEl = getDashEl("dot-legend-" + item.key);
+    const legendEl = getDashEl("legend-drill-" + item.key);
 
     let matched = null;
     if (mabResults && Array.isArray(mabResults.drills)) {
       matched = mabResults.drills.find(d => {
         const dName = (d.name || d.item || "").toUpperCase();
         if (item.key === "supervisory") {
-          return /\b(DFE|FI|FLIGHT\s+INSTRUCTOR|EXAMINER|CHECK\s+PILOT|TRI|TRE)\b/i.test(dName);
+          return /(DFE|FI|FLIGHT\s+INSTRUCTOR|EXAMINER|CHECK\s+PILOT|TRI|TRE)/i.test(dName);
         }
         return item.name.some(keyword => dName.includes(keyword));
       });
@@ -1538,8 +1541,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
       if (colEl) colEl.style.display = "flex";
       if (legendEl) legendEl.style.display = "flex";
 
-      let dDays = matched ? getDaysUntil(matched.nextDue || matched.expiryDate) : 365;
-      if (dDays === null && matched) dDays = 365;
+      let dDays = matched ? getDaysUntil(matched.nextDue || matched.expiryDate) : null;
 
       if (dDays !== null) {
         collectedDrillDays.push(dDays);
@@ -1548,13 +1550,13 @@ async function renderDashboardResults(caamResults, mabResults = null) {
         const pct = Math.min(100, Math.max(4, Math.round((dDays / 365.25) * 100)));
 
         if (vBarEl) {
-          vBarEl.style.height = `${pct}%`;
+          vBarEl.style.height = pct + "%";
           if (dDays < 0) {
             vBarEl.className = "w-full max-w-[14px] bg-rose-500 rounded-t-sm transition-all duration-500";
           } else if (dDays <= drillThreshold) {
             vBarEl.className = "w-full max-w-[14px] bg-amber-400 animate-pulse rounded-t-sm transition-all duration-500";
           } else {
-            vBarEl.className = "w-full max-w-[14px] bg-emerald-500 rounded-t-sm transition-all duration-500";
+            vBarEl.className = "w-full max-w-[14px] " + item.defaultBg + " rounded-t-sm transition-all duration-500";
           }
         }
 
@@ -1564,8 +1566,16 @@ async function renderDashboardResults(caamResults, mabResults = null) {
           } else if (dDays <= drillThreshold) {
             dotEl.className = "w-2 h-2 rounded-full bg-amber-400 shrink-0 animate-pulse";
           } else {
-            dotEl.className = "w-2 h-2 rounded-full bg-emerald-500 shrink-0";
+            dotEl.className = "w-2 h-2 rounded-full " + item.defaultBg + " shrink-0";
           }
+        }
+      } else {
+        if (vBarEl) {
+          vBarEl.style.height = "100%";
+          vBarEl.className = "w-full max-w-[14px] " + item.defaultBg + " rounded-t-sm transition-all duration-500";
+        }
+        if (dotEl) {
+          dotEl.className = "w-2 h-2 rounded-full " + item.defaultBg + " shrink-0";
         }
       }
     }
