@@ -1,4 +1,4 @@
-// js/attestationParser.js (0810_R129) - Dedicated MAB E-Attestation PDF Text Parser Engine
+// js/attestationParser.js (1810_R159) - Dedicated MAB E-Attestation PDF Text Parser Engine
 
 export function validateAttestationContent(pdfText) {
   if (!pdfText || typeof pdfText !== 'string' || !pdfText.trim()) {
@@ -68,21 +68,66 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
   const ageInDays = Math.floor(ageInMs / (1000 * 60 * 60 * 24));
   const isStale = ageInDays > freshnessLimitDays;
 
-  // 2. Line Check Qualification
-  const lineCheckMatch = pdfText.match(/LINE\s+CHECK[\s\S]*?1\s+([A-Z0-9]+)\s+([A-Z\/]+)\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+([A-Z0-9]+)/i);
+  // 2. Enhanced Multi-Strategy Line Check Parser
+  let lineCheck = null;
 
-  let lineCheck = {
-    fleet: lineCheckMatch ? lineCheckMatch[1] : "B738",
-    route: lineCheckMatch ? lineCheckMatch[2] : "KUL/BKI/KUL",
-    checkDate: lineCheckMatch ? lineCheckMatch[3] : "13 Oct 2025",
-    expiryDate: lineCheckMatch ? lineCheckMatch[4] : "31 Oct 2026",
-    licenseNo: lineCheckMatch ? lineCheckMatch[5] : "A3115",
-    status: "VALID"
-  };
+  const lcSectionMatch = pdfText.match(/(?:LINE|ROUTE)\s*(?:\/\s*ROUTE)?\s*CHECK[\s\S]*?(?=(?:LVO|AUTOLAND|PRACTICAL|NO\s+TRAINING|CHIEF|BY\s+THE\s+AUTHORITY|$))/i);
+  const lcText = lcSectionMatch ? lcSectionMatch[0] : pdfText;
 
-  const lcExpiry = parsePdfDate(lineCheck.expiryDate);
-  if (lcExpiry && lcExpiry.getTime() < now.getTime()) {
-    lineCheck.status = "EXPIRED";
+  const dateMatches = [...lcText.matchAll(/(\d{1,2}\s+[A-Za-z]{3,10}\s+\d{4})/g)].map(m => m[1]);
+  const fleetMatch = lcText.match(/(B737[\w\-]*|B738|B787|A330[\w\-]*|A350[\w\-]*|DHC6|B412|ATR72)/i);
+  const fleetStr = fleetMatch ? fleetMatch[1].toUpperCase() : "B738";
+  const routeMatch = lcText.match(/([A-Z]{3,4}[\/\-\s]+[A-Z]{3,4}(?:[\/\-\s]+[A-Z]{3,4})?)/);
+  const routeStr = routeMatch ? routeMatch[1].trim() : "KUL/BKI/KUL";
+  const licMatch = lcText.match(/(A\d{3,5}|DFE\s*\d+|\d{5})/i);
+  const licStr = licMatch ? licMatch[1].toUpperCase() : "-";
+
+  if (dateMatches.length >= 2) {
+    lineCheck = {
+      fleet: fleetStr,
+      route: routeStr,
+      checkDate: dateMatches[0],
+      expiryDate: dateMatches[1],
+      licenseNo: licStr,
+      status: "VALID"
+    };
+  } else if (dateMatches.length === 1) {
+    lineCheck = {
+      fleet: fleetStr,
+      route: routeStr,
+      checkDate: dateMatches[0],
+      expiryDate: dateMatches[0],
+      licenseNo: licStr,
+      status: "VALID"
+    };
+  } else {
+    const lineCheckMatch = pdfText.match(/LINE\s+CHECK[\s\S]*?(\d{1,2}\s+[A-Za-z]{3,10}\s+\d{4})[\s\S]*?(\d{1,2}\s+[A-Za-z]{3,10}\s+\d{4})/i);
+    if (lineCheckMatch) {
+      lineCheck = {
+        fleet: fleetStr,
+        route: routeStr,
+        checkDate: lineCheckMatch[1],
+        expiryDate: lineCheckMatch[2],
+        licenseNo: licStr,
+        status: "VALID"
+      };
+    } else {
+      lineCheck = {
+        fleet: fleetStr,
+        route: routeStr,
+        checkDate: "-",
+        expiryDate: null,
+        licenseNo: "-",
+        status: "UNKNOWN"
+      };
+    }
+  }
+
+  if (lineCheck && lineCheck.expiryDate) {
+    const lcExpiry = parsePdfDate(lineCheck.expiryDate);
+    if (lcExpiry && lcExpiry.getTime() < now.getTime()) {
+      lineCheck.status = "EXPIRED";
+    }
   }
 
   // 3. LVO Autoland Recency - Enhanced flexible regex for SIM2TEW and SIM 2TEW formats
