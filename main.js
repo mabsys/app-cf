@@ -1690,7 +1690,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   if (ringMab) {
     const mabOffset = Math.round(263.89 * (1 - mabScore / 100));
     const isMabWarning = (lcDays !== null && lcDays <= userThreshold && lcDays >= 0) || (minDrillDays !== null && minDrillDays <= userThreshold && minDrillDays >= 0);
-    const mabColor = isMabLapsed ? "#EF4444" : (isMabWarning ? "#F59E0B" : "#8B5CF6");
+    const mabColor = isMabLapsed ? "#EF4444" : (isMabWarning ? "#F59E0B" : "#2B7FFF");
     ringMab.setAttribute("stroke", mabColor);
     const dotMab = getDashEl("legend-dot-mab"); if (dotMab) dotMab.style.backgroundColor = mabColor;
     ringMab.setAttribute("stroke-dashoffset", String(mabOffset));
