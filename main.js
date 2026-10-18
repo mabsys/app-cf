@@ -1,7 +1,7 @@
-// main.js (1810_R157) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (1810_R158) - CertiFly Application Shell & Bento Dashboard Controller
 
-// js/main.js (1410_R155) - Main Application Controller & Orchestrator
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
+
 
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -1274,6 +1274,33 @@ async function renderDashboardResults(caamResults, mabResults = null) {
 
   if (heroPilot) heroPilot.innerText = displayName;
   if (heroTime) heroTime.innerText = (caamResults && caamResults.scanTime) ? `${caamResults.scanTime} LT` : "18 Oct 2026 LT";
+
+
+  function parseAnyDate(dateStr) {
+    if (!dateStr || typeof dateStr !== 'string') return null;
+    const trimmed = dateStr.trim();
+    if (['NO EXPIRY', 'NIL', 'NA', 'N/A', '-'].includes(trimmed.toUpperCase())) {
+      return null;
+    }
+    const timestamp = Date.parse(trimmed);
+    if (!isNaN(timestamp)) {
+      return new Date(timestamp);
+    }
+    const match = trimmed.match(/^(\d{1,2})\s+([a-zA-Z]{3,10})\s+(\d{4})$/);
+    if (match) {
+      const day = parseInt(match[1], 10);
+      const monthStr = match[2].toUpperCase();
+      const year = parseInt(match[3], 10);
+      const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+      const monthsMalay = ['JAN', 'FEB', 'MAC', 'APR', 'MEI', 'JUN', 'JUL', 'OGOS', 'SEP', 'OKT', 'NOV', 'DIS'];
+      let mIdx = months.indexOf(monthStr);
+      if (mIdx === -1) mIdx = monthsMalay.indexOf(monthStr);
+      if (mIdx !== -1) {
+        return new Date(year, mIdx, day);
+      }
+    }
+    return null;
+  }
 
   // Date difference helper function
   function getDaysUntil(dateStr) {
