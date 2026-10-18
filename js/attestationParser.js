@@ -1,4 +1,4 @@
-// js/attestationParser.js (1810_R159) - Dedicated MAB E-Attestation PDF Text Parser Engine
+// js/attestationParser.js (1810_R160) - Dedicated MAB E-Attestation PDF Text Parser Engine
 
 export function validateAttestationContent(pdfText) {
   if (!pdfText || typeof pdfText !== 'string' || !pdfText.trim()) {
@@ -16,14 +16,14 @@ export function validateAttestationContent(pdfText) {
   }
 
   const hasStaff = /Staff\s*No/i.test(cleanText) || /Staff/i.test(cleanText);
-  const hasDesignation = /Designation/i.test(cleanText) || /Flight\s*Crew/i.test(cleanText) || /Captain/i.test(cleanText);
-  const hasName = /Name/i.test(cleanText);
+  const hasDesignation = /Designation\s*:?/i.test(cleanText) || /Flight\s*Crew/i.test(cleanText) || /Captain/i.test(cleanText);
+  const hasName = /Name\s*:?/i.test(cleanText);
 
   if (!hasStaff && !hasDesignation && !hasName) {
     return { isValid: false, reason: "Missing crew identity fields (Name / Staff No) in PDF." };
   }
 
-  const hasOpsData = /(LINE\s+CHECK|AIRCRAFT\s+TYPE|PRACTICAL\s+DRILL|DOOR\s+DRILL|WET\s+DRILL|FIRE\s+DRILL|CRM|SMS|AVSEC|LVO)/i.test(cleanText);
+  const hasOpsData = /(LINE\s+CHECK|ROUTE\s+CHECK|AIRCRAFT\s+TYPE|PRACTICAL\s+DRILL|DOOR\s+DRILL|WET\s+DRILL|FIRE\s+DRILL|CRM|SMS|AVSEC|LVO)/i.test(cleanText);
   if (!hasOpsData) {
     return { isValid: false, reason: "PDF lacks mandatory flight qualification tables (Line Check / Drills)." };
   }
@@ -68,46 +68,56 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
   const ageInDays = Math.floor(ageInMs / (1000 * 60 * 60 * 24));
   const isStale = ageInDays > freshnessLimitDays;
 
-  // 2. Enhanced Multi-Strategy Line Check Parser
+  // 2. Line Check Qualification Parser
+  // Supports multiple formats:
+  // - B7M8 KUL-SGN-KUL 14 Oct 2026 31 Oct 2027 12450 (attestation_oct.pdf)
+  // - B738 KUL/BKI/KUL 13 Oct 2025 31 Oct 2026 A3115 (attestation_cert.wp.pdf)
+  // - B738 KUL/CGK/KUL 25 Dec 2025 31 Dec 2026 11832 (attestation_farhan.pdf)
   let lineCheck = null;
 
-  const lcSectionMatch = pdfText.match(/(?:LINE|ROUTE)\s*(?:\/\s*ROUTE)?\s*CHECK[\s\S]*?(?=(?:LVO|AUTOLAND|PRACTICAL|NO\s+TRAINING|CHIEF|BY\s+THE\s+AUTHORITY|$))/i);
-  const lcText = lcSectionMatch ? lcSectionMatch[0] : pdfText;
+  // Primary Strategy: Structured MAB Table Row Match
+  // Matches: [Row No] [FLEET] [ROUTE] [DATE OF CHECK] [EXPIRY DATE] [LICENSE NO]
+  const tableRowMatch = pdfText.match(
+    /LINE\s+CHECK[\s\S]*?(?:\b\d+\b)\s+([A-Z0-9\-]+)\s+([A-Z0-9\/\-]+)\s+(\d{1,2}\s+[A-Za-z]{3,10}\s+\d{4})\s+(\d{1,2}\s+[A-Za-z]{3,10}\s+\d{4})\s+([A-Z0-9]+)/i
+  );
 
-  const dateMatches = [...lcText.matchAll(/(\d{1,2}\s+[A-Za-z]{3,10}\s+\d{4})/g)].map(m => m[1]);
-  const fleetMatch = lcText.match(/(B737[\w\-]*|B738|B787|A330[\w\-]*|A350[\w\-]*|DHC6|B412|ATR72)/i);
-  const fleetStr = fleetMatch ? fleetMatch[1].toUpperCase() : "B738";
-  const routeMatch = lcText.match(/([A-Z]{3,4}[\/\-\s]+[A-Z]{3,4}(?:[\/\-\s]+[A-Z]{3,4})?)/);
-  const routeStr = routeMatch ? routeMatch[1].trim() : "KUL/BKI/KUL";
-  const licMatch = lcText.match(/(A\d{3,5}|DFE\s*\d+|\d{5})/i);
-  const licStr = licMatch ? licMatch[1].toUpperCase() : "-";
-
-  if (dateMatches.length >= 2) {
+  if (tableRowMatch) {
     lineCheck = {
-      fleet: fleetStr,
-      route: routeStr,
-      checkDate: dateMatches[0],
-      expiryDate: dateMatches[1],
-      licenseNo: licStr,
-      status: "VALID"
-    };
-  } else if (dateMatches.length === 1) {
-    lineCheck = {
-      fleet: fleetStr,
-      route: routeStr,
-      checkDate: dateMatches[0],
-      expiryDate: dateMatches[0],
-      licenseNo: licStr,
+      fleet: tableRowMatch[1].trim().toUpperCase(),
+      route: tableRowMatch[2].trim().toUpperCase(),
+      checkDate: tableRowMatch[3].trim(),
+      expiryDate: tableRowMatch[4].trim(),
+      licenseNo: tableRowMatch[5].trim().toUpperCase(),
       status: "VALID"
     };
   } else {
-    const lineCheckMatch = pdfText.match(/LINE\s+CHECK[\s\S]*?(\d{1,2}\s+[A-Za-z]{3,10}\s+\d{4})[\s\S]*?(\d{1,2}\s+[A-Za-z]{3,10}\s+\d{4})/i);
-    if (lineCheckMatch) {
+    // Strategy 2: Flexible Section Fallback
+    const lcSectionMatch = pdfText.match(/(?:LINE|ROUTE)\s*(?:\/\s*ROUTE)?\s*CHECK[\s\S]*?(?=(?:LVO|AUTOLAND|PRACTICAL|NO\s+TRAINING|CHIEF|BY\s+THE\s+AUTHORITY|$))/i);
+    const lcText = lcSectionMatch ? lcSectionMatch[0] : pdfText;
+
+    const dateMatches = [...lcText.matchAll(/(\d{1,2}\s+[A-Za-z]{3,10}\s+\d{4})/g)].map(m => m[1]);
+    const fleetMatch = lcText.match(/\b(B7M8|B738|B737[\w\-]*|B787[\w\-]*|A330[\w\-]*|A350[\w\-]*|DHC6|B412|ATR72)\b/i);
+    const fleetStr = fleetMatch ? fleetMatch[1].toUpperCase() : "B738";
+    const routeMatch = lcText.match(/\b([A-Z]{3,4}[\/\-\s]+[A-Z]{3,4}(?:[\/\-\s]+[A-Z]{3,4})?)\b/);
+    const routeStr = routeMatch ? routeMatch[1].trim().toUpperCase() : "KUL/BKI/KUL";
+    const licMatch = lcText.match(/\b(A\d{3,5}|DFE\s*\d+|\d{4,6})\b/i);
+    const licStr = licMatch ? licMatch[1].toUpperCase() : "-";
+
+    if (dateMatches.length >= 2) {
       lineCheck = {
         fleet: fleetStr,
         route: routeStr,
-        checkDate: lineCheckMatch[1],
-        expiryDate: lineCheckMatch[2],
+        checkDate: dateMatches[0],
+        expiryDate: dateMatches[1],
+        licenseNo: licStr,
+        status: "VALID"
+      };
+    } else if (dateMatches.length === 1) {
+      lineCheck = {
+        fleet: fleetStr,
+        route: routeStr,
+        checkDate: dateMatches[0],
+        expiryDate: dateMatches[0],
         licenseNo: licStr,
         status: "VALID"
       };
@@ -214,7 +224,7 @@ export function parseAttestationText(pdfText, freshnessLimitDays = 30, warningTh
 
     knownTitles.forEach((title, idx) => {
       const escaped = title.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-      const pat = new RegExp(`${escaped}\\s+(\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4}|NIL)\\s+(\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4}|NIL)`, 'i');
+      const pat = new RegExp(`${escaped}\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4}|NIL)\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4}|NIL)`, 'i');
       const m = pdfText.match(pat);
 
       if (m) {
