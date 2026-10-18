@@ -1,4 +1,4 @@
-<!-- index.html (1810_R156) - CertiFly PWA Application Shell & Core Layout -->
+<!-- index.html (1810_R162) - CertiFly PWA Application Shell & Core Layout -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -110,20 +110,15 @@ if ('serviceWorker' in navigator) {
                         <!-- Left: 3 Concentric SVG Rings -->
                         <div class="relative w-24 h-24 shrink-0 flex items-center justify-center">
                             <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
-                                <!-- Ring 1 Track (Outer - Statutory) -->
-                                <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
-                                <!-- Ring 1 Progress (Outer) -->
-                                <circle id="ring-statutory" cx="50" cy="50" r="40" fill="none" stroke="#10B981" stroke-width="7" stroke-dasharray="251.32" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
+                                <!-- Outer Ring Track (MAB Attestation - Company Currency) r=42 -->
+                                <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
+                                <!-- Outer Ring Progress (MAB) -->
+                                <circle id="ring-mab" cx="50" cy="50" r="42" fill="none" stroke="#10B981" stroke-width="7" stroke-dasharray="263.89" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
 
-                                <!-- Ring 2 Track (Middle - Currency) -->
-                                <circle cx="50" cy="50" r="28" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
-                                <!-- Ring 2 Progress (Middle) -->
-                                <circle id="ring-currency" cx="50" cy="50" r="28" fill="none" stroke="#F59E0B" stroke-width="7" stroke-dasharray="175.93" stroke-dashoffset="25" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
-
-                                <!-- Ring 3 Track (Inner - Safety Drills) -->
-                                <circle cx="50" cy="50" r="16" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
-                                <!-- Ring 3 Progress (Inner) -->
-                                <circle id="ring-drills" cx="50" cy="50" r="16" fill="none" stroke="#10B981" stroke-width="7" stroke-dasharray="100.53" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
+                                <!-- Inner Ring Track (CAAM Licence - Statutory Authority) r=30 -->
+                                <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
+                                <!-- Inner Ring Progress (CAAM) -->
+                                <circle id="ring-caam" cx="50" cy="50" r="30" fill="none" stroke="#10B981" stroke-width="7" stroke-dasharray="188.50" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
                             </svg>
                             <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
                                 <span id="ov-ring-percent" class="text-xs font-black text-slate-900 dark:text-slate-100 tracking-tight">100%</span>
@@ -154,10 +149,14 @@ if ('serviceWorker' in navigator) {
                     <div class="grid grid-cols-2 gap-2.5">
 
                         <!-- TILE 1: CAAM LICENCE -->
-                        <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-2">
+                        <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
                             <div class="flex items-center justify-between">
                                 <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">CAAM Licence</span>
                                 <span id="ov-caam-badge" class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">Valid</span>
+                            </div>
+                            <!-- Horizontal Sparkline Progress Bar -->
+                            <div class="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
+                                <div id="ov-caam-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
                             </div>
                             <div>
                                 <div id="ov-caam-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 truncate">--</div>
@@ -166,10 +165,14 @@ if ('serviceWorker' in navigator) {
                         </div>
 
                         <!-- TILE 2: CLASS 1 MEDICAL -->
-                        <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-2">
+                        <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
                             <div class="flex items-center justify-between">
                                 <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Class 1 Medical</span>
                                 <span id="ov-medical-badge" class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">Valid</span>
+                            </div>
+                            <!-- Horizontal Sparkline Progress Bar -->
+                            <div class="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
+                                <div id="ov-medical-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
                             </div>
                             <div>
                                 <div id="ov-medical-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 truncate">--</div>
@@ -178,10 +181,14 @@ if ('serviceWorker' in navigator) {
                         </div>
 
                         <!-- TILE 3: B737 TYPE RATING & IR -->
-                        <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-2">
+                        <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
                             <div class="flex items-center justify-between">
                                 <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">B737 LPC / IR</span>
                                 <span id="ov-type-badge" class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">Valid</span>
+                            </div>
+                            <!-- Horizontal Sparkline Progress Bar -->
+                            <div class="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
+                                <div id="ov-type-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
                             </div>
                             <div>
                                 <div id="ov-type-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 truncate">--</div>
@@ -190,10 +197,14 @@ if ('serviceWorker' in navigator) {
                         </div>
 
                         <!-- TILE 4: MAB LINE CHECK -->
-                        <div onclick="switchResultTab('mab')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-2">
+                        <div onclick="switchResultTab('mab')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
                             <div class="flex items-center justify-between">
                                 <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">MAB Line Check</span>
                                 <span id="ov-linecheck-badge" class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">Valid</span>
+                            </div>
+                            <!-- Horizontal Sparkline Progress Bar -->
+                            <div class="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
+                                <div id="ov-linecheck-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
                             </div>
                             <div>
                                 <div id="ov-linecheck-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 truncate">--</div>
@@ -303,7 +314,7 @@ if ('serviceWorker' in navigator) {
                         <div class="bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between gap-1.5">
                             <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">Passport Clearance</span>
                             <div id="ov-passport-no" class="text-xs font-black text-slate-800 dark:text-slate-100 truncate">--</div>
-                            <div id="ov-passport-buffer" class="mt-0.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold inline-block bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 w-fit">✓ 6-Mo Layover OK</div>
+                            <div id="ov-passport-buffer" class="mt-0.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold inline-block bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 w-fit">6-Mo Layover OK</div>
                         </div>
 
                         <!-- PROFILE & STATIC ENDORSEMENTS TILE -->
