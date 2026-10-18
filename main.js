@@ -1,4 +1,4 @@
-// main.js (1810_R161) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (1810_R162) - CertiFly Application Shell & Bento Dashboard Controller
 
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
 
@@ -1327,12 +1327,15 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     return Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   }
 
-  // Helper to format badge & pill status
-  function applyStatusTheme(days, badgeEl, textEl, ledEl, pillEl, validLabel = "Valid") {
+  // Helper to format badge, pill status & sparkline progress bar
+  function applyStatusTheme(days, badgeEl, textEl, ledEl, pillEl, validLabel = "Valid", barEl = null) {
+    const threshold = (typeof getThresholdDays === 'function') ? getThresholdDays() : 30;
+
     if (days === null || days === undefined) {
       if (badgeEl) { badgeEl.innerText = "N/A"; badgeEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"; }
       if (textEl) textEl.innerText = "N/A";
       if (ledEl) ledEl.className = "w-2 h-2 rounded-full bg-slate-400 shrink-0";
+      if (barEl) { barEl.style.width = "0%"; barEl.className = "h-full bg-slate-400 rounded-full transition-all duration-500"; }
       return "UNKNOWN";
     }
 
@@ -1341,18 +1344,32 @@ async function renderDashboardResults(caamResults, mabResults = null) {
       if (textEl) textEl.innerText = "LAPSED";
       if (ledEl) ledEl.className = "w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(239,68,68,0.8)] shrink-0";
       if (pillEl) pillEl.className = "flex items-center gap-2 p-2 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800/60 transition-all";
+      if (barEl) {
+        barEl.style.width = "5%";
+        barEl.className = "h-full bg-rose-500 rounded-full transition-all duration-500";
+      }
       return "EXPIRED";
-    } else if (days <= 30) {
+    } else if (days <= threshold) {
       if (badgeEl) { badgeEl.innerText = `${days}d Left`; badgeEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300"; }
       if (textEl) textEl.innerText = `${days}d LEFT`;
       if (ledEl) ledEl.className = "w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)] shrink-0 animate-pulse";
       if (pillEl) pillEl.className = "flex items-center gap-2 p-2 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/60 transition-all";
+      if (barEl) {
+        const pct = Math.min(100, Math.max(5, Math.round((days / 365.25) * 100)));
+        barEl.style.width = `${pct}%`;
+        barEl.className = "h-full bg-amber-400 animate-pulse rounded-full transition-all duration-500";
+      }
       return "WARNING";
     } else {
       if (badgeEl) { badgeEl.innerText = validLabel; badgeEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300"; }
       if (textEl) textEl.innerText = validLabel.toUpperCase();
       if (ledEl) ledEl.className = "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] shrink-0";
       if (pillEl) pillEl.className = "flex items-center gap-2 p-2 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800/80 transition-all";
+      if (barEl) {
+        const pct = Math.min(100, Math.max(5, Math.round((days / 365.25) * 100)));
+        barEl.style.width = `${pct}%`;
+        barEl.className = "h-full bg-emerald-500 rounded-full transition-all duration-500";
+      }
       return "VALID";
     }
   }
@@ -1370,10 +1387,11 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     const caamExpEl = getDashEl("ov-caam-expiry");
     const caamDaysEl = getDashEl("ov-caam-days");
     const caamBadgeEl = getDashEl("ov-caam-badge");
+    const caamBarEl = getDashEl("ov-caam-bar");
 
     if (caamExpEl) caamExpEl.innerText = caamExpDate || "N/A";
     if (caamDaysEl) caamDaysEl.innerText = caamDays !== null ? (caamDays < 0 ? "Lapsed" : `${caamDays} Days Remaining`) : "N/A";
-    applyStatusTheme(caamDays, caamBadgeEl, null, null, null, "Valid");
+    applyStatusTheme(caamDays, caamBadgeEl, null, null, null, "Valid", caamBarEl);
 
     if (caamDays !== null) {
       allCandidates.push({ name: "CAAM Digital Licence", days: caamDays, tab: "caam" });
@@ -1394,10 +1412,11 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     const medExpEl = getDashEl("ov-medical-expiry");
     const medDaysEl = getDashEl("ov-medical-days");
     const medBadgeEl = getDashEl("ov-medical-badge");
+    const medBarEl = getDashEl("ov-medical-bar");
 
     if (medExpEl) medExpEl.innerText = medExpDate || "N/A";
     if (medDaysEl) medDaysEl.innerText = medDays !== null ? (medDays < 0 ? "Lapsed" : `${medDays} Days Remaining`) : "N/A";
-    applyStatusTheme(medDays, medBadgeEl, null, null, null, "Valid");
+    applyStatusTheme(medDays, medBadgeEl, null, null, null, "Valid", medBarEl);
 
     if (medDays !== null) {
       allCandidates.push({ name: "Class 1 Medical", days: medDays, tab: "caam" });
@@ -1418,10 +1437,11 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     const typeExpEl = getDashEl("ov-type-expiry");
     const typeDaysEl = getDashEl("ov-type-days");
     const typeBadgeEl = getDashEl("ov-type-badge");
+    const typeBarEl = getDashEl("ov-type-bar");
 
     if (typeExpEl) typeExpEl.innerText = typeExpDate || "N/A";
     if (typeDaysEl) typeDaysEl.innerText = typeDays !== null ? (typeDays < 0 ? "Lapsed" : `${typeDays} Days Remaining`) : "N/A";
-    applyStatusTheme(typeDays, typeBadgeEl, null, null, null, "Valid");
+    applyStatusTheme(typeDays, typeBadgeEl, null, null, null, "Valid", typeBarEl);
 
     if (typeDays !== null) {
       allCandidates.push({ name: "B737 Type Rating & IR", days: typeDays, tab: "caam" });
@@ -1438,10 +1458,11 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     const lcExpEl = getDashEl("ov-linecheck-expiry");
     const lcRouteEl = getDashEl("ov-linecheck-route");
     const lcBadgeEl = getDashEl("ov-linecheck-badge");
+    const lcBarEl = getDashEl("ov-linecheck-bar");
 
     if (lcExpEl) lcExpEl.innerText = lcExpDate || "N/A";
     if (lcRouteEl) lcRouteEl.innerText = lcDays !== null ? (lcDays < 0 ? "Lapsed" : `${lcDays} Days Remaining`) : "N/A";
-    applyStatusTheme(lcDays, lcBadgeEl, null, null, null, "Valid");
+    applyStatusTheme(lcDays, lcBadgeEl, null, null, null, "Valid", lcBarEl);
 
     if (lcDays !== null) {
       allCandidates.push({ name: `MAB Line Check`, days: lcDays, tab: "mab" });
@@ -1518,24 +1539,50 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   const bottleneckTextEl = getDashEl("ov-bottleneck-text");
   const bottleneckLedEl = getDashEl("ov-bottleneck-led");
 
-  const ringStatutory = getDashEl("ring-statutory");
-  const ringCurrency = getDashEl("ring-currency");
-  const ringDrills = getDashEl("ring-drills");
+  const ringCaam = getDashEl("ring-caam");
+  const ringMab = getDashEl("ring-mab");
+
+  const userThreshold = (typeof getThresholdDays === 'function') ? getThresholdDays() : 30;
+
+  // 1. Calculate CAAM Score (Inner Ring - r=30, C=188.50)
+  const caamItems = [caamDays, medDays, typeDays].filter(d => d !== null && d !== undefined);
+  let caamScore = 100;
+  let isCaamLapsed = caamItems.some(d => d < 0);
+  
+  if (isCaamLapsed) {
+    caamScore = 0;
+  } else if (caamItems.length > 0) {
+    const sumRatios = caamItems.reduce((acc, d) => acc + Math.min(1.0, Math.max(0.0, d / 365.25)), 0);
+    caamScore = Math.round((sumRatios / caamItems.length) * 100);
+  }
+
+  // 2. Calculate MAB Score (Outer Ring - r=42, C=263.89)
+  let isMabLapsed = (lcDays !== null && lcDays < 0) || (minDrillDays !== null && minDrillDays < 0);
+  let mabScore = 100;
+
+  if (isMabLapsed) {
+    mabScore = 0;
+  } else {
+    const lcRatio = lcDays !== null ? Math.min(1.0, Math.max(0.0, lcDays / 365.25)) : 1.0;
+    const drillRatio = (avgDrillDays !== null && avgDrillDays !== undefined) ? Math.min(1.0, Math.max(0.0, avgDrillDays / 365.25)) : 1.0;
+    mabScore = Math.round((0.4 * lcRatio + 0.6 * drillRatio) * 100);
+  }
 
   let minDays = allCandidates.length > 0 ? allCandidates[0].days : 365;
+  let overallPercent = Math.round((caamScore + mabScore) / 2);
 
-  if (minDays < 0) {
-    if (ringPercentEl) ringPercentEl.innerText = "EXPIRED";
+  if (minDays < 0 || isCaamLapsed || isMabLapsed) {
+    if (ringPercentEl) ringPercentEl.innerText = "RESTRICTED";
     if (ringLabelEl) { ringLabelEl.innerText = "RESTRICTED"; ringLabelEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300"; }
-  } else if (minDays <= 30) {
-    if (ringPercentEl) ringPercentEl.innerText = "92%";
+  } else if (minDays <= userThreshold) {
+    if (ringPercentEl) ringPercentEl.innerText = `${overallPercent}%`;
     if (ringLabelEl) { ringLabelEl.innerText = "ATTENTION"; ringLabelEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300"; }
   } else {
-    if (ringPercentEl) ringPercentEl.innerText = "100%";
+    if (ringPercentEl) ringPercentEl.innerText = `${overallPercent}%`;
     if (ringLabelEl) { ringLabelEl.innerText = "OPERATIONAL"; ringLabelEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300"; }
   }
 
-  if (allCandidates.length > 0 && allCandidates[0].days <= 30) {
+  if (allCandidates.length > 0 && allCandidates[0].days <= userThreshold) {
     const b = allCandidates[0];
     if (bottleneckTextEl) bottleneckTextEl.innerText = `Next Expiry: ${b.name} (${b.days < 0 ? 'Lapsed' : b.days + 'd'})`;
     if (bottleneckLedEl) {
@@ -1548,21 +1595,22 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     if (bottleneckLedEl) bottleneckLedEl.className = "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] shrink-0";
   }
 
-  // Set Ring Stroke Offsets (251.32, 175.93, 100.53)
-  if (ringStatutory) {
-    const isStatOk = (caamDays === null || caamDays > 0) && (medDays === null || medDays > 0);
-    ringStatutory.setAttribute("stroke", isStatOk ? "#10B981" : "#EF4444");
-    ringStatutory.setAttribute("stroke-dashoffset", isStatOk ? "0" : "50");
+  // Inner Ring (CAAM): C = 188.50
+  if (ringCaam) {
+    const caamOffset = Math.round(188.50 * (1 - caamScore / 100));
+    const isCaamWarning = caamItems.some(d => d <= userThreshold && d >= 0);
+    const caamColor = isCaamLapsed ? "#EF4444" : (isCaamWarning ? "#F59E0B" : "#10B981");
+    ringCaam.setAttribute("stroke", caamColor);
+    ringCaam.setAttribute("stroke-dashoffset", String(caamOffset));
   }
-  if (ringCurrency) {
-    const isCurrOk = (typeDays === null || typeDays > 0) && (lcDays === null || lcDays > 0);
-    ringCurrency.setAttribute("stroke", isCurrOk ? (lcDays <= 30 ? "#F59E0B" : "#10B981") : "#EF4444");
-    ringCurrency.setAttribute("stroke-dashoffset", isCurrOk ? "0" : "35");
-  }
-  if (ringDrills) {
-    const isDrillsOk = minDays > 0;
-    ringDrills.setAttribute("stroke", isDrillsOk ? "#10B981" : "#EF4444");
-    ringDrills.setAttribute("stroke-dashoffset", "0");
+
+  // Outer Ring (MAB): C = 263.89
+  if (ringMab) {
+    const mabOffset = Math.round(263.89 * (1 - mabScore / 100));
+    const isMabWarning = (lcDays !== null && lcDays <= userThreshold && lcDays >= 0) || (minDrillDays !== null && minDrillDays <= userThreshold && minDrillDays >= 0);
+    const mabColor = isMabLapsed ? "#EF4444" : (isMabWarning ? "#F59E0B" : "#10B981");
+    ringMab.setAttribute("stroke", mabColor);
+    ringMab.setAttribute("stroke-dashoffset", String(mabOffset));
   }
 
 
