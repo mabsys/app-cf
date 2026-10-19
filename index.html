@@ -1,4 +1,4 @@
-<!-- index.html (1810_R169) - CertiFly PWA Application Shell & Core Layout -->
+<!-- index.html (1810_R170) - CertiFly PWA Application Shell & Core Layout -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -105,48 +105,56 @@ if ('serviceWorker' in navigator) {
                 <div id="tab-overview-content" class="res-tab-content flex flex-col gap-3.5">
 
                     <!-- 1. HERO LEGALITY RINGS CARD (STYLE 3 CONCENTRIC RINGS & READINESS DIAL) -->
-                    <div id="overview-hero-card" class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-6 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                    <div id="overview-hero-card" class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-200 dark:border-slate-800 flex flex-col gap-3">
 
-                        <!-- Left: Concentric SVG Rings & Legend -->
-                        <div class="flex flex-col items-center shrink-0 gap-2">
-                            <div class="relative w-24 h-24 flex items-center justify-center">
-                                <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
-                                    <!-- Outer Ring Track (MAB Attestation - Company Currency) r=42 -->
-                                    <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
-                                    <!-- Outer Ring Progress (MAB) -->
-                                    <circle id="ring-mab" cx="50" cy="50" r="42" fill="none" stroke="#74D4FF" stroke-width="7" stroke-dasharray="263.89" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
-
-                                    <!-- Inner Ring Track (CAAM Licence - Statutory Authority) r=30 -->
-                                    <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
-                                    <!-- Inner Ring Progress (CAAM) -->
-                                    <circle id="ring-caam" cx="50" cy="50" r="30" fill="none" stroke="#3B82F6" stroke-width="7" stroke-dasharray="188.50" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
-                                </svg>
-                                <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-                                    <span id="ov-ring-percent" class="text-xs font-black text-slate-900 dark:text-slate-100 tracking-tight">100%</span>
-                                </div>
-                            </div>
-                            <!-- Ring Legend -->
-                            <div class="flex items-center gap-2.5 text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                                <span class="flex items-center gap-1"><span id="legend-dot-caam" class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>CAAM</span>
-                                <span class="flex items-center gap-1"><span id="legend-dot-mab" class="w-1.5 h-1.5 rounded-full bg-sky-300"></span>MAB</span>
-                            </div>
+                        <!-- Top: Live Generic Time-Based Greeting -->
+                        <div class="text-center border-b border-slate-100 dark:border-slate-800/80 pb-2">
+                            <span id="overview-greeting" class="text-base font-black text-slate-900 dark:text-white">Good Morning</span>
                         </div>
 
-                        <!-- Right: Readiness Summary Block -->
-                        <div class="flex-1 flex flex-col justify-center min-w-0">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Crew Status:</span>
-                                <span id="ov-ring-label" class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">OPERATIONAL</span>
+                        <!-- Content Row: SVG Rings + Readiness Summary -->
+                        <div class="flex items-center justify-between gap-4">
+                            <!-- Left: Concentric SVG Rings & Legend -->
+                            <div class="flex flex-col items-center shrink-0 gap-2">
+                                <div class="relative w-24 h-24 flex items-center justify-center">
+                                    <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
+                                        <!-- Outer Ring Track (MAB Attestation) r=42 -->
+                                        <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
+                                        <!-- Outer Ring Progress (MAB - blue-700 #1D4ED8) -->
+                                        <circle id="ring-mab" cx="50" cy="50" r="42" fill="none" stroke="#1D4ED8" stroke-width="7" stroke-dasharray="263.89" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
+
+                                        <!-- Inner Ring Track (CAAM Licence) r=30 -->
+                                        <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
+                                        <!-- Inner Ring Progress (CAAM - Royal Blue #3B82F6) -->
+                                        <circle id="ring-caam" cx="50" cy="50" r="30" fill="none" stroke="#3B82F6" stroke-width="7" stroke-dasharray="188.50" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
+                                    </svg>
+                                    <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                                        <span id="ov-ring-percent" class="text-xs font-black text-slate-900 dark:text-slate-100 tracking-tight block leading-none">100+</span>
+                                        <span id="ov-ring-unit" class="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mt-0.5">DAYS</span>
+                                    </div>
+                                </div>
+                                <!-- Ring Legend -->
+                                <div class="flex items-center gap-2.5 text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                    <span class="flex items-center gap-1"><span id="legend-dot-caam" class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>CAAM</span>
+                                    <span class="flex items-center gap-1"><span id="legend-dot-mab" class="w-1.5 h-1.5 rounded-full bg-blue-700"></span>MAB</span>
+                                </div>
                             </div>
 
-                            <div id="ov-ring-bottleneck" class="mt-2 text-[10px] font-bold p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 truncate">
-                                <span id="ov-bottleneck-led" class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] shrink-0"></span>
-                                <span id="ov-bottleneck-text" class="truncate">All Items Valid</span>
-                            </div>
+                            <!-- Right: Readiness Summary Block -->
+                            <div class="flex-1 flex flex-col justify-center min-w-0">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Crew Status:</span>
+                                    <span id="ov-ring-label" class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">OPERATIONAL</span>
+                                </div>
 
-                            <div class="mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-800/80 flex flex-col gap-0.5 text-[9px] text-slate-400">
-                                <span class="leading-snug break-words">Crew: <strong id="overview-pilot-name" class="text-slate-800 dark:text-slate-200 font-extrabold">--</strong></span>
-                                <span class="leading-snug">Last Synced: <strong id="overview-scan-timestamp" class="text-slate-800 dark:text-slate-200 font-extrabold">--:--</strong></span>
+                                <div id="ov-ring-bottleneck" class="mt-2 text-[10px] font-bold p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 leading-snug break-words">
+                                    <span id="ov-bottleneck-led" class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] shrink-0 mt-0.5"></span>
+                                    <span id="ov-bottleneck-text" class="break-words">All Items Valid</span>
+                                </div>
+
+                                <div class="mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[9px] text-slate-400">
+                                    <span class="leading-snug">Last Synced: <strong id="overview-scan-timestamp" class="text-slate-800 dark:text-slate-200 font-extrabold">--:--</strong></span>
+                                </div>
                             </div>
                         </div>
 
@@ -158,14 +166,14 @@ if ('serviceWorker' in navigator) {
                         <!-- TILE 1: CAAM LICENCE -->
                         <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
                             <div class="flex items-center justify-between">
-                                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">CAAM Licence</span>
+                                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">LICENCE VALIDITY</span>
                             </div>
                             <!-- Horizontal Sparkline Progress Bar -->
                             <div class="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
                                 <div id="ov-caam-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
                             </div>
                             <div>
-                                <div id="ov-caam-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 truncate">--</div>
+                                <div id="ov-caam-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 uppercase truncate">--</div>
                                 <div id="ov-caam-days" class="text-[9px] font-bold text-slate-400 mt-0.5">--</div>
                             </div>
                         </div>
@@ -180,7 +188,7 @@ if ('serviceWorker' in navigator) {
                                 <div id="ov-medical-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
                             </div>
                             <div>
-                                <div id="ov-medical-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 truncate">--</div>
+                                <div id="ov-medical-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 uppercase truncate">--</div>
                                 <div id="ov-medical-days" class="text-[9px] font-bold text-slate-400 mt-0.5">--</div>
                             </div>
                         </div>
@@ -188,14 +196,14 @@ if ('serviceWorker' in navigator) {
                         <!-- TILE 3: B737 TYPE RATING & IR -->
                         <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
                             <div class="flex items-center justify-between">
-                                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">B737 LPC / IR</span>
+                                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">LPC / IR VALIDITY</span>
                             </div>
                             <!-- Horizontal Sparkline Progress Bar -->
                             <div class="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
                                 <div id="ov-type-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
                             </div>
                             <div>
-                                <div id="ov-type-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 truncate">--</div>
+                                <div id="ov-type-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 uppercase truncate">--</div>
                                 <div id="ov-type-days" class="text-[9px] font-bold text-slate-400 mt-0.5">--</div>
                             </div>
                         </div>
@@ -210,7 +218,7 @@ if ('serviceWorker' in navigator) {
                                 <div id="ov-linecheck-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
                             </div>
                             <div>
-                                <div id="ov-linecheck-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 truncate">--</div>
+                                <div id="ov-linecheck-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 uppercase truncate">--</div>
                                 <div id="ov-linecheck-route" class="text-[9px] font-bold text-slate-400 mt-0.5 truncate">Route: --</div>
                             </div>
                         </div>
@@ -227,19 +235,17 @@ if ('serviceWorker' in navigator) {
                         <!-- Vertical Sparkline Histogram Chart Area -->
                         <div class="flex gap-2 items-stretch h-28 pt-1">
                             <!-- Y-Axis Scale Labels -->
-                            <div class="w-5 shrink-0 flex flex-col justify-between text-[8px] font-black text-slate-400 dark:text-slate-500 select-none pb-0.5 text-right">
+                            <div class="w-5 shrink-0 flex flex-col justify-between text-[8px] font-black text-slate-400 dark:text-slate-500 select-none py-0.5 text-right">
                                 <span>1Y</span>
                                 <span>6M</span>
-                                <span class="text-amber-500/90 dark:text-amber-400/90">30D</span>
-                                <span class="text-slate-300 dark:text-slate-700">0D</span>
+                                <span>0D</span>
                             </div>
 
                             <!-- Plot Box with Reference Guide Lines -->
                             <div class="flex-1 relative h-full flex items-end justify-between gap-1.5 px-1 bg-slate-50/50 dark:bg-slate-950/40 rounded-xl p-1.5 border border-slate-100/80 dark:border-slate-800/60 overflow-hidden">
                                 <!-- Horizontal Guide Lines -->
                                 <div class="absolute left-0 right-0 top-1.5 border-b border-dashed border-slate-200 dark:border-slate-800/80 pointer-events-none"></div>
-                                <div class="absolute left-0 right-0 top-[50.7%] border-b border-dashed border-slate-200 dark:border-slate-800/80 pointer-events-none"></div>
-                                <div class="absolute left-0 right-0 bottom-[8.2%] border-b border-dashed border-amber-400/50 dark:border-amber-500/40 pointer-events-none z-0"></div>
+                                <div class="absolute left-0 right-0 top-[50%] border-b border-dashed border-slate-200 dark:border-slate-800/80 pointer-events-none"></div>
                                 <div class="absolute left-0 right-0 bottom-0 border-b border-slate-200 dark:border-slate-700 pointer-events-none"></div>
 
                                 <!-- Vertical Sparkline Bars (Spread evenly across X-axis) -->
