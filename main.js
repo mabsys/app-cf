@@ -1,4 +1,4 @@
-// main.js (1810_R173) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (1810_R174) - CertiFly Application Shell & Bento Dashboard Controller
 
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
 
@@ -1666,10 +1666,11 @@ async function renderDashboardResults(caamResults, mabResults = null) {
 
   const passportNo = (profile && profile.passportNo) ? profile.passportNo.trim() : "";
   const rawPassExp = (profile && profile.passportExpiry) ? profile.passportExpiry.trim() : "";
+  let passDays = null;
 
   if (passportNo || rawPassExp) {
     const formattedDate = formatPassportDisplayDate(rawPassExp);
-    const passDays = rawPassExp ? getDaysUntil(rawPassExp) : null;
+    passDays = rawPassExp ? getDaysUntil(rawPassExp) : null;
 
     if (passExpEl) passExpEl.innerText = formattedDate;
     if (passNoEl) passNoEl.innerText = passportNo ? `No: ${passportNo}` : "No: Not Configured";
