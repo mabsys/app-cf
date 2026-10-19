@@ -1,4 +1,4 @@
-// main.js (1810_R170) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (1810_R171) - CertiFly Application Shell & Bento Dashboard Controller
 
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
 
@@ -1311,7 +1311,19 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     let greeting = "Good Morning";
     if (hour >= 12 && hour < 18) greeting = "Good Afternoon";
     else if (hour >= 18) greeting = "Good Evening";
-    greetingEl.innerText = greeting;
+
+    const rawDesig = (mabResults && mabResults.designation) || (profile && profile.designation) || "";
+    let title = "Captain";
+    if (rawDesig) {
+      const u = rawDesig.toUpperCase().trim();
+      if (u.includes("FIRST OFFICER") || u.includes("F/O") || u.includes("FO")) title = "FO";
+      else if (u.includes("SECOND OFFICER") || u.includes("S/O") || u.includes("SO")) title = "SO";
+      else if (u.includes("CADET")) title = "Cadet";
+      else if (u.includes("CAPTAIN") || u.includes("CAPT")) title = "Captain";
+      else if (u.includes("FE") || u.includes("ENGINEER")) title = "FE";
+    }
+
+    greetingEl.innerText = `${greeting}, ${title}`;
   }
 
   const heroPilot = getDashEl("overview-pilot-name");
@@ -1596,23 +1608,51 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   }
 
   // F. Passport & Profile Footer
+  const passExpEl = getDashEl("ov-passport-expiry");
   const passNoEl = getDashEl("ov-passport-no");
-  const passBufEl = getDashEl("ov-passport-buffer");
+  const passDaysEl = getDashEl("ov-passport-days");
+  const passBarEl = getDashEl("ov-passport-bar");
   const staffDesigEl = getDashEl("ov-staff-designation");
 
   const passportNo = (profile && profile.passportNo) || (caamResults && caamResults.pilotDetails && caamResults.pilotDetails.mykadPassport) || "A12345678";
-  const passportExp = (profile && profile.passportExpiry) || "15 NOV 2028";
+  const passportExp = ((profile && profile.passportExpiry) || "15 NOV 2028").toUpperCase();
   const passDays = getDaysUntil(passportExp);
 
-  if (passNoEl) passNoEl.innerText = `${passportNo} (${passportExp})`;
-  if (passBufEl) {
-    if (passDays !== null && passDays < 180) {
-      passBufEl.innerText = "Layover Buffer (<6 Mo)";
-      passBufEl.className = "mt-0.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold inline-block bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 w-fit";
+  if (passExpEl) passExpEl.innerText = passportExp;
+  if (passNoEl) passNoEl.innerText = `No: ${passportNo}`;
+  if (passDaysEl) {
+    if (passDays !== null && passDays !== undefined) {
+      if (passDays < 0) {
+        passDaysEl.innerText = "Expired";
+      } else {
+        passDaysEl.innerText = `${passDays} Days Remaining`;
+      }
     } else {
-      passBufEl.innerText = "6-Mo Layover OK";
-      passBufEl.className = "mt-0.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold inline-block bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 w-fit";
+      passDaysEl.innerText = "N/A";
     }
+  }
+
+  if (passBarEl) {
+    if (passDays === null || passDays === undefined) {
+      passBarEl.style.width = "0%";
+      passBarEl.className = "h-full bg-slate-400 rounded-full transition-all duration-500 relative z-10";
+    } else if (passDays <= 180) {
+      const pct = passDays < 0 ? 5 : Math.min(100, Math.max(5, Math.round((passDays / 365.25) * 100)));
+      passBarEl.style.width = `${pct}%`;
+      passBarEl.className = "h-full bg-rose-500 rounded-full transition-all duration-500 relative z-10";
+    } else if (passDays <= 240) {
+      const pct = Math.min(100, Math.max(5, Math.round((passDays / 365.25) * 100)));
+      passBarEl.style.width = `${pct}%`;
+      passBarEl.className = "h-full bg-amber-400 animate-pulse rounded-full transition-all duration-500 relative z-10";
+    } else {
+      const pct = Math.min(100, Math.max(5, Math.round((passDays / 365.25) * 100)));
+      passBarEl.style.width = `${pct}%`;
+      passBarEl.className = "h-full bg-indigo-500 rounded-full transition-all duration-500 relative z-10";
+    }
+  }
+
+  if (passDays !== null && passDays !== undefined) {
+    allCandidates.push({ name: "Passport Clearance", days: passDays, tab: "mab" });
   }
 
   if (staffDesigEl) {
