@@ -1,4 +1,4 @@
-<!-- index.html (1810_R170) - CertiFly PWA Application Shell & Core Layout -->
+<!-- index.html (1810_R171) - CertiFly PWA Application Shell & Core Layout -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -226,7 +226,7 @@ if ('serviceWorker' in navigator) {
                     </div>
 
                     <!-- 3. EMERGENCY & SAFETY RECURRENT DRILLS BENTO BOX (HEALTH PROFILE HISTOGRAM) -->
-                    <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col gap-3">
+                    <div onclick="switchResultTab('mab')" class="cursor-pointer bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col gap-3">
                         <div class="flex items-center justify-between">
                             <span class="text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Mandatory Recurrents & Drills</span>
                             <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 cursor-pointer" onclick="switchResultTab('mab')">View All &rarr;</span>
@@ -327,9 +327,24 @@ if ('serviceWorker' in navigator) {
 
                         <!-- PASSPORT TILE -->
                         <div class="bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between gap-1.5">
-                            <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">Passport Clearance</span>
-                            <div id="ov-passport-no" class="text-xs font-black text-slate-800 dark:text-slate-100 truncate">--</div>
-                            <div id="ov-passport-buffer" class="mt-0.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold inline-block bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 w-fit">6-Mo Layover OK</div>
+                            <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">PASSPORT EXPIRY</span>
+                            <!-- Horizontal Sparkline Progress Bar with 0D, 6M, 1Y Scale -->
+                            <div class="relative w-full pt-0.5 pb-2">
+                                <div class="relative w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
+                                    <div class="absolute top-0 bottom-0 left-[49.4%] w-0.5 bg-rose-400/40 dark:bg-rose-500/40 z-0"></div>
+                                    <div id="ov-passport-bar" class="h-full bg-indigo-500 rounded-full transition-all duration-500 relative z-10" style="width: 100%;"></div>
+                                </div>
+                                <div class="relative w-full flex justify-between text-[7.5px] font-black text-slate-400 dark:text-slate-500 select-none mt-1">
+                                    <span>0D</span>
+                                    <span class="absolute left-[49.4%] -translate-x-1/2 text-rose-500/80 dark:text-rose-400/80">6M</span>
+                                    <span>1Y</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div id="ov-passport-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 uppercase truncate">--</div>
+                                <div id="ov-passport-no" class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 truncate">--</div>
+                                <div id="ov-passport-days" class="text-[9px] font-bold text-slate-400 mt-0.5">--</div>
+                            </div>
                         </div>
 
                         <!-- PROFILE & STATIC ENDORSEMENTS TILE -->
