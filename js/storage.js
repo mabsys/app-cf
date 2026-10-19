@@ -1,4 +1,4 @@
-// js/storage.js (1110_R131) - CertiFly Storage Engine (LocalStorage & IndexedDB)
+// storage.js (1810_R172) - CertiFly Storage Engine (LocalStorage & IndexedDB)
 
 const DB_NAME = 'CertiFlyDB';
 const DB_VERSION = 1;
@@ -540,11 +540,13 @@ export function renderHistoryList() {
 export function getProfileData() {
   try {
     const data = localStorage.getItem(PROFILE_KEY);
-    if (!data) return { url: '', attestationFileName: '', cachedCaamResults: null, cachedMabResults: null, qrImageUrl: '', cachedQrDataUrl: '' };
+    if (!data) return { url: '', attestationFileName: '', passportNo: '', passportExpiry: '', cachedCaamResults: null, cachedMabResults: null, qrImageUrl: '', cachedQrDataUrl: '' };
     const parsed = JSON.parse(data);
     return {
       url: (parsed.url || '').trim(),
       attestationFileName: (parsed.attestationFileName || '').trim(),
+      passportNo: (parsed.passportNo || '').trim(),
+      passportExpiry: (parsed.passportExpiry || '').trim(),
       cachedCaamResults: parsed.cachedCaamResults || null,
       cachedMabResults: parsed.cachedMabResults || null,
       qrImageUrl: parsed.qrImageUrl || '',
@@ -552,7 +554,7 @@ export function getProfileData() {
     };
   } catch (err) {
     console.error('Failed to read profile data from storage:', err);
-    return { url: '', attestationFileName: '', cachedCaamResults: null, cachedMabResults: null, qrImageUrl: '', cachedQrDataUrl: '' };
+    return { url: '', attestationFileName: '', passportNo: '', passportExpiry: '', cachedCaamResults: null, cachedMabResults: null, qrImageUrl: '', cachedQrDataUrl: '' };
   }
 }
 
@@ -562,6 +564,8 @@ export function saveProfileData(profile = {}) {
     const sanitized = {
       url: profile.url !== undefined ? (profile.url || '').trim() : existing.url,
       attestationFileName: profile.attestationFileName !== undefined ? (profile.attestationFileName || '').trim() : existing.attestationFileName,
+      passportNo: profile.passportNo !== undefined ? (profile.passportNo || '').trim() : existing.passportNo,
+      passportExpiry: profile.passportExpiry !== undefined ? (profile.passportExpiry || '').trim() : existing.passportExpiry,
       cachedCaamResults: profile.cachedCaamResults !== undefined ? profile.cachedCaamResults : existing.cachedCaamResults,
       cachedMabResults: profile.cachedMabResults !== undefined ? profile.cachedMabResults : existing.cachedMabResults,
       qrImageUrl: profile.qrImageUrl !== undefined ? profile.qrImageUrl : existing.qrImageUrl,
