@@ -1,4 +1,4 @@
-// js/components/menu.js (1110_R131) - Slide-over Menu Navigation & Sub-pane Drawer Engine
+// menu.js (1810_R172) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
 
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
@@ -176,6 +176,26 @@ export const menuHTML = `
             <span id="profile-qs-pdf-status-text">✓ Valid Qualification Slip (QS) file</span>
           </div>
           <p class="text-[9px] text-slate-400 mt-1">Upload MAB Qualification Slip for PBN & operational ratings checks.</p>
+        </div>
+
+        <!-- Passport Clearance Details -->
+        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs mb-2 flex flex-col gap-3">
+          <label class="text-[10px] font-extrabold text-slate-400 uppercase block">Passport Clearance Details</label>
+
+          <!-- Passport Number Field -->
+          <div>
+            <span class="text-[9px] text-slate-400 font-semibold block mb-1">Passport Number</span>
+            <input type="text" id="profile-passport-no" maxlength="12" placeholder="e.g. A12345678 or AA1234567" 
+                   class="w-full p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-100 focus:outline-none uppercase tracking-wider transition-all">
+          </div>
+
+          <!-- Passport Expiry Date Field (Manual Entry / Date Picker) -->
+          <div>
+            <span class="text-[9px] text-slate-400 font-semibold block mb-1">Passport Expiry Date</span>
+            <input type="date" id="profile-passport-expiry" 
+                   class="w-full p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-100 focus:outline-none transition-all cursor-pointer">
+            <p class="text-[9px] text-slate-400 mt-1">Enter date or select using datepicker for passport expiry tracking.</p>
+          </div>
         </div>
 
         <!-- Action Buttons -->
