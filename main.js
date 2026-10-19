@@ -1,4 +1,4 @@
-// main.js (1810_R169) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (1810_R170) - CertiFly Application Shell & Bento Dashboard Controller
 
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
 
@@ -1305,6 +1305,15 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     : ((mabResults && mabResults.pilotName && mabResults.pilotName !== "-") ? mabResults.pilotName : "Crew Member");
 
     // 1. APPLE-STYLE BENTO OVERVIEW TAB HANDLER
+  const greetingEl = getDashEl("overview-greeting");
+  if (greetingEl) {
+    const hour = new Date().getHours();
+    let greeting = "Good Morning";
+    if (hour >= 12 && hour < 18) greeting = "Good Afternoon";
+    else if (hour >= 18) greeting = "Good Evening";
+    greetingEl.innerText = greeting;
+  }
+
   const heroPilot = getDashEl("overview-pilot-name");
   const heroTime = getDashEl("overview-scan-timestamp");
 
@@ -1412,7 +1421,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     const caamBadgeEl = getDashEl("ov-caam-badge");
     const caamBarEl = getDashEl("ov-caam-bar");
 
-    if (caamExpEl) caamExpEl.innerText = caamExpDate || "N/A";
+    if (caamExpEl) caamExpEl.innerText = (caamExpDate || "N/A").toUpperCase();
     if (caamDaysEl) caamDaysEl.innerText = caamDays !== null ? (caamDays < 0 ? "Lapsed" : `${caamDays} Days Remaining`) : "N/A";
     applyStatusTheme(caamDays, caamBadgeEl, null, null, null, "Valid", caamBarEl);
 
@@ -1437,7 +1446,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     const medBadgeEl = getDashEl("ov-medical-badge");
     const medBarEl = getDashEl("ov-medical-bar");
 
-    if (medExpEl) medExpEl.innerText = medExpDate || "N/A";
+    if (medExpEl) medExpEl.innerText = (medExpDate || "N/A").toUpperCase();
     if (medDaysEl) medDaysEl.innerText = medDays !== null ? (medDays < 0 ? "Lapsed" : `${medDays} Days Remaining`) : "N/A";
     applyStatusTheme(medDays, medBadgeEl, null, null, null, "Valid", medBarEl);
 
@@ -1462,7 +1471,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     const typeBadgeEl = getDashEl("ov-type-badge");
     const typeBarEl = getDashEl("ov-type-bar");
 
-    if (typeExpEl) typeExpEl.innerText = typeExpDate || "N/A";
+    if (typeExpEl) typeExpEl.innerText = (typeExpDate || "N/A").toUpperCase();
     if (typeDaysEl) typeDaysEl.innerText = typeDays !== null ? (typeDays < 0 ? "Lapsed" : `${typeDays} Days Remaining`) : "N/A";
     applyStatusTheme(typeDays, typeBadgeEl, null, null, null, "Valid", typeBarEl);
 
@@ -1483,7 +1492,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     const lcBadgeEl = getDashEl("ov-linecheck-badge");
     const lcBarEl = getDashEl("ov-linecheck-bar");
 
-    if (lcExpEl) lcExpEl.innerText = lcExpDate || "N/A";
+    if (lcExpEl) lcExpEl.innerText = (lcExpDate || "N/A").toUpperCase();
     if (lcRouteEl) lcRouteEl.innerText = lcDays !== null ? (lcDays < 0 ? "Lapsed" : `${lcDays} Days Remaining`) : "N/A";
     applyStatusTheme(lcDays, lcBadgeEl, null, null, null, "Valid", lcBarEl);
 
@@ -1625,42 +1634,72 @@ async function renderDashboardResults(caamResults, mabResults = null) {
 
   const userThreshold = (typeof getThresholdDays === 'function') ? getThresholdDays() : 30;
 
-  // 1. Calculate CAAM Score (Inner Ring - r=30, C=188.50)
+  // 1. CAAM Ring (Nearest expiring CAAM item: Licence, Medical, Type Rating)
   const caamItems = [caamDays, medDays, typeDays].filter(d => d !== null && d !== undefined);
-  let caamScore = 100;
-  let isCaamLapsed = caamItems.some(d => d < 0);
-  
-  if (isCaamLapsed) {
-    caamScore = 0;
-  } else if (caamItems.length > 0) {
-    const sumRatios = caamItems.reduce((acc, d) => acc + Math.min(1.0, Math.max(0.0, d / 365.25)), 0);
-    caamScore = Math.round((sumRatios / caamItems.length) * 100);
+  const caamMinDays = caamItems.length > 0 ? Math.min(...caamItems) : 365;
+
+  // 100 days = 100% full circle ring (Inner Ring r=30, C=188.50)
+  const caamPct = Math.min(100, Math.max(0, caamMinDays));
+  const caamOffset = Math.round(188.50 * (1 - caamPct / 100));
+
+  const isCaamLapsed = caamMinDays <= 0;
+  const isCaamWarning = caamMinDays <= userThreshold && caamMinDays > 0;
+  const caamColor = isCaamLapsed ? "#EF4444" : (isCaamWarning ? "#F59E0B" : "#3B82F6"); // Royal Blue #3B82F6
+
+  if (ringCaam) {
+    ringCaam.setAttribute("stroke", caamColor);
+    ringCaam.setAttribute("stroke-dashoffset", String(caamOffset));
+    const dotCaam = getDashEl("legend-dot-caam");
+    if (dotCaam) dotCaam.style.backgroundColor = caamColor;
   }
 
-  // 2. Calculate MAB Score (Outer Ring - r=42, C=263.89)
-  let isMabLapsed = (lcDays !== null && lcDays < 0) || (minDrillDays !== null && minDrillDays < 0);
-  let mabScore = 100;
+  // 2. MAB Ring (Nearest expiring MAB item: Line Check, Drills)
+  const mabItems = [lcDays, minDrillDays].filter(d => d !== null && d !== undefined);
+  const mabMinDays = mabItems.length > 0 ? Math.min(...mabItems) : 365;
 
-  if (isMabLapsed) {
-    mabScore = 0;
-  } else {
-    const lcRatio = lcDays !== null ? Math.min(1.0, Math.max(0.0, lcDays / 365.25)) : 1.0;
-    const drillRatio = (avgDrillDays !== null && avgDrillDays !== undefined) ? Math.min(1.0, Math.max(0.0, avgDrillDays / 365.25)) : 1.0;
-    mabScore = Math.round((0.4 * lcRatio + 0.6 * drillRatio) * 100);
+  // 100 days = 100% full circle ring (Outer Ring r=42, C=263.89)
+  const mabPct = Math.min(100, Math.max(0, mabMinDays));
+  const mabOffset = Math.round(263.89 * (1 - mabPct / 100));
+
+  const isMabLapsed = mabMinDays <= 0;
+  const isMabWarning = mabMinDays <= userThreshold && mabMinDays > 0;
+  const mabColor = isMabLapsed ? "#EF4444" : (isMabWarning ? "#F59E0B" : "#1D4ED8"); // blue-700 #1D4ED8
+
+  if (ringMab) {
+    ringMab.setAttribute("stroke", mabColor);
+    ringMab.setAttribute("stroke-dashoffset", String(mabOffset));
+    const dotMab = getDashEl("legend-dot-mab");
+    if (dotMab) dotMab.style.backgroundColor = mabColor;
   }
 
-  let minDays = allCandidates.length > 0 ? allCandidates[0].days : 365;
-  let overallPercent = Math.round((caamScore + mabScore) / 2);
+  // Center Percent/Days Display (Pick least days between CAAM & MAB)
+  const leastDays = Math.min(caamMinDays, mabMinDays);
 
-  if (minDays < 0 || isCaamLapsed || isMabLapsed) {
-    if (ringPercentEl) ringPercentEl.innerText = "RESTRICTED";
-    if (ringLabelEl) { ringLabelEl.innerText = "RESTRICTED"; ringLabelEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300"; }
-  } else if (minDays <= userThreshold) {
-    if (ringPercentEl) ringPercentEl.innerText = `${overallPercent}%`;
-    if (ringLabelEl) { ringLabelEl.innerText = "ATTENTION"; ringLabelEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300"; }
+  if (ringPercentEl) {
+    if (leastDays > 100) {
+      ringPercentEl.innerText = "100+";
+    } else if (leastDays <= 0) {
+      ringPercentEl.innerText = "0";
+    } else {
+      ringPercentEl.innerText = String(leastDays);
+    }
+  }
+
+  if (leastDays <= 0 || isCaamLapsed || isMabLapsed) {
+    if (ringLabelEl) {
+      ringLabelEl.innerText = "RESTRICTED";
+      ringLabelEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300";
+    }
+  } else if (leastDays <= userThreshold) {
+    if (ringLabelEl) {
+      ringLabelEl.innerText = "ATTENTION";
+      ringLabelEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300";
+    }
   } else {
-    if (ringPercentEl) ringPercentEl.innerText = `${overallPercent}%`;
-    if (ringLabelEl) { ringLabelEl.innerText = "OPERATIONAL"; ringLabelEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300"; }
+    if (ringLabelEl) {
+      ringLabelEl.innerText = "OPERATIONAL";
+      ringLabelEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300";
+    }
   }
 
   if (allCandidates.length > 0 && allCandidates[0].days <= userThreshold) {
@@ -1668,32 +1707,12 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     if (bottleneckTextEl) bottleneckTextEl.innerText = `Next Expiry: ${b.name} (${b.days < 0 ? 'Lapsed' : b.days + 'd'})`;
     if (bottleneckLedEl) {
       bottleneckLedEl.className = b.days < 0 
-        ? "w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(239,68,68,0.8)] shrink-0"
-        : "w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)] shrink-0 animate-pulse";
+        ? "w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(239,68,68,0.8)] shrink-0 mt-0.5"
+        : "w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)] shrink-0 animate-pulse mt-0.5";
     }
   } else {
     if (bottleneckTextEl) bottleneckTextEl.innerText = "All Credentials Active";
-    if (bottleneckLedEl) bottleneckLedEl.className = "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] shrink-0";
-  }
-
-  // Inner Ring (CAAM): C = 188.50
-  if (ringCaam) {
-    const caamOffset = Math.round(188.50 * (1 - caamScore / 100));
-    const isCaamWarning = caamItems.some(d => d <= userThreshold && d >= 0);
-    const caamColor = isCaamLapsed ? "#EF4444" : (isCaamWarning ? "#F59E0B" : "#3B82F6");
-    ringCaam.setAttribute("stroke", caamColor);
-    const dotCaam = getDashEl("legend-dot-caam"); if (dotCaam) dotCaam.style.backgroundColor = caamColor;
-    ringCaam.setAttribute("stroke-dashoffset", String(caamOffset));
-  }
-
-  // Outer Ring (MAB): C = 263.89
-  if (ringMab) {
-    const mabOffset = Math.round(263.89 * (1 - mabScore / 100));
-    const isMabWarning = (lcDays !== null && lcDays <= userThreshold && lcDays >= 0) || (minDrillDays !== null && minDrillDays <= userThreshold && minDrillDays >= 0);
-    const mabColor = isMabLapsed ? "#EF4444" : (isMabWarning ? "#F59E0B" : "#74D4FF");
-    ringMab.setAttribute("stroke", mabColor);
-    const dotMab = getDashEl("legend-dot-mab"); if (dotMab) dotMab.style.backgroundColor = mabColor;
-    ringMab.setAttribute("stroke-dashoffset", String(mabOffset));
+    if (bottleneckLedEl) bottleneckLedEl.className = "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] shrink-0 mt-0.5";
   }
 
 
