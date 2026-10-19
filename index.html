@@ -1,4 +1,4 @@
-<!-- index.html (1810_R171) - CertiFly PWA Application Shell & Core Layout -->
+<!-- index.html (1810_R173) - CertiFly PWA Application Shell & Core Layout -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -326,7 +326,7 @@ if ('serviceWorker' in navigator) {
                     <div class="grid grid-cols-2 gap-2.5">
 
                         <!-- PASSPORT TILE -->
-                        <div class="bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between gap-1.5">
+                        <div onclick="openMenu(); setTimeout(() => { const nav = document.querySelector('[data-target=pane-profile]'); if(nav) nav.click(); }, 150);" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
                             <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">PASSPORT EXPIRY</span>
                             <!-- Horizontal Sparkline Progress Bar with 0D, 6M, 1Y Scale -->
                             <div class="relative w-full pt-0.5 pb-2">
