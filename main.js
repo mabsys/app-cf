@@ -1,4 +1,4 @@
-// main.js (1810_R171) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (1810_R172) - CertiFly Application Shell & Bento Dashboard Controller
 
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
 
@@ -311,6 +311,20 @@ function initProfileUI() {
   const qsPdfStatusText = document.getElementById("profile-qs-pdf-status-text") || (qsPdfStatusBadge ? qsPdfStatusBadge.querySelector("span") : null);
   const storedQsData = getQualificationSlipData();
 
+  const passNoInput = document.getElementById("profile-passport-no");
+  const passExpInput = document.getElementById("profile-passport-expiry");
+
+  if (passNoInput) {
+    passNoInput.value = profile.passportNo || "";
+    passNoInput.oninput = () => {
+      passNoInput.value = passNoInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    };
+  }
+
+  if (passExpInput) {
+    passExpInput.value = profile.passportExpiry || "";
+  }
+
   if (qsPdfLabel) {
     qsPdfLabel.innerText = (storedQsData && storedQsData.fileName) || "Select PDF qualification slip file...";
   }
@@ -619,7 +633,14 @@ function initProfileUI() {
         await setQualificationSlipPdf(selectedQsFile);
         setQualificationSlipData(selectedQsParsed);
       }
-      saveProfileData({ url: urlVal, attestationFileName: attestationName });
+      const passNoVal = passNoInput ? passNoInput.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '') : "";
+      const passExpVal = passExpInput ? passExpInput.value.trim() : "";
+      saveProfileData({
+        url: urlVal,
+        attestationFileName: attestationName,
+        passportNo: passNoVal,
+        passportExpiry: passExpVal
+      });
       updateProfileUrlBadge(urlVal);
       if (pdfStatusBadge && pdfStatusText) {
         pdfStatusBadge.classList.remove("hidden");
@@ -666,6 +687,8 @@ function initProfileUI() {
           urlInput.value = "";
           updateProfileUrlBadge("");
         }
+        if (passNoInput) passNoInput.value = "";
+        if (passExpInput) passExpInput.value = "";
         if (pdfLabel) pdfLabel.innerText = "Select PDF attestation file...";
         if (urlStatusBadge) urlStatusBadge.classList.add("hidden");
         if (pdfStatusBadge) pdfStatusBadge.classList.add("hidden");
@@ -1614,9 +1637,10 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   const passBarEl = getDashEl("ov-passport-bar");
   const staffDesigEl = getDashEl("ov-staff-designation");
 
-  const passportNo = (profile && profile.passportNo) || (caamResults && caamResults.pilotDetails && caamResults.pilotDetails.mykadPassport) || "A12345678";
-  const passportExp = ((profile && profile.passportExpiry) || "15 NOV 2028").toUpperCase();
-  const passDays = getDaysUntil(passportExp);
+  const passportNo = (profile && profile.passportNo) || "--";
+  const rawPassExp = (profile && profile.passportExpiry) || "";
+  const passportExp = rawPassExp ? rawPassExp.toUpperCase() : "--";
+  const passDays = rawPassExp ? getDaysUntil(rawPassExp) : null;
 
   if (passExpEl) passExpEl.innerText = passportExp;
   if (passNoEl) passNoEl.innerText = `No: ${passportNo}`;
