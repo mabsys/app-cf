@@ -1,4 +1,4 @@
-// main.js (1810_R172) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (1810_R173) - CertiFly Application Shell & Bento Dashboard Controller
 
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
 
@@ -1630,6 +1630,33 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     avgDrillDays = collectedDrillDays.reduce((a, b) => a + b, 0) / collectedDrillDays.length;
   }
 
+  // Helper to format ISO or raw dates into "31 OCT 2028" format
+  function formatPassportDisplayDate(dateStr) {
+    if (!dateStr) return "NOT CONFIGURED";
+    const str = String(dateStr).trim();
+    const ymdMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (ymdMatch) {
+      const year = ymdMatch[1];
+      const monthIdx = parseInt(ymdMatch[2], 10) - 1;
+      const day = ymdMatch[3];
+      const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+      if (monthIdx >= 0 && monthIdx < 12) {
+        return `${day} ${months[monthIdx]} ${year}`;
+      }
+    }
+    let d = (dateStr instanceof Date) ? dateStr : parseAnyDate(dateStr);
+    if (!d || isNaN(d.getTime())) {
+      const ts = Date.parse(str);
+      if (!isNaN(ts)) d = new Date(ts);
+    }
+    if (d && !isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, '0');
+      const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+      return `${day} ${months[d.getMonth()]} ${d.getFullYear()}`;
+    }
+    return str.toUpperCase();
+  }
+
   // F. Passport & Profile Footer
   const passExpEl = getDashEl("ov-passport-expiry");
   const passNoEl = getDashEl("ov-passport-no");
@@ -1637,41 +1664,53 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   const passBarEl = getDashEl("ov-passport-bar");
   const staffDesigEl = getDashEl("ov-staff-designation");
 
-  const passportNo = (profile && profile.passportNo) || "--";
-  const rawPassExp = (profile && profile.passportExpiry) || "";
-  const passportExp = rawPassExp ? rawPassExp.toUpperCase() : "--";
-  const passDays = rawPassExp ? getDaysUntil(rawPassExp) : null;
+  const passportNo = (profile && profile.passportNo) ? profile.passportNo.trim() : "";
+  const rawPassExp = (profile && profile.passportExpiry) ? profile.passportExpiry.trim() : "";
 
-  if (passExpEl) passExpEl.innerText = passportExp;
-  if (passNoEl) passNoEl.innerText = `No: ${passportNo}`;
-  if (passDaysEl) {
-    if (passDays !== null && passDays !== undefined) {
-      if (passDays < 0) {
-        passDaysEl.innerText = "Expired";
+  if (passportNo || rawPassExp) {
+    const formattedDate = formatPassportDisplayDate(rawPassExp);
+    const passDays = rawPassExp ? getDaysUntil(rawPassExp) : null;
+
+    if (passExpEl) passExpEl.innerText = formattedDate;
+    if (passNoEl) passNoEl.innerText = passportNo ? `No: ${passportNo}` : "No: Not Configured";
+    if (passDaysEl) {
+      if (passDays !== null && passDays !== undefined) {
+        if (passDays < 0) {
+          passDaysEl.innerText = "Expired";
+        } else {
+          passDaysEl.innerText = `${passDays} Days Remaining`;
+        }
       } else {
-        passDaysEl.innerText = `${passDays} Days Remaining`;
+        passDaysEl.innerText = "Expiry Not Configured";
       }
-    } else {
-      passDaysEl.innerText = "N/A";
     }
-  }
 
-  if (passBarEl) {
-    if (passDays === null || passDays === undefined) {
+    if (passBarEl) {
+      if (passDays === null || passDays === undefined) {
+        passBarEl.style.width = "0%";
+        passBarEl.className = "h-full bg-slate-400 rounded-full transition-all duration-500 relative z-10";
+      } else if (passDays <= 180) {
+        const pct = passDays < 0 ? 5 : Math.min(100, Math.max(5, Math.round((passDays / 365.25) * 100)));
+        passBarEl.style.width = `${pct}%`;
+        passBarEl.className = "h-full bg-rose-500 rounded-full transition-all duration-500 relative z-10";
+      } else if (passDays <= 240) {
+        const pct = Math.min(100, Math.max(5, Math.round((passDays / 365.25) * 100)));
+        passBarEl.style.width = `${pct}%`;
+        passBarEl.className = "h-full bg-amber-400 animate-pulse rounded-full transition-all duration-500 relative z-10";
+      } else {
+        const pct = Math.min(100, Math.max(5, Math.round((passDays / 365.25) * 100)));
+        passBarEl.style.width = `${pct}%`;
+        passBarEl.className = "h-full bg-indigo-500 rounded-full transition-all duration-500 relative z-10";
+      }
+    }
+  } else {
+    // Fallback when Passport Details are unconfigured / not set
+    if (passExpEl) passExpEl.innerText = "NOT CONFIGURED";
+    if (passNoEl) passNoEl.innerText = "Tap to set up in My Credentials";
+    if (passDaysEl) passDaysEl.innerText = "Click tile to configure";
+    if (passBarEl) {
       passBarEl.style.width = "0%";
-      passBarEl.className = "h-full bg-slate-400 rounded-full transition-all duration-500 relative z-10";
-    } else if (passDays <= 180) {
-      const pct = passDays < 0 ? 5 : Math.min(100, Math.max(5, Math.round((passDays / 365.25) * 100)));
-      passBarEl.style.width = `${pct}%`;
-      passBarEl.className = "h-full bg-rose-500 rounded-full transition-all duration-500 relative z-10";
-    } else if (passDays <= 240) {
-      const pct = Math.min(100, Math.max(5, Math.round((passDays / 365.25) * 100)));
-      passBarEl.style.width = `${pct}%`;
-      passBarEl.className = "h-full bg-amber-400 animate-pulse rounded-full transition-all duration-500 relative z-10";
-    } else {
-      const pct = Math.min(100, Math.max(5, Math.round((passDays / 365.25) * 100)));
-      passBarEl.style.width = `${pct}%`;
-      passBarEl.className = "h-full bg-indigo-500 rounded-full transition-all duration-500 relative z-10";
+      passBarEl.className = "h-full bg-slate-300 dark:bg-slate-700 rounded-full transition-all duration-500 relative z-10";
     }
   }
 
