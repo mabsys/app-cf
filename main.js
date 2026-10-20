@@ -1,4 +1,4 @@
-// main.js (1810_R174) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (1910_R177) - CertiFly Application Shell & Bento Dashboard Controller
 
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
 
@@ -1536,16 +1536,64 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     }
   }
 
-  // E. Vertical Sparkline Histogram Drills Array
+  // E1. LVO 180-Day Recency Tile Handler
+  const lvoMarkerEl = getDashEl("ov-lvo-marker");
+  const lvoCheckDateEl = getDashEl("ov-lvo-checkdate");
+  const lvoDaysTextEl = getDashEl("ov-lvo-days-text");
+
+  let lvoCheckDateStr = null;
+  let lvoDaysRemaining = null;
+
+  if (mabResults) {
+    if (mabResults.lvo && (mabResults.lvo.checkDate || mabResults.lvo.date)) {
+      lvoCheckDateStr = mabResults.lvo.checkDate || mabResults.lvo.date;
+    } else if (Array.isArray(mabResults.drills)) {
+      const lvoMatch = mabResults.drills.find(d => {
+        const name = (d.name || d.item || "").toUpperCase();
+        return name.includes("LVO") || name.includes("AUTOLAND") || name.includes("CAT III");
+      });
+      if (lvoMatch) {
+        lvoCheckDateStr = lvoMatch.checkDate || lvoMatch.date || lvoMatch.issueDate || lvoMatch.nextDue;
+      }
+    }
+  }
+
+  if (lvoCheckDateStr) {
+    const daysSinceCheck = getDaysUntil(lvoCheckDateStr);
+    const daysElapsed = (daysSinceCheck !== null && daysSinceCheck <= 0) ? Math.abs(daysSinceCheck) : 0;
+    lvoDaysRemaining = Math.max(0, 180 - daysElapsed);
+
+    if (lvoCheckDateEl) lvoCheckDateEl.innerText = formatPassportDisplayDate(lvoCheckDateStr) || lvoCheckDateStr.toUpperCase();
+    if (lvoDaysTextEl) {
+      if (lvoDaysRemaining <= 0) {
+        lvoDaysTextEl.innerText = "Recency Expired (Lapsed)";
+        lvoDaysTextEl.className = "text-rose-600 dark:text-rose-400 font-extrabold";
+      } else {
+        lvoDaysTextEl.innerText = `${lvoDaysRemaining} Days Remaining`;
+        lvoDaysTextEl.className = "text-slate-800 dark:text-slate-200 font-extrabold";
+      }
+    }
+
+    const markerPct = Math.min(100, Math.max(0, Math.round((daysElapsed / 180) * 100)));
+    if (lvoMarkerEl) lvoMarkerEl.style.left = `${markerPct}%`;
+
+    allCandidates.push({ name: "LVO Recency", days: lvoDaysRemaining, tab: "mab" });
+  } else {
+    if (lvoCheckDateEl) lvoCheckDateEl.innerText = "N/A";
+    if (lvoDaysTextEl) lvoDaysTextEl.innerText = "N/A";
+    if (lvoMarkerEl) lvoMarkerEl.style.left = "0%";
+  }
+
+  // E2. Vertical Sparkline Histogram Drills Array
   const drillItems = [
-    { key: "door", name: ["DOOR"], label: "Door", defaultBg: "bg-cyan-500" },
+    { key: "actype", name: ["AIRCRAFT TYPE", "B737", "A330", "A350", "TYPE RATING", "FLEET"], label: "B737", defaultBg: "bg-teal-500" },
+    { key: "door", name: ["DOOR"], label: "Door Drill", defaultBg: "bg-cyan-500" },
     { key: "wet", name: ["WET", "DINGHY"], label: "Wet Drill", defaultBg: "bg-sky-500" },
     { key: "fire", name: ["FIRE", "SMOKE"], label: "Fire Drill", defaultBg: "bg-violet-500" },
     { key: "crm", name: ["CRM"], label: "CRM", defaultBg: "bg-purple-500" },
     { key: "sms", name: ["SMS"], label: "SMS", defaultBg: "bg-fuchsia-500" },
     { key: "dg", name: ["DG", "DANGEROUS"], label: "DG-7", defaultBg: "bg-pink-500" },
-    { key: "avsec", name: ["AVSEC", "SECURITY"], label: "AVSEC", defaultBg: "bg-indigo-500" },
-    { key: "lvo", name: ["LVO", "CAT III", "AUTOLAND"], label: "LVO", defaultBg: "bg-teal-500" },
+    { key: "avsec", name: ["AVSEC"], label: "AVSEC", defaultBg: "bg-indigo-500" },
     { key: "supervisory", name: ["DFE", "FI", "EXAMINER", "INSTRUCTOR"], label: "DFE / FI", defaultBg: "bg-blue-500" }
   ];
 
@@ -1564,11 +1612,22 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     if (mabResults && Array.isArray(mabResults.drills)) {
       matched = mabResults.drills.find(d => {
         const dName = (d.name || d.item || "").toUpperCase();
+        const expStr = d.nextDue || d.expiryDate || "";
+        const hasValidDate = expStr && !['NIL', 'N/A', 'NA', '-'].includes(expStr.trim().toUpperCase()) && getDaysUntil(expStr) !== null;
+
+        if (item.key === "actype") {
+          // Future & False-Positive Proof: Search all table rows and match ONLY Aircraft Type entries with a valid expiry date
+          return item.name.some(keyword => dName.includes(keyword)) && hasValidDate;
+        }
         if (item.key === "supervisory") {
-          return /(DFE|FI|FLIGHT\s+INSTRUCTOR|EXAMINER|CHECK\s+PILOT|TRI|TRE)/i.test(dName);
+          return /\b(DFE|FI|FLIGHT\s+INSTRUCTOR|EXAMINER|CHECK\s+PILOT|TRI|TRE)\b/i.test(dName);
         }
         return item.name.some(keyword => dName.includes(keyword));
       });
+    }
+
+    if (!matched && item.key === "actype" && mabResults && mabResults.lineCheck && mabResults.lineCheck.fleet) {
+      matched = { name: mabResults.lineCheck.fleet, expiryDate: mabResults.lineCheck.expiryDate };
     }
 
     if (!matched && item.key === "supervisory" && caamResults && Array.isArray(caamResults.qualifications)) {
@@ -1576,6 +1635,21 @@ async function renderDashboardResults(caamResults, mabResults = null) {
       if (supCaam) {
         matched = { name: supCaam.name, expiryDate: supCaam.dateText };
       }
+    }
+
+    if (item.key === "actype") {
+      let fleetText = "B737";
+      if (matched) {
+        const dName = (matched.name || matched.item || "").toUpperCase();
+        if (dName.includes("A330")) fleetText = "A330";
+        else if (dName.includes("A350")) fleetText = "A350";
+        else if (dName.includes("B737") || dName.includes("B738") || dName.includes("B7M8")) fleetText = "B737";
+        else if (mabResults && mabResults.lineCheck && mabResults.lineCheck.fleet) fleetText = mabResults.lineCheck.fleet;
+      } else if (mabResults && mabResults.lineCheck && mabResults.lineCheck.fleet) {
+        fleetText = mabResults.lineCheck.fleet;
+      }
+      const actypeTxtEl = getDashEl("txt-legend-actype");
+      if (actypeTxtEl) actypeTxtEl.innerText = fleetText;
     }
 
     if (item.key === "supervisory" && !matched) {
