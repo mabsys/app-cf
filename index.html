@@ -1,4 +1,4 @@
-<!-- index.html (1910_R176) - CertiFly PWA Application Shell & Core Layout -->
+<!-- index.html (1910_R178) - CertiFly PWA Application Shell & Core Layout -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -232,14 +232,14 @@ if ('serviceWorker' in navigator) {
                             <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400">View Details &rarr;</span>
                         </div>
 
-                        <!-- 180-Day Recency Gradient Sparkline Track with Vertical Marker -->
-                        <div class="relative w-full pt-1 pb-1">
-                            <div class="relative w-full h-3 rounded-full overflow-hidden shadow-inner border border-slate-200/60 dark:border-slate-800/80" style="background: linear-gradient(to right, #10B981 0%, #10B981 83.3%, #F59E0B 83.3%, #F59E0B 91.7%, #EF4444 91.7%, #EF4444 100%);">
-                                <!-- Vertical Marker Line (Cuts through sparkline bar) -->
-                                <div id="ov-lvo-marker" class="absolute top-0 bottom-0 w-1.5 bg-slate-900 dark:bg-white rounded-full transition-all duration-500 shadow-md -translate-x-1/2" style="left: 0%;"></div>
-                            </div>
+                        <!-- 180-Day Recency Gradient Sparkline Track with Slim & Overflowing Vertical Marker -->
+                        <div class="relative w-full my-1">
+                            <div class="w-full h-3 rounded-full overflow-hidden shadow-inner border border-slate-200/60 dark:border-slate-800/80" style="background: linear-gradient(to right, #10B981 0%, #10B981 83.3%, #F59E0B 83.3%, #F59E0B 91.7%, #EF4444 91.7%, #EF4444 100%);"></div>
+                            <!-- Slim Vertical Marker Line (Overflows vertically 4px top & bottom across the track) -->
+                            <div id="ov-lvo-marker" class="absolute -top-1 -bottom-1 w-1 bg-slate-900 dark:bg-white rounded-full transition-all duration-500 shadow-lg -translate-x-1/2 z-10" style="left: 0%;"></div>
+
                             <!-- Scale Labels (0D, 90D, 180D) -->
-                            <div class="relative w-full flex justify-between text-[7.5px] font-black text-slate-400 dark:text-slate-500 select-none mt-1">
+                            <div class="relative w-full flex justify-between text-[7.5px] font-black text-slate-400 dark:text-slate-500 select-none mt-1.5">
                                 <span>0D</span>
                                 <span class="absolute left-1/2 -translate-x-1/2">90D</span>
                                 <span>180D</span>
@@ -249,7 +249,7 @@ if ('serviceWorker' in navigator) {
                         <!-- Metadata Footer -->
                         <div class="flex items-center justify-between text-[9.5px] text-slate-500 dark:text-slate-400 pt-0.5 border-t border-slate-100 dark:border-slate-800/80">
                             <span>Check Date: <strong id="ov-lvo-checkdate" class="text-slate-800 dark:text-slate-200 font-extrabold">--</strong></span>
-                            <strong id="ov-lvo-days-text" class="text-slate-800 dark:text-slate-200 font-extrabold">-- Days Remaining</strong>
+                            <strong id="ov-lvo-days-text" class="text-slate-400 dark:text-slate-400 font-bold">-- Days Remaining</strong>
                         </div>
                     </div>
 
