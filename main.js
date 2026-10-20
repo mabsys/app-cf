@@ -1,8 +1,7 @@
-// main.js (2010_R180) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (2010_R183) - CertiFly Application Shell & Bento Dashboard Controller
 
+import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
-
-
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
 import { parseAttestationText, validateAttestationContent, parseQualificationSlipText, validateQualificationSlipContent } from './js/parser.js';
@@ -2002,6 +2001,22 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     }
   } else {
     if (bottleneckTextEl) bottleneckTextEl.innerText = "All Credentials Active";
+
+  // Trigger Anime.js Animation Engine for Overview Tab
+  try {
+    if (typeof animateOverviewDashboard === 'function') {
+      animateOverviewDashboard({
+        caamOffset,
+        mabOffset,
+        caamColor,
+        mabColor,
+        targetDays: leastDays,
+        lvoPct: markerPct
+      });
+    }
+  } catch (animErr) {
+    console.warn("Anime.js animation trigger skipped/error:", animErr);
+  }
     if (bottleneckLedEl) bottleneckLedEl.className = "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] shrink-0 mt-0.5";
   }
 
