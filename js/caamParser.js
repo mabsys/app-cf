@@ -1,4 +1,4 @@
-// js/caamParser.js (0810_R116) - Dedicated CAAM eCLIPSE Digital Licence Parser Engine
+// js/caamParser.js (2010_R180) - Dedicated CAAM eCLIPSE Digital Licence Parser Engine
 
 import { DEFAULT_THRESHOLD } from './config.js';
 
@@ -601,7 +601,56 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD, activeFl
     }
   }
 
-  const rawQualsList = Object.values(qualificationData);
+    // Pass 4: Dedicated English Language Proficiency (ELP) Pass
+  (function extractELPPass() {
+    const existingElpKey = Object.keys(qualificationData).find(k => k.includes('ENGLISH') || k.includes('ELP') || k.includes('LANGUAGE'));
+    if (existingElpKey) return;
+
+    let elpName = '';
+    let elpDateStr = '';
+    let elpLevel = null;
+
+    const allEls = doc.querySelectorAll('tr, .card, td, div, p, li, font, span, b, strong');
+    for (let i = 0; i < allEls.length; i++) {
+      const el = allEls[i];
+      if (isUnderPg2(el)) continue;
+      const text = el.textContent.toUpperCase();
+      if (text.includes('ENGLISH') || text.includes('ELP') || text.includes('LANGUAGE PROFICIENCY')) {
+        const lvlMatch = text.match(/(?:LEVEL|LVL|L)\s*[-:]?\s*([456])/i) || text.match(/LEVEL\s+([456])/i);
+        if (lvlMatch) elpLevel = parseInt(lvlMatch[1], 10);
+
+        const dateMatch = text.match(/(\d{1,2}\s+[A-Za-z]{3,10}\s+\d{4})/i) || text.match(/\b(NO EXPIRY|PERMANENT|NIL)\b/i);
+        if (dateMatch) elpDateStr = dateMatch[1].trim();
+
+        if (elpLevel || elpDateStr) break;
+      }
+    }
+
+    if (!elpLevel) {
+      const fullText = (doc.body ? doc.body.textContent : '').toUpperCase();
+      const rMatch = fullText.match(/ENGLISH\s+(?:PROFICIENCY|LANGUAGE)[^.\n]*?LEVEL\s*([456])/i);
+      if (rMatch) elpLevel = parseInt(rMatch[1], 10);
+    }
+
+    if (elpLevel && !elpDateStr) {
+      if (elpLevel === 6) {
+        elpDateStr = 'NO EXPIRY';
+      } else {
+        const fullText = (doc.body ? doc.body.textContent : '').toUpperCase();
+        const dateMatch = fullText.match(/(?:ENGLISH|ELP)[^.\n]*?(\d{1,2}\s+[A-Za-z]{3,10}\s+\d{4})/i);
+        if (dateMatch) elpDateStr = dateMatch[1].trim();
+      }
+    }
+
+    if (elpLevel || elpDateStr) {
+      const nameToUse = elpLevel ? "English Language Proficiency - Level " + elpLevel : 'English Language Proficiency';
+      const dateToUse = elpDateStr || (elpLevel === 6 ? 'NO EXPIRY' : 'N/A');
+      const parsedDate = parseLicenseDate(dateToUse);
+      processQualification(nameToUse, dateToUse, parsedDate, false);
+    }
+  })();
+
+const rawQualsList = Object.values(qualificationData);
 
   // -------------------------------------------------------------
   // Smart Fleet Resolution & Legacy Fleet Classification Engine
@@ -784,6 +833,26 @@ export function parseLicenseDOM(doc, daysThreshold = DEFAULT_THRESHOLD, activeFl
       licenseNo: licenseNo || '-'
     },
     qualifications: sortCaamQualifications(finalQualsList),
+    elp: (function() {
+      const found = finalQualsList.find(q => {
+        const n = (q.name || '').toUpperCase();
+        return n.includes('ENGLISH') || n.includes('ELP') || n.includes('LANGUAGE PROFICIENCY') || n.includes('LANGUAGE');
+      });
+      if (!found) return null;
+      const qName = (found.name || '').toUpperCase();
+      let lvl = 5;
+      if (qName.includes('LEVEL 6') || qName.includes('LVL 6') || qName.includes('L6')) lvl = 6;
+      else if (qName.includes('LEVEL 4') || qName.includes('LVL 4') || qName.includes('L4')) lvl = 4;
+      else if (qName.includes('LEVEL 5') || qName.includes('LVL 5') || qName.includes('L5')) lvl = 5;
+      return {
+        level: lvl,
+        name: found.name,
+        dateText: found.dateText || (lvl === 6 ? 'NO EXPIRY' : 'N/A'),
+        parsedDate: found.parsedDate,
+        daysRemaining: found.daysRemaining,
+        status: found.status
+      };
+    })(),
     medicalLimitations: medicalLimitationsFormatted,
     qrImageUrl: qrImageUrl,
     overallStatus: overallStatus,
