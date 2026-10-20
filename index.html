@@ -1,4 +1,4 @@
-<!-- index.html (1910_R178) - CertiFly PWA Application Shell & Core Layout -->
+<!-- index.html (2010_R179) - CertiFly PWA Application Shell & Core Layout -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -236,7 +236,7 @@ if ('serviceWorker' in navigator) {
                         <div class="relative w-full my-1">
                             <div class="w-full h-3 rounded-full overflow-hidden shadow-inner border border-slate-200/60 dark:border-slate-800/80" style="background: linear-gradient(to right, #10B981 0%, #10B981 83.3%, #F59E0B 83.3%, #F59E0B 91.7%, #EF4444 91.7%, #EF4444 100%);"></div>
                             <!-- Slim Vertical Marker Line (Overflows vertically 4px top & bottom across the track) -->
-                            <div id="ov-lvo-marker" class="absolute -top-0 -bottom-1 w-0.5 bg-slate-700 dark:bg-white rounded-full transition-all duration-500 shadow-lg -translate-x-1/2 z-10" style="left: 0%;"></div>
+                            <div id="ov-lvo-marker" class="absolute -top-1 -bottom-1 w-1 bg-slate-900 dark:bg-white rounded-full transition-all duration-500 shadow-lg -translate-x-1/2 z-10" style="left: 0%;"></div>
 
                             <!-- Scale Labels (0D, 90D, 180D) -->
                             <div class="relative w-full flex justify-between text-[7.5px] font-black text-slate-400 dark:text-slate-500 select-none mt-1.5">
@@ -249,7 +249,7 @@ if ('serviceWorker' in navigator) {
                         <!-- Metadata Footer -->
                         <div class="flex items-center justify-between text-[9.5px] text-slate-500 dark:text-slate-400 pt-0.5 border-t border-slate-100 dark:border-slate-800/80">
                             <span>Check Date: <strong id="ov-lvo-checkdate" class="text-slate-800 dark:text-slate-200 font-extrabold">--</strong></span>
-                            <strong id="ov-lvo-days-text" class="text-slate-400 dark:text-slate-400 font-bold">-- Days Remaining</strong>
+                            <strong id="ov-lvo-days-text" class="text-slate-800 dark:text-slate-200 font-extrabold">-- Days Remaining</strong>
                         </div>
                     </div>
 
@@ -375,13 +375,28 @@ if ('serviceWorker' in navigator) {
                             </div>
                         </div>
 
-                        <!-- PROFILE & STATIC ENDORSEMENTS TILE -->
-                        <div class="bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between gap-1.5">
-                            <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">Permanent Authorizations</span>
-                            <div id="ov-staff-designation" class="text-xs font-black text-slate-800 dark:text-slate-100 truncate">CAPT • #84102</div>
-                            <div class="flex items-center gap-1 mt-0.5">
-                                <span class="px-2 py-0.5 rounded-md text-[9px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300">RTOL</span>
-                                <span class="px-2 py-0.5 rounded-md text-[9px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300">First Aid</span>
+                        <!-- ELP VALIDITY TILE -->
+                        <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
+                            <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">ELP VALIDITY</span>
+                            <!-- Horizontal Sparkline Progress Bar with Dynamic Scale -->
+                            <div class="relative w-full pt-0.5 pb-2">
+                                <div class="relative w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
+                                    <div id="ov-elp-bar" class="h-full bg-purple-500 rounded-full transition-all duration-500 relative z-10" style="width: 100%;"></div>
+                                </div>
+                                <div id="ov-elp-scale" class="relative w-full flex justify-between text-[7.5px] font-black text-slate-400 dark:text-slate-500 select-none mt-1">
+                                    <span>0Y</span>
+                                    <span>1Y</span>
+                                    <span>2Y</span>
+                                    <span>3Y</span>
+                                    <span>4Y</span>
+                                    <span>5Y</span>
+                                    <span>6Y</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div id="ov-elp-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 uppercase truncate">--</div>
+                                <div id="ov-elp-level" class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 truncate">Level --</div>
+                                <div id="ov-elp-years" class="text-[9px] font-bold text-slate-400 mt-0.5">--</div>
                             </div>
                         </div>
 
