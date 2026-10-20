@@ -1,4 +1,4 @@
-// main.js (2010_R179) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (2010_R180) - CertiFly Application Shell & Bento Dashboard Controller
 
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
 
@@ -1801,11 +1801,15 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   const elpYearsEl = getDashEl("ov-elp-years");
 
   let elpQual = null;
-  if (caamResults && Array.isArray(caamResults.qualifications)) {
-    elpQual = caamResults.qualifications.find(q => {
-      const n = (q.name || "").toUpperCase();
-      return n.includes("ENGLISH") || n.includes("ELP") || n.includes("LANGUAGE PROFICIENCY");
-    });
+  if (caamResults) {
+    if (caamResults.elp) {
+      elpQual = caamResults.elp;
+    } else if (Array.isArray(caamResults.qualifications)) {
+      elpQual = caamResults.qualifications.find(q => {
+        const n = (q.name || "").toUpperCase();
+        return n.includes("ENGLISH") || n.includes("ELP") || n.includes("LANGUAGE PROFICIENCY") || n.includes("LANGUAGE");
+      });
+    }
   }
 
   if (elpQual) {
