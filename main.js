@@ -1,4 +1,4 @@
-// main.js (1910_R177) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (2010_R179) - CertiFly Application Shell & Bento Dashboard Controller
 
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
 
@@ -1731,12 +1731,12 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     return str.toUpperCase();
   }
 
-  // F. Passport & Profile Footer
+  // F. Passport & ELP Footer Bento
+  // F1. Passport Clearance
   const passExpEl = getDashEl("ov-passport-expiry");
   const passNoEl = getDashEl("ov-passport-no");
   const passDaysEl = getDashEl("ov-passport-days");
   const passBarEl = getDashEl("ov-passport-bar");
-  const staffDesigEl = getDashEl("ov-staff-designation");
 
   const passportNo = (profile && profile.passportNo) ? profile.passportNo.trim() : "";
   const rawPassExp = (profile && profile.passportExpiry) ? profile.passportExpiry.trim() : "";
@@ -1793,10 +1793,118 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     allCandidates.push({ name: "Passport Clearance", days: passDays, tab: "mab" });
   }
 
-  if (staffDesigEl) {
-    const staffNo = (profile && profile.staffNo) || "84102";
-    const desig = (profile && profile.designation) || "CAPT";
-    staffDesigEl.innerText = `${desig} • #${staffNo}`;
+  // F2. English Language Proficiency (ELP) Validity
+  const elpBarEl = getDashEl("ov-elp-bar");
+  const elpScaleEl = getDashEl("ov-elp-scale");
+  const elpExpEl = getDashEl("ov-elp-expiry");
+  const elpLevelEl = getDashEl("ov-elp-level");
+  const elpYearsEl = getDashEl("ov-elp-years");
+
+  let elpQual = null;
+  if (caamResults && Array.isArray(caamResults.qualifications)) {
+    elpQual = caamResults.qualifications.find(q => {
+      const n = (q.name || "").toUpperCase();
+      return n.includes("ENGLISH") || n.includes("ELP") || n.includes("LANGUAGE PROFICIENCY");
+    });
+  }
+
+  if (elpQual) {
+    const qName = (elpQual.name || "").toUpperCase();
+    let level = 5; // default
+    if (qName.includes("LEVEL 6") || qName.includes("LVL 6") || qName.includes("LEVEL-6") || qName.includes("L6")) {
+      level = 6;
+    } else if (qName.includes("LEVEL 4") || qName.includes("LVL 4") || qName.includes("LEVEL-4") || qName.includes("L4")) {
+      level = 4;
+    } else if (qName.includes("LEVEL 5") || qName.includes("LVL 5") || qName.includes("LEVEL-5") || qName.includes("L5")) {
+      level = 5;
+    }
+
+    const rawExpStr = elpQual.dateText || elpQual.expiryDate || "";
+    const isLevel6 = level === 6 || rawExpStr.toUpperCase().includes("PERMANENT") || rawExpStr.toUpperCase().includes("NO EXPIRY") || rawExpStr.toUpperCase().includes("NIL") || !rawExpStr;
+
+    if (isLevel6 || level === 6) {
+      // RULE 2: Level 6 (No Expiry)
+      if (elpExpEl) elpExpEl.innerText = "NO EXPIRY";
+      if (elpLevelEl) elpLevelEl.innerText = "Level 6";
+      if (elpYearsEl) {
+        elpYearsEl.innerText = "";
+        elpYearsEl.style.display = "none";
+      }
+      if (elpBarEl) {
+        elpBarEl.style.width = "0%";
+        elpBarEl.className = "h-full bg-slate-300 dark:bg-slate-700 rounded-full transition-all duration-500 relative z-10";
+      }
+      if (elpScaleEl) {
+        elpScaleEl.innerHTML = `<span>0Y</span><span class="absolute left-1/2 -translate-x-1/2">3Y</span><span>6Y</span>`;
+      }
+    } else {
+      // Levels 4 & 5
+      const elpDays = getDaysUntil(rawExpStr);
+      const formattedElpDate = formatPassportDisplayDate(rawExpStr);
+
+      if (elpExpEl) elpExpEl.innerText = formattedElpDate;
+      if (elpLevelEl) elpLevelEl.innerText = `Level ${level}`;
+
+      if (elpDays !== null && elpDays !== undefined) {
+        allCandidates.push({ name: `ELP Level ${level}`, days: elpDays, tab: "caam" });
+
+        const yearsExact = (elpDays / 365.25);
+        const yearsRounded = Math.max(0, Math.round(yearsExact * 10) / 10);
+        
+        if (elpYearsEl) {
+          elpYearsEl.style.display = "block";
+          if (elpDays < 0) {
+            elpYearsEl.innerText = "Expired";
+            elpYearsEl.className = "text-[9px] font-bold text-rose-500 mt-0.5";
+          } else {
+            const yearsStr = yearsRounded === 1 ? "1 Year" : `${yearsRounded} Years`;
+            elpYearsEl.innerText = `${yearsStr} Remaining`;
+            elpYearsEl.className = "text-[9px] font-bold text-slate-400 mt-0.5";
+          }
+        }
+
+        const maxYears = level === 4 ? 3 : 6;
+        const maxDays = maxYears * 365.25;
+        const pct = elpDays < 0 ? 5 : Math.min(100, Math.max(5, Math.round((elpDays / maxDays) * 100)));
+
+        if (elpBarEl) {
+          elpBarEl.style.width = `${pct}%`;
+          if (elpDays <= 365.25) { // <= 1 year left
+            elpBarEl.className = "h-full bg-rose-500 rounded-full transition-all duration-500 relative z-10";
+          } else if (elpDays <= 730.5) { // <= 2 years left
+            elpBarEl.className = "h-full bg-amber-400 animate-pulse rounded-full transition-all duration-500 relative z-10";
+          } else {
+            elpBarEl.className = "h-full bg-purple-500 rounded-full transition-all duration-500 relative z-10";
+          }
+        }
+
+        // Scale Labels based on level
+        if (elpScaleEl) {
+          if (level === 4) {
+            // Level 4: 0y (far left), 1y (between zone 2 & 3 / 33.3%), 2y (between zone 4 & 5 / 66.7%), 3y (far right)
+            elpScaleEl.innerHTML = `<span>0Y</span><span class="absolute left-[33.3%] -translate-x-1/2">1Y</span><span class="absolute left-[66.7%] -translate-x-1/2">2Y</span><span>3Y</span>`;
+          } else {
+            // Level 5: 6 zones (0Y, 1Y, 2Y, 3Y, 4Y, 5Y, 6Y)
+            elpScaleEl.innerHTML = `<span>0Y</span><span>1Y</span><span>2Y</span><span>3Y</span><span>4Y</span><span>5Y</span><span>6Y</span>`;
+          }
+        }
+      } else {
+        if (elpYearsEl) elpYearsEl.innerText = "--";
+        if (elpBarEl) elpBarEl.style.width = "0%";
+      }
+    }
+  } else {
+    // Fallback when no ELP qualification is found
+    if (elpExpEl) elpExpEl.innerText = "NOT FOUND";
+    if (elpLevelEl) elpLevelEl.innerText = "Level --";
+    if (elpYearsEl) elpYearsEl.innerText = "Tap to view CAAM Licence";
+    if (elpBarEl) {
+      elpBarEl.style.width = "0%";
+      elpBarEl.className = "h-full bg-slate-300 dark:bg-slate-700 rounded-full transition-all duration-500 relative z-10";
+    }
+    if (elpScaleEl) {
+      elpScaleEl.innerHTML = `<span>0Y</span><span class="absolute left-1/2 -translate-x-1/2">3Y</span><span>6Y</span>`;
+    }
   }
 
   // G. Legality Rings Arc Computation & Bottleneck Detection
