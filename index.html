@@ -1,4 +1,4 @@
-<!-- index.html (1810_R173) - CertiFly PWA Application Shell & Core Layout -->
+<!-- index.html (1910_R176) - CertiFly PWA Application Shell & Core Layout -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -225,8 +225,36 @@ if ('serviceWorker' in navigator) {
 
                     </div>
 
-                    <!-- 3. EMERGENCY & SAFETY RECURRENT DRILLS BENTO BOX (HEALTH PROFILE HISTOGRAM) -->
-                    <div onclick="switchResultTab('mab')" class="cursor-pointer bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col gap-3">
+                    <!-- 3. LVO RECENCY BENTO BOX (1x1 FULL WIDTH) -->
+                    <div onclick="switchResultTab('mab')" class="cursor-pointer bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col gap-2.5 hover:border-blue-500 transition-all">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">LVO Recency</span>
+                            <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400">View Details &rarr;</span>
+                        </div>
+
+                        <!-- 180-Day Recency Gradient Sparkline Track with Vertical Marker -->
+                        <div class="relative w-full pt-1 pb-1">
+                            <div class="relative w-full h-3 rounded-full overflow-hidden shadow-inner border border-slate-200/60 dark:border-slate-800/80" style="background: linear-gradient(to right, #10B981 0%, #10B981 83.3%, #F59E0B 83.3%, #F59E0B 91.7%, #EF4444 91.7%, #EF4444 100%);">
+                                <!-- Vertical Marker Line (Cuts through sparkline bar) -->
+                                <div id="ov-lvo-marker" class="absolute top-0 bottom-0 w-1.5 bg-slate-900 dark:bg-white rounded-full transition-all duration-500 shadow-md -translate-x-1/2" style="left: 0%;"></div>
+                            </div>
+                            <!-- Scale Labels (0D, 90D, 180D) -->
+                            <div class="relative w-full flex justify-between text-[7.5px] font-black text-slate-400 dark:text-slate-500 select-none mt-1">
+                                <span>0D</span>
+                                <span class="absolute left-1/2 -translate-x-1/2">90D</span>
+                                <span>180D</span>
+                            </div>
+                        </div>
+
+                        <!-- Metadata Footer -->
+                        <div class="flex items-center justify-between text-[9.5px] text-slate-500 dark:text-slate-400 pt-0.5 border-t border-slate-100 dark:border-slate-800/80">
+                            <span>Check Date: <strong id="ov-lvo-checkdate" class="text-slate-800 dark:text-slate-200 font-extrabold">--</strong></span>
+                            <strong id="ov-lvo-days-text" class="text-slate-800 dark:text-slate-200 font-extrabold">-- Days Remaining</strong>
+                        </div>
+                    </div>
+
+                    <!-- 4. MANDATORY RECURRENTS & DRILLS (HEALTH PROFILE HISTOGRAM) -->
+                    <div id="drills-histogram-card" onclick="switchResultTab('mab')" class="cursor-pointer bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col gap-3">
                         <div class="flex items-center justify-between">
                             <span class="text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Mandatory Recurrents & Drills</span>
                             <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 cursor-pointer" onclick="switchResultTab('mab')">View All &rarr;</span>
@@ -249,6 +277,9 @@ if ('serviceWorker' in navigator) {
                                 <div class="absolute left-0 right-0 bottom-0 border-b border-slate-200 dark:border-slate-700 pointer-events-none"></div>
 
                                 <!-- Vertical Sparkline Bars (Spread evenly across X-axis) -->
+                                <div id="vbar-col-actype" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
+                                    <div id="vbar-drill-actype" class="w-full max-w-[14px] bg-teal-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
+                                </div>
                                 <div id="vbar-col-door" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
                                     <div id="vbar-drill-door" class="w-full max-w-[14px] bg-cyan-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
                                 </div>
@@ -270,9 +301,6 @@ if ('serviceWorker' in navigator) {
                                 <div id="vbar-col-avsec" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
                                     <div id="vbar-drill-avsec" class="w-full max-w-[14px] bg-indigo-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
                                 </div>
-                                <div id="vbar-col-lvo" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
-                                    <div id="vbar-drill-lvo" class="w-full max-w-[14px] bg-teal-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
-                                </div>
                                 <div id="vbar-col-supervisory" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
                                     <div id="vbar-drill-supervisory" class="w-full max-w-[14px] bg-blue-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
                                 </div>
@@ -281,9 +309,13 @@ if ('serviceWorker' in navigator) {
 
                         <!-- Legend Grid Below Chart -->
                         <div id="drills-legend-grid" class="grid grid-cols-3 gap-y-1.5 gap-x-2 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 text-[9px] font-bold text-slate-600 dark:text-slate-300">
+                            <div id="legend-drill-actype" class="flex items-center gap-1.5 truncate">
+                                <span id="dot-legend-actype" class="w-2 h-2 rounded-full bg-teal-500 shrink-0"></span>
+                                <span id="txt-legend-actype" class="truncate">B737</span>
+                            </div>
                             <div id="legend-drill-door" class="flex items-center gap-1.5 truncate">
                                 <span id="dot-legend-door" class="w-2 h-2 rounded-full bg-cyan-500 shrink-0"></span>
-                                <span class="truncate">Door</span>
+                                <span class="truncate">Door Drill</span>
                             </div>
                             <div id="legend-drill-wet" class="flex items-center gap-1.5 truncate">
                                 <span id="dot-legend-wet" class="w-2 h-2 rounded-full bg-sky-500 shrink-0"></span>
@@ -308,10 +340,6 @@ if ('serviceWorker' in navigator) {
                             <div id="legend-drill-avsec" class="flex items-center gap-1.5 truncate">
                                 <span id="dot-legend-avsec" class="w-2 h-2 rounded-full bg-indigo-500 shrink-0"></span>
                                 <span class="truncate">AVSEC</span>
-                            </div>
-                            <div id="legend-drill-lvo" class="flex items-center gap-1.5 truncate">
-                                <span id="dot-legend-lvo" class="w-2 h-2 rounded-full bg-teal-500 shrink-0"></span>
-                                <span class="truncate">LVO</span>
                             </div>
                             <div id="legend-drill-supervisory" class="flex items-center gap-1.5 truncate">
                                 <span id="dot-legend-supervisory" class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
