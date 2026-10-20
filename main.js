@@ -1,4 +1,4 @@
-// main.js (2010_R183) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (2010_R184) - CertiFly Application Shell & Bento Dashboard Controller
 
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
@@ -2373,13 +2373,18 @@ function updateHistoryPillUI(targetFilter) {
     { el: pillExpired, value: "EXPIRED" }
   ];
 
-  const activeStyle = "py-1.5 px-1 rounded-lg bg-blue-600 text-white shadow-xs transition-all cursor-pointer font-extrabold";
+  const activeStyles = {
+    ALL: "py-1.5 px-1 rounded-lg bg-blue-600 text-white shadow-xs transition-all cursor-pointer font-extrabold",
+    VALID: "py-1.5 px-1 rounded-lg bg-emerald-600 text-white shadow-xs transition-all cursor-pointer font-extrabold",
+    EXPIRING_SOON: "py-1.5 px-1 rounded-lg bg-amber-500 text-white shadow-xs transition-all cursor-pointer font-extrabold",
+    EXPIRED: "py-1.5 px-1 rounded-lg bg-rose-600 text-white shadow-xs transition-all cursor-pointer font-extrabold"
+  };
   const inactiveStyle = "py-1.5 px-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold transition-all cursor-pointer";
 
   filterPills.forEach(({ el, value }) => {
     if (!el) return;
     if (value === targetFilter) {
-      el.className = activeStyle;
+      el.className = activeStyles[value] || activeStyles.ALL;
     } else {
       el.className = inactiveStyle;
     }
