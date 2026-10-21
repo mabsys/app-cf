@@ -1,4 +1,4 @@
-<!-- index.html (2010_R185) - CertiFly PWA Application Shell & Core Layout -->
+<!-- index.html (2010_R187) - CertiFly PWA Application Shell & Core Layout -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -105,9 +105,9 @@ if ('serviceWorker' in navigator) {
                 <div id="tab-overview-content" class="res-tab-content flex flex-col gap-3.5">
 
                     <!-- 1. HERO LEGALITY RINGS CARD (3D FLIP CONTAINER) -->
-                    <div id="overview-hero-container" class="[perspective:1000px] cursor-pointer group">
+                    <div id="overview-hero-container" class="[perspective:1000px] cursor-pointer group select-none touch-manipulation active:scale-[0.995] transition-transform duration-100">
 
-                        <div id="overview-hero-card" class="relative w-full rounded-3xl [transform-style:preserve-3d] transition-transform duration-500">
+                        <div id="overview-hero-card" class="relative w-full rounded-3xl [transform-style:preserve-3d] [will-change:transform]">
 
                             <!-- FRONT FACE -->
                             <div class="relative bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-200 dark:border-slate-800 flex flex-col gap-3 [backface-visibility:hidden]">
@@ -159,8 +159,8 @@ if ('serviceWorker' in navigator) {
                                             <span id="ov-ring-label" class="px-2.5 py-0.5 rounded-md text-xs font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">OPERATIONAL</span>
                                         </div>
 
-                                        <div id="ov-ring-bottleneck" class="flex-1 my-1.5 text-[10px] font-bold p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 leading-snug break-words">
-                                            <span id="ov-bottleneck-led" class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] shrink-0"></span>
+                                        <div id="ov-ring-bottleneck" class="flex-1 my-1.5 text-[10px] font-bold p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 flex items-start gap-1.5 leading-snug break-words">
+                                            <span id="ov-bottleneck-led" class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] shrink-0 mt-0.5"></span>
                                             <span id="ov-bottleneck-text" class="break-words">All Items Valid</span>
                                         </div>
 
