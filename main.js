@@ -1,4 +1,4 @@
-// main.js (2010_R186) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (2010_R188) - CertiFly Application Shell & Bento Dashboard Controller
 
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
@@ -1442,6 +1442,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
 
   // Candidate items list for bottleneck detection
   const allCandidates = [];
+  let markerPct = 0;
 
   // A. CAAM Digital Licence Overall
   let caamDays = null;
@@ -1573,7 +1574,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
       }
     }
 
-    const markerPct = Math.min(100, Math.max(0, Math.round((daysElapsed / 180) * 100)));
+    markerPct = Math.min(100, Math.max(0, Math.round((daysElapsed / 180) * 100)));
     if (lvoMarkerEl) lvoMarkerEl.style.left = `${markerPct}%`;
 
     allCandidates.push({ name: "LVO Recency", days: lvoDaysRemaining, tab: "mab" });
