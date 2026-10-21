@@ -1,4 +1,4 @@
-// js/animations.js (2010_R186) - CertiFly™ Anime.js Universal Animation Engine Controller (v3 & v4 Compatible)
+// js/animations.js (2010_R187) - CertiFly™ Anime.js Universal Animation Engine Controller (v3 & v4 Compatible)
 
 /**
  * Check if Anime.js library is loaded globally
