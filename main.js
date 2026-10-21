@@ -1,7 +1,9 @@
-// main.js (2010_R184) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (2010_R185) - CertiFly Application Shell & Bento Dashboard Controller
 
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail } from './js/tools.js';
+
+
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
 import { parseAttestationText, validateAttestationContent, parseQualificationSlipText, validateQualificationSlipContent } from './js/parser.js';
@@ -1935,11 +1937,19 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   const isCaamWarning = caamMinDays <= userThreshold && caamMinDays > 0;
   const caamColor = isCaamLapsed ? "#EF4444" : (isCaamWarning ? "#F59E0B" : "#3B82F6"); // Royal Blue #3B82F6
 
+  const ringCaamBack = getDashEl("ring-caam-back");
+  const ringMabBack = getDashEl("ring-mab-back");
+  const ringPercentElBack = getDashEl("ov-ring-percent-back");
+
   if (ringCaam) {
     ringCaam.setAttribute("stroke", caamColor);
     ringCaam.setAttribute("stroke-dashoffset", String(caamOffset));
     const dotCaam = getDashEl("legend-dot-caam");
     if (dotCaam) dotCaam.style.backgroundColor = caamColor;
+  }
+  if (ringCaamBack) {
+    ringCaamBack.setAttribute("stroke", caamColor);
+    ringCaamBack.setAttribute("stroke-dashoffset", String(caamOffset));
   }
 
   // 2. MAB Ring (Nearest expiring MAB item: Line Check, Drills)
@@ -1960,19 +1970,17 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     const dotMab = getDashEl("legend-dot-mab");
     if (dotMab) dotMab.style.backgroundColor = mabColor;
   }
+  if (ringMabBack) {
+    ringMabBack.setAttribute("stroke", mabColor);
+    ringMabBack.setAttribute("stroke-dashoffset", String(mabOffset));
+  }
 
   // Center Percent/Days Display (Pick least days between CAAM & MAB)
   const leastDays = Math.min(caamMinDays, mabMinDays);
 
-  if (ringPercentEl) {
-    if (leastDays > 100) {
-      ringPercentEl.innerText = "100+";
-    } else if (leastDays <= 0) {
-      ringPercentEl.innerText = "0";
-    } else {
-      ringPercentEl.innerText = String(leastDays);
-    }
-  }
+  const leastDaysText = leastDays > 100 ? "100+" : (leastDays <= 0 ? "0" : String(leastDays));
+  if (ringPercentEl) ringPercentEl.innerText = leastDaysText;
+  if (ringPercentElBack) ringPercentElBack.innerText = leastDaysText;
 
   if (leastDays <= 0 || isCaamLapsed || isMabLapsed) {
     if (ringLabelEl) {
@@ -2001,6 +2009,17 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     }
   } else {
     if (bottleneckTextEl) bottleneckTextEl.innerText = "All Credentials Active";
+
+  // Initialize 3D Hero Card Flip Listener
+  try {
+    if (typeof initHeroCardFlip === 'function') {
+      initHeroCardFlip();
+    } else if (window.CertiFlyAnimations && window.CertiFlyAnimations.initHeroCardFlip) {
+      window.CertiFlyAnimations.initHeroCardFlip();
+    }
+  } catch (flipErr) {
+    console.warn("Hero flip init skipped/error:", flipErr);
+  }
 
   // Trigger Anime.js Animation Engine for Overview Tab
   try {
