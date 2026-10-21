@@ -1,4 +1,4 @@
-// js/animations.js (2010_R187) - CertiFly™ Anime.js Universal Animation Engine Controller (v3 & v4 Compatible)
+// js/animations.js (2010_R186) - CertiFly™ Anime.js Universal Animation Engine Controller (v3 & v4 Compatible)
 
 /**
  * Check if Anime.js library is loaded globally
@@ -19,7 +19,7 @@ function runAnime(params = {}) {
     return anime(params);
   } else if (typeof anime === 'object' && typeof anime.animate === 'function') {
     // Anime.js v4.x syntax: anime.animate(targets, parameters)
-    const { targets, easing, ease, ...rest } = params;
+    const { targets, easing, ease, update, onUpdate, ...rest } = params;
     let v4Easing = easing || ease;
     if (v4Easing === 'easeOutQuad') v4Easing = 'outQuad';
     else if (v4Easing === 'easeOutCubic') v4Easing = 'outCubic';
@@ -31,6 +31,11 @@ function runAnime(params = {}) {
 
     const animProps = { ...rest };
     if (v4Easing) animProps.ease = v4Easing;
+    const updateCb = onUpdate || update;
+    if (updateCb) {
+      animProps.onUpdate = updateCb;
+      animProps.update = updateCb;
+    }
 
     if (targets) {
       return anime.animate(targets, animProps);
