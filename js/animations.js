@@ -1,4 +1,4 @@
-// js/animations.js (2010_R183) - CertiFly™ Anime.js Animation Engine Controller
+// js/animations.js (2010_R185) - CertiFly™ Anime.js Animation Engine Controller
 
 /**
  * Check if Anime.js library is loaded globally
@@ -31,12 +31,44 @@ export function animateOverviewEntrance() {
  * 2. Hero Legality Concentric Rings & Live Number Counter Animation
  * @param {Object} opts - { caamOffset, mabOffset, caamColor, mabColor, targetDays }
  */
+let isHeroFlipped = false;
+
+/**
+ * Interactive 3D Hero Card Flip Controller
+ */
+export function initHeroCardFlip() {
+  const containerEl = document.getElementById('overview-hero-container');
+  const cardEl = document.getElementById('overview-hero-card');
+  if (!containerEl || !cardEl) return;
+
+  if (containerEl.dataset.flipInitialized === 'true') return;
+  containerEl.dataset.flipInitialized = 'true';
+
+  containerEl.addEventListener('click', () => {
+    isHeroFlipped = !isHeroFlipped;
+
+    if (isAnimeAvailable()) {
+      anime({
+        targets: cardEl,
+        rotateY: isHeroFlipped ? 180 : 0,
+        duration: 650,
+        easing: 'easeOutBack(1.2)'
+      });
+    } else {
+      cardEl.style.transform = `rotateY(${isHeroFlipped ? 180 : 0}deg)`;
+    }
+  });
+}
+
 export function animateLegalityRings(opts = {}) {
   if (!isAnimeAvailable()) return;
 
   const ringCaam = document.getElementById('ring-caam');
+  const ringCaamBack = document.getElementById('ring-caam-back');
   const ringMab = document.getElementById('ring-mab');
+  const ringMabBack = document.getElementById('ring-mab-back');
   const percentEl = document.getElementById('ov-ring-percent');
+  const percentElBack = document.getElementById('ov-ring-percent-back');
 
   const {
     caamOffset = 0,
@@ -47,26 +79,30 @@ export function animateLegalityRings(opts = {}) {
   } = opts;
 
   // Inner Ring (CAAM, circumference = 188.50)
-  if (ringCaam) {
-    ringCaam.setAttribute('stroke', caamColor);
-    anime({
-      targets: ringCaam,
-      strokeDashoffset: [188.50, caamOffset],
-      duration: 1100,
-      easing: 'easeOutExpo'
-    });
-  }
+  [ringCaam, ringCaamBack].forEach(r => {
+    if (r) {
+      r.setAttribute('stroke', caamColor);
+      anime({
+        targets: r,
+        strokeDashoffset: [188.50, caamOffset],
+        duration: 1100,
+        easing: 'easeOutExpo'
+      });
+    }
+  });
 
   // Outer Ring (MAB, circumference = 263.89)
-  if (ringMab) {
-    ringMab.setAttribute('stroke', mabColor);
-    anime({
-      targets: ringMab,
-      strokeDashoffset: [263.89, mabOffset],
-      duration: 1300,
-      easing: 'easeOutExpo'
-    });
-  }
+  [ringMab, ringMabBack].forEach(r => {
+    if (r) {
+      r.setAttribute('stroke', mabColor);
+      anime({
+        targets: r,
+        strokeDashoffset: [263.89, mabOffset],
+        duration: 1300,
+        easing: 'easeOutExpo'
+      });
+    }
+  });
 
   // Live Counter for Days Remaining in Ring Center
   if (percentEl && typeof targetDays === 'number' && !isNaN(targetDays)) {
@@ -81,11 +117,9 @@ export function animateLegalityRings(opts = {}) {
       duration: 1000,
       easing: 'easeOutCubic',
       update: () => {
-        if (isOverHundred && counterObj.val >= 100) {
-          percentEl.innerText = '100+';
-        } else {
-          percentEl.innerText = String(Math.round(counterObj.val));
-        }
+        const txt = (isOverHundred && counterObj.val >= 100) ? '100+' : String(Math.round(counterObj.val));
+        if (percentEl) percentEl.innerText = txt;
+        if (percentElBack) percentElBack.innerText = txt;
       }
     });
   }
@@ -218,6 +252,7 @@ export function animateOverviewDashboard(animData = {}) {
 // Global window fallback for non-module usage
 if (typeof window !== 'undefined') {
   window.CertiFlyAnimations = {
+    initHeroCardFlip,
     animateOverviewEntrance,
     animateLegalityRings,
     animateLvoMarker,
