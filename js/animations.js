@@ -70,8 +70,8 @@ export function initHeroCardFlip() {
       runAnime({
         targets: cardEl,
         rotateY: isHeroFlipped ? 180 : 0,
-        duration: 650,
-        easing: 'easeOutBack(1.2)'
+        duration: 480,
+        easing: 'easeOutBack(1.1)'
       });
     } else {
       cardEl.style.transform = `rotateY(${isHeroFlipped ? 180 : 0}deg)`;
