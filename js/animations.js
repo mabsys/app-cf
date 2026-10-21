@@ -1,36 +1,55 @@
-// js/animations.js (2010_R185) - CertiFly™ Anime.js Animation Engine Controller
+// js/animations.js (2010_R186) - CertiFly™ Anime.js Universal Animation Engine Controller (v3 & v4 Compatible)
 
 /**
  * Check if Anime.js library is loaded globally
  */
 function isAnimeAvailable() {
-  return typeof anime !== 'undefined';
+  if (typeof anime === 'undefined' || !anime) return false;
+  return typeof anime === 'function' || typeof anime.animate === 'function';
 }
 
 /**
- * 1. Bento Grid Entrance Cascade
- * Staggers entrance fade-in and slide-up for Overview tab Bento cards
+ * Universal Anime.js Execution Helper (Compatible with both v3.x and v4.x)
  */
-export function animateOverviewEntrance() {
-  if (!isAnimeAvailable()) return;
+function runAnime(params = {}) {
+  if (!isAnimeAvailable()) return null;
 
-  const cards = document.querySelectorAll('#tab-overview-content > div');
-  if (!cards || cards.length === 0) return;
+  if (typeof anime === 'function') {
+    // Anime.js v3.x syntax: anime({...})
+    return anime(params);
+  } else if (typeof anime === 'object' && typeof anime.animate === 'function') {
+    // Anime.js v4.x syntax: anime.animate(targets, parameters)
+    const { targets, easing, ease, ...rest } = params;
+    let v4Easing = easing || ease;
+    if (v4Easing === 'easeOutQuad') v4Easing = 'outQuad';
+    else if (v4Easing === 'easeOutCubic') v4Easing = 'outCubic';
+    else if (v4Easing === 'easeOutExpo') v4Easing = 'outExpo';
+    else if (typeof v4Easing === 'string' && v4Easing.startsWith('easeOutBack')) {
+      const match = v4Easing.match(/easeOutBack\(([^)]+)\)/);
+      v4Easing = match ? `outBack(${match[1]})` : 'outBack';
+    }
 
-  anime({
-    targets: cards,
-    opacity: [0, 1],
-    translateY: [16, 0],
-    delay: anime.stagger(80, { start: 50 }),
-    duration: 650,
-    easing: 'easeOutQuad'
-  });
+    const animProps = { ...rest };
+    if (v4Easing) animProps.ease = v4Easing;
+
+    if (targets) {
+      return anime.animate(targets, animProps);
+    }
+    return anime.animate(animProps);
+  }
+  return null;
 }
 
 /**
- * 2. Hero Legality Concentric Rings & Live Number Counter Animation
- * @param {Object} opts - { caamOffset, mabOffset, caamColor, mabColor, targetDays }
+ * Universal Stagger Helper (v3 & v4 compatible)
  */
+function runStagger(value, options) {
+  if (typeof anime !== 'undefined' && anime && typeof anime.stagger === 'function') {
+    return anime.stagger(value, options);
+  }
+  return 0;
+}
+
 let isHeroFlipped = false;
 
 /**
@@ -48,7 +67,7 @@ export function initHeroCardFlip() {
     isHeroFlipped = !isHeroFlipped;
 
     if (isAnimeAvailable()) {
-      anime({
+      runAnime({
         targets: cardEl,
         rotateY: isHeroFlipped ? 180 : 0,
         duration: 650,
@@ -60,6 +79,29 @@ export function initHeroCardFlip() {
   });
 }
 
+/**
+ * 1. Bento Grid Entrance Cascade
+ */
+export function animateOverviewEntrance() {
+  if (!isAnimeAvailable()) return;
+
+  const cards = document.querySelectorAll('#tab-overview-content > div');
+  if (!cards || cards.length === 0) return;
+
+  runAnime({
+    targets: cards,
+    opacity: [0, 1],
+    translateY: [16, 0],
+    delay: runStagger(80, { start: 50 }),
+    duration: 650,
+    easing: 'easeOutQuad'
+  });
+}
+
+/**
+ * 2. Hero Legality Concentric Rings & Live Number Counter Animation
+ * @param {Object} opts - { caamOffset, mabOffset, caamColor, mabColor, targetDays }
+ */
 export function animateLegalityRings(opts = {}) {
   if (!isAnimeAvailable()) return;
 
@@ -79,47 +121,45 @@ export function animateLegalityRings(opts = {}) {
   } = opts;
 
   // Inner Ring (CAAM, circumference = 188.50)
-  [ringCaam, ringCaamBack].forEach(r => {
-    if (r) {
-      r.setAttribute('stroke', caamColor);
-      anime({
-        targets: r,
-        strokeDashoffset: [188.50, caamOffset],
-        duration: 1100,
-        easing: 'easeOutExpo'
-      });
-    }
-  });
+  const caamRings = [ringCaam, ringCaamBack].filter(Boolean);
+  if (caamRings.length > 0) {
+    caamRings.forEach(r => r.setAttribute('stroke', caamColor));
+    runAnime({
+      targets: caamRings,
+      strokeDashoffset: [188.50, caamOffset],
+      duration: 1100,
+      easing: 'easeOutExpo'
+    });
+  }
 
   // Outer Ring (MAB, circumference = 263.89)
-  [ringMab, ringMabBack].forEach(r => {
-    if (r) {
-      r.setAttribute('stroke', mabColor);
-      anime({
-        targets: r,
-        strokeDashoffset: [263.89, mabOffset],
-        duration: 1300,
-        easing: 'easeOutExpo'
-      });
-    }
-  });
+  const mabRings = [ringMab, ringMabBack].filter(Boolean);
+  if (mabRings.length > 0) {
+    mabRings.forEach(r => r.setAttribute('stroke', mabColor));
+    runAnime({
+      targets: mabRings,
+      strokeDashoffset: [263.89, mabOffset],
+      duration: 1300,
+      easing: 'easeOutExpo'
+    });
+  }
 
-  // Live Counter for Days Remaining in Ring Center
-  if (percentEl && typeof targetDays === 'number' && !isNaN(targetDays)) {
+  // Live Counter for Days Remaining in Ring Center (Front & Back)
+  const targetElements = [percentEl, percentElBack].filter(Boolean);
+  if (targetElements.length > 0 && typeof targetDays === 'number' && !isNaN(targetDays)) {
     const isOverHundred = targetDays > 100;
     const finalVal = Math.max(0, targetDays);
     const counterObj = { val: 0 };
 
-    anime({
+    runAnime({
       targets: counterObj,
       val: finalVal,
       round: 1,
       duration: 1000,
       easing: 'easeOutCubic',
       update: () => {
-        const txt = (isOverHundred && counterObj.val >= 100) ? '100+' : String(Math.round(counterObj.val));
-        if (percentEl) percentEl.innerText = txt;
-        if (percentElBack) percentElBack.innerText = txt;
+        const displayVal = isOverHundred && counterObj.val >= 100 ? '100+' : String(Math.round(counterObj.val));
+        targetElements.forEach(el => { el.innerText = displayVal; });
       }
     });
   }
@@ -137,7 +177,7 @@ export function animateLvoMarker(targetPct = 0) {
 
   const safePct = Math.min(100, Math.max(0, targetPct));
 
-  anime({
+  runAnime({
     targets: markerEl,
     left: ['0%', safePct + '%'],
     duration: 1100,
@@ -159,10 +199,10 @@ export function animateHistogramBars() {
     bar.setAttribute('data-target-height', currentHeight);
   });
 
-  anime({
+  runAnime({
     targets: vBars,
     height: [(el) => '0%', (el) => el.getAttribute('data-target-height') || '100%'],
-    delay: anime.stagger(50, { start: 100 }),
+    delay: runStagger(50, { start: 100 }),
     duration: 850,
     easing: 'easeOutCubic'
   });
@@ -170,11 +210,11 @@ export function animateHistogramBars() {
   // Stagger legend dots pop-in
   const dots = document.querySelectorAll('#tab-overview-content [id^="dot-legend-"]');
   if (dots && dots.length > 0) {
-    anime({
+    runAnime({
       targets: dots,
       scale: [0, 1],
       opacity: [0, 1],
-      delay: anime.stagger(40, { start: 200 }),
+      delay: runStagger(40, { start: 200 }),
       duration: 500,
       easing: 'easeOutBack(1.5)'
     });
@@ -192,7 +232,7 @@ export function animatePassportAndElpBars() {
 
   if (passBar) {
     const targetW = passBar.style.width || '100%';
-    anime({
+    runAnime({
       targets: passBar,
       width: ['0%', targetW],
       duration: 900,
@@ -202,7 +242,7 @@ export function animatePassportAndElpBars() {
 
   if (elpBar) {
     const targetW = elpBar.style.width || '100%';
-    anime({
+    runAnime({
       targets: elpBar,
       width: ['0%', targetW],
       duration: 900,
@@ -213,11 +253,11 @@ export function animatePassportAndElpBars() {
   // Scale labels stagger
   const scaleSpans = document.querySelectorAll('#ov-elp-scale span');
   if (scaleSpans && scaleSpans.length > 0) {
-    anime({
+    runAnime({
       targets: scaleSpans,
       opacity: [0, 1],
       translateY: [4, 0],
-      delay: anime.stagger(40, { start: 300 }),
+      delay: runStagger(40, { start: 300 }),
       duration: 500,
       easing: 'easeOutCubic'
     });
