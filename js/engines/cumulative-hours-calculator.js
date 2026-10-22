@@ -204,3 +204,8 @@ class CumulativeHoursEngine {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = CumulativeHoursEngine;
 }
+
+export { CumulativeHoursEngine }; 
+export function calculateCumulativeHours(params) { 
+  return CumulativeHoursEngine.calculateCumulativeBudget(params); 
+}
