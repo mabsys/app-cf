@@ -130,3 +130,8 @@ class MedicalValidityEngine {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = MedicalValidityEngine;
 }
+
+export { MedicalValidityEngine }; 
+export function calculateMedicalValidity(params) { 
+  return MedicalValidityEngine.calculateValidity(params); 
+}
