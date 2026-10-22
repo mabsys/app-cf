@@ -166,3 +166,8 @@ class PreFlightRestEngine {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = PreFlightRestEngine;
 }
+
+export { PreFlightRestEngine }; 
+export function calculatePreFlightRest(params) { 
+  return PreFlightRestEngine.calculateMinRest(params); 
+}
