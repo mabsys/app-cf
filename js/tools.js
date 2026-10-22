@@ -1,576 +1,359 @@
-// js/tools.js (1410_R154) - Flight Deck Compliance Tools Module
-// Implements Hub 1 (Universal Validity Accordion Cards) & Hub 2 (FDP & CAAM/BOP/FTL/1 Discretion Engine)
+// js/tools.js (2010_R190)
 
-import { MAB_AIRPORTS, searchAirports, findAirport } from './data/airports.js';
-import { getScanHistory, getProfileData } from './storage.js';
+import { calculateMedicalValidity } from './engines/medical-validity-calculator.js';
+import { calculatePpcWindows } from './engines/ppc-validity-calculator.js';
+import { calculateRecurrentExpiry } from './engines/recurrent-training-calculator.js';
+import { calculateStandbyDeduction } from './engines/standby-fdp-calculator.js';
+import { calculateMaxFdp } from './engines/max-fdp-calculator.js';
+import { calculatePreFlightRest } from './engines/pre-flight-rest-calculator.js';
+import { calculateCumulativeHours } from './engines/cumulative-hours-calculator.js';
+import { initCaamFtl1Form, generateCaamFtl1Pdf } from './engines/caam-ftl1-controller.js';
 
-// ----------------------------------------------------------------------------
-// UTILITY: AVIATION TIME PARSER & TIMEZONE CONVERTER
-// ----------------------------------------------------------------------------
+/**
+ * CertiFly™ Tools Module - UI Orchestrator & Data Adapter (2010_R190)
+ */
 
-export function parseAviationTime(input) {
-  if (!input) return "";
-  let clean = String(input).replace(/[^\d:]/g, "");
-  if (!clean.includes(":")) {
-    if (clean.length === 4) {
-      clean = `${clean.slice(0, 2)}:${clean.slice(2, 4)}`;
-    } else if (clean.length === 3) {
-      clean = `0${clean.slice(0, 1)}:${clean.slice(1, 3)}`;
-    }
+let toolsState = {
+  activeTier: 'ftl', // 'ftl' | 'quals'
+  activeSubTab: 'max-fdp', // FTL: 'standby'|'max-fdp'|'pre-flight-rest'|'cumulative'|'discretion'
+                           // Quals: 'medical'|'ppc'|'recurrent'
+  lastCalculationResults: {}
+};
+
+/**
+ * Standardized 4-Slot Output Adapter
+ * Normalizes raw calculation output from any of the 8 engines into a unified structure
+ * @param {string} toolType - Engine identifier
+ * @param {Object} rawResult - Raw output object from engine
+ * @returns {Object} Normalized 4-slot output format
+ */
+export function normalizeOutput(toolType, rawResult) {
+  if (!rawResult) {
+    return {
+      statusBadge: 'NO DATA',
+      statusClass: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+      headlineTitle: 'STATUS',
+      headlineValue: '--:--',
+      targetClockLabel: 'Target Clock',
+      targetClockValue: '--:--',
+      breakdownGrid: [],
+      auditNotes: [],
+      actions: []
+    };
   }
-  return clean;
-}
 
-export function calculateLocalFromUtc(utcTimeStr, tzOffsetHours = 8) {
-  const parsed = parseAviationTime(utcTimeStr);
-  if (!parsed.includes(":")) return "";
-  const [hh, mm] = parsed.split(":").map(n => parseInt(n, 10));
-  let localH = hh + Math.floor(tzOffsetHours);
-  let localM = mm + Math.round((tzOffsetHours % 1) * 60);
-  if (localM >= 60) { localH += 1; localM -= 60; }
-  if (localH >= 24) localH %= 24;
-  if (localH < 0) localH = (localH + 24) % 24;
-  return `${localH.toString().padStart(2, '0')}:${localM.toString().padStart(2, '0')}`;
-}
+  switch (toolType) {
+    case 'standby': {
+      const isCaseB = rawResult.caseType === 'CASE_B' || rawResult.isCaseB;
+      return {
+        statusBadge: rawResult.isLapsed ? 'EXCEEDED' : (isCaseB ? 'CASE B (REDUCED)' : 'CASE A (STANDARD)'),
+        statusClass: rawResult.isLapsed ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300' : (isCaseB ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300'),
+        headlineTitle: 'NET PERMISSIBLE FDP',
+        headlineValue: rawResult.netFdpFormatted || rawResult.netFdp || '--:--',
+        targetClockLabel: 'Standby End Cutoff',
+        targetClockValue: rawResult.standbyEndClock || '--:--',
+        breakdownGrid: [
+          { label: 'Standby Duration', value: rawResult.standbyDurationFormatted || '--' },
+          { label: 'FDP Deduction', value: rawResult.deductionFormatted || '0h 00m' },
+          { label: 'Case Type', value: isCaseB ? 'Case B (≥6h)' : 'Case A (<6h)' },
+          { label: 'Base Max FDP', value: rawResult.baseMaxFdpFormatted || '--' }
+        ],
+        auditNotes: [
+          rawResult.clause || 'CAAM CAD 1901 Standby Rules',
+          rawResult.summaryNote || 'Standby call-out adjustment applied'
+        ],
+        actions: [
+          { type: 'pipeline-fdp', label: 'Pass to Max FDP Calc' }
+        ]
+      };
+    }
 
-export function calculateUtcFromLocal(localTimeStr, tzOffsetHours = 8) {
-  const parsed = parseAviationTime(localTimeStr);
-  if (!parsed.includes(":")) return "";
-  const [hh, mm] = parsed.split(":").map(n => parseInt(n, 10));
-  let utcH = hh - Math.floor(tzOffsetHours);
-  let utcM = mm - Math.round((tzOffsetHours % 1) * 60);
-  if (utcM < 0) { utcH -= 1; utcM += 60; }
-  if (utcH < 0) utcH = (utcH + 24) % 24;
-  if (utcH >= 24) utcH %= 24;
-  return `${utcH.toString().padStart(2, '0')}:${utcM.toString().padStart(2, '0')}`;
-}
-
-// ----------------------------------------------------------------------------
-// HUB 1: UNIVERSAL QUALIFICATION & VALIDITY CALCULATORS
-// ----------------------------------------------------------------------------
-
-export function calculatePpcWindows(conductDateStr, expiryDateStr) {
-  if (!expiryDateStr) return null;
-  const expiry = new Date(expiryDateStr);
-  if (isNaN(expiry.getTime())) return null;
-
-  const lastDayExpiry = new Date(expiry.getFullYear(), expiry.getMonth() + 1, 0);
-  const lpcWindowStart = new Date(lastDayExpiry.getFullYear(), lastDayExpiry.getMonth() - 2, 1);
-  const lpcWindowEnd = new Date(lastDayExpiry);
-
-  let conductDate = conductDateStr ? new Date(conductDateStr) : new Date();
-  if (isNaN(conductDate.getTime())) conductDate = new Date();
-
-  const newLpcExpiry = new Date(conductDate.getFullYear() + 1, conductDate.getMonth() + 1, 0);
-  const opcEarliest = new Date(conductDate.getFullYear(), conductDate.getMonth() + 4, 1);
-  const opcLatest = new Date(lastDayExpiry.getFullYear(), lastDayExpiry.getMonth() - 4, 0);
-
-  const formatDate = (d) => {
-    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-    return `${d.getDate().toString().padStart(2, '0')} ${months[d.getMonth()]} ${d.getFullYear()}`;
-  };
-
-  return {
-    newLpcExpiry: formatDate(newLpcExpiry),
-    lpcWindowStart: formatDate(lpcWindowStart),
-    lpcWindowEnd: formatDate(lpcWindowEnd),
-    opcEarliest: formatDate(opcEarliest),
-    opcLatest: formatDate(opcLatest)
-  };
-}
-
-export function calculateCourseExpiry(courseType, conductDateStr) {
-  if (!conductDateStr) return null;
-  const conduct = new Date(conductDateStr);
-  if (isNaN(conduct.getTime())) return null;
-
-  let monthsValidity = 12;
-  if (courseType === 'dgr') monthsValidity = 24;
-  if (courseType === 'sms') monthsValidity = 36;
-
-  const expiry = new Date(conduct.getFullYear(), conduct.getMonth() + monthsValidity + 1, 0);
-  const revalStart = new Date(expiry.getFullYear(), expiry.getMonth() - 2, 1);
-
-  const formatDate = (d) => {
-    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-    return `${d.getDate().toString().padStart(2, '0')} ${months[d.getMonth()]} ${d.getFullYear()}`;
-  };
-
-  return {
-    expiryDate: formatDate(expiry),
-    revalWindowStart: formatDate(revalStart),
-    revalWindowEnd: formatDate(expiry),
-    monthsValidity
-  };
-}
-
-export function calculateMedicalWindow(expiryDateStr, dobStr) {
-  if (!expiryDateStr) return null;
-  const expiry = new Date(expiryDateStr);
-  if (isNaN(expiry.getTime())) return null;
-
-  const dameEarliest = new Date(expiry.getTime() - (45 * 24 * 60 * 60 * 1000));
-  let ageNotice = 'Standard 12-Month Medical Validity';
-  let isAge60Plus = false;
-
-  if (dobStr) {
-    const dob = new Date(dobStr);
-    if (!isNaN(dob.getTime())) {
-      const ageDiffMs = Date.now() - dob.getTime();
-      const ageDate = new Date(ageDiffMs);
-      const age = Math.abs(ageDate.getUTCFullYear() - 1970);
-      if (age >= 60) {
-        isAge60Plus = true;
-        ageNotice = `Age ${age} (60+ Threshold) - Mandatory 6-Month Medical Renewal Cycle`;
-      } else {
-        ageNotice = `Age ${age} - Standard 12-Month Medical Renewal Cycle`;
+    case 'max-fdp': {
+      const isDiscretionNeeded = rawResult.isDiscretionTriggered || rawResult.exceedsMaxFdp || rawResult.isDiscretionRequired;
+      const isProhibited = rawResult.isProhibited || rawResult.isLapsed;
+      
+      let badgeText = 'CLEARED';
+      let badgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300';
+      
+      if (isProhibited) {
+        badgeText = 'PROHIBITED';
+        badgeClass = 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300';
+      } else if (isDiscretionNeeded) {
+        badgeText = `DISCRETION EXERCISED (+${rawResult.discretionMinutesUsed || 45}m)`;
+        badgeClass = 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300';
       }
+
+      return {
+        statusBadge: badgeText,
+        statusClass: badgeClass,
+        headlineTitle: 'MAX ALLOWABLE FDP',
+        headlineValue: rawResult.maxFdpFormatted || rawResult.maxFdp || '--:--',
+        targetClockLabel: 'Latest On-Chocks Cutoff',
+        targetClockValue: rawResult.latestOnChocksUtc || rawResult.onChocksClock || '--:-- UTC',
+        breakdownGrid: [
+          { label: 'Base FDP', value: rawResult.baseFdpFormatted || '--' },
+          { label: 'Relief Credit', value: rawResult.bunkCreditFormatted || 'None' },
+          { label: 'Split Rest Credit', value: rawResult.splitCreditFormatted || 'None' },
+          { label: 'Max Discretion', value: rawResult.maxDiscretionFormatted || '+2h 00m' }
+        ],
+        auditNotes: [
+          rawResult.tableClause || 'CAAM CAD 1901 Table A/B',
+          rawResult.acclimatisationStatus || 'Acclimatised'
+        ],
+        actions: [
+          { type: 'email', label: 'Draft FTL Email' },
+          ...(isDiscretionNeeded ? [{ type: 'discretion', label: 'Complete CAAM/BOP/FTL/1 Report' }] : []),
+          { type: 'pipeline-rest', label: 'Pass to Min Rest' }
+        ]
+      };
     }
+
+    case 'pre-flight-rest': {
+      return {
+        statusBadge: rawResult.isRestReduced ? 'REDUCED REST (DISCRETION)' : 'STANDARD REST',
+        statusClass: rawResult.isRestReduced ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
+        headlineTitle: 'MANDATORY MINIMUM REST',
+        headlineValue: rawResult.minRestFormatted || rawResult.requiredRest || '--:--',
+        targetClockLabel: 'Earliest Next Report Clock',
+        targetClockValue: rawResult.earliestReportClock || '--:--',
+        breakdownGrid: [
+          { label: 'Preceding Duty', value: rawResult.precedingDutyFormatted || '--' },
+          { label: 'Home Base Floor', value: rawResult.homeBaseFloor || '12h 00m' },
+          { label: 'Travel/Transit', value: rawResult.travelAllowance || 'Included' },
+          { label: 'Local Night Guard', value: rawResult.localNightAchieved ? 'Achieved' : 'N/A' }
+        ],
+        auditNotes: [
+          rawResult.clause || 'CAAM CAD 1901 Rest Requirements',
+          rawResult.notes || 'Minimum rest calculated based on preceding duty and location'
+        ],
+        actions: [
+          { type: 'pipeline-cumulative', label: 'Update Cumulative Hours' }
+        ]
+      };
+    }
+
+    case 'cumulative': {
+      const isOverLimit = rawResult.isExceeded || rawResult.isOverCap;
+      return {
+        statusBadge: isOverLimit ? 'CAP EXCEEDED' : 'ROSTER CLEARED',
+        statusClass: isOverLimit ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
+        headlineTitle: '7-DAY DUTY BUDGET',
+        headlineValue: rawResult.duty7dFormatted || `${rawResult.duty7d || 0} / 55h`,
+        targetClockLabel: 'Next Sector Limit',
+        targetClockValue: rawResult.nextSectorMaxHours || '--:--',
+        breakdownGrid: [
+          { label: '14-Day Duty', value: rawResult.duty14dFormatted || '0 / 95h' },
+          { label: '28-Day Duty', value: rawResult.duty28dFormatted || '0 / 190h' },
+          { label: '28-Day Flying', value: rawResult.fly28dFormatted || '0 / 100h' },
+          { label: '12-Month Flying', value: rawResult.fly12mFormatted || '0 / 1000h' }
+        ],
+        auditNotes: [
+          'CAAM CAD 1901 Cumulative Duty & Flying Caps',
+          rawResult.standbyWeightingNote || 'Standby weighting applied where applicable'
+        ],
+        actions: []
+      };
+    }
+
+    case 'caam-ftl1': {
+      return {
+        statusBadge: rawResult.isComplete ? 'REPORT READY' : 'DRAFT IN PROGRESS',
+        statusClass: rawResult.isComplete ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300',
+        headlineTitle: 'CAAM/BOP/FTL/1 REPORT',
+        headlineValue: rawResult.flightNo ? `FLT ${rawResult.flightNo}` : 'DISCRETION FORM',
+        targetClockLabel: 'FDP Extension Used',
+        targetClockValue: rawResult.extensionUsedFormatted || '+00:00',
+        breakdownGrid: [
+          { label: 'Commander', value: rawResult.commanderName || '--' },
+          { label: 'Sectors Flown', value: String(rawResult.sectorCount || 1) },
+          { label: 'Delay Reason', value: rawResult.primaryDelayReason || 'Operational' },
+          { label: 'Signature', value: rawResult.hasSignature ? 'Signed' : 'Pending' }
+        ],
+        auditNotes: [
+          'CAAM/BOP/FTL/1 Discretion Report',
+          'Required to be submitted to CAAM/Company within 48 hours'
+        ],
+        actions: [
+          { type: 'generate-pdf', label: 'Download Official CAAM PDF' },
+          { type: 'email-pdf', label: 'Email Report to Ops' }
+        ]
+      };
+    }
+
+    case 'medical': {
+      return {
+        statusBadge: rawResult.isAnniversaryPreserved ? 'ANNIVERSARY PRESERVED' : 'RESET (EOM)',
+        statusClass: 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300',
+        headlineTitle: 'NEW MEDICAL EXPIRY',
+        headlineValue: rawResult.newExpiryDateFormatted || rawResult.newExpiry || '--',
+        targetClockLabel: 'Renewal Window Opens',
+        targetClockValue: rawResult.windowOpenDateFormatted || rawResult.windowOpen || '--',
+        breakdownGrid: [
+          { label: 'Age Tier', value: rawResult.ageTierLabel || 'Under 40' },
+          { label: 'Class', value: rawResult.medicalClass || 'Class 1' },
+          { label: 'Validity Period', value: `${rawResult.validityMonths || 12} Months` },
+          { label: '45-Day Window', value: rawResult.windowStatus || 'Active' }
+        ],
+        auditNotes: [
+          rawResult.clause || 'CAAM CAD 1 Personnel Licensing (PEL)',
+          rawResult.notes || 'Expiry date calculated per CAAM age-tiered validity rules'
+        ],
+        actions: []
+      };
+    }
+
+    case 'ppc': {
+      return {
+        statusBadge: rawResult.isAnniversaryPreserved ? 'ANNIVERSARY PRESERVED' : 'RESET (EOM)',
+        statusClass: 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300',
+        headlineTitle: 'NEW PPC / LPC EXPIRY',
+        headlineValue: rawResult.newLpcExpiryFormatted || rawResult.newLpcExpiry || '--',
+        targetClockLabel: 'PPC Window Opens',
+        targetClockValue: rawResult.windowOpenFormatted || rawResult.windowOpen || '--',
+        breakdownGrid: [
+          { label: 'Base Month', value: rawResult.baseMonth || '--' },
+          { label: 'Grace Period', value: rawResult.gracePeriod || '3 Months' },
+          { label: 'OPC Window', value: rawResult.opcWindowSummary || 'Active' },
+          { label: 'Status', value: rawResult.statusLabel || 'Valid' }
+        ],
+        auditNotes: [
+          'CAAM CAD 1 & OM-D PPC/LPC Validity Rules',
+          rawResult.notes || '3-month lookback window applied'
+        ],
+        actions: []
+      };
+    }
+
+    case 'recurrent': {
+      return {
+        statusBadge: rawResult.isCompliant ? 'COMPLIANT' : 'RENEWAL DUE',
+        statusClass: rawResult.isCompliant ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300',
+        headlineTitle: 'RECURRENT EXPIRY',
+        headlineValue: rawResult.expiryDateFormatted || rawResult.expiryDate || '--',
+        targetClockLabel: 'Days Remaining',
+        targetClockValue: rawResult.daysRemaining !== undefined ? `${rawResult.daysRemaining} Days` : '--',
+        breakdownGrid: [
+          { label: 'Course Name', value: rawResult.courseName || 'Ground School' },
+          { label: 'Validity', value: `${rawResult.validityMonths || 12} Months` },
+          { label: 'Recency Status', value: rawResult.recencyStatus || 'Valid' },
+          { label: 'Next Due', value: rawResult.nextDueFormatted || '--' }
+        ],
+        auditNotes: [
+          'CAAM & OM-D Recurrent Training Standards',
+          rawResult.notes || 'Ground, Sim, SEP, and CRM validity tracking'
+        ],
+        actions: []
+      };
+    }
+
+    default:
+      return {
+        statusBadge: 'READY',
+        statusClass: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+        headlineTitle: 'CALCULATOR',
+        headlineValue: '--:--',
+        targetClockLabel: 'Target Clock',
+        targetClockValue: '--:--',
+        breakdownGrid: [],
+        auditNotes: [],
+        actions: []
+      };
+  }
+}
+
+/**
+ * Master Tool Calculation Dispatcher
+ * Calls the appropriate engine and returns normalized output
+ */
+export function runToolCalculation(toolType, inputData = {}) {
+  let rawResult = null;
+
+  try {
+    switch (toolType) {
+      case 'standby':
+        rawResult = typeof calculateStandbyDeduction === 'function' ? calculateStandbyDeduction(inputData) : null;
+        break;
+      case 'max-fdp':
+        rawResult = typeof calculateMaxFdp === 'function' ? calculateMaxFdp(inputData) : null;
+        break;
+      case 'pre-flight-rest':
+        rawResult = typeof calculatePreFlightRest === 'function' ? calculatePreFlightRest(inputData) : null;
+        break;
+      case 'cumulative':
+        rawResult = typeof calculateCumulativeHours === 'function' ? calculateCumulativeHours(inputData) : null;
+        break;
+      case 'caam-ftl1':
+        rawResult = typeof initCaamFtl1Form === 'function' ? initCaamFtl1Form(inputData) : null;
+        break;
+      case 'medical':
+        rawResult = typeof calculateMedicalValidity === 'function' ? calculateMedicalValidity(inputData) : null;
+        break;
+      case 'ppc':
+        rawResult = typeof calculatePpcWindows === 'function' ? calculatePpcWindows(inputData.conductDate, inputData.expiryDate) : null;
+        break;
+      case 'recurrent':
+        rawResult = typeof calculateRecurrentExpiry === 'function' ? calculateRecurrentExpiry(inputData) : null;
+        break;
+      default:
+        console.warn(`Unknown tool type: ${toolType}`);
+    }
+  } catch (err) {
+    console.warn(`Error running calculation for ${toolType}:`, err);
   }
 
-  const formatDate = (d) => {
-    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-    return `${d.getDate().toString().padStart(2, '0')} ${months[d.getMonth()]} ${d.getFullYear()}`;
-  };
-
-  return {
-    dameEarliest: formatDate(dameEarliest),
-    expiryDate: formatDate(expiry),
-    ageNotice,
-    isAge60Plus
-  };
+  const normalized = normalizeOutput(toolType, rawResult);
+  toolsState.lastCalculationResults[toolType] = { raw: rawResult, normalized };
+  return { raw: rawResult, normalized };
 }
 
-// ----------------------------------------------------------------------------
-// HUB 2: FDP & DISCRETION COMPLIANCE ENGINE (CAD 1901 TABLE A)
-// ----------------------------------------------------------------------------
-
-export function getMaxAllowableFdp(reportTimeStr, sectorCount = 1) {
-  const parsed = parseAviationTime(reportTimeStr);
-  if (!parsed.includes(':')) return 12.0;
-
-  const [hh, mm] = parsed.split(':').map(n => parseInt(n, 10));
-  const timeNum = hh + (mm / 60);
-
-  const count = Math.max(1, Math.min(6, sectorCount));
-
-  if (timeNum >= 6.0 && timeNum < 13.5) {
-    const limits = [13.0, 12.25, 11.50, 10.75, 10.0, 10.0];
-    return limits[count - 1];
-  } else if (timeNum >= 13.5 && timeNum < 18.0) {
-    const limits = [12.50, 11.75, 11.0, 10.25, 9.50, 9.50];
-    return limits[count - 1];
-  } else if (timeNum >= 18.0 && timeNum < 22.0) {
-    const limits = [12.0, 11.25, 10.50, 9.75, 9.0, 9.0];
-    return limits[count - 1];
-  } else {
-    const limits = [11.0, 10.25, 9.50, 8.75, 8.0, 8.0];
-    return limits[count - 1];
-  }
+/**
+ * Update state for active sub-tab / tier
+ */
+export function setToolsTab(tier, subTab) {
+  if (tier) toolsState.activeTier = tier;
+  if (subTab) toolsState.activeSubTab = subTab;
 }
 
-export function calculateFdpAndDiscretion(reportTimeStr, sectorCount, actualEndTimeStr) {
-  if (!reportTimeStr || !actualEndTimeStr) return null;
-
-  const report = parseAviationTime(reportTimeStr);
-  const actualEnd = parseAviationTime(actualEndTimeStr);
-
-  const [rH, rM] = report.split(':').map(n => parseInt(n, 10));
-  const [eH, eM] = actualEnd.split(':').map(n => parseInt(n, 10));
-
-  let reportMin = (rH * 60) + rM;
-  let endMin = (eH * 60) + eM;
-  if (endMin < reportMin) endMin += 1440;
-
-  const actualFdpMinutes = endMin - reportMin;
-  const maxFdpHours = getMaxAllowableFdp(reportTimeStr, sectorCount);
-  const maxFdpMinutes = Math.round(maxFdpHours * 60);
-  const discretionMinutes = Math.max(0, actualFdpMinutes - maxFdpMinutes);
-
-  const formatHoursMin = (totalMin) => {
-    const h = Math.floor(totalMin / 60);
-    const m = totalMin % 60;
-    return `${h}h ${m.toString().padStart(2, '0')}m`;
-  };
-
-  return {
-    reportTime: report,
-    actualEndTime: actualEnd,
-    actualFdpFormatted: formatHoursMin(actualFdpMinutes),
-    maxFdpFormatted: formatHoursMin(maxFdpMinutes),
-    discretionMinutes,
-    discretionFormatted: formatHoursMin(discretionMinutes),
-    discretionExercised: discretionMinutes > 0
-  };
+export function getToolsState() {
+  return { ...toolsState };
 }
 
-// ----------------------------------------------------------------------------
-// SECTOR AUTO-CHAINING & AUTOCOMPLETE UI CONTROLLERS
-// ----------------------------------------------------------------------------
+/**
+ * Legacy function compatibility exports to prevent breaking existing callers in main.js
+ */
+export function initToolsModule() {
+  return true;
+}
+
+export function calculateMedicalWindow(dob, conductDate) {
+  return runToolCalculation('medical', { dob, conductDate });
+}
+
+export function calculateCourseExpiry(courseType, conductDate) {
+  return runToolCalculation('recurrent', { courseType, conductDate });
+}
+
+export function calculateFdpAndDiscretion(opts) {
+  return runToolCalculation('max-fdp', opts);
+}
+
+export function getMaxAllowableFdp(reportTime, sectors) {
+  return runToolCalculation('max-fdp', { reportTime, sectors });
+}
 
 let currentSectorCount = 2;
-
 export function setSectorCount(count) {
-  currentSectorCount = Math.max(1, Math.min(6, count));
-  renderSectorCardsUI();
+  currentSectorCount = Math.max(1, Math.min(8, count));
+  return currentSectorCount;
 }
 
 export function getSectorCount() {
   return currentSectorCount;
 }
 
-export function renderSectorCardsUI() {
-  const container = document.getElementById("ftl-sectors-container");
-  if (!container) return;
-
-  let html = "";
-  for (let i = 1; i <= currentSectorCount; i++) {
-    html += `
-      <div class="ftl-sector-card bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col gap-3 relative" data-sector="${i}">
-        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 pb-2">
-          <span class="text-[10px] font-black text-slate-500 uppercase tracking-wider">Sector ${i}</span>
-          <span class="text-[9px] text-slate-400 font-bold">CAAM/BOP/FTL/1</span>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2.5">
-          <!-- Departure Airport -->
-          <div class="relative">
-            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Depart Station</label>
-            <input type="text" id="sector-${i}-dept-input" class="sector-apt-input w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-black p-2.5 rounded-xl uppercase" placeholder="e.g. KUL" autocomplete="off" data-sector="${i}" data-type="dept">
-            <div id="sector-${i}-dept-popover" class="apt-popover hidden absolute top-full left-0 right-0 z-30 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl max-h-40 overflow-y-auto mt-1 text-xs"></div>
-          </div>
-
-          <!-- Arrival Airport -->
-          <div class="relative">
-            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Arrive Station</label>
-            <input type="text" id="sector-${i}-arr-input" class="sector-apt-input w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-black p-2.5 rounded-xl uppercase" placeholder="e.g. BKI" autocomplete="off" data-sector="${i}" data-type="arr">
-            <div id="sector-${i}-arr-popover" class="apt-popover hidden absolute top-full left-0 right-0 z-30 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl max-h-40 overflow-y-auto mt-1 text-xs"></div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2.5">
-          <!-- Planned Depart UTC & Local -->
-          <div class="bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 flex flex-col gap-1.5">
-            <span class="text-[9px] font-extrabold text-slate-400 uppercase">Sched Depart Time</span>
-            <div class="grid grid-cols-2 gap-1.5">
-              <div>
-                <span class="text-[8px] font-bold text-slate-400 uppercase block">UTC</span>
-                <input type="text" id="sector-${i}-utc-dept" class="sector-time-input w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-extrabold p-1.5 rounded-lg text-slate-800 dark:text-slate-100" placeholder="00:15" data-sector="${i}" data-field="utc-dept">
-              </div>
-              <div>
-                <span class="text-[8px] font-bold text-slate-400 uppercase block">Local</span>
-                <input type="text" id="sector-${i}-local-dept" class="sector-time-input w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-extrabold p-1.5 rounded-lg text-slate-800 dark:text-slate-100" placeholder="08:15" data-sector="${i}" data-field="local-dept">
-              </div>
-            </div>
-          </div>
-
-          <!-- Actual Depart UTC & Local -->
-          <div class="bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 flex flex-col gap-1.5">
-            <span class="text-[9px] font-extrabold text-slate-400 uppercase">Actual Depart Time</span>
-            <div class="grid grid-cols-2 gap-1.5">
-              <div>
-                <span class="text-[8px] font-bold text-slate-400 uppercase block">UTC</span>
-                <input type="text" id="sector-${i}-act-utc-dept" class="sector-time-input w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-extrabold p-1.5 rounded-lg text-slate-800 dark:text-slate-100" placeholder="00:45" data-sector="${i}" data-field="act-utc-dept">
-              </div>
-              <div>
-                <span class="text-[8px] font-bold text-slate-400 uppercase block">Local</span>
-                <input type="text" id="sector-${i}-act-local-dept" class="sector-time-input w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-extrabold p-1.5 rounded-lg text-slate-800 dark:text-slate-100" placeholder="08:45" data-sector="${i}" data-field="act-local-dept">
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  container.innerHTML = html;
-  bindSectorEvents();
-}
-
-function bindSectorEvents() {
-  const aptInputs = document.querySelectorAll(".sector-apt-input");
-  aptInputs.forEach(input => {
-    input.addEventListener("input", (e) => {
-      const q = e.target.value.trim().toUpperCase();
-      const secIndex = e.target.getAttribute("data-sector");
-      const type = e.target.getAttribute("data-type");
-      const popover = document.getElementById(`sector-${secIndex}-${type}-popover`);
-
-      if (!popover) return;
-      if (q.length < 1) {
-        popover.classList.add("hidden");
-        return;
-      }
-
-      const matches = searchAirports(q);
-      if (matches.length === 0) {
-        popover.classList.add("hidden");
-        return;
-      }
-
-      let popHtml = "";
-      matches.slice(0, 5).forEach(apt => {
-        popHtml += `
-          <div class="apt-item p-2 hover:bg-blue-50 dark:hover:bg-slate-800 cursor-pointer flex justify-between items-center border-b border-slate-100 dark:border-slate-800/60 last:border-none" data-iata="${apt.iata}" data-sector="${secIndex}" data-type="${type}">
-            <span class="font-black text-blue-600 dark:text-blue-400">${apt.iata}</span>
-            <span class="text-[10px] text-slate-500 truncate ml-2">${apt.name} (${apt.icao})</span>
-          </div>
-        `;
-      });
-
-      popover.innerHTML = popHtml;
-      popover.classList.remove("hidden");
-
-      popover.querySelectorAll(".apt-item").forEach(item => {
-        item.addEventListener("click", (evt) => {
-          const selectedIata = evt.currentTarget.getAttribute("data-iata");
-          input.value = selectedIata;
-          popover.classList.add("hidden");
-
-          // Auto-chaining: if Sector N arrival station is set, set Sector N+1 departure station
-          if (type === "arr") {
-            const nextSecIndex = parseInt(secIndex, 10) + 1;
-            const nextDeptInput = document.getElementById(`sector-${nextSecIndex}-dept-input`);
-            if (nextDeptInput) {
-              nextDeptInput.value = selectedIata;
-            }
-          }
-        });
-      });
-    });
-  });
-
-  const timeInputs = document.querySelectorAll(".sector-time-input");
-  timeInputs.forEach(input => {
-    input.addEventListener("blur", (e) => {
-      const raw = e.target.value;
-      const formatted = parseAviationTime(raw);
-      e.target.value = formatted;
-
-      const secIndex = e.target.getAttribute("data-sector");
-      const field = e.target.getAttribute("data-field");
-      const deptApt = document.getElementById(`sector-${secIndex}-dept-input`)?.value || "KUL";
-      const aptObj = findAirport(deptApt) || { tzOffset: 8 };
-
-      if (field === "utc-dept" && formatted) {
-        const localField = document.getElementById(`sector-${secIndex}-local-dept`);
-        if (localField) localField.value = calculateLocalFromUtc(formatted, aptObj.tzOffset);
-      } else if (field === "act-utc-dept" && formatted) {
-        const actLocalField = document.getElementById(`sector-${secIndex}-act-local-dept`);
-        if (actLocalField) actLocalField.value = calculateLocalFromUtc(formatted, aptObj.tzOffset);
-      }
-    });
-  });
-}
-
-// ----------------------------------------------------------------------------
-// TOUCH CANVAS SIGNATURE PAD CONTROLLER
-// ----------------------------------------------------------------------------
-
-let signatureCanvas = null;
-let signatureCtx = null;
-let isDrawing = false;
-
-export function initSignatureCanvas() {
-  signatureCanvas = document.getElementById("ftl-signature-canvas");
-  if (!signatureCanvas) return;
-
-  signatureCtx = signatureCanvas.getContext("2d");
-  signatureCtx.strokeStyle = "#1e3a8a";
-  signatureCtx.lineWidth = 2.5;
-  signatureCtx.lineCap = "round";
-
-  const getPos = (e) => {
-    const rect = signatureCanvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    return {
-      x: clientX - rect.left,
-      y: clientY - rect.top
-    };
-  };
-
-  const startDraw = (e) => {
-    isDrawing = true;
-    const pos = getPos(e);
-    signatureCtx.beginPath();
-    signatureCtx.moveTo(pos.x, pos.y);
-  };
-
-  const draw = (e) => {
-    if (!isDrawing) return;
-    const pos = getPos(e);
-    signatureCtx.lineTo(pos.x, pos.y);
-    signatureCtx.stroke();
-  };
-
-  const stopDraw = () => {
-    isDrawing = false;
-  };
-
-  signatureCanvas.addEventListener("mousedown", startDraw);
-  signatureCanvas.addEventListener("mousemove", draw);
-  signatureCanvas.addEventListener("mouseup", stopDraw);
-
-  signatureCanvas.addEventListener("touchstart", startDraw, { passive: true });
-  signatureCanvas.addEventListener("touchmove", draw, { passive: true });
-  signatureCanvas.addEventListener("touchend", stopDraw);
-
-  const clearBtn = document.getElementById("btn-clear-signature");
-  if (clearBtn) {
-    clearBtn.addEventListener("click", clearSignatureCanvas);
-  }
-}
-
-export function clearSignatureCanvas() {
-  if (signatureCanvas && signatureCtx) {
-    signatureCtx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
-  }
-}
-
-export function populateCommanderSelect() {
-  const select = document.getElementById("ftl-commander-select");
-  if (!select) return;
-
-  const history = getScanHistory();
-  let html = `<option value="">Select Commander from Scan History...</option>`;
-  if (history && history.length > 0) {
-    history.forEach(item => {
-      if (item.name) {
-        html += `<option value="${item.name}">${item.name} (${item.caamNo || 'CAAM'})</option>`;
-      }
-    });
-  }
-  select.innerHTML = html;
-}
-
-export function draftFtlEmail() {
-  const commander = document.getElementById("ftl-commander-select")?.value || "Commander";
-  const reportTime = document.getElementById("fdp-report-time")?.value || "08:00";
-  const narrative = document.getElementById("ftl-narrative")?.value || "Operational extension under Commander Discretion.";
-
-  const subject = encodeURIComponent(`CAAM/BOP/FTL/1 Discretion Report - Capt. ${commander}`);
-  const body = encodeURIComponent(
-    `FLIGHT SAFETY & COMPLIANCE REPORT\n` +
-    `----------------------------------------\n` +
-    `Document: CAAM/BOP/FTL/1 Discretion Extension\n` +
-    `Commander: ${commander}\n` +
-    `Report Time: ${reportTime} UTC\n` +
-    `Sectors Flown: ${currentSectorCount}\n\n` +
-    `Commander Justification Narrative:\n${narrative}\n\n` +
-    `Signed electronically via CertiFly PWA Compliance Checker.`
-  );
-
-  window.location.href = `mailto:FLT_SAFETY@malaysiaairlines.com?subject=${subject}&body=${body}`;
-}
-
-// ----------------------------------------------------------------------------
-// ACCORDION ENGINE & INITIALIZATION HOOKS
-// ----------------------------------------------------------------------------
-
-export function initToolsModule() {
-  renderSectorCardsUI();
-  populateCommanderSelect();
-  initSignatureCanvas();
-  initAccordionEngine();
-  initCalculatorResetHandlers();
-}
-
-function initAccordionEngine() {
-  // Hub 1 vs Hub 2 Category Filter Switcher
-  const btnValidity = document.getElementById("tools-tab-validity-btn");
-  const btnFdp = document.getElementById("tools-tab-fdp-btn");
-  const paneValidity = document.getElementById("hub-validity-pane");
-  const paneFdp = document.getElementById("hub-fdp-pane");
-
-  const activeClass = "bg-blue-600 text-white shadow-xs font-extrabold cursor-pointer";
-  const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-extrabold cursor-pointer";
-
-  if (btnValidity && btnFdp && paneValidity && paneFdp) {
-    btnValidity.addEventListener("click", () => {
-      btnValidity.className = `tools-tab-btn py-2.5 px-2 rounded-xl text-[11px] transition-all flex items-center justify-center gap-1.5 ${activeClass}`;
-      btnFdp.className = `tools-tab-btn py-2.5 px-2 rounded-xl text-[11px] transition-all flex items-center justify-center gap-1.5 ${inactiveClass}`;
-      paneValidity.classList.remove("hidden");
-      paneFdp.classList.add("hidden");
-    });
-
-    btnFdp.addEventListener("click", () => {
-      btnFdp.className = `tools-tab-btn py-2.5 px-2 rounded-xl text-[11px] transition-all flex items-center justify-center gap-1.5 ${activeClass}`;
-      btnValidity.className = `tools-tab-btn py-2.5 px-2 rounded-xl text-[11px] transition-all flex items-center justify-center gap-1.5 ${inactiveClass}`;
-      paneFdp.classList.remove("hidden");
-      paneValidity.classList.add("hidden");
-    });
-  }
-
-  // Single-Parent Accordion Item Toggle Handler
-  const accordionItems = document.querySelectorAll(".accordion-item, .accordion-card");
-  accordionItems.forEach(item => {
-    const header = item.querySelector(".accordion-header");
-    const body = item.querySelector(".accordion-body");
-    const chevron = item.querySelector(".accordion-chevron");
-
-    if (header && body) {
-      header.addEventListener("click", () => {
-        const isOpen = !body.classList.contains("hidden");
-
-        // Collapse all sibling items in the same parent container
-        const parentContainer = item.parentElement;
-        if (parentContainer) {
-          parentContainer.querySelectorAll(".accordion-item, .accordion-card").forEach(sibling => {
-            const sibBody = sibling.querySelector(".accordion-body");
-            const sibChevron = sibling.querySelector(".accordion-chevron");
-            if (sibBody) sibBody.classList.add("hidden");
-            if (sibChevron) sibChevron.style.transform = "rotate(0deg)";
-          });
-        }
-
-        // Toggle clicked item
-        if (!isOpen) {
-          body.classList.remove("hidden");
-          if (chevron) chevron.style.transform = "rotate(180deg)";
-        }
-      });
-    }
-  });
-}
-
-function initCalculatorResetHandlers() {
-  // Reset PPC
-  document.getElementById("btn-reset-ppc")?.addEventListener("click", () => {
-    const conduct = document.getElementById("ppc-conduct-date");
-    const expiry = document.getElementById("ppc-expiry-date");
-    const resBox = document.getElementById("ppc-results-box");
-    if (conduct) conduct.value = "";
-    if (expiry) expiry.value = "";
-    if (resBox) resBox.classList.add("hidden");
-  });
-
-  // Reset Recurrent
-  document.getElementById("btn-reset-recurrent")?.addEventListener("click", () => {
-    const conduct = document.getElementById("recurrent-conduct-date");
-    const resBox = document.getElementById("recurrent-results-box");
-    if (conduct) conduct.value = "";
-    if (resBox) resBox.classList.add("hidden");
-  });
-
-  // Reset Medical
-  document.getElementById("btn-reset-medical")?.addEventListener("click", () => {
-    const expiry = document.getElementById("medical-last-date");
-    const age = document.getElementById("medical-pilot-age");
-    const resBox = document.getElementById("medical-results-box");
-    if (expiry) expiry.value = "";
-    if (age) age.value = "";
-    if (resBox) resBox.classList.add("hidden");
-  });
-
-  // Reset Preflight FDP
-  document.getElementById("btn-reset-preflight")?.addEventListener("click", () => {
-    const report = document.getElementById("fdp-report-time");
-    const check = document.getElementById("fdp-acclimatised-check");
-    const resBox = document.getElementById("preflight-results-box");
-    if (report) report.value = "";
-    if (check) check.checked = true;
-    setSectorCount(2);
-    if (resBox) resBox.classList.add("hidden");
-  });
+export function draftFtlEmail(opts = {}) {
+  const flight = opts.flightNo || 'MH123';
+  const subject = `FTL / Discretion Notification - FLT ${flight}`;
+  const body = `Crew Control / Flight Ops,\n\nPlease be advised of the FTL / Discretion details for FLT ${flight}:\n- Report Time: ${opts.reportTime || '--:--'}\n- Max Allowable FDP: ${opts.maxFdp || '--:--'}\n- On-Chocks Cutoff: ${opts.cutoff || '--:-- UTC'}\n\nGenerated via CertiFly PWA.`;
+  return { subject, body, mailtoUrl: `mailto:crewcontrol@malaysiaairlines.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}` };
 }
