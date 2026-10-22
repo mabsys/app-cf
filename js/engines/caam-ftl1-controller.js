@@ -7,7 +7,8 @@
  * Applicable Standard: CAAM CAD 1901 / OM-A Chapter 7 / CAAM/BOP/FTL/1
  */
 
-import { findAirport, searchAirports } from './data/airports.js';
+// Relative import assuming file sits inside /js/engines/
+import { findAirport, searchAirports } from '../data/airports.js';
 
 // Safe fallback helper if loaded directly in a non-ESM script environment
 const safeFindAirport = (typeof findAirport === 'function') 
