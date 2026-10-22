@@ -1,4 +1,4 @@
-// js/tools.js (2010_R190)
+// js/tools.js (2010_R194) - Tools Orchestrator & Output Card Adapter
 
 import { calculateMedicalValidity } from './engines/medical-validity-calculator.js';
 import { calculatePpcWindows } from './engines/ppc-validity-calculator.js';
@@ -10,13 +10,13 @@ import { calculateCumulativeHours } from './engines/cumulative-hours-calculator.
 import { initCaamFtl1Form, generateCaamFtl1Pdf } from './engines/caam-ftl1-controller.js';
 
 /**
- * CertiFly™ Tools Module - UI Orchestrator & Data Adapter (2010_R190)
+ * CertiFly™ Tools Module - UI Orchestrator & Data Adapter
  */
 
 let toolsState = {
-  activeTier: 'ftl', // 'ftl' | 'quals'
-  activeSubTab: 'max-fdp', // FTL: 'standby'|'max-fdp'|'pre-flight-rest'|'cumulative'|'discretion'
-                           // Quals: 'medical'|'ppc'|'recurrent'
+  activeTier: 'validity', // 'validity' | 'fdp'
+  activeSubTab: 'medical', // Validity: 'medical'|'ppc'|'recurrent'
+                            // Duty & Rest: 'standby'|'max-fdp'|'pre-flight-rest'|'cumulative'|'caam-ftl1'
   lastCalculationResults: {}
 };
 
@@ -30,14 +30,14 @@ let toolsState = {
 export function normalizeOutput(toolType, rawResult) {
   if (!rawResult) {
     return {
-      statusBadge: 'NO DATA',
+      statusBadge: 'READY',
       statusClass: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
-      headlineTitle: 'STATUS',
+      headlineTitle: 'CALCULATOR',
       headlineValue: '--:--',
       targetClockLabel: 'Target Clock',
       targetClockValue: '--:--',
       breakdownGrid: [],
-      auditNotes: [],
+      auditNotes: ['ℹ CAAM CAD 1901 / CAD 1 Standards'],
       actions: []
     };
   }
@@ -255,7 +255,7 @@ export function normalizeOutput(toolType, rawResult) {
         targetClockLabel: 'Target Clock',
         targetClockValue: '--:--',
         breakdownGrid: [],
-        auditNotes: [],
+        auditNotes: ['ℹ CAAM CAD 1901 / CAD 1 Standards'],
         actions: []
       };
   }
@@ -303,7 +303,63 @@ export function runToolCalculation(toolType, inputData = {}) {
 
   const normalized = normalizeOutput(toolType, rawResult);
   toolsState.lastCalculationResults[toolType] = { raw: rawResult, normalized };
+  renderToolsOutputCard(normalized);
   return { raw: rawResult, normalized };
+}
+
+/**
+ * DOM Updater for the Fixed 4-Slot Summary Output Card (#tools-output-card)
+ */
+export function renderToolsOutputCard(normalized) {
+  if (!normalized) return;
+
+  const badgeEl = document.getElementById('out-status-badge');
+  const titleEl = document.getElementById('out-headline-title');
+  const valEl = document.getElementById('out-headline-val');
+  const clockLabelEl = document.getElementById('out-clock-label');
+  const clockValEl = document.getElementById('out-clock-val');
+  const gridEl = document.getElementById('out-breakdown-grid');
+  const auditEl = document.getElementById('out-audit-notes');
+  const actionsEl = document.getElementById('out-actions-container');
+
+  // Slot 1
+  if (badgeEl) {
+    badgeEl.innerText = normalized.statusBadge || 'READY';
+    badgeEl.className = `px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-xs ${normalized.statusClass || 'bg-slate-100 text-slate-700'}`;
+  }
+  if (titleEl) titleEl.innerText = normalized.headlineTitle || 'CALCULATOR';
+  if (valEl) valEl.innerText = normalized.headlineValue || '--:--';
+
+  // Slot 2
+  if (clockLabelEl) clockLabelEl.innerText = normalized.targetClockLabel || 'Target Clock';
+  if (clockValEl) clockValEl.innerText = normalized.targetClockValue || '--:--';
+
+  // Slot 3 (2x2 Grid)
+  if (gridEl && Array.isArray(normalized.breakdownGrid)) {
+    gridEl.innerHTML = normalized.breakdownGrid.map(item => `
+      <div class="bg-slate-50 dark:bg-slate-950/60 p-2 rounded-xl flex justify-between items-center">
+        <span class="text-slate-400 font-extrabold uppercase text-[8px] truncate">${item.label}</span>
+        <span class="font-extrabold text-slate-800 dark:text-slate-200">${item.value}</span>
+      </div>
+    `).join('');
+  }
+
+  // Slot 4 (Audit Notes & Action CTAs)
+  if (auditEl && Array.isArray(normalized.auditNotes)) {
+    auditEl.innerHTML = normalized.auditNotes.map(note => `<span>ℹ ${note}</span>`).join('');
+  }
+
+  if (actionsEl) {
+    if (Array.isArray(normalized.actions) && normalized.actions.length > 0) {
+      actionsEl.innerHTML = normalized.actions.map(action => `
+        <button type="button" data-action="${action.type}" class="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[10px] uppercase rounded-xl shadow-xs transition-all active:scale-[0.98] cursor-pointer text-center">
+          ${action.label}
+        </button>
+      `).join('');
+    } else {
+      actionsEl.innerHTML = '';
+    }
+  }
 }
 
 /**
