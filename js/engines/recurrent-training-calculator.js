@@ -211,3 +211,11 @@ class RecurrentTrainingEngine {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = RecurrentTrainingEngine;
 }
+
+export { RecurrentTrainingEngine }; 
+export function calculateRecurrentExpiry(params) { 
+  return RecurrentTrainingEngine.calculateExpiry( 
+    params.qualKey || params.courseType || 'linecheck', 
+    params.conductDate, params.currentExpiryDate 
+  ); 
+}
