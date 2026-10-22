@@ -261,7 +261,4 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = StandbyFDPEngine;
 }
 
-export { StandbyFDPEngine }; 
-export function calculateStandbyDeduction(params) { 
-  return StandbyFDPEngine.calculateStandbyFDP(params); 
-}
+
