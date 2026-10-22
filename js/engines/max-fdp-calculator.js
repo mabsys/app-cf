@@ -307,3 +307,8 @@ class MaxFDPEngine {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = MaxFDPEngine;
 }
+
+export { MaxFDPEngine }; 
+export function calculateMaxFdp(params) { 
+  return MaxFDPEngine.calculateMaxFDP(params); 
+}
