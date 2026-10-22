@@ -1,6 +1,7 @@
-// js/ui.js (1310_R151) - View State, Navigation, Dock Active Highlight & Network Controller
+// js/ui.js (2010_R198) - CertiFly Complete View State, Theme & Navigation Controller
 
-import { initToolsModule } from './tools.js';
+
+import { initToolsModule, runToolCalculation, setToolsTab, getToolsState, getSectorCount, setSectorCount, draftFtlEmail } from './tools.js';
 import { stopScanner, switchScanHubTab } from './scanner.js';
 import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData } from './storage.js';
 import { topbarHTML } from './components/topbar.js';
@@ -651,4 +652,271 @@ if (typeof window !== 'undefined') {
   window.openProfileMenu = openProfileMenu;
   window.applyThemeMode = applyThemeMode;
   window.applyTextSize = applyTextSize;
+}
+
+
+// ==================================================================
+// PHASE 3: CERTIFLY™ TOOLS VIEW UI CONTROLLER
+// ==================================================================
+
+import { getProfileData, getAttestationData } from './storage.js';
+
+let activeToolsTier = 'validity'; // 'validity' | 'fdp'
+let activeToolsSubTab = 'medical'; // 'medical'|'ppc'|'recurrent'|'standby'|'max-fdp'|'pre-flight-rest'|'cumulative'|'caam-ftl1'
+
+export function switchTier1(tier) {
+  activeToolsTier = tier;
+  
+  const valBtn = document.getElementById('tools-tab-validity-btn');
+  const fdpBtn = document.getElementById('tools-tab-fdp-btn');
+
+  const activeClass = "tools-tab-btn py-2.5 px-2 rounded-xl text-[11px] font-extrabold transition-all bg-blue-600 text-white shadow-xs flex items-center justify-center gap-1.5 cursor-pointer";
+  const inactiveClass = "tools-tab-btn py-2.5 px-2 rounded-xl text-[11px] font-extrabold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 flex items-center justify-center gap-1.5 cursor-pointer";
+
+  if (valBtn && fdpBtn) {
+    if (tier === 'validity') {
+      valBtn.className = activeClass;
+      fdpBtn.className = inactiveClass;
+    } else {
+      valBtn.className = inactiveClass;
+      fdpBtn.className = activeClass;
+    }
+  }
+
+  const qualsNav = document.getElementById('tools-subnav-quals');
+  const ftlNav = document.getElementById('tools-subnav-ftl');
+
+  if (qualsNav && ftlNav) {
+    if (tier === 'validity') {
+      qualsNav.classList.remove('hidden');
+      ftlNav.classList.add('hidden');
+      switchSubTab('medical');
+    } else {
+      qualsNav.classList.add('hidden');
+      ftlNav.classList.remove('hidden');
+      switchSubTab('max-fdp');
+    }
+  }
+
+  setToolsTab(tier, activeToolsSubTab);
+}
+
+export function switchSubTab(subTab) {
+  activeToolsSubTab = subTab;
+  
+  const allSubBtns = document.querySelectorAll('#tools-subnav-quals button, #tools-subnav-ftl button');
+  const btnActive = "px-3 py-1.5 rounded-xl bg-blue-600 text-white shrink-0 font-extrabold shadow-xs transition-all cursor-pointer";
+  const btnInactive = "px-3 py-1.5 rounded-xl bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0 font-bold hover:text-slate-900 transition-all cursor-pointer";
+
+  allSubBtns.forEach(btn => {
+    if (btn.id === `subtab-${subTab}`) {
+      btn.className = btnActive;
+    } else {
+      btn.className = btnInactive;
+    }
+  });
+
+  const panes = ['medical', 'ppc', 'recurrent', 'standby', 'max-fdp', 'pre-flight-rest', 'cumulative', 'caam-ftl1'];
+  panes.forEach(p => {
+    const paneEl = document.getElementById(`pane-${p}`);
+    if (paneEl) {
+      if (p === subTab) {
+        paneEl.classList.remove('hidden');
+      } else {
+        paneEl.classList.add('hidden');
+      }
+    }
+  });
+
+  setToolsTab(activeToolsTier, subTab);
+  dispatchActiveToolCalculation();
+}
+
+export function dispatchActiveToolCalculation() {
+  const subTab = activeToolsSubTab;
+  let inputData = {};
+
+  try {
+    switch (subTab) {
+      case 'medical':
+        inputData = {
+          lastDate: document.getElementById('medical-last-date')?.value || '',
+          pilotAge: document.getElementById('medical-pilot-age')?.value || ''
+        };
+        break;
+      case 'ppc':
+        inputData = {
+          conductDate: document.getElementById('ppc-conduct-date')?.value || '',
+          expiryDate: document.getElementById('ppc-expiry-date')?.value || ''
+        };
+        break;
+      case 'recurrent':
+        inputData = {
+          courseType: document.getElementById('recurrent-drill-type')?.value || 'linecheck',
+          conductDate: document.getElementById('recurrent-conduct-date')?.value || ''
+        };
+        break;
+      case 'standby':
+        inputData = {
+          startTime: document.getElementById('standby-start-time')?.value || '',
+          calloutTime: document.getElementById('callout-time')?.value || ''
+        };
+        break;
+      case 'max-fdp':
+        inputData = {
+          reportTime: document.getElementById('fdp-report-time')?.value || '',
+          sectors: getSectorCount(),
+          isAcclimatised: document.getElementById('fdp-acclimatised-check')?.checked ?? true
+        };
+        break;
+      case 'pre-flight-rest':
+        inputData = {
+          precedingDutyHours: parseFloat(document.getElementById('rest-preceding-duty')?.value) || 10,
+          locationType: document.getElementById('rest-location-type')?.value || 'outstation'
+        };
+        break;
+      case 'cumulative':
+        inputData = {
+          duty7d: parseFloat(document.getElementById('cum-duty-7d')?.value) || 0,
+          duty14d: parseFloat(document.getElementById('cum-duty-14d')?.value) || 0
+        };
+        break;
+      case 'caam-ftl1':
+        inputData = {
+          commander: document.getElementById('ftl-commander-select')?.value || '',
+          reasonAtc: document.getElementById('reason-atc')?.checked || false,
+          reasonTech: document.getElementById('reason-tech')?.checked || false,
+          reasonWeather: document.getElementById('reason-weather')?.checked || false,
+          reasonOthers: document.getElementById('reason-others')?.checked || false,
+          narrative: document.getElementById('ftl-narrative')?.value || ''
+        };
+        break;
+    }
+  } catch (err) {
+    console.warn(`Error gathering inputs for ${subTab}:`, err);
+  }
+
+  runToolCalculation(subTab, inputData);
+}
+
+export function autoFillFromCredentials() {
+  const profile = getProfileData();
+  const caam = profile?.cachedCaamResults;
+  const mab = getAttestationData() || profile?.cachedMabResults;
+
+  if (activeToolsSubTab === 'medical') {
+    const medLastInput = document.getElementById('medical-last-date');
+    const medAgeInput = document.getElementById('medical-pilot-age');
+    if (medLastInput && caam?.medicalExpiryISO) medLastInput.value = caam.medicalExpiryISO;
+    if (medAgeInput && profile?.dob) medAgeInput.value = profile.dob;
+  } else if (activeToolsSubTab === 'ppc') {
+    const ppcConductInput = document.getElementById('ppc-conduct-date');
+    const ppcExpiryInput = document.getElementById('ppc-expiry-date');
+    if (ppcConductInput && mab?.lineCheck?.checkDateISO) ppcConductInput.value = mab.lineCheck.checkDateISO;
+    if (ppcExpiryInput && mab?.lineCheck?.expiryDateISO) ppcExpiryInput.value = mab.lineCheck.expiryDateISO;
+  } else if (activeToolsSubTab === 'recurrent') {
+    const recConductInput = document.getElementById('recurrent-conduct-date');
+    if (recConductInput && mab?.lineCheck?.checkDateISO) recConductInput.value = mab.lineCheck.checkDateISO;
+  }
+
+  dispatchActiveToolCalculation();
+}
+
+export function initToolsViewUI() {
+  document.getElementById('tools-tab-validity-btn')?.addEventListener('click', () => switchTier1('validity'));
+  document.getElementById('tools-tab-fdp-btn')?.addEventListener('click', () => switchTier1('fdp'));
+
+  const subNavMap = {
+    'subtab-medical': 'medical',
+    'subtab-ppc': 'ppc',
+    'subtab-recurrent': 'recurrent',
+    'subtab-standby': 'standby',
+    'subtab-max-fdp': 'max-fdp',
+    'subtab-pre-flight-rest': 'pre-flight-rest',
+    'subtab-cumulative': 'cumulative',
+    'subtab-caam-ftl1': 'caam-ftl1'
+  };
+
+  Object.entries(subNavMap).forEach(([btnId, subTabKey]) => {
+    document.getElementById(btnId)?.addEventListener('click', () => switchSubTab(subTabKey));
+  });
+
+  const inputContainer = document.getElementById('tools-input-container');
+  if (inputContainer) {
+    inputContainer.addEventListener('input', () => dispatchActiveToolCalculation());
+    inputContainer.addEventListener('change', () => dispatchActiveToolCalculation());
+  }
+
+  document.getElementById('btn-fdp-inc')?.addEventListener('click', () => {
+    setSectorCount(getSectorCount() + 1);
+    const badge = document.getElementById('fdp-sector-count');
+    if (badge) badge.innerText = getSectorCount();
+    dispatchActiveToolCalculation();
+  });
+
+  document.getElementById('btn-fdp-dec')?.addEventListener('click', () => {
+    setSectorCount(getSectorCount() - 1);
+    const badge = document.getElementById('fdp-sector-count');
+    if (badge) badge.innerText = getSectorCount();
+    dispatchActiveToolCalculation();
+  });
+
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const targetId = e.currentTarget.dataset.target;
+      const preset = e.currentTarget.dataset.preset;
+      const inputEl = document.getElementById(targetId);
+      if (!inputEl) return;
+
+      const now = new Date();
+      let d = new Date();
+
+      if (preset === 'eom') {
+        d = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0));
+      } else if (preset === '+1y') {
+        d.setFullYear(now.getFullYear() + 1);
+      }
+
+      inputEl.value = d.toISOString().split('T')[0];
+      dispatchActiveToolCalculation();
+    });
+  });
+
+  document.getElementById('btn-autofill-credentials')?.addEventListener('click', () => autoFillFromCredentials());
+
+  const actionsContainer = document.getElementById('out-actions-container');
+  if (actionsContainer) {
+    actionsContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const action = btn.dataset.action;
+
+      if (action === 'discretion') {
+        switchTier1('fdp');
+        switchSubTab('caam-ftl1');
+      } else if (action === 'email') {
+        const report = document.getElementById('fdp-report-time')?.value || '08:00';
+        const mailObj = draftFtlEmail({ flightNo: 'MH123', reportTime: report });
+        if (mailObj?.mailtoUrl) window.location.href = mailObj.mailtoUrl;
+      } else if (action === 'pipeline-rest') {
+        switchTier1('fdp');
+        switchSubTab('pre-flight-rest');
+      } else if (action === 'pipeline-cumulative') {
+        switchTier1('fdp');
+        switchSubTab('cumulative');
+      } else if (action === 'pipeline-fdp') {
+        switchTier1('fdp');
+        switchSubTab('max-fdp');
+      }
+    });
+  }
+
+  switchTier1('validity');
+}
+
+if (typeof window !== 'undefined') {
+  window.initToolsViewUI = initToolsViewUI;
+  window.switchTier1 = switchTier1;
+  window.switchSubTab = switchSubTab;
+  window.dispatchActiveToolCalculation = dispatchActiveToolCalculation;
 }
