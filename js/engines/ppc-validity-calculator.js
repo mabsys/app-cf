@@ -141,3 +141,11 @@ class PPCValidityEngine {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = PPCValidityEngine;
 }
+
+export { PPCValidityEngine }; 
+export function calculatePpcWindows(conductDate, expiryDate) { 
+  return { 
+    lpc: PPCValidityEngine.calculateLPCExpiry(conductDate, expiryDate), 
+    opc: PPCValidityEngine.calculateOPCWindow(conductDate, expiryDate) 
+  }; 
+}
