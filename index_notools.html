@@ -1,0 +1,1002 @@
+<!-- index.html (2010_R195) - CertiFly PWA Application Shell & Core Layout -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!----------------------------------------------
+// CertiFly - Digital Licence Checker          //
+// Version: 2.0 (PWA), Release: (10.2026)      //
+// Developed by: Capt. Mohd Sallehuddin Zaidy //
+----------------------------------------------->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#172554">
+    <title>CertiFly™</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+    <!-- UNCOMMENT THIS BLOCK ONCE DEV IS COMPLETE
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then((reg) => console.log('CertiFly Service Worker registered successfully:', reg.scope))
+      .catch((err) => console.error('Service Worker registration failed:', err));
+  });
+}
+</script> -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class"
+        };
+    </script>
+    <script src="js/vendor/qr-scanner.umd.min.js"></script>
+    <script src="js/vendor/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-950 min-h-screen font-sans text-slate-800 dark:text-slate-200 flex flex-col justify-between">
+
+    <!-- Floating Top Overlay Alert -->
+    <div id="offline-overlay" class="hidden fixed top-0 left-0 right-0 z-[1] bg-red-600 text-white text-[10px] font-black uppercase tracking-widest text-center py-3 px-4 shadow-xl flex items-center justify-center gap-2 animate-pulse">
+        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <span>Offline — Please check your connection</span>
+    </div>
+
+    <div class="max-w-md mx-auto w-full p-4 flex flex-col min-h-screen">
+
+        <!-- Header -->
+        <header class="text-center py-3">
+            <h1 onclick="showScannerView()" class="text-3xl font-extrabold text-blue-950 dark:text-white tracking-tight italic flex items-center justify-center gap-1 leading-none cursor-pointer">
+                <span class="relative">
+                    CertiFly<span class="align-super text-[6px] font-bold absolute -top-0.5 -right-1.5 dark:text-white">™</span>
+                </span>
+                <svg class="h-[1.15em] w-auto fill-current text-blue-950 dark:text-white" viewBox="0 0 98 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+                    <path id="path22" d="M10.144,35.354L9.8,36.674C9.8,36.674 14.131,36.602 15.877,36.602C19.875,36.598 22.309,36.964 22.577,39.398C22.814,41.038 22.053,42.614 21.614,44.162C21.191,45.664 20.807,47.105 20.39,48.588C19.95,50.152 19.476,51.531 18.64,52.587C17.688,53.785 16.472,54.58 15.227,54.884C13.512,55.303 6.502,55.055 4.55,55.055C4.331,55.605 4.2,56.245 4.024,56.84C9.708,57.13 15.186,56.748 21.003,56.925C22.889,56.983 24.762,57.183 26.427,56.84C28.966,56.321 30.801,54.574 31.59,52.245C32.371,49.951 33.078,47.278 33.779,44.844C34.163,43.51 34.409,42.25 35.003,41.185C35.57,40.169 36.318,39.378 37.278,38.631C39.04,37.266 41.91,36.117 44.63,37.441C45.971,38.092 46.75,39.176 46.731,41.185C46.715,42.914 46.134,44.337 45.681,45.949C44.325,50.762 43.13,54.852 41.83,59.564C41.403,61.11 41.074,62.768 40.518,64.074C39.439,66.61 37.064,68.684 33.955,69.179C31.349,69.593 28.385,69.265 25.64,69.265L0.613,69.265C0.613,69.265 0.186,70.495 0,71.137C10.984,71.292 22.305,71.22 32.992,71.22C35.903,71.22 38.599,71.298 41.131,71.051C48.391,70.344 54.817,68.307 60.12,65.435C68.938,60.661 75.866,53.998 80.948,45.44C83.874,40.509 88.767,36.753 96.812,36.753C97.043,36.141 97.16,35.875 97.35,35.354L10.144,35.354L10.144,35.354Z" style="fill-rule:nonzero;" />
+                    <path id="path90" d="M97.674,34.461C91.512,34.598 86.903,31.955 86.462,26.379C86.372,25.254 86.47,24.202 86.374,23.231C86.071,20.148 85.407,17.72 84.36,15.317C80.344,6.093 72.42,1.014 59.683,0L20.128,0C20.052,0.692 19.743,1.157 19.69,1.872L45.243,1.872C48.033,1.872 51.129,1.493 53.469,2.127C54.98,2.536 56.823,3.895 56.707,6.55C56.648,7.912 56.012,9.361 55.568,10.891C54.344,15.126 53.293,19.321 52.069,23.57C51.272,26.331 50.706,29.272 49.005,31.313C47.464,33.164 44.67,34.974 41.304,34.036C40.08,33.694 39.313,33.263 38.768,32.42C37.447,30.385 38.661,27.255 39.293,25.017C39.638,23.789 40.016,22.65 40.341,21.527C40.654,20.448 41.19,19.152 41.216,17.869C41.261,15.895 40.004,14.878 38.768,14.464C37.3,13.977 35.183,14.21 33.253,14.21C27.62,14.21 21.544,14.14 16.101,14.295C15.985,14.89 15.76,15.38 15.664,15.997C20.565,15.997 28.44,15.382 28.44,19.401C28.452,20.339 28.113,21.388 27.827,22.378C27.306,24.191 26.76,25.985 26.253,27.825C25.996,28.758 25.82,29.719 25.466,30.548C24.534,32.732 23.549,34.461 19.952,34.461L10.372,34.461L10.143,35.354L97.349,35.354C97.484,34.956 97.558,34.761 97.674,34.461" style="fill-rule:nonzero;" />
+                </svg>
+            </h1>
+            <p class="text-[7.5px] font-semibold text-slate-500 dark:text-slate-200 mt-0.5 uppercase tracking-[2px]">Compliance Checker</p>
+        </header>
+
+        <!-- Main Body -->
+        <main class="flex-grow flex flex-col justify-start my-2 px-3 max-w-md mx-auto w-full">
+
+            <!-- DASHBOARD VIEW -->
+            <div id="dashboard-view" class="app-view hidden flex flex-col gap-4">
+                <!-- 2. SEGMENTED 3-PILL TAB CONTROLLER -->
+                <div class="bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl grid grid-cols-3 gap-1 text-center shadow-xs">
+                    <button id="res-tab-btn-overview" onclick="switchResultTab('overview')" type="button" class="res-tab-btn py-2 px-1 rounded-xl text-[11px] font-extrabold transition-all bg-blue-600 text-white shadow-xs flex items-center justify-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                        </svg>
+                        <span>Overview</span>
+                    </button>
+                    <button id="res-tab-btn-caam" onclick="switchResultTab('caam')" type="button" class="res-tab-btn py-2 px-1 rounded-xl text-[11px] font-extrabold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 flex items-center justify-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                        </svg>
+                        <span>CAAM</span>
+                    </button>
+                    <button id="res-tab-btn-mab" onclick="switchResultTab('mab')" type="button" class="res-tab-btn py-2 px-1 rounded-xl text-[11px] font-extrabold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 flex items-center justify-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                        </svg>
+                        <span>MAB</span>
+                    </button>
+                </div>
+
+                <!-- NEW REMINDER -->
+                <div id="res-reminder" class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-2.5 text-slate-700 dark:text-slate-300">
+                    <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                    </svg>
+                    <p class="text-[10px] leading-relaxed font-medium">
+                        <strong class="font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wide">For Personal Reference Only:</strong> This digital summary <strong>MUST NOT</strong> be used for operational purposes.
+                    </p>
+                </div>
+
+                <!-- TAB 1: OVERVIEW SUMMARY VIEW -->
+                <div id="tab-overview-content" class="res-tab-content flex flex-col gap-3.5">
+
+                    <!-- 1. HERO LEGALITY RINGS CARD (3D FLIP CONTAINER) -->
+                    <div id="overview-hero-container" class="[perspective:1000px] cursor-pointer group select-none touch-manipulation active:scale-[0.995] transition-transform duration-100">
+
+                        <div id="overview-hero-card" class="relative w-full rounded-3xl [transform-style:preserve-3d] [will-change:transform]">
+
+                            <!-- FRONT FACE -->
+                            <div class="relative bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-200 dark:border-slate-800 flex flex-col gap-3 [backface-visibility:hidden]">
+
+                                <!-- Floating Question Mark Icon (Top Right) -->
+                                <div class="absolute top-3.5 right-4 text-blue-500/70 dark:text-blue-400/70 hover:text-blue-600 transition-colors pointer-events-none">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M12 18h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+
+                                <!-- Top: Live Generic Time-Based Greeting (font-bold) -->
+                                <div class="text-center border-b border-slate-100 dark:border-slate-800/80 pb-2 pr-4">
+                                    <span id="overview-greeting" class="text-base font-bold text-slate-900 dark:text-white">Good Morning</span>
+                                </div>
+
+                                <!-- Content Row: SVG Rings + Readiness Summary -->
+                                <div class="flex items-stretch justify-between gap-4">
+                                    <!-- Left: Concentric SVG Rings & Legend -->
+                                    <div class="flex flex-col items-center shrink-0 gap-2">
+                                        <div class="relative w-24 h-24 flex items-center justify-center">
+                                            <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
+                                                <!-- Outer Ring Track (MAB Attestation) r=42 -->
+                                                <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
+                                                <!-- Outer Ring Progress (MAB - blue-700 #1D4ED8) -->
+                                                <circle id="ring-mab" cx="50" cy="50" r="42" fill="none" stroke="#1D4ED8" stroke-width="7" stroke-dasharray="263.89" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
+
+                                                <!-- Inner Ring Track (CAAM Licence) r=30 -->
+                                                <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
+                                                <!-- Inner Ring Progress (CAAM - Royal Blue #3B82F6) -->
+                                                <circle id="ring-caam" cx="50" cy="50" r="30" fill="none" stroke="#3B82F6" stroke-width="7" stroke-dasharray="188.50" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
+                                            </svg>
+                                            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                                                <span id="ov-ring-percent" class="text-xs font-black text-slate-900 dark:text-slate-100 tracking-tight block leading-none">100+</span>
+                                                <span id="ov-ring-unit" class="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mt-0.5">DAYS</span>
+                                            </div>
+                                        </div>
+                                        <!-- Ring Legend -->
+                                        <div class="flex items-center gap-2.5 text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                            <span class="flex items-center gap-1"><span id="legend-dot-caam" class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>CAAM</span>
+                                            <span class="flex items-center gap-1"><span id="legend-dot-mab" class="w-1.5 h-1.5 rounded-full bg-blue-700"></span>MAB</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Right: Readiness Summary Block -->
+                                    <div class="flex-1 flex flex-col justify-between min-w-0">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Crew Status:</span>
+                                            <span id="ov-ring-label" class="px-2.5 py-0.5 rounded-md text-xs font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">OPERATIONAL</span>
+                                        </div>
+
+                                        <div id="ov-ring-bottleneck" class="flex-1 my-1.5 text-[10px] font-bold p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 flex items-start gap-1.5 leading-snug break-words">
+                                            <span id="ov-bottleneck-led" class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] shrink-0 mt-0.5"></span>
+                                            <span id="ov-bottleneck-text" class="break-words">All Items Valid</span>
+                                        </div>
+
+                                        <div class="pt-1.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[9px] text-slate-400">
+                                            <span class="leading-snug">Last Synced: <strong id="overview-scan-timestamp" class="text-slate-800 dark:text-slate-200 font-extrabold">--:--</strong></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- BACK FACE -->
+                            <div class="absolute inset-0 w-full h-full bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4 [backface-visibility:hidden] [transform:rotateY(180deg)]">
+
+                                <!-- Left Box: Replicated Concentric Rings & Days Counter -->
+                                <div class="flex flex-col items-center shrink-0 gap-2">
+                                    <div class="relative w-24 h-24 flex items-center justify-center">
+                                        <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
+                                            <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
+                                            <circle id="ring-mab-back" cx="50" cy="50" r="42" fill="none" stroke="#1D4ED8" stroke-width="7" stroke-dasharray="263.89" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
+                                            <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
+                                            <circle id="ring-caam-back" cx="50" cy="50" r="30" fill="none" stroke="#3B82F6" stroke-width="7" stroke-dasharray="188.50" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
+                                        </svg>
+                                        <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                                            <span id="ov-ring-percent-back" class="text-xs font-black text-slate-900 dark:text-slate-100 tracking-tight block leading-none">100+</span>
+                                            <span id="ov-ring-unit-back" class="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mt-0.5">DAYS</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2.5 text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>CAAM</span>
+                                        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-700"></span>MAB</span>
+                                    </div>
+                                </div>
+
+                                <!-- Right Box: Header & Descriptions -->
+                                <div class="flex-1 flex flex-col justify-between h-full min-w-0 pr-1">
+                                    <div>
+                                        <h3 class="text-sm font-extrabold text-slate-900 dark:text-white tracking-wide border-b border-slate-100 dark:border-slate-800 pb-1 mb-1.5">Overview</h3>
+                                        <p class="text-[9.5px] leading-tight text-slate-600 dark:text-slate-300 font-medium">
+                                            This card is a Quick Summary of your flight duty eligibility and items that may require your immediate action.
+                                        </p>
+                                    </div>
+
+                                    <div class="space-y-1.5 text-[9.5px]">
+                                        <div>
+                                            <strong class="font-bold text-slate-900 dark:text-slate-100 block">Rings</strong>
+                                            <p class="leading-tight text-slate-500 dark:text-slate-400 font-normal">Item with the next immediate expiry from each group validities.</p>
+                                        </div>
+                                        <div>
+                                            <strong class="font-bold text-slate-900 dark:text-slate-100 block">Number</strong>
+                                            <p class="leading-tight text-slate-500 dark:text-slate-400 font-normal">The least number of remaining days from both rings.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- 2. BENTO GRID: CAAM STATUTORY & FLEET CURRENCY TILES (2x2) -->
+                    <div class="grid grid-cols-2 gap-2.5">
+
+                        <!-- TILE 1: CAAM LICENCE -->
+                        <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">LICENCE VALIDITY</span>
+                            </div>
+                            <!-- Horizontal Sparkline Progress Bar -->
+                            <div class="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
+                                <div id="ov-caam-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
+                            </div>
+                            <div>
+                                <div id="ov-caam-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 uppercase truncate">--</div>
+                                <div id="ov-caam-days" class="text-[9px] font-bold text-slate-400 mt-0.5">--</div>
+                            </div>
+                        </div>
+
+                        <!-- TILE 2: CLASS 1 MEDICAL -->
+                        <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Class 1 Medical</span>
+                            </div>
+                            <!-- Horizontal Sparkline Progress Bar -->
+                            <div class="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
+                                <div id="ov-medical-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
+                            </div>
+                            <div>
+                                <div id="ov-medical-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 uppercase truncate">--</div>
+                                <div id="ov-medical-days" class="text-[9px] font-bold text-slate-400 mt-0.5">--</div>
+                            </div>
+                        </div>
+
+                        <!-- TILE 3: B737 TYPE RATING & IR -->
+                        <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">LPC / IR VALIDITY</span>
+                            </div>
+                            <!-- Horizontal Sparkline Progress Bar -->
+                            <div class="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
+                                <div id="ov-type-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
+                            </div>
+                            <div>
+                                <div id="ov-type-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 uppercase truncate">--</div>
+                                <div id="ov-type-days" class="text-[9px] font-bold text-slate-400 mt-0.5">--</div>
+                            </div>
+                        </div>
+
+                        <!-- TILE 4: MAB LINE CHECK -->
+                        <div onclick="switchResultTab('mab')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">MAB Line Check</span>
+                            </div>
+                            <!-- Horizontal Sparkline Progress Bar -->
+                            <div class="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
+                                <div id="ov-linecheck-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
+                            </div>
+                            <div>
+                                <div id="ov-linecheck-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 uppercase truncate">--</div>
+                                <div id="ov-linecheck-route" class="text-[9px] font-bold text-slate-400 mt-0.5 truncate">Route: --</div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- 3. LVO RECENCY BENTO BOX (1x1 FULL WIDTH) -->
+                    <div onclick="switchResultTab('mab')" class="cursor-pointer bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col gap-2.5 hover:border-blue-500 transition-all">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">LVO Recency</span>
+                            <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400">View Details &rarr;</span>
+                        </div>
+
+                        <!-- 180-Day Recency Gradient Sparkline Track with Inverted House Pointer Marker -->
+                        <div class="relative w-full pt-1 pb-3">
+                            <div class="relative w-full h-3 rounded-full overflow-hidden shadow-inner border border-slate-200/60 dark:border-slate-800/80" style="background: linear-gradient(to right, #10B981 0%, #10B981 83.3%, #F59E0B 83.3%, #F59E0B 91.7%, #EF4444 91.7%, #EF4444 100%);">
+                            </div>
+                            <!-- Inverted House-Shaped Pointer Marker (Points directly down at scale labels) -->
+                            <div id="ov-lvo-marker" class="absolute top-3 w-3 h-3 bg-slate-900 dark:bg-white transition-all duration-500 shadow-md -translate-x-1/2 z-10" style="left: 0%; clip-path: polygon(0% 0%, 100% 0%, 100% 55%, 50% 100%, 0% 55%);"></div>
+                            <!-- Scale Labels (180D -> 90D -> 0D) -->
+                            <div class="relative w-full flex justify-between text-[7.5px] font-black text-slate-400 dark:text-slate-500 select-none mt-2.5">
+                                <span>180D</span>
+                                <span class="absolute left-1/2 -translate-x-1/2">90D</span>
+                                <span>0D</span>
+                            </div>
+                        </div>
+
+                        <!-- Metadata Footer -->
+                        <div class="flex items-center justify-between text-[9.5px] text-slate-500 dark:text-slate-400 pt-0.5 border-t border-slate-100 dark:border-slate-800/80">
+                            <span>Check Date: <strong id="ov-lvo-checkdate" class="text-slate-800 dark:text-slate-200 font-extrabold">--</strong></span>
+                            <strong id="ov-lvo-days-text" class="text-slate-800 dark:text-slate-200 font-extrabold">-- Days Remaining</strong>
+                        </div>
+                    </div>
+
+                    <!-- 4. MANDATORY RECURRENTS & DRILLS (HEALTH PROFILE HISTOGRAM) -->
+                    <div id="drills-histogram-card" onclick="switchResultTab('mab')" class="cursor-pointer bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col gap-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Mandatory Recurrents & Drills</span>
+                            <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 cursor-pointer" onclick="switchResultTab('mab')">View All &rarr;</span>
+                        </div>
+
+                        <!-- Vertical Sparkline Histogram Chart Area -->
+                        <div class="flex gap-2 items-stretch h-28 pt-1">
+                            <!-- Y-Axis Scale Labels -->
+                            <div class="w-5 shrink-0 flex flex-col justify-between text-[8px] font-black text-slate-400 dark:text-slate-500 select-none py-0.5 text-right">
+                                <span>1Y</span>
+                                <span>6M</span>
+                                <span>0D</span>
+                            </div>
+
+                            <!-- Plot Box with Reference Guide Lines -->
+                            <div class="flex-1 relative h-full flex items-end justify-between gap-1.5 px-1 bg-slate-50/50 dark:bg-slate-950/40 rounded-xl p-1.5 border border-slate-100/80 dark:border-slate-800/60 overflow-hidden">
+                                <!-- Horizontal Guide Lines -->
+                                <div class="absolute left-0 right-0 top-1.5 border-b border-dashed border-slate-200 dark:border-slate-800/80 pointer-events-none"></div>
+                                <div class="absolute left-0 right-0 top-[50%] border-b border-dashed border-slate-200 dark:border-slate-800/80 pointer-events-none"></div>
+                                <div class="absolute left-0 right-0 bottom-0 border-b border-slate-200 dark:border-slate-700 pointer-events-none"></div>
+
+                                <!-- Vertical Sparkline Bars (Spread evenly across X-axis) -->
+                                <div id="vbar-col-actype" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
+                                    <div id="vbar-drill-actype" class="w-full max-w-[14px] bg-teal-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
+                                </div>
+                                <div id="vbar-col-door" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
+                                    <div id="vbar-drill-door" class="w-full max-w-[14px] bg-cyan-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
+                                </div>
+                                <div id="vbar-col-wet" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
+                                    <div id="vbar-drill-wet" class="w-full max-w-[14px] bg-sky-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
+                                </div>
+                                <div id="vbar-col-fire" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
+                                    <div id="vbar-drill-fire" class="w-full max-w-[14px] bg-violet-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
+                                </div>
+                                <div id="vbar-col-crm" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
+                                    <div id="vbar-drill-crm" class="w-full max-w-[14px] bg-purple-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
+                                </div>
+                                <div id="vbar-col-sms" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
+                                    <div id="vbar-drill-sms" class="w-full max-w-[14px] bg-fuchsia-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
+                                </div>
+                                <div id="vbar-col-dg" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
+                                    <div id="vbar-drill-dg" class="w-full max-w-[14px] bg-pink-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
+                                </div>
+                                <div id="vbar-col-avsec" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
+                                    <div id="vbar-drill-avsec" class="w-full max-w-[14px] bg-indigo-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
+                                </div>
+                                <div id="vbar-col-supervisory" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
+                                    <div id="vbar-drill-supervisory" class="w-full max-w-[14px] bg-blue-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Legend Grid Below Chart -->
+                        <div id="drills-legend-grid" class="grid grid-cols-3 gap-y-1.5 gap-x-2 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 text-[9px] font-bold text-slate-600 dark:text-slate-300">
+                            <div id="legend-drill-actype" class="flex items-center gap-1.5 truncate">
+                                <span id="dot-legend-actype" class="w-2 h-2 rounded-full bg-teal-500 shrink-0"></span>
+                                <span id="txt-legend-actype" class="truncate">B737</span>
+                            </div>
+                            <div id="legend-drill-door" class="flex items-center gap-1.5 truncate">
+                                <span id="dot-legend-door" class="w-2 h-2 rounded-full bg-cyan-500 shrink-0"></span>
+                                <span class="truncate">Door Drill</span>
+                            </div>
+                            <div id="legend-drill-wet" class="flex items-center gap-1.5 truncate">
+                                <span id="dot-legend-wet" class="w-2 h-2 rounded-full bg-sky-500 shrink-0"></span>
+                                <span class="truncate">Wet Drill</span>
+                            </div>
+                            <div id="legend-drill-fire" class="flex items-center gap-1.5 truncate">
+                                <span id="dot-legend-fire" class="w-2 h-2 rounded-full bg-violet-500 shrink-0"></span>
+                                <span class="truncate">Fire Drill</span>
+                            </div>
+                            <div id="legend-drill-crm" class="flex items-center gap-1.5 truncate">
+                                <span id="dot-legend-crm" class="w-2 h-2 rounded-full bg-purple-500 shrink-0"></span>
+                                <span class="truncate">CRM</span>
+                            </div>
+                            <div id="legend-drill-sms" class="flex items-center gap-1.5 truncate">
+                                <span id="dot-legend-sms" class="w-2 h-2 rounded-full bg-fuchsia-500 shrink-0"></span>
+                                <span class="truncate">SMS</span>
+                            </div>
+                            <div id="legend-drill-dg" class="flex items-center gap-1.5 truncate">
+                                <span id="dot-legend-dg" class="w-2 h-2 rounded-full bg-pink-500 shrink-0"></span>
+                                <span class="truncate">DG-7</span>
+                            </div>
+                            <div id="legend-drill-avsec" class="flex items-center gap-1.5 truncate">
+                                <span id="dot-legend-avsec" class="w-2 h-2 rounded-full bg-indigo-500 shrink-0"></span>
+                                <span class="truncate">AVSEC</span>
+                            </div>
+                            <div id="legend-drill-supervisory" class="flex items-center gap-1.5 truncate">
+                                <span id="dot-legend-supervisory" class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+                                <span class="truncate">DFE / FI</span>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <!-- 4. GROUP 1: NON-EXPIRY & PASSPORT FOOTER BENTO (2x1) -->
+                    <div class="grid grid-cols-2 gap-2.5">
+
+                        <!-- PASSPORT TILE -->
+                        <div onclick="openMenu(); setTimeout(() => { const nav = document.querySelector('[data-target=pane-profile]'); if(nav) nav.click(); }, 150);" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
+                            <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">PASSPORT VALIDITY</span>
+                            <!-- Horizontal Sparkline Progress Bar with 0D, 6M, 1Y Scale -->
+                            <div class="relative w-full pt-0.5 pb-2">
+                                <div class="relative w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
+                                    <div class="absolute top-0 bottom-0 left-[49.4%] w-0.5 bg-rose-400/40 dark:bg-rose-500/40 z-0"></div>
+                                    <div id="ov-passport-bar" class="h-full bg-indigo-500 rounded-full transition-all duration-500 relative z-10" style="width: 100%;"></div>
+                                </div>
+                                <div class="relative w-full flex justify-between text-[7.5px] font-black text-slate-400 dark:text-slate-500 select-none mt-1">
+                                    <span>0D</span>
+                                    <span class="absolute left-[49.4%] -translate-x-1/2 text-rose-500/80 dark:text-rose-400/80">6M</span>
+                                    <span>1Y</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div id="ov-passport-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 uppercase truncate">--</div>
+                                <div id="ov-passport-no" class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 truncate">--</div>
+                                <div id="ov-passport-days" class="text-[9px] font-bold text-slate-400 mt-0.5">--</div>
+                            </div>
+                        </div>
+
+                        <!-- ELP VALIDITY TILE -->
+                        <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
+                            <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">ELP VALIDITY</span>
+                            <!-- Horizontal Sparkline Progress Bar with Dynamic Scale -->
+                            <div class="relative w-full pt-0.5 pb-2">
+                                <div class="relative w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
+                                    <div id="ov-elp-bar" class="h-full bg-purple-500 rounded-full transition-all duration-500 relative z-10" style="width: 100%;"></div>
+                                </div>
+                                <div id="ov-elp-scale" class="relative w-full flex justify-between text-[7.5px] font-black text-slate-400 dark:text-slate-500 select-none mt-1">
+                                    <span>0Y</span>
+                                    <span>1Y</span>
+                                    <span>2Y</span>
+                                    <span>3Y</span>
+                                    <span>4Y</span>
+                                    <span>5Y</span>
+                                    <span>6Y</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div id="ov-elp-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 uppercase truncate">--</div>
+                                <div id="ov-elp-level" class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 truncate">Level --</div>
+                                <div id="ov-elp-years" class="text-[9px] font-bold text-slate-400 mt-0.5">--</div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- TAB 2: CAAM DIGITAL LICENCE VIEW -->
+                <div id="tab-caam-content" class="res-tab-content hidden flex flex-col gap-4">
+                    <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+                        <div class="border-b-2 border-slate-200 dark:border-slate-800 pb-2 flex justify-between items-center">
+                            <span class="text-slate-500 text-[11px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                                </svg>
+                                Crew Profile
+                            </span>
+                        </div>
+                        <div class="flex flex-col gap-2.5">
+                            <div>
+                                <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block">Full Name</span>
+                                <span id="pilot-name" class="font-extrabold text-slate-900 dark:text-slate-100 text-base">-</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block">Licence Type</span>
+                                    <span id="licence-type" class="font-bold text-slate-800 dark:text-slate-200 text-sm">-</span>
+                                </div>
+                                <div>
+                                    <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block">Licence Number</span>
+                                    <span id="licence-number" class="font-bold text-slate-800 dark:text-slate-200 text-sm">-</span>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                                <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block mb-1">Special / Other Medical Limitations</span>
+                                <div id="dash-medical-limit" class="text-xs font-semibold text-slate-800 dark:text-slate-200 whitespace-pre-line leading-relaxed">NIL</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+                        <div class="border-b-2 border-slate-200 dark:border-slate-800 pb-2 flex justify-between items-center">
+                            <span class="text-slate-500 text-[11px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                                </svg>
+                                VALIDITIES & CERTIFICATIONS
+                            </span>
+                        </div>
+                        <div id="qualifications-list" class="flex flex-col"></div>
+                    </div>
+                    <button id="open-original-btn" type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-3.5 rounded-2xl transition duration-150 text-xs uppercase tracking-wider shadow-md flex items-center justify-center gap-2 cursor-pointer">
+                        <span>Proceed to eCLIPSE Licence Page</span>
+                        <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm4.28 10.28a.75.75 0 000-1.06l-3-3a.75.75 0 10-1.06 1.06l1.72 1.72H8.25a.75.75 0 000 1.5h5.69l-1.72 1.72a.75.75 0 101.06 1.06l3-3Z" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- TAB 3: MAB COMPANY ATTESTATION VIEW -->
+                <div id="tab-mab-content" class="res-tab-content hidden flex flex-col gap-4">
+                    <div id="mab-void-warning-box" class="hidden bg-rose-500/10 border-l-4 border-rose-600 p-4 rounded-r-2xl text-rose-950 dark:text-rose-200">
+                        <div class="flex items-start gap-2.5">
+                            <svg class="w-5 h-5 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                            </svg>
+                            <div class="flex-1">
+                                <h4 class="text-xs font-black uppercase tracking-wider text-rose-700 dark:text-rose-300">MAB Attestation VOID / Stale</h4>
+                                <p id="mab-void-reason" class="text-[10px] text-rose-800 dark:text-rose-200 mt-1 leading-relaxed">
+                                    Attestation PDF is older than 30 days or a qualification has lapsed. Please re-upload your latest monthly PDF.
+                                </p>
+                                <button onclick="openMenu(); setTimeout(() => { const nav = document.querySelector('[data-target=pane-profile]'); if(nav) nav.click(); }, 150);" type="button" class="mt-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[10px] uppercase py-2 px-3.5 rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer">
+                                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                                    </svg>
+                                    <span>Upload New Attestation PDF</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+                        <div class="border-b-2 border-slate-200 dark:border-slate-800 pb-2 flex justify-between items-center">
+                            <span class="text-slate-500 text-[11px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                </svg>
+                                MAB E-ATTESTATION CREDENTIALS
+                            </span>
+                            <span id="mab-doc-ref" class="hidden text-[9px] font-bold text-slate-400"></span>
+                        </div>
+                        <div class="flex flex-col gap-2.5">
+                            <div>
+                                <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block">Pilot Name</span>
+                                <span id="mab-pilot-name" class="font-extrabold text-slate-900 dark:text-slate-100 text-base">-</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block">Staff No</span>
+                                    <span id="mab-staff-no" class="font-bold text-slate-800 dark:text-slate-200 text-sm">-</span>
+                                </div>
+                                <div>
+                                    <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block">Designation / Fleet</span>
+                                    <span id="mab-designation" class="font-bold text-slate-800 dark:text-slate-200 uppercase text-sm">-</span>
+                                </div>
+                            </div>
+                            <div class="border-t border-slate-100 dark:border-slate-800/80 pt-2 flex justify-between items-center text-[9px] text-slate-400">
+                                <span>Published: <strong id="mab-published-date" class="text-slate-700 dark:text-slate-300 font-bold">-</strong></span>
+                                <span id="mab-freshness-tag" class="text-emerald-600 dark:text-emerald-400 font-extrabold uppercase">-</span>
+                            </div>
+
+                            <!-- COMPACT QUALIFICATION SLIP STATUS PILL -->
+                            <div id="mab-qs-badge-container" class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                <div id="mab-qs-badge" class="px-3 py-1.5 rounded-xl text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                                    <span id="mab-qs-status-text">Qualification Slip: Not Configured</span>
+                                    <span id="mab-qs-cert-no" class="text-[9px] font-semibold text-slate-400">CERT -</span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-3">
+                        <!-- LINE CHECK -->
+                        <div id="mab-linecheck-box" class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-md flex flex-col gap-3">
+                            <div class="border-b-2 border-slate-200 dark:border-slate-800 pb-2">
+                                <span class="text-slate-500 text-[11px] uppercase tracking-wide font-extrabold flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                                    </svg>
+                                    LINE CHECK
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between gap-4 pt-1">
+                                <div class="shrink-0 flex items-center justify-center">
+                                    <div class="px-3 py-3 rounded-xl dark:bg-blue-950/70 uppercase shadow-xs flex flex-col items-center leading-none min-w-[70px] border border-slate-300 dark:border-blue-900">
+                                        <span class="text-slate-500 dark:text-blue-300 font-normal text-[12px] tracking-wide">FLEET</span>
+                                        <span id="mab-linecheck-title" class="text-slate-500 dark:text-blue-300 font-black text-[20px] mt-0.5">B738</span>
+                                    </div>
+                                </div>
+                                <div class="flex-1 flex flex-col">
+                                    <div class="flex flex-col place-items-stretch justify-evenly">
+                                        <div class="flex flex-row gap-2 items-center justify-between w-full">
+                                            <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wide font-semibold">Check Date</span>
+                                            <strong id="mab-linecheck-date" class="text-slate-800 dark:text-slate-200 font-bold text-xs uppercase tracking-wide self-auto">13 OCT 2025</strong>
+                                        </div>
+                                        <div class="flex flex-row gap-2 items-center justify-between w-full">
+                                            <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wide font-semibold">EXPIRY DATE</span>
+                                            <strong id="mab-linecheck-expiry" class="text-slate-900 dark:text-slate-100 font-bold text-xs uppercase tracking-wide self-auto">31 OCT 2026</strong>
+                                        </div>
+                                        <div class="flex flex-row gap-2 items-center justify-between w-full">
+                                            <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">ROUTE</span>
+                                            <strong id="mab-linecheck-route" class="text-slate-800 dark:text-slate-200 font-bold text-xs uppercase tracking-wider">KUL/BKI/KUL</strong>
+                                        </div>
+                                        <div class="flex flex-row gap-2 items-center justify-between w-full">
+                                            <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wide font-semibold">LICENCE No</span>
+                                            <strong id="mab-linecheck-licence" class="text-slate-800 dark:text-slate-200 font-bold text-xs self-auto">A3115</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LVO AUTOLAND CARD -->
+                        <div id="mab-lvo-box" class="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-md flex flex-col gap-4">
+                            <div class="border-b-2 border-slate-200 dark:border-slate-800 pb-2">
+                                <span class="text-slate-500 text-[11px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+                                    </svg>
+                                    LVO AUTOLAND
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between gap-4 pt-1">
+                                <div class="shrink-0 flex items-center justify-center">
+                                    <div class="px-3 py-2 rounded-xl dark:bg-blue-950/70 uppercase shadow-xs flex flex-col items-center leading-none min-w-[70px] border border-slate-300 dark:border-blue-900">
+                                        <span id="mab-lvo-airport" class="text-slate-500 dark:text-blue-300 font-bold text-[18px] tracking-wide">VIDP</span>
+                                        <span id="mab-lvo-runway" class="text-slate-500 dark:text-blue-300 font-extrabold text-[32px] mt-0.5">28</span>
+                                        <span class="text-slate-500 dark:text-blue-300 font-bold text-[12px] mt-0.5">CAT <span id="mab-lvo-cat">III</span></span>
+                                    </div>
+                                </div>
+                                <div class="flex-1 flex flex-col">
+                                    <div class="flex flex-col place-items-stretch justify-evenly">
+                                        <div class="flex flex-row gap-2 items-center justify-between w-full">
+                                            <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wide font-semibold">Check Date</span>
+                                            <strong id="mab-lvo-date" class="text-slate-800 dark:text-slate-200 font-bold text-xs uppercase tracking-wide self-auto">-</strong>
+                                        </div>
+                                        <div class="flex flex-row gap-2 items-center justify-between w-full">
+                                            <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wide font-semibold">Type</span>
+                                            <strong id="mab-lvo-badge" class="text-slate-900 dark:text-slate-100 font-bold text-xs uppercase tracking-wide self-auto">-</strong>
+                                        </div>
+                                        <div class="flex flex-row gap-2 items-center justify-between w-full">
+                                            <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">Sim</span>
+                                            <strong id="mab-lvo-sim" class="text-slate-800 dark:text-slate-200 font-bold text-xs uppercase tracking-wide">-</strong>
+                                        </div>
+                                        <div class="flex flex-row gap-2 items-center justify-between w-full">
+                                            <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wide font-semibold">DFE No</span>
+                                            <strong id="mab-lvo-dfe" class="text-slate-800 dark:text-slate-200 font-bold text-xs self-auto">-</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SAFETY & RECURRENT TRAININGS -->
+                        <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+                            <div class="border-b-2 border-slate-200 dark:border-slate-800 pb-2">
+                                <span class="text-slate-500 text-[11px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                                    </svg>
+                                    SAFETY DRILLS & RECURRENT TRAINING
+                                </span>
+                            </div>
+                            <div id="mab-drills-list" class="flex flex-col"></div>
+                        </div>
+
+                        <!-- STACKED DOCUMENT ACTION BAR -->
+                        <div id="mab-doc-actions-container" class="flex flex-col gap-2.5 pt-2 pb-4">
+                            <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block px-1">Official Document Access</span>
+
+                            <button id="mab-view-attestation-btn" type="button" class="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]">
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                </svg>
+                                <span>View Company Attestation PDF</span>
+                            </button>
+
+                            <button id="mab-view-qs-btn" type="button" class="w-full h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-extrabold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-not-allowed border border-slate-200 dark:border-slate-700/60" disabled>
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <span>View Qualification Slip (QS)</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- LOADING VIEW -->
+            <div id="loading-view" class="app-view hidden flex flex-col items-center justify-center p-8 gap-4 min-h-[50vh]">
+                <div class="relative flex items-center justify-center">
+                    <div class="w-16 h-16 border-4 border-blue-200 dark:border-blue-900 border-t-blue-600 rounded-full animate-spin"></div>
+                    <div class="absolute inset-0 flex items-center justify-center font-black text-blue-600 text-xs">CF</div>
+                </div>
+                <p id="loading-text" class="text-xs font-bold tracking-wide text-slate-700 dark:text-slate-300 uppercase">Fetching pilot credentials...</p>
+            </div>
+
+            <!-- TARGETED UPDATE 2: RESULT VIEW (Single-Licence Inspection Sheet) -->
+            <div id="result-view" class="app-view hidden flex flex-col gap-4">
+                <!-- 2. Verification Notice Card -->
+                <div id="res-reminder" class="p-3 bg-red-500/10 border border-red-500/50 rounded-2xl flex items-start gap-2.5 text-red-600 dark:text-red-400">
+                    <svg class="w-4 h-4 text-red-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                    </svg>
+                    <p class="text-[10px] leading-relaxed font-semibold uppercase">
+                        <strong class="font-extrabold text-red-600 dark:text-red-600 uppercase tracking-wide">MANDATORY:</strong> Tap "View Licence Page" below to verify against official CAAM eCLIPSE records.
+                    </p>
+                </div>
+
+                <!-- 3. Master Compliance Status Card -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-5 shadow-lg flex flex-col items-center justify-center text-center gap-1.5">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">Master Compliance Status</span>
+                    <h3 id="res-header" class="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wide">Licence Valid</h3>
+                    <div id="res-overall-status-badge" class="w-full py-2.5 rounded-2xl text-xs font-black uppercase text-center bg-emerald-600 text-white shadow-md tracking-wider mt-1">
+                        ELIGIBLE FOR FLIGHT DUTY
+                    </div>
+                    <p id="res-scan-timestamp" class="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-semibold mt-1">Last Checked: --:--</p>
+                </div>
+
+                <!-- 4. Crew Profile & Medical Limitations Card (Unified) -->
+                <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+                    <div class="border-b-2 border-slate-200 dark:border-slate-800 pb-2 flex justify-between items-center">
+                        <span class="text-slate-500 text-[11px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                            </svg>
+                            Crew Profile
+                        </span>
+                    </div>
+                    <div class="flex flex-col gap-2.5">
+                        <div>
+                            <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block">Full Name</span>
+                            <span id="res-pilot-name" class="font-extrabold text-slate-900 dark:text-slate-100 text-base">-</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block">Licence Type</span>
+                                <span id="res-licence-type" class="font-bold text-slate-800 dark:text-slate-200 text-sm">-</span>
+                            </div>
+                            <div>
+                                <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block">Licence Number</span>
+                                <span id="res-licence-number" class="font-bold text-slate-800 dark:text-slate-200 text-sm">-</span>
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                            <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block mb-1">Special / Other Medical Limitations</span>
+                            <div id="res-medical-limit" class="text-xs font-semibold text-slate-800 dark:text-slate-200 whitespace-pre-line leading-relaxed">NIL</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. CAAM Qualifications Breakdown List -->
+                <div class="bg-white dark:bg-slate-900 shadow-lg rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+                    <div class="border-b border-slate-100 dark:border-slate-800 pb-2 flex justify-between items-center">
+                        <span class="text-slate-500 text-[10px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                            </svg>
+                            Validities & Certifications
+                        </span>
+                    </div>
+                    <div id="res-qualifications-list" class="flex flex-col"></div>
+                </div>
+
+                <!-- 6. Bottom Action Footer (Post-Review CTAs) -->
+                <div id="res-actions-footer" class="flex flex-col gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                    <!-- Primary CTA: Official Government Source Link -->
+                    <button id="res-open-original-btn" type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-3.5 px-4 rounded-2xl transition duration-150 text-xs uppercase tracking-wider shadow-md flex items-center justify-center gap-2 cursor-pointer">
+                        <span>View Official CAAM Licence Page</span>
+                        <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm4.28 10.28a.75.75 0 000-1.06l-3-3a.75.75 0 10-1.06 1.06l1.72 1.72H8.25a.75.75 0 000 1.5h5.69l-1.72 1.72a.75.75 0 101.06 1.06l3-3Z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+
+                    <!-- Secondary Toolbar Grid -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="btn-reverify-online" type="button" class="py-2.5 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer">
+                            <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                            </svg>
+                            <span>Re-Verify Online</span>
+                        </button>
+                        <button id="btn-toggle-pin" type="button" class="py-2.5 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer">
+                            <svg id="pin-icon-svg" class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                            </svg>
+                            <span id="pin-button-text">Bookmark</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- STANDALONE HISTORY VIEW (#history-view) -->
+            <div id="history-view" class="app-view hidden flex flex-col gap-4">
+                <div id="history-directory" class="bg-white dark:bg-slate-900 shadow-lg rounded-3xl p-4 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+                    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-[18px] font-bold text-slate-800 dark:text-slate-100 tracking-normal px-2">Recent</h2>
+                            <span id="history-retention-tag" class="text-[10px] font-bold text-slate-400 dark:text-slate-500"> (10)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="btn-history-manage" type="button" class="py-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer">
+                                Manage
+                            </button>
+                            <span id="history-cache-badge" class="hidden text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                Cache View
+                            </span>
+                        </div>
+                    </div>
+                    <div class="relative flex items-center">
+                        <input type="text" id="history-search-input" placeholder="Search Pilot Name, CAAM #, Rating..." class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs font-medium">
+                        <svg class="w-4 h-4 text-slate-400 absolute left-2.5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                        </svg>
+                    </div>
+                    <div class="grid grid-cols-4 gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-center text-[10px] font-bold">
+                        <button id="filter-all-btn" type="button" class="py-1.5 px-1 rounded-lg bg-blue-600 text-white shadow-xs transition-all">
+                            All <br>(<span id="count-all">0</span>)
+                        </button>
+                        <button id="filter-valid-btn" type="button" class="py-1.5 px-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all">
+                            Valid <br>(<span id="count-valid">0</span>)
+                        </button>
+                        <button id="filter-expiring-btn" type="button" class="py-1.5 px-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all">
+                            Expiring <br>(<span id="count-expiring">0</span>)
+                        </button>
+                        <button id="filter-expired-btn" type="button" class="py-1.5 px-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all">
+                            Expired <br>(<span id="count-expired">0</span>)
+                        </button>
+                    </div>
+                    <div id="history-list" class="flex flex-col">
+                        <div class="text-[11px] text-slate-400 italic py-3 text-center">No recent verified crew yet.</div>
+                    </div>
+                    <div id="history-bulk-action-bar" class="hidden sticky bottom-16 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl flex items-center justify-between gap-2 my-2 transition-all">
+                        <button id="btn-bulk-select-all" type="button" class="py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 shrink-0">
+                            <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+                            <span id="btn-bulk-select-all-text">Select All</span>
+                        </button>
+                        <div class="flex items-center gap-1">
+                            <span id="bulk-selected-count" class="px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-extrabold text-[11px]">0 selected</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button id="btn-bulk-bookmark" type="button" class="p-2 rounded-xl bg-orange-100 dark:bg-orange-950/60 hover:bg-orange-200 dark:hover:bg-orange-900/80 text-orange-600 dark:text-orange-400 font-bold transition-all cursor-pointer active:scale-95" title="Bookmark Selected">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" />
+                                </svg>
+                            </button>
+                            <button id="btn-bulk-delete" type="button" class="p-2 rounded-xl bg-red-100 dark:bg-red-950/60 hover:bg-red-200 dark:hover:bg-red-900/80 text-red-600 dark:text-red-400 font-bold transition-all cursor-pointer active:scale-95" title="Delete Selected">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCANNER VIEW (PILOT SCAN HUB) -->
+            <div id="scanner-view" class="app-view hidden flex flex-col gap-4">
+                <!-- 3-Pill Segmented Switcher Header -->
+                <div class="bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl grid grid-cols-3 gap-1 text-center shadow-xs">
+                    <button id="tab-camera-btn" type="button" class="py-2 px-1 rounded-xl text-[11px] font-extrabold transition-all bg-blue-600 text-white shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                        </svg>
+                        <span>Camera</span>
+                    </button>
+                    <button id="tab-qrpass-btn" type="button" class="py-2 px-1 rounded-xl text-[11px] font-extrabold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 flex items-center justify-center gap-1.5 cursor-pointer">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c0 .621.504 1.125 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z" />
+                        </svg>
+                        <span>My QR</span>
+                    </button>
+                    <button id="tab-manual-btn" type="button" class="py-2 px-1 rounded-xl text-[11px] font-extrabold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 flex items-center justify-center gap-1.5 cursor-pointer">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                        </svg>
+                        <span>Manual</span>
+                    </button>
+                </div>
+
+                <!-- TAB 1: CAMERA SCANNER -->
+                <div id="camera-scan-tab" class="flex flex-col gap-4">
+                    <div id="qr-reader-container" class="w-full overflow-hidden rounded-2xl bg-slate-900 aspect-square flex items-center justify-center relative shadow-inner">
+                        <video id="qr-video" class="w-full h-full object-cover" playsinline webkit-playsinline muted></video>
+                        <div id="qr-reticle" class="absolute inset-8 border-2 border-dashed border-white/70 rounded-2xl pointer-events-none flex items-end justify-center pb-3 transition-colors">
+                            <span class="text-[10px] font-bold text-white bg-black/60 px-2.5 py-1 rounded-full backdrop-blur-md uppercase tracking-wider shadow-sm">
+                                Position card 15-20 cm away
+                            </span>
+                        </div>
+                        <div id="scanner-paused-overlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex-col items-center justify-center gap-2 text-center p-4 cursor-pointer z-20">
+                            <div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white mb-1">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+                                </svg>
+                            </div>
+                            <span class="text-xs font-bold text-white">Scanner Paused</span>
+                            <span class="text-[10px] text-slate-300">Tap to resume camera</span>
+                        </div>
+                    </div>
+                    <div id="error-message" class="text-xs text-red-600 bg-red-50 dark:bg-red-950/40 p-3.5 rounded-xl font-semibold text-center empty:hidden border border-red-100 dark:border-red-900/50"></div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="camera-cycle-btn" type="button" class="bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold py-3 px-3 rounded-2xl text-xs transition duration-150 flex items-center justify-center gap-2 border border-slate-200/80 dark:border-slate-800 shadow-sm cursor-pointer">
+                            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                            </svg>
+                            <span>Switch Lens</span>
+                        </button>
+                        <button id="upload-qr-btn" type="button" class="bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold py-3 px-3 rounded-2xl text-xs transition duration-150 flex items-center justify-center gap-2 border border-slate-200/80 dark:border-slate-800 shadow-sm cursor-pointer">
+                            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                            </svg>
+                            <span>Scan Photo</span>
+                        </button>
+                        <input type="file" id="qr-file-input" accept="image/*" class="hidden" />
+                    </div>
+                    <button id="torch-toggle-btn" type="button" class="hidden w-full bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold py-3 px-3 rounded-2xl text-xs transition duration-150 flex items-center justify-center gap-2 border border-slate-200/80 dark:border-slate-800 shadow-sm cursor-pointer">
+                        <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                        </svg>
+                        <span>Toggle Flashlight</span>
+                    </button>
+                </div>
+
+                <!-- TAB 2: MY QR PASS -->
+                <div id="my-qr-pass-tab" class="hidden flex flex-col gap-4">
+                    <div class="bg-white dark:bg-slate-900 shadow-lg rounded-3xl p-6 border border-slate-100 dark:border-slate-800 text-center flex flex-col items-center gap-4">
+                        <div class="p-4 bg-white rounded-2xl shadow-inner border border-slate-100 max-w-[240px] w-full aspect-square flex items-center justify-center mx-auto">
+                            <canvas id="pass-qr-canvas" class="w-full h-full object-contain"></canvas>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <span id="pass-pilot-name" class="font-black text-slate-900 dark:text-slate-100 text-base uppercase">-</span>
+                            <span id="pass-licence-no" class="text-xs font-extrabold text-slate-500 dark:text-slate-400 mt-0.5">-</span>
+                            <div id="pass-eligibility-badge" class="mt-3 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm">-</div>
+                        </div>
+                        <div class="w-full border-t border-slate-100 dark:border-slate-800/80 pt-3 flex justify-between items-center text-[10px] text-slate-400 uppercase font-bold">
+                            <span>Last Fetched:</span>
+                            <span id="pass-freshness-tag" class="text-blue-600 dark:text-blue-400">Cached</span>
+                        </div>
+                    </div>
+                    <button id="verify-my-licence-btn" type="button" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3.5 px-4 rounded-2xl transition duration-150 flex items-center justify-center gap-2 shadow-md cursor-pointer text-xs uppercase tracking-wider">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span id="verify-my-licence-label">Verify My Licence</span>
+                    </button>
+                </div>
+
+                <!-- TAB 3: MANUAL ENTRY -->
+                <div id="manual-entry-tab" class="hidden flex flex-col gap-4">
+                    <div class="bg-white dark:bg-slate-900 shadow-lg rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+                        <span class="text-slate-500 text-[10px] font-extrabold uppercase tracking-wider block">Input eCLIPSE Licence URL</span>
+                        <div class="relative flex items-center">
+                            <div class="flex flex-col items-center w-full gap-2">
+                                <input type="url" id="manual-url-input" placeholder="https://eclipse.caam.gov.my/ELICENSING.." class="w-full pl-3 pr-20 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs font-medium block w-full">
+                                <div id="manual-url-badge" class="hidden text-[10px] text-emerald-600 font-extrabold flex items-center gap-1 mt-0.5">
+                                    <span id="manual-url-status-text">Valid CAAM Licence URL captured</span>
+                                </div>
+                            </div>
+                            <button id="paste-url-btn" type="button" class="absolute right-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold px-3 py-1.5 rounded-xl text-[10px] uppercase transition-all flex items-center gap-1 cursor-pointer">
+                                Paste
+                            </button>
+                        </div>
+                        <button id="submit-url-btn" type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-3.5 rounded-2xl transition duration-150 text-xs uppercase tracking-wider shadow-md cursor-pointer">
+                            Verify Manual URL
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TOOLS VIEW (FLIGHT DECK COMPLIANCE TOOLS) -->
+            <div id="tools-view" class="app-view hidden flex flex-col gap-3.5 pb-32">
+
+                
+
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center py-4 text-[9px] text-slate-500 dark:text-slate-400 mt-auto uppercase tracking-widest font-semibold">
+            © 2026 CertiFly • v2.0 (beta)
+        </footer>
+
+        <script src="js/vendor/anime.min.js"></script>
+        <script type="module" src="main.js"></script>
+</body>
+
+</html>
