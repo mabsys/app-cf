@@ -1,5 +1,6 @@
+// medical-validity-calculator_2310_R197.js.txt (2310_R197) - Medical Certificate Validity & Interruption Engine
 /**
- * Medical Certificate Validity & Interruption Engine (v2)
+ * Medical Certificate Validity & Interruption Engine (2310_R197)
  * Grounded in MCAR / CAAM Regulations and OM-A Policies
  * 
  * Excludes:
@@ -8,13 +9,24 @@
 
 class MedicalValidityEngine {
   /**
-   * Calculates the medical certificate validity and new expiry date.
+   * Helper: Format Date object to YYYY-MM-DD
+   */
+  static formatDate(date) {
+    if (!date || isNaN(date.getTime())) return null;
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  /**
+   * Calculates the medical certificate validity, 45-day renewal window, and new expiry date.
    * 
    * @param {Object} params
    * @param {string|Date} params.dob - Pilot Date of Birth (YYYY-MM-DD or Date)
    * @param {string|Date} params.examDate - Date of medical examination
    * @param {string|Date} [params.currentExpiryDate] - Current medical expiry date (if renewing)
-   * @returns {Object} Calculation results including age, validity months, new expiry date, anniversary preserved flag.
+   * @returns {Object} Calculation results including age, validity months, 45d window dates, new expiry date, anniversary preserved flag.
    */
   static calculateValidity({ dob, examDate, currentExpiryDate = null }) {
     const dobDate = new Date(dob);
@@ -34,7 +46,10 @@ class MedicalValidityEngine {
         isEligible: false,
         reason: "Commercial Air Transport pilot privileges cease at Age 65.",
         validityMonths: 0,
-        newExpiryDate: null
+        newExpiryDate: null,
+        earlyRenewalWindowStart: null,
+        nextEarlyRenewalWindowStart: null,
+        renewalWindowSummary: "Ineligible (Age >= 65)"
       };
     }
 
@@ -43,15 +58,21 @@ class MedicalValidityEngine {
 
     let baseDate = new Date(exam);
     let anniversaryPreserved = false;
+    let earlyRenewalWindowStart = null;
 
     // 3. Apply 45-Day Window Rule if existing expiry date is provided
     if (currentExpiryDate) {
       const currentExpiry = new Date(currentExpiryDate);
       if (!isNaN(currentExpiry.getTime())) {
+        // Calculate exact 45-day early renewal start date (currentExpiry - 45 days)
+        const windowStartDate = new Date(currentExpiry.getTime());
+        windowStartDate.setDate(windowStartDate.getDate() - 45);
+        earlyRenewalWindowStart = this.formatDate(windowStartDate);
+
         const diffTime = currentExpiry.getTime() - exam.getTime();
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        // If exam is conducted within 45 days prior to current expiry
+        // If exam is conducted within 45 days prior to current expiry (0 <= diffDays <= 45)
         if (diffDays >= 0 && diffDays <= 45) {
           baseDate = new Date(currentExpiry);
           anniversaryPreserved = true;
@@ -63,13 +84,26 @@ class MedicalValidityEngine {
     const newExpiryDate = new Date(baseDate);
     newExpiryDate.setMonth(newExpiryDate.getMonth() + validityMonths);
 
+    // 5. Calculate Next Early Renewal Window Start Date (New Expiry - 45 days)
+    const nextWindowStartDate = new Date(newExpiryDate.getTime());
+    nextWindowStartDate.setDate(nextWindowStartDate.getDate() - 45);
+    const nextEarlyRenewalWindowStart = this.formatDate(nextWindowStartDate);
+
+    const currExpiryFormatted = currentExpiryDate ? this.formatDate(new Date(currentExpiryDate)) : null;
+
     return {
       age,
       isEligible: true,
       validityMonths,
       anniversaryPreserved,
-      examDate: exam.toISOString().split('T')[0],
-      newExpiryDate: newExpiryDate.toISOString().split('T')[0],
+      examDate: this.formatDate(exam),
+      currentExpiryDate: currExpiryFormatted,
+      earlyRenewalWindowStart: earlyRenewalWindowStart,
+      newExpiryDate: this.formatDate(newExpiryDate),
+      nextEarlyRenewalWindowStart: nextEarlyRenewalWindowStart,
+      renewalWindowSummary: earlyRenewalWindowStart && currExpiryFormatted 
+        ? `45-Day Window: ${earlyRenewalWindowStart} to ${currExpiryFormatted}`
+        : `45-Day Window Opens: ${nextEarlyRenewalWindowStart}`,
       restrictions: age >= 60 ? ["Multi-pilot crew operations only (Single-pilot prohibited)"] : []
     };
   }
@@ -129,9 +163,4 @@ class MedicalValidityEngine {
 // Node.js module export compatibility
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = MedicalValidityEngine;
-}
-
-export { MedicalValidityEngine }; 
-export function calculateMedicalValidity(params) { 
-  return MedicalValidityEngine.calculateValidity(params); 
 }
