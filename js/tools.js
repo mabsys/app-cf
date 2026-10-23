@@ -1,4 +1,4 @@
-// js/tools.js (2010_R199) - Tools Orchestrator & Data Adapter (Engine Method Signature Fix)
+// tools_2310_R197.js.txt (2310_R197) - Tools Orchestrator & Data Adapter (Real-Time Reactive Dispatcher)
 
 import * as StandbyEngineModule from './engines/standby-fdp-calculator.js';
 import * as MaxFdpEngineModule from './engines/max-fdp-calculator.js';
@@ -28,7 +28,7 @@ export function normalizeOutput(toolType, rawResult) {
       targetClockLabel: 'Target Clock',
       targetClockValue: '--:--',
       breakdownGrid: [],
-      auditNotes: ['ℹ CAAM CAD 1901 / CAD 1 Standards'],
+      auditNotes: ['CAAM CAD 1901 / CAD 1 Standards'],
       actions: []
     };
   }
@@ -46,7 +46,7 @@ export function normalizeOutput(toolType, rawResult) {
         breakdownGrid: [
           { label: 'Standby Duration', value: rawResult.standbyDurationFormatted || '--' },
           { label: 'FDP Deduction', value: rawResult.deductionFormatted || '0h 00m' },
-          { label: 'Case Type', value: isCaseB ? 'Case B (≥6h)' : 'Case A (<6h)' },
+          { label: 'Case Type', value: isCaseB ? 'Case B (>=6h)' : 'Case A (<6h)' },
           { label: 'Base Max FDP', value: rawResult.baseMaxFdpFormatted || '--' }
         ],
         auditNotes: [
@@ -62,10 +62,9 @@ export function normalizeOutput(toolType, rawResult) {
     case 'max-fdp': {
       const isDiscretionNeeded = rawResult.isDiscretionTriggered || rawResult.exceedsMaxFdp || rawResult.isDiscretionRequired;
       const isProhibited = rawResult.isProhibited || rawResult.isLapsed;
-      
       let badgeText = 'CLEARED';
       let badgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300';
-      
+
       if (isProhibited) {
         badgeText = 'PROHIBITED';
         badgeClass = 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300';
@@ -129,14 +128,14 @@ export function normalizeOutput(toolType, rawResult) {
         statusBadge: isOverLimit ? 'CAP EXCEEDED' : 'ROSTER CLEARED',
         statusClass: isOverLimit ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
         headlineTitle: '7-DAY DUTY BUDGET',
-        headlineValue: rawResult.duty7Days ? `${rawResult.duty7Days.currentFormatted} / 55h` : '-- / 55h',
+        headlineValue: rawResult.duty7Days ? `${rawResult.duty7Days.currentFormatted || rawResult.duty7Days.current || '--'} / 55h` : '-- / 55h',
         targetClockLabel: '28-Day Duty Budget',
-        targetClockValue: rawResult.duty28Days ? rawResult.duty28Days.currentFormatted : '--:--',
+        targetClockValue: rawResult.duty28Days ? (rawResult.duty28Days.currentFormatted || `${rawResult.duty28Days.current || '--'} / 190h`) : '--:--',
         breakdownGrid: [
-          { label: '14-Day Duty', value: rawResult.duty14Days ? rawResult.duty14Days.currentFormatted : '0h' },
-          { label: '28-Day Duty', value: rawResult.duty28Days ? rawResult.duty28Days.currentFormatted : '0h' },
-          { label: '28-Day Flying', value: rawResult.flight28Days ? rawResult.flight28Days.currentFormatted : '0h' },
-          { label: '12-Month Flying', value: rawResult.flight12Months ? rawResult.flight12Months.currentFormatted : '0h' }
+          { label: '14-Day Duty', value: rawResult.duty14Days ? (rawResult.duty14Days.currentFormatted || `${rawResult.duty14Days.current}h`) : '0h' },
+          { label: '28-Day Duty', value: rawResult.duty28Days ? (rawResult.duty28Days.currentFormatted || `${rawResult.duty28Days.current}h`) : '0h' },
+          { label: '28-Day Flying', value: rawResult.flight28Days ? (rawResult.flight28Days.currentFormatted || `${rawResult.flight28Days.current}h`) : '0h' },
+          { label: '12-Month Flying', value: rawResult.flight12Months ? (rawResult.flight12Months.currentFormatted || `${rawResult.flight12Months.current}h`) : '0h' }
         ],
         auditNotes: [
           'CAAM CAD 1901 Cumulative Duty & Flying Caps',
@@ -155,7 +154,7 @@ export function normalizeOutput(toolType, rawResult) {
         targetClockLabel: 'FDP Extension Used',
         targetClockValue: rawResult.voyage ? `+${Math.floor((rawResult.voyage.discretionExercisedMinutes || 0) / 60)}h ${(rawResult.voyage.discretionExercisedMinutes || 0) % 60}m` : '+00:00',
         breakdownGrid: [
-          { label: 'Commander', value: rawResult.partA ? rawResult.partA.picName : '--' },
+          { label: 'Commander', value: rawResult.partA ? (rawResult.partA.picName || '--') : '--' },
           { label: 'Sectors Flown', value: rawResult.voyage && rawResult.voyage.sectors ? String(rawResult.voyage.sectors.length) : '1' },
           { label: 'Delay Reason', value: 'Operational' },
           { label: 'Signature', value: rawResult.partC && rawResult.partC.signatureDataUrl ? 'Signed' : 'Pending' }
@@ -172,44 +171,46 @@ export function normalizeOutput(toolType, rawResult) {
     }
 
     case 'medical': {
+      const windowStr = rawResult.renewalWindowSummary || (rawResult.earlyRenewalWindowStart ? `${rawResult.earlyRenewalWindowStart} to ${rawResult.currentExpiryDate}` : '--');
       return {
-        statusBadge: rawResult.anniversaryPreserved ? 'ANNIVERSARY PRESERVED' : 'RESET (EOM)',
-        statusClass: 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300',
+        statusBadge: rawResult.anniversaryPreserved ? 'ANNIVERSARY PRESERVED (45d)' : 'RESET (EOM)',
+        statusClass: rawResult.anniversaryPreserved ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300',
         headlineTitle: 'NEW MEDICAL EXPIRY',
         headlineValue: rawResult.newExpiryDate || '--',
-        targetClockLabel: 'Age Ceiling / Tier',
-        targetClockValue: rawResult.age ? `Age ${rawResult.age}` : '--',
+        targetClockLabel: '45-Day Early Renewal Window',
+        targetClockValue: windowStr,
         breakdownGrid: [
-          { label: 'Age', value: rawResult.age !== undefined ? String(rawResult.age) : '--' },
+          { label: 'Pilot Age', value: rawResult.age !== undefined ? `Age ${rawResult.age}` : '--' },
           { label: 'Class', value: 'Class 1' },
           { label: 'Validity Period', value: `${rawResult.validityMonths || 12} Months` },
-          { label: 'Eligible', value: rawResult.isEligible ? 'Yes' : 'No' }
+          { label: 'Preserved (45d)', value: rawResult.anniversaryPreserved ? 'Yes' : 'No' }
         ],
         auditNotes: [
-          'CAAM CAD 1 Personnel Licensing (PEL)',
-          rawResult.reason || 'Expiry date calculated per CAAM age-tiered validity rules'
+          'CAAM CAD 1 Personnel Licensing (PEL) Standards',
+          rawResult.reason || (rawResult.anniversaryPreserved ? 'Exam conducted within 45-day window: Anniversary preserved' : 'Expiry calculated per CAAM age-tiered validity rules')
         ],
         actions: []
       };
     }
 
     case 'ppc': {
+      const windowStr = rawResult.opcWindowSummary || (rawResult.earliestOPCDate ? `${rawResult.earliestOPCDate} to ${rawResult.latestOPCDate}` : '--');
       return {
-        statusBadge: rawResult.anniversaryPreserved ? 'ANNIVERSARY PRESERVED' : 'RESET (EOM)',
-        statusClass: 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300',
+        statusBadge: rawResult.anniversaryPreserved ? 'ANNIVERSARY PRESERVED (3m)' : 'RESET (EOM)',
+        statusClass: rawResult.anniversaryPreserved ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300',
         headlineTitle: 'NEW PPC / LPC EXPIRY',
         headlineValue: rawResult.newLPCExpiryDate || rawResult.newLpcExpiry || '--',
-        targetClockLabel: 'PPC Window Summary',
-        targetClockValue: rawResult.lpcConductDate || '--',
+        targetClockLabel: 'Mandatory OPC Window (4-8m)',
+        targetClockValue: windowStr,
         breakdownGrid: [
           { label: 'LPC Conducted', value: rawResult.lpcConductDate || '--' },
           { label: 'Previous Expiry', value: rawResult.previousLPCExpiry || 'None' },
           { label: 'New Expiry', value: rawResult.newLPCExpiryDate || '--' },
-          { label: 'Calculation', value: rawResult.anniversaryPreserved ? 'Preserved' : 'Reset' }
+          { label: 'Calculation', value: rawResult.anniversaryPreserved ? 'Preserved (+12m)' : 'Reset (EOM)' }
         ],
         auditNotes: [
-          'CAAM CAD 1 & OM-D PPC/LPC Validity Rules',
-          rawResult.calculationMethod || '3-month lookback window applied'
+          'CAAM CAD 1 & OM-D PPC/LPC Validity Standards',
+          rawResult.calculationMethod || '3-month renewal lookback window applied'
         ],
         actions: []
       };
@@ -217,8 +218,8 @@ export function normalizeOutput(toolType, rawResult) {
 
     case 'recurrent': {
       return {
-        statusBadge: rawResult.anniversaryPreserved ? 'ANNIVERSARY PRESERVED' : 'RESET (EOM)',
-        statusClass: 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300',
+        statusBadge: rawResult.anniversaryPreserved ? 'ANNIVERSARY PRESERVED (3m)' : 'RESET (EOM)',
+        statusClass: rawResult.anniversaryPreserved ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300',
         headlineTitle: 'RECURRENT EXPIRY',
         headlineValue: rawResult.newExpiryDate || '--',
         targetClockLabel: 'Completion Date',
@@ -246,7 +247,7 @@ export function normalizeOutput(toolType, rawResult) {
         targetClockLabel: 'Target Clock',
         targetClockValue: '--:--',
         breakdownGrid: [],
-        auditNotes: ['ℹ CAAM CAD 1901 / CAD 1 Standards'],
+        auditNotes: ['CAAM CAD 1901 / CAD 1 Standards'],
         actions: []
       };
   }
@@ -358,7 +359,7 @@ export function runToolCalculation(toolType, inputData = {}) {
           const completionDate = inputData.completionDateStr || inputData.conductDate || inputData.completionDate;
           if (completionDate) {
             rawResult = ClassObj.calculateExpiry(
-              inputData.qualKey || inputData.courseType || 'linecheck',
+              inputData.qualKey || inputData.courseType || 'LINE_CHECK',
               completionDate,
               inputData.currentExpiryDateStr || null
             );
@@ -412,14 +413,14 @@ export function renderToolsOutputCard(normalized) {
     gridEl.innerHTML = normalized.breakdownGrid.map(item => `
       <div class="bg-slate-50 dark:bg-slate-950/60 p-2 rounded-xl flex justify-between items-center">
         <span class="text-slate-400 font-extrabold uppercase text-[8px] truncate">${item.label}</span>
-        <span class="font-extrabold text-slate-800 dark:text-slate-200">${item.value}</span>
+        <span class="font-extrabold text-slate-800 dark:text-slate-200 text-xs">${item.value}</span>
       </div>
     `).join('');
   }
 
   // Slot 4 (Audit Notes & Action CTAs)
   if (auditEl && Array.isArray(normalized.auditNotes)) {
-    auditEl.innerHTML = normalized.auditNotes.map(note => `<span>ℹ ${note}</span>`).join('');
+    auditEl.innerHTML = normalized.auditNotes.map(note => `<span>[INFO] ${note}</span>`).join('');
   }
 
   if (actionsEl) {
@@ -433,6 +434,75 @@ export function renderToolsOutputCard(normalized) {
       actionsEl.innerHTML = '';
     }
   }
+}
+
+/**
+ * Real-Time Input Binder for Reactive UI Operations
+ */
+export function initToolsViewUI() {
+  const toolPanes = {
+    medical: ['medical-dob', 'medical-exam-date', 'medical-current-expiry'],
+    ppc: ['ppc-conduct-date', 'ppc-current-expiry'],
+    recurrent: ['recurrent-qual-key', 'recurrent-conduct-date', 'recurrent-current-expiry'],
+    standby: ['standby-start-time', 'standby-callout-time'],
+    'max-fdp': ['max-fdp-report-time', 'max-fdp-sectors', 'max-fdp-acclimatised'],
+    'pre-flight-rest': ['pre-flight-duty-hours', 'pre-flight-location'],
+    cumulative: ['cum-duty-7d', 'cum-duty-14d', 'cum-duty-28d', 'cum-flight-28d', 'cum-flight-12m']
+  };
+
+  const getPaneData = (type) => {
+    const data = {};
+    switch (type) {
+      case 'medical':
+        data.dob = document.getElementById('medical-dob')?.value || '';
+        data.examDate = document.getElementById('medical-exam-date')?.value || '';
+        data.currentExpiryDate = document.getElementById('medical-current-expiry')?.value || '';
+        break;
+      case 'ppc':
+        data.lpcConductDateStr = document.getElementById('ppc-conduct-date')?.value || '';
+        data.currentLPCExpiryDateStr = document.getElementById('ppc-current-expiry')?.value || '';
+        break;
+      case 'recurrent':
+        data.qualKey = document.getElementById('recurrent-qual-key')?.value || 'LINE_CHECK';
+        data.completionDateStr = document.getElementById('recurrent-conduct-date')?.value || '';
+        data.currentExpiryDateStr = document.getElementById('recurrent-current-expiry')?.value || '';
+        break;
+      case 'standby':
+        data.standbyStartISO = document.getElementById('standby-start-time')?.value || '';
+        data.calloutTimestampISO = document.getElementById('standby-callout-time')?.value || '';
+        break;
+      case 'max-fdp':
+        data.reportTimestampISO = document.getElementById('max-fdp-report-time')?.value || '';
+        data.sectorsPlanned = parseInt(document.getElementById('max-fdp-sectors')?.value || '1', 10);
+        data.isAcclimatised = document.getElementById('max-fdp-acclimatised')?.checked ?? true;
+        break;
+      case 'pre-flight-rest':
+        data.precedingDutyHours = parseFloat(document.getElementById('pre-flight-duty-hours')?.value || '0');
+        data.locationType = document.getElementById('pre-flight-location')?.value || 'outstation';
+        break;
+      case 'cumulative':
+        data.loggedDutyHours7Days = parseFloat(document.getElementById('cum-duty-7d')?.value || '0');
+        data.loggedDutyHours14Days = parseFloat(document.getElementById('cum-duty-14d')?.value || '0');
+        data.loggedDutyHours28Days = parseFloat(document.getElementById('cum-duty-28d')?.value || '0');
+        data.loggedFlightHours28Days = parseFloat(document.getElementById('cum-flight-28d')?.value || '0');
+        data.loggedFlightHours12Months = parseFloat(document.getElementById('cum-flight-12m')?.value || '0');
+        break;
+      default:
+        break;
+    }
+    return data;
+  };
+
+  Object.entries(toolPanes).forEach(([toolType, elIds]) => {
+    elIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        const handler = () => runToolCalculation(toolType, getPaneData(toolType));
+        el.addEventListener('input', handler);
+        el.addEventListener('change', handler);
+      }
+    });
+  });
 }
 
 /**
@@ -451,6 +521,7 @@ export function getToolsState() {
  * Legacy function compatibility exports
  */
 export function initToolsModule() {
+  initToolsViewUI();
   return true;
 }
 
