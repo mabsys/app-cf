@@ -1,4 +1,4 @@
-// js/tools.js (2410_R205) - Tools Orchestrator, Data Adapter & Backward Compatibility Exports
+// js/tools.js (2410_R207) - Tools Orchestrator, Data Adapter, Window & Module Exports
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -673,3 +673,29 @@ export function draftFtlEmail(opts = {}) {
 export function renderSectorCardsUI() {}
 export function clearSignatureCanvas() {}
 export function populateCommanderSelect() {}
+
+// Expose functions on window for inline HTML onclick handlers and cross-module access
+if (typeof window !== 'undefined') {
+  window.switchToolCategory = switchToolCategory;
+  window.switchActiveTool = switchActiveTool;
+  window.setMasterTimezone = setMasterTimezone;
+  window.setStandbyLocation = setStandbyLocation;
+  window.openRecurrentCourseModal = openRecurrentCourseModal;
+  window.closeRecurrentCourseModal = closeRecurrentCourseModal;
+  window.selectRecurrentCourse = selectRecurrentCourse;
+  window.filterRecurrentCourses = filterRecurrentCourses;
+  window.resetToolInputs = resetToolInputs;
+  window.openFtl1WizardModal = openFtl1WizardModal;
+  window.closeFtl1WizardModal = closeFtl1WizardModal;
+  window.runToolCalculation = runToolCalculation;
+  window.renderToolsOutputCard = renderToolsOutputCard;
+  window.setSectorCount = setSectorCount;
+  window.getSectorCount = getSectorCount;
+  window.draftFtlEmail = draftFtlEmail;
+  window.initToolsModule = initToolsModule;
+  window.calculateMedicalWindow = calculateMedicalWindow;
+  window.calculateCourseExpiry = calculateCourseExpiry;
+  window.calculatePpcWindows = calculatePpcWindows;
+  window.calculateFdpAndDiscretion = calculateFdpAndDiscretion;
+  window.getMaxAllowableFdp = getMaxAllowableFdp;
+}
