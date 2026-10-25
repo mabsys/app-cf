@@ -1,4 +1,4 @@
-// js/ui.js (2410_R206) - CertiFly Complete View State, Theme & Navigation Controller
+// js/ui.js (2410_R208) - CertiFly Complete View State, Theme & Navigation Controller
 
 import { initToolsModule, runToolCalculation, setToolsTab, getToolsState, getSectorCount, setSectorCount, draftFtlEmail } from './tools.js';
 import { stopScanner, switchScanHubTab } from './scanner.js';
@@ -732,70 +732,79 @@ export function switchSubTab(subTab) {
 }
 
 export function dispatchActiveToolCalculation() {
-  const subTab = activeToolsSubTab;
+  const activeToolCard = document.querySelector('.tool-card.active');
+  const activeToolId = activeToolCard ? activeToolCard.id : 'tool-card-medical';
+  let toolType = activeToolId.replace('tool-card-', '');
+  if (toolType === 'maxfdp') toolType = 'max-fdp';
+  if (toolType === 'preflight') toolType = 'pre-flight-rest';
+
   let inputData = {};
 
   try {
-    switch (subTab) {
+    switch (toolType) {
       case 'medical':
         inputData = {
-          lastDate: document.getElementById('medical-last-date')?.value || '',
-          pilotAge: document.getElementById('medical-pilot-age')?.value || ''
+          examDate: document.getElementById('input-med-exam-date')?.value || '',
+          licenseType: document.getElementById('input-med-license-type')?.value || 'ATPL',
+          ageBracket: document.getElementById('input-med-age-bracket')?.value || '40_TO_59'
         };
         break;
       case 'ppc':
         inputData = {
-          conductDate: document.getElementById('ppc-conduct-date')?.value || '',
-          expiryDate: document.getElementById('ppc-expiry-date')?.value || ''
+          conductDate: document.getElementById('input-ppc-conduct-date')?.value || '',
+          expiryDate: document.getElementById('input-ppc-expiry-date')?.value || ''
         };
         break;
       case 'recurrent':
         inputData = {
-          courseType: document.getElementById('recurrent-drill-type')?.value || 'linecheck',
-          conductDate: document.getElementById('recurrent-conduct-date')?.value || ''
+          courseType: document.getElementById('input-recurrent-course')?.value || 'LINE_CHECK',
+          conductDate: document.getElementById('input-recurrent-conduct-date')?.value || ''
+        };
+        break;
+      case 'recency':
+        inputData = {
+          dayCount: parseInt(document.getElementById('input-recency-day')?.value || '0', 10),
+          nightCount: parseInt(document.getElementById('input-recency-night')?.value || '0', 10)
         };
         break;
       case 'standby':
         inputData = {
-          startTime: document.getElementById('standby-start-time')?.value || '',
-          calloutTime: document.getElementById('callout-time')?.value || ''
+          startTime: document.getElementById('input-stby-start-time')?.value || '',
+          calloutTime: document.getElementById('input-stby-report-time')?.value || '',
+          location: window.toolsState?.standbyLocation || 'HOME'
         };
         break;
       case 'max-fdp':
         inputData = {
-          reportTime: document.getElementById('fdp-report-time')?.value || '',
-          sectors: getSectorCount(),
-          isAcclimatised: document.getElementById('fdp-acclimatised-check')?.checked ?? true
+          reportTime: document.getElementById('input-fdp-report-time')?.value || '',
+          sectors: parseInt(document.getElementById('input-fdp-sectors')?.value || '2', 10),
+          isAcclimatised: document.getElementById('input-fdp-acclimatised')?.checked ?? true
         };
         break;
       case 'pre-flight-rest':
         inputData = {
-          precedingDutyHours: parseFloat(document.getElementById('rest-preceding-duty')?.value) || 10,
-          locationType: document.getElementById('rest-location-type')?.value || 'outstation'
+          precedingDutyHours: document.getElementById('input-rest-preceding-duty')?.value || '',
+          locationType: document.getElementById('input-rest-location')?.value || 'HOME'
         };
         break;
       case 'cumulative':
         inputData = {
-          duty7d: parseFloat(document.getElementById('cum-duty-7d')?.value) || 0,
-          duty14d: parseFloat(document.getElementById('cum-duty-14d')?.value) || 0
+          duty7d: document.getElementById('input-cum-duty-7d')?.value || '',
+          flight28d: document.getElementById('input-cum-flight-28d')?.value || ''
         };
         break;
       case 'caam-ftl1':
         inputData = {
-          commander: document.getElementById('ftl-commander-select')?.value || '',
-          reasonAtc: document.getElementById('reason-atc')?.checked || false,
-          reasonTech: document.getElementById('reason-tech')?.checked || false,
-          reasonWeather: document.getElementById('reason-weather')?.checked || false,
-          reasonOthers: document.getElementById('reason-others')?.checked || false,
-          narrative: document.getElementById('ftl-narrative')?.value || ''
+          flightNo: document.getElementById('ftl1-flight-no')?.value || '',
+          acReg: document.getElementById('ftl1-ac-reg')?.value || ''
         };
         break;
     }
   } catch (err) {
-    console.warn(`Error gathering inputs for ${subTab}:`, err);
+    console.warn("Error gathering inputs for " + toolType + ":", err);
   }
 
-  runToolCalculation(subTab, inputData);
+  runToolCalculation(toolType, inputData);
 }
 
 export function autoFillFromCredentials() {
