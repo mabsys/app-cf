@@ -1,4 +1,4 @@
-// js/tools.js (2410_R208) - Tools Orchestrator, Data Adapter, Window & Module Exports
+// js/tools.js (2410_R209) - Tools Orchestrator, Data Adapter & Guarded Engine Calculations
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -344,7 +344,7 @@ export function runToolCalculation(toolType, inputData = {}) {
               let sampleAge = 45;
               if (ageBracket === 'UNDER_40') sampleAge = 30;
               else if (ageBracket === '60_PLUS') sampleAge = 62;
-              dob = ;
+              dob = `${nowYear - sampleAge}-01-01`;
             }
             rawResult = ClassObj.calculateValidity({
               dob,
