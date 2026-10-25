@@ -1,3 +1,7 @@
+// js/engines/caam-ftl1-controller.js (2410_R211) - CAAM/BOP/FTL/1 Discretion Assistant Controller
+// Developed by: Capt. Mohd Sallehuddin Zaidy
+// CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
+
 /**
  * CAAM/BOP/FTL/1 Discretion Assistant Controller
  * ------------------------------------------------------------------
@@ -7,7 +11,6 @@
  * Applicable Standard: CAAM CAD 1901 / OM-A Chapter 7 / CAAM/BOP/FTL/1
  */
 
-// Relative import assuming file sits inside /js/engines/
 import { findAirport, searchAirports } from '../data/airports.js';
 
 // Safe fallback helper if loaded directly in a non-ESM script environment
@@ -112,8 +115,8 @@ export function createDefaultFormState(maxFdpOutput = null) {
     // PART A: General Metadata
     partA: {
       operatorName: 'MALAYSIA AIRLINES BERHAD (MAB)',
-      aircraftRegistration: '9M-MTB',
-      flightNumber: 'MH123',
+      aircraftRegistration: '9M-MXA',
+      flightNumber: 'MH1141',
       flightDate: todayISO,
       picName: 'CAPT. AHMAD RAZALI',
       crewType: 'flight_crew', // 'flight_crew' | 'cabin_crew'
@@ -821,7 +824,7 @@ PIC: ${a.picName} (${a.operatorName})
 
 VOYAGE TIMESTAMPS:
 • Duty Start: ${v.dutyStartAirport} @ ${v.dutyStartUTC} UTC (${v.dutyStartLocal} Local)
-${v.sectors.map(s => `• Sector ${s.sectorNumber}: ${s.depAirport} ➔ ${s.arrAirport} | Off: ${s.actOffChocksUTC} UTC (${s.actOffChocksLocal} Local) | On: ${s.actOnChocksUTC} UTC (${s.actOnChocksLocal} Local)`).join('\n')}
+${v.sectors.map(s => `• Sector ${s.sectorNumber}: ${s.depAirport} -> ${s.arrAirport} | Off: ${s.actOffChocksUTC} UTC (${s.actOffChocksLocal} Local) | On: ${s.actOnChocksUTC} UTC (${s.actOnChocksLocal} Local)`).join('\n')}
 • Duty Completed: ${v.dutyEndAirport} @ ${v.dutyEndUTC} UTC (${v.dutyEndLocal} Local)
 
 FTL & DISCRETION TOTALS:
@@ -835,4 +838,23 @@ JUSTIFICATION / REASON:
 =====================================================
 `.trim();
   }
+}
+
+// Expose on window object for universal script tag compatibility
+if (typeof window !== 'undefined') {
+  window.CAAMFTL1Controller = CAAMFTL1Controller;
+  window.formatMinutesToHHMM = formatMinutesToHHMM;
+  window.parseHHMMToMinutes = parseHHMMToMinutes;
+  window.calculateUTCMinutesDuration = calculateUTCMinutesDuration;
+  window.convertUTCToLocal = convertUTCToLocal;
+  window.projectNextSectorDeparture = projectNextSectorDeparture;
+  window.createDefaultFormState = createDefaultFormState;
+  window.populateFromMaxFdpEngine = populateFromMaxFdpEngine;
+  window.addSectorLeg = addSectorLeg;
+  window.removeSectorLeg = removeSectorLeg;
+  window.updateSectorTimes = updateSectorTimes;
+  window.recalculateVoyageTotals = recalculateVoyageTotals;
+  window.validateForm = validateForm;
+  window.mapFormToPdfCoordinates = mapFormToPdfCoordinates;
+  window.overlayFormOnPdfTemplate = overlayFormOnPdfTemplate;
 }
