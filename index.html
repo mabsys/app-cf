@@ -1,4 +1,4 @@
-<!-- index.html (2410_R213) - CertiFly PWA Application Shell & Core Layout -->
+<!-- index.html (2410_R216) - CertiFly PWA Application Shell & Core Layout -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -36,6 +36,10 @@ if ('serviceWorker' in navigator) {
     <script src="js/vendor/qr-scanner.umd.min.js"></script>
     <script src="js/vendor/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none !important; }
+        .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
+    </style>
 </head>
 
 <body class="bg-slate-50 dark:bg-slate-950 min-h-screen font-sans text-slate-800 dark:text-slate-200 flex flex-col justify-between">
@@ -983,7 +987,7 @@ if ('serviceWorker' in navigator) {
             </div>
 
             <!-- TOOLS VIEW (FLIGHT DECK COMPLIANCE TOOLS) -->
-            <div id="tools-view" class="app-view hidden flex flex-col gap-3.5 pb-32 w-full max-w-md mx-auto select-none overflow-x-hidden">
+            <div id="tools-view" class="app-view hidden flex flex-col gap-3.5 pb-32 w-full max-w-md mx-auto select-none overflow-visible px-1">
 
                 <!-- TIER 1: CATEGORY SEGMENTED CONTROL (Primary Category Filter) -->
                 <nav class="bg-slate-200/80 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-300 dark:border-slate-700/60 shadow-inner">
@@ -1359,7 +1363,7 @@ if ('serviceWorker' in navigator) {
     <!-- ================================================================= -->
     <!-- ================================================================= -->
     <div id="recurrent-course-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 select-none">
-        <div class="w-full max-w-sm mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+        <div class="w-11/12 max-w-[320px] mx-auto rounded-2xl shadow-2xl my-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
 
             <!-- Modal Header -->
             <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-900/90">
@@ -1494,7 +1498,7 @@ if ('serviceWorker' in navigator) {
 
     <!-- ================================================================= -->
     <div id="ftl1-wizard-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 select-none">
-        <div class="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+        <div class="w-11/12 max-w-[340px] mx-auto rounded-2xl max-h-[75vh] my-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
 
             <!-- Modal Header -->
             <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-900/90">
@@ -1541,7 +1545,7 @@ if ('serviceWorker' in navigator) {
 
     <!-- ================================================================= -->
     <div id="efb-date-picker-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 select-none">
-        <div class="w-full max-w-sm mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        <div class="w-11/12 max-w-[320px] mx-auto rounded-2xl shadow-2xl my-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
 
             <!-- Modal Header -->
             <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/90">
@@ -1579,10 +1583,7 @@ if ('serviceWorker' in navigator) {
                 </div>
             </div>
 
-            <!-- Footer Action -->
-            <div class="p-2.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 flex items-center justify-end">
-                <button type="button" class="py-1.5 px-4 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white shadow-md transition-all cursor-pointer" onclick="closeEfbDatePicker()">Confirm Selection</button>
-            </div>
+
 
         </div>
     </div>
