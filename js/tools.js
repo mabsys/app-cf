@@ -1,4 +1,4 @@
-// js/tools.js (2410_R210) - Tools Orchestrator, Data Adapter & Guarded Engine Calculations
+// js/tools.js (2410_R212) - Tools Orchestrator, EFB Date Picker & Date Formatter
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -8,6 +8,177 @@ import * as PreFlightRestEngineModule from './engines/pre-flight-rest-calculator
 import * as CumulativeEngineModule from './engines/cumulative-hours-calculator.js';
 import * as CaamFtl1Module from './engines/caam-ftl1-controller.js';
 import * as MedicalEngineModule from './engines/medical-validity-calculator.js';
+
+/**
+ * Helper: Formats ISO date string or Date object to DD MMM YYYY (e.g. "31 OCT 2027")
+ */
+export function formatDateDDMMMYYYY(dateInput) {
+  if (!dateInput) return '--';
+  let d;
+  if (typeof dateInput === 'string') {
+    const trimmed = dateInput.trim();
+    if (!trimmed || trimmed === '--') return '--';
+    if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
+      const parts = trimmed.split('-');
+      d = new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)));
+    } else {
+      d = new Date(trimmed);
+    }
+  } else if (dateInput instanceof Date) {
+    d = dateInput;
+  } else {
+    return '--';
+  }
+
+  if (isNaN(d.getTime())) return String(dateInput);
+
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  const month = months[d.getUTCMonth()];
+  const year = d.getUTCFullYear();
+
+  return `${day} ${month} ${year}`;
+}
+
+
+// ==================================================================
+// OPTION B: THEME-ADAPTIVE CUSTOM EFB MODAL DATE PICKER ENGINE
+// ==================================================================
+let efbPickerState = {
+  targetInputId: null,
+  activeDate: new Date(),
+  title: 'SELECT DATE'
+};
+
+export function openEfbDatePicker(targetInputId, labelTitle = 'SELECT DATE') {
+  efbPickerState.targetInputId = targetInputId;
+  efbPickerState.title = labelTitle;
+
+  const hiddenInput = document.getElementById(targetInputId);
+  if (hiddenInput && hiddenInput.value) {
+    const parts = hiddenInput.value.split('-');
+    if (parts.length === 3) {
+      efbPickerState.activeDate = new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)));
+    } else {
+      efbPickerState.activeDate = new Date();
+    }
+  } else {
+    efbPickerState.activeDate = new Date();
+  }
+
+  const titleEl = document.getElementById('efb-date-picker-title');
+  if (titleEl) titleEl.innerText = labelTitle;
+
+  renderEfbCalendarGrid();
+
+  const modal = document.getElementById('efb-date-picker-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+export function closeEfbDatePicker() {
+  const modal = document.getElementById('efb-date-picker-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+export function renderEfbCalendarGrid() {
+  const monthLabelEl = document.getElementById('efb-calendar-month-label');
+  const gridEl = document.getElementById('efb-calendar-days-grid');
+  if (!gridEl) return;
+
+  const months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+  const curYear = efbPickerState.activeDate.getUTCFullYear();
+  const curMonth = efbPickerState.activeDate.getUTCMonth();
+
+  if (monthLabelEl) {
+    monthLabelEl.innerText = `${months[curMonth]} ${curYear}`;
+  }
+
+  // Get first day of month and total days
+  const firstDayIndex = (new Date(Date.UTC(curYear, curMonth, 1)).getUTCDay() + 6) % 7; // Monday=0
+  const totalDays = new Date(Date.UTC(curYear, curMonth + 1, 0)).getUTCDate();
+
+  const hiddenInput = document.getElementById(efbPickerState.targetInputId);
+  let selectedIso = hiddenInput ? hiddenInput.value : '';
+
+  let html = '';
+  // Empty padding cells for preceding month
+  for (let i = 0; i < firstDayIndex; i++) {
+    html += '<div class="py-2 text-slate-300 dark:text-slate-800 pointer-events-none"></div>';
+  }
+
+  const today = new Date();
+  const todayIso = `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, '0')}-${String(today.getUTCDate()).padStart(2, '0')}`;
+
+  for (let day = 1; day <= totalDays; day++) {
+    const dayStr = String(day).padStart(2, '0');
+    const monthStr = String(curMonth + 1).padStart(2, '0');
+    const isoVal = `${curYear}-${monthStr}-${dayStr}`;
+
+    const isSelected = isoVal === selectedIso;
+    const isToday = isoVal === todayIso;
+
+    let btnClasses = 'py-2 rounded-xl transition-all cursor-pointer select-none text-xs font-bold ';
+    if (isSelected) {
+      btnClasses += 'bg-sky-600 text-white shadow-md font-extrabold scale-105';
+    } else if (isToday) {
+      btnClasses += 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40';
+    } else {
+      btnClasses += 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800';
+    }
+
+    html += `<button type="button" class="${btnClasses}" onclick="selectEfbDate('${isoVal}')">${day}</button>`;
+  }
+
+  gridEl.innerHTML = html;
+}
+
+export function changeEfbMonth(delta) {
+  efbPickerState.activeDate.setUTCMonth(efbPickerState.activeDate.getUTCMonth() + delta);
+  renderEfbCalendarGrid();
+}
+
+export function setEfbDatePreset(presetKey) {
+  const now = new Date();
+  let d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+
+  if (presetKey === 'today') {
+    // Current date
+  } else if (presetKey === 'eom') {
+    d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0));
+  } else if (presetKey === '+1y') {
+    d.setUTCFullYear(d.getUTCFullYear() + 1);
+  } else if (presetKey === '-1y') {
+    d.setUTCFullYear(d.getUTCFullYear() - 1);
+  }
+
+  const isoVal = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+  selectEfbDate(isoVal);
+}
+
+export function selectEfbDate(isoVal) {
+  if (!efbPickerState.targetInputId) return;
+
+  const hiddenInput = document.getElementById(efbPickerState.targetInputId);
+  if (hiddenInput) {
+    hiddenInput.value = isoVal;
+  }
+
+  // Update display trigger text
+  const displayId = efbPickerState.targetInputId.replace('input-', 'display-');
+  const displayEl = document.getElementById(displayId);
+  if (displayEl) {
+    displayEl.innerText = formatDateDDMMMYYYY(isoVal);
+  }
+
+  renderEfbCalendarGrid();
+  closeEfbDatePicker();
+
+  // Dispatch calculation
+  if (window.dispatchActiveToolCalculation) {
+    window.dispatchActiveToolCalculation();
+  }
+}
+
 import * as PpcEngineModule from './engines/ppc-validity-calculator.js';
 import * as RecurrentEngineModule from './engines/recurrent-training-calculator.js';
 
@@ -164,9 +335,9 @@ export function normalizeOutput(toolType, rawResult) {
         statusBadge: rawResult.anniversaryPreserved ? 'ANNIVERSARY PRESERVED' : 'STANDARD RENEWAL',
         statusClass: 'bg-sky-100 text-sky-800 dark:bg-sky-950/80 dark:text-sky-300',
         headlineTitle: 'NEW MEDICAL EXPIRY',
-        headlineValue: rawResult.newExpiryDate || '--',
+        headlineValue: formatDateDDMMMYYYY(rawResult.newExpiryDate),
         targetClockLabel: 'Earliest Re-Exam Window (45D)',
-        targetClockValue: rawResult.dameEarliestDate || rawResult.reExamDate || '--',
+        targetClockValue: rawResult.dameEarliestDate ? `${formatDateDDMMMYYYY(rawResult.dameEarliestDate)} to ${formatDateDDMMMYYYY(rawResult.newExpiryDate)}` : '--',
         breakdownGrid: [
           { label: 'Age', value: rawResult.age !== undefined ? String(rawResult.age) : '40-59' },
           { label: 'Class', value: 'Class 1' },
@@ -189,9 +360,9 @@ export function normalizeOutput(toolType, rawResult) {
         statusBadge: rawResult.anniversaryPreserved ? 'ANNIVERSARY PRESERVED' : 'RESET (EOM)',
         statusClass: 'bg-sky-100 text-sky-800 dark:bg-sky-950/80 dark:text-sky-300',
         headlineTitle: 'NEW PPC / LPC EXPIRY',
-        headlineValue: rawResult.newLPCExpiryDate || rawResult.newLpcExpiry || '--',
+        headlineValue: formatDateDDMMMYYYY(rawResult.newLPCExpiryDate || rawResult.newLpcExpiry),
         targetClockLabel: 'OPC Revalidation Window (90D)',
-        targetClockValue: rawResult.opcWindowStart ? `${rawResult.opcWindowStart} - ${rawResult.opcWindowEnd}` : '--',
+        targetClockValue: rawResult.opcWindowStart ? `${formatDateDDMMMYYYY(rawResult.opcWindowStart)} to ${formatDateDDMMMYYYY(rawResult.opcWindowEnd)}` : '--',
         breakdownGrid: [
           { label: 'LPC Conducted', value: rawResult.lpcConductDate || '--' },
           { label: 'Previous Expiry', value: rawResult.previousLPCExpiry || 'None' },
@@ -214,7 +385,7 @@ export function normalizeOutput(toolType, rawResult) {
         statusBadge: rawResult.anniversaryPreserved ? 'ANNIVERSARY PRESERVED' : 'RESET (EOM)',
         statusClass: 'bg-sky-100 text-sky-800 dark:bg-sky-950/80 dark:text-sky-300',
         headlineTitle: 'RECURRENT EXPIRY',
-        headlineValue: rawResult.newExpiryDate || '--',
+        headlineValue: formatDateDDMMMYYYY(rawResult.newExpiryDate),
         targetClockLabel: 'Module Name',
         targetClockValue: (rawResult.name || toolsState.recurrentCourseName).toUpperCase(),
         breakdownGrid: [
@@ -344,7 +515,7 @@ export function runToolCalculation(toolType, inputData = {}) {
               let sampleAge = 45;
               if (ageBracket === 'UNDER_40') sampleAge = 30;
               else if (ageBracket === '60_PLUS') sampleAge = 62;
-              dob = `${nowYear - sampleAge}-01-01`;
+              dob = ;
             }
             rawResult = ClassObj.calculateValidity({
               dob,
@@ -711,6 +882,15 @@ export function populateCommanderSelect() {}
 
 // Expose functions on window for inline HTML onclick handlers and cross-module access
 if (typeof window !== 'undefined') {
+  
+  window.formatDateDDMMMYYYY = formatDateDDMMMYYYY;
+  window.openEfbDatePicker = openEfbDatePicker;
+  window.closeEfbDatePicker = closeEfbDatePicker;
+  window.renderEfbCalendarGrid = renderEfbCalendarGrid;
+  window.changeEfbMonth = changeEfbMonth;
+  window.setEfbDatePreset = setEfbDatePreset;
+  window.selectEfbDate = selectEfbDate;
+
   window.switchToolCategory = switchToolCategory;
   window.switchActiveTool = switchActiveTool;
   window.setMasterTimezone = setMasterTimezone;
