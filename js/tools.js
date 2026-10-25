@@ -1,4 +1,4 @@
-// js/tools.js (2410_R220) - Tools Orchestrator, EFB Date Picker & Date Formatter
+// js/tools.js (2410_R221) - Tools Orchestrator, EFB Date Picker & Date Formatter
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -277,8 +277,8 @@ export function normalizeOutput(toolType, rawResult) {
         targetClockLabel: 'Minimum Passenger Currency',
         targetClockValue: '3 PF Take-Offs & Landings in 90 Days',
         breakdownGrid: [
-          { label: 'DAY LANDINGS', value:  },
-          { label: 'NIGHT LANDINGS', value:  },
+          { label: 'DAY LANDINGS', value: String(dayCount) + ' / 3' },
+          { label: 'NIGHT LANDINGS', value: String(nightCount) + ' / 1' },
           { label: 'ANCHOR DATE (3RD)', value: '15 AUG 2026' },
           { label: 'RECENCY EXPIRY', value: '13 NOV 2026' }
         ],
