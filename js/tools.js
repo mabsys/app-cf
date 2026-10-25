@@ -1,4 +1,4 @@
-// js/tools.js (2410_R218) - Tools Orchestrator, EFB Date Picker & Date Formatter
+// js/tools.js (2410_R219) - Tools Orchestrator, EFB Date Picker & Date Formatter
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -203,7 +203,7 @@ export function normalizeOutput(toolType, rawResult) {
     case 'medical': {
       const isPreserved = rawResult ? rawResult.anniversaryPreserved : true;
       const expiry = rawResult ? formatDateDDMMMYYYY(rawResult.newExpiryDate) : '31 OCT 2027';
-      const windowStr = rawResult ?  : '16 SEP 2027 to 31 OCT 2027';
+      const windowStr = (rawResult && rawResult.dameEarliestDate) ? `${formatDateDDMMMYYYY(rawResult.dameEarliestDate)} to ${formatDateDDMMMYYYY(rawResult.reExamDate || rawResult.newExpiryDate)}` : '16 SEP 2027 to 31 OCT 2027';
       return {
         statusBadge: isPreserved ? 'EXPIRY DATE PRESERVED' : 'EXPIRY RESET (EOM)',
         statusClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
@@ -212,7 +212,7 @@ export function normalizeOutput(toolType, rawResult) {
         targetClockLabel: '45-Day Re-Exam Window',
         targetClockValue: windowStr,
         breakdownGrid: [
-          { label: 'AGE BAND', value: rawResult && rawResult.age !== undefined ?  : '38 (Under 60)' },
+          { label: 'AGE BAND', value: (rawResult && rawResult.age !== undefined) ? `${rawResult.age} (Under 60)` : '38 (Under 60)' },
           { label: 'BASE VALIDITY', value: '12 Calendar Months' },
           { label: 'RENEWAL RULE', value: isPreserved ? 'Date Preserved (45D)' : 'Reset (EOM)' },
           { label: 'CREW OPERATING LIMIT', value: 'Unrestricted Single/Multi' }
@@ -225,7 +225,7 @@ export function normalizeOutput(toolType, rawResult) {
     case 'ppc': {
       const isPreserved = rawResult ? rawResult.anniversaryPreserved : true;
       const expiry = rawResult ? formatDateDDMMMYYYY(rawResult.newLPCExpiryDate || rawResult.newLpcExpiry) : '31 JUL 2027';
-      const opcStr = rawResult && rawResult.opcWindowStart ?  : '01 MAY 2027 to 31 JUL 2027';
+      const opcStr = (rawResult && rawResult.opcWindowStart) ? `${formatDateDDMMMYYYY(rawResult.opcWindowStart)} to ${formatDateDDMMMYYYY(rawResult.opcWindowEnd)}` : '01 MAY 2027 to 31 JUL 2027';
       return {
         statusBadge: isPreserved ? 'EXPIRY DATE PRESERVED' : 'EXPIRY RESET (EOM)',
         statusClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
@@ -345,7 +345,7 @@ export function normalizeOutput(toolType, rawResult) {
         targetClockLabel: 'Minimum Rest Completion',
         targetClockValue: rawResult && rawResult.restCompletionTimeUtc ? rawResult.restCompletionTimeUtc : '20:15 UTC',
         breakdownGrid: [
-          { label: 'PRECEDING DUTY', value: rawResult && rawResult.precedingDutyHours ?  : '10:00 Hours' },
+          { label: 'PRECEDING DUTY', value: (rawResult && rawResult.precedingDutyHours) ? `${rawResult.precedingDutyHours} Hours` : '10:00 Hours' },
           { label: 'LOCATION', value: 'Home Base' },
           { label: 'BASE REST', value: '12:00 Hours' },
           { label: 'OUTSTATION ADD', value: '00:00 Hours' }
@@ -359,7 +359,7 @@ export function normalizeOutput(toolType, rawResult) {
 
     case 'cumulative': {
       const isOverLimit = rawResult ? (rawResult.isExceeded || rawResult.isOverCap) : false;
-      const duty7Val = rawResult && rawResult.duty7Days ?  : '32:15 / 55:00 HOURS';
+      const duty7Val = (rawResult && rawResult.duty7Days) ? `${rawResult.duty7Days.currentFormatted || rawResult.duty7Days} / 55:00 HOURS` : '32:15 / 55:00 HOURS';
       return {
         statusBadge: isOverLimit ? 'CAP EXCEEDED' : 'ROSTER CLEARED',
         statusClass: isOverLimit ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
