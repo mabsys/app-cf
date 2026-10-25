@@ -344,7 +344,7 @@ export function runToolCalculation(toolType, inputData = {}) {
               let sampleAge = 45;
               if (ageBracket === 'UNDER_40') sampleAge = 30;
               else if (ageBracket === '60_PLUS') sampleAge = 62;
-              dob = ;
+              dob = `${nowYear - sampleAge}-01-01`;
             }
             rawResult = ClassObj.calculateValidity({
               dob,
