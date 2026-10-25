@@ -1,7 +1,9 @@
-// main.js (2410_R207) - CertiFly Application Shell, Complete Tools Module Imports & Smart Pipelining
+// main.js (2410_R213) - CertiFly Application Shell, Touch Gesture Swipe & EFB Date Picker 
 
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
-import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setMasterTimezone, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, filterRecurrentCourses, resetToolInputs, openFtl1WizardModal, closeFtl1WizardModal, renderToolsOutputCard } from './js/tools.js';
+import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setMasterTimezone, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, filterRecurrentCourses, resetToolInputs, openFtl1WizardModal, closeFtl1WizardModal, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
+// js/main.js (1410_R152) - Main Application Controller & Orchestrator
+
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
 import { parseAttestationText, validateAttestationContent, parseQualificationSlipText, validateQualificationSlipContent } from './js/parser.js';
@@ -3995,6 +3997,63 @@ export function initToolsUIController() {
         dispatchActiveToolCalculation();
       }
     });
+  });
+
+
+  // Touch Swipe Gesture Listener for Card Wrapper (Category A & B)
+  setupToolsCardSwipeGestures();
+}
+
+function setupToolsCardSwipeGestures() {
+  const catASubtabs = ['medical', 'ppc', 'recurrent', 'recency'];
+  const catBSubtabs = ['standby', 'max-fdp', 'pre-flight-rest', 'cumulative'];
+
+  const wrappers = [
+    { id: 'card-wrapper-cat-a', subtabs: catASubtabs },
+    { id: 'card-wrapper-cat-b', subtabs: catBSubtabs }
+  ];
+
+  wrappers.forEach(item => {
+    const el = document.getElementById(item.id);
+    if (!el) return;
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    el.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches.length > 0) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+
+    el.addEventListener('touchend', (e) => {
+      if (!e.changedTouches || e.changedTouches.length === 0) return;
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+
+      const diffX = touchEndX - touchStartX;
+      const diffY = touchEndY - touchStartY;
+
+      // Ensure horizontal swipe is dominant and at least 40px
+      if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+        const state = getToolsState ? getToolsState() : {};
+        const currentSubtab = state.activeSubTab || 'medical';
+        const currentIndex = item.subtabs.indexOf(currentSubtab);
+
+        if (currentIndex !== -1) {
+          if (diffX < 0 && currentIndex < item.subtabs.length - 1) {
+            // Swipe Left -> Next subtab
+            const nextTab = item.subtabs[currentIndex + 1];
+            switchActiveTool(nextTab);
+          } else if (diffX > 0 && currentIndex > 0) {
+            // Swipe Right -> Prev subtab
+            const prevTab = item.subtabs[currentIndex - 1];
+            switchActiveTool(prevTab);
+          }
+        }
+      }
+    }, { passive: true });
   });
 
   // 6. Reset Links across Tool Cards
