@@ -1,4 +1,4 @@
-<!-- index.html (2410_R203) - CertiFly PWA Application Shell & Core Layout -->
+<!-- index.html (2410_R213) - CertiFly PWA Application Shell & Core Layout -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -983,7 +983,7 @@ if ('serviceWorker' in navigator) {
             </div>
 
             <!-- TOOLS VIEW (FLIGHT DECK COMPLIANCE TOOLS) -->
-            <div id="tools-view" class="app-view hidden flex flex-col gap-3.5 pb-32 max-w-2xl mx-auto select-none">
+            <div id="tools-view" class="app-view hidden flex flex-col gap-3.5 pb-32 w-full max-w-md mx-auto select-none overflow-x-hidden">
 
                 <!-- TIER 1: CATEGORY SEGMENTED CONTROL (Primary Category Filter) -->
                 <nav class="bg-slate-200/80 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-300 dark:border-slate-700/60 shadow-inner">
@@ -1043,7 +1043,11 @@ if ('serviceWorker' in navigator) {
                             <div class="grid grid-cols-1 gap-3">
                                 <div>
                                     <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Medical Examination Date</label>
-                                    <input type="date" id="input-med-exam-date" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-sky-500">
+                                    <button type="button" id="btn-med-exam-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-sky-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="openEfbDatePicker('input-med-exam-date', 'MEDICAL EXAM DATE')">
+                                        <span id="display-med-exam-date">24 OCT 2026</span>
+                                        <span class="text-[10px] text-slate-400 font-semibold bg-slate-200/60 dark:bg-slate-700/60 px-2 py-0.5 rounded">Select ▾</span>
+                                    </button>
+                                    <input type="hidden" id="input-med-exam-date" value="2026-10-24">
                                 </div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
@@ -1075,11 +1079,19 @@ if ('serviceWorker' in navigator) {
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
                                     <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">LPC Conducted Date</label>
-                                    <input type="date" id="input-ppc-conduct-date" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-sky-500">
+                                    <button type="button" id="btn-ppc-conduct-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-sky-500 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="openEfbDatePicker('input-ppc-conduct-date', 'LPC CONDUCTED DATE')">
+                                        <span id="display-ppc-conduct-date" class="truncate">24 OCT 2026</span>
+                                        <span class="text-[9px] text-slate-400 font-semibold bg-slate-200/60 dark:bg-slate-700/60 px-1.5 py-0.5 rounded shrink-0">▾</span>
+                                    </button>
+                                    <input type="hidden" id="input-ppc-conduct-date" value="2026-10-24">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Current LPC Expiry</label>
-                                    <input type="date" id="input-ppc-expiry-date" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-sky-500">
+                                    <button type="button" id="btn-ppc-expiry-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-sky-500 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="openEfbDatePicker('input-ppc-expiry-date', 'CURRENT LPC EXPIRY')">
+                                        <span id="display-ppc-expiry-date" class="truncate">31 OCT 2026</span>
+                                        <span class="text-[9px] text-slate-400 font-semibold bg-slate-200/60 dark:bg-slate-700/60 px-1.5 py-0.5 rounded shrink-0">▾</span>
+                                    </button>
+                                    <input type="hidden" id="input-ppc-expiry-date" value="2026-10-31">
                                 </div>
                             </div>
                         </div>
@@ -1104,7 +1116,11 @@ if ('serviceWorker' in navigator) {
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Conducted Date</label>
-                                    <input type="date" id="input-recurrent-conduct-date" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-sky-500">
+                                    <button type="button" id="btn-recurrent-conduct-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-sky-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="openEfbDatePicker('input-recurrent-conduct-date', 'CONDUCTED DATE')">
+                                        <span id="display-recurrent-conduct-date">24 OCT 2026</span>
+                                        <span class="text-[10px] text-slate-400 font-semibold bg-slate-200/60 dark:bg-slate-700/60 px-2 py-0.5 rounded">Select ▾</span>
+                                    </button>
+                                    <input type="hidden" id="input-recurrent-conduct-date" value="2026-10-24">
                                 </div>
                             </div>
                         </div>
@@ -1329,194 +1345,6 @@ if ('serviceWorker' in navigator) {
 
             </div>
 
-
-            <!-- ================================================================= -->
-            <!-- TOOL #3: GROUPED RECURRENT TRAINING FULL-SCREEN MODAL OVERLAY     -->
-            <!-- ================================================================= -->
-            <div id="recurrent-course-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 select-none">
-                <div class="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
-
-                    <!-- Modal Header -->
-                    <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-900/90">
-                        <div>
-                            <span class="text-[10px] font-extrabold text-sky-600 dark:text-sky-400 uppercase tracking-wider">QUALIFICATION SELECTOR</span>
-                            <h3 class="text-sm font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Select Qualification Module</h3>
-                        </div>
-                        <button type="button" class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-1 text-xs font-bold cursor-pointer" onclick="closeRecurrentCourseModal()">Close ✕</button>
-                    </div>
-
-                    <!-- Search Input Bar -->
-                    <div class="p-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60">
-                        <div class="relative flex items-center">
-                            <input type="text" id="recurrent-search-input" placeholder="Search module name or rule..." class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500 text-xs font-medium" oninput="filterRecurrentCourses()">
-                            <svg class="w-4 h-4 text-slate-400 absolute left-2.5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                            </svg>
-                        </div>
-                    </div>
-
-                    <!-- Grouped Module List Container -->
-                    <div class="p-4 overflow-y-auto space-y-5 flex-1 text-xs text-slate-700 dark:text-slate-300">
-
-                        <!-- GROUP 1: ANNUAL (12 CALENDAR MONTHS) -->
-                        <div class="recurrent-group-block space-y-2">
-                            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
-                                <span class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest">ANNUAL (12 CALENDAR MONTHS)</span>
-                                <span class="text-[9px] font-bold text-sky-600 dark:text-sky-400">6 Modules</span>
-                            </div>
-                            <div class="grid grid-cols-1 gap-1.5">
-
-                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-sky-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('LINE_CHECK', 'Line Check (LC)', 'Annual (12 Calendar Months)')">
-                                    <span class="font-bold text-slate-800 dark:text-slate-100">Line Check (LC)</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30">12m</span>
-                                </button>
-
-                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-sky-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('SEP_AIRCRAFT_TYPE', 'SEP Type', 'Annual (12 Calendar Months)')">
-                                    <span class="font-bold text-slate-800 dark:text-slate-100">SEP Type</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30">12m</span>
-                                </button>
-
-                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-sky-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('DOOR_DRILL', 'Door Drill', 'Annual (12 Calendar Months)')">
-                                    <span class="font-bold text-slate-800 dark:text-slate-100">Door Drill</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30">12m</span>
-                                </button>
-
-                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-sky-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('CRM', 'CRM', 'Annual (12 Calendar Months)')">
-                                    <span class="font-bold text-slate-800 dark:text-slate-100">CRM</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30">12m</span>
-                                </button>
-
-                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-sky-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('AVSEC', 'AVSEC', 'Annual (12 Calendar Months)')">
-                                    <span class="font-bold text-slate-800 dark:text-slate-100">AVSEC</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30">12m</span>
-                                </button>
-
-                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-sky-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('ROUTE_AERODROME_COMPETENCE', 'Route &amp; A/D', 'Annual (12 Calendar Months)')">
-                                    <span class="font-bold text-slate-800 dark:text-slate-100">Route &amp; A/D</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30">12m</span>
-                                </button>
-
-                            </div>
-                        </div>
-
-                        <!-- GROUP 2: BI-ANNUAL (24 CALENDAR MONTHS) -->
-                        <div class="recurrent-group-block space-y-2">
-                            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
-                                <span class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest">BI-ANNUAL (24 CALENDAR MONTHS)</span>
-                                <span class="text-[9px] font-bold text-purple-600 dark:text-purple-400">1 Module</span>
-                            </div>
-                            <div class="grid grid-cols-1 gap-1.5">
-
-                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-purple-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-purple-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('DGR_FUNCTION_7', 'DGR (Func 7)', 'Bi-Annual (24 Calendar Months)')">
-                                    <span class="font-bold text-slate-800 dark:text-slate-100">DGR (Func 7)</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/30">24m</span>
-                                </button>
-
-                            </div>
-                        </div>
-
-                        <!-- GROUP 3: TRIENNIAL (36 CALENDAR MONTHS) -->
-                        <div class="recurrent-group-block space-y-2">
-                            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
-                                <span class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest">TRIENNIAL (36 CALENDAR MONTHS)</span>
-                                <span class="text-[9px] font-bold text-amber-600 dark:text-amber-400">3 Modules</span>
-                            </div>
-                            <div class="grid grid-cols-1 gap-1.5">
-
-                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-amber-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('FIRE_SMOKE_DRILL', 'Fire Drill', 'Triennial (36 Calendar Months)')">
-                                    <span class="font-bold text-slate-800 dark:text-slate-100">Fire Drill</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">36m</span>
-                                </button>
-
-                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-amber-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('SMS', 'SMS', 'Triennial (36 Calendar Months)')">
-                                    <span class="font-bold text-slate-800 dark:text-slate-100">SMS</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">36m</span>
-                                </button>
-
-                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-amber-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('WET_DITCHING_DRILL', 'Wet / Dinghy', 'Triennial (36 Calendar Months)')">
-                                    <span class="font-bold text-slate-800 dark:text-slate-100">Wet / Dinghy</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">36m</span>
-                                </button>
-
-                            </div>
-                        </div>
-
-                        <!-- GROUP 4: SEMI-ANNUAL (180-DAY ROLLING) -->
-                        <div class="recurrent-group-block space-y-2">
-                            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
-                                <span class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest">SEMI-ANNUAL (180-DAY ROLLING)</span>
-                                <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">1 Module</span>
-                            </div>
-                            <div class="grid grid-cols-1 gap-1.5">
-
-                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-emerald-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('LVO_AUTOLAND', 'LVO / Autoland', 'Semi-Annual (180-Day Rolling)')">
-                                    <span class="font-bold text-slate-800 dark:text-slate-100">LVO / Autoland</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30">180d</span>
-                                </button>
-
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <!-- Modal Footer Actions -->
-                    <div class="p-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 flex items-center justify-end">
-                        <button type="button" class="py-2 px-4 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 cursor-pointer" onclick="closeRecurrentCourseModal()">Cancel</button>
-                    </div>
-
-                </div>
-            </div>
-
-
-            <!-- ================================================================= -->
-            <!-- TOOL #9: CAAM/BOP/FTL/1 DISCRETION ASSISTANT WIZARD MODAL        -->
-            <!-- ================================================================= -->
-            <div id="ftl1-wizard-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 select-none">
-                <div class="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
-
-                    <!-- Modal Header -->
-                    <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-900/90">
-                        <div>
-                            <span class="text-[10px] font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wider">CAAM/BOP/FTL/1 REPORT</span>
-                            <h3 class="text-sm font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Commander Discretion Assistant</h3>
-                        </div>
-                        <button type="button" class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-1 text-xs font-bold cursor-pointer" onclick="closeFtl1WizardModal()">Close ✕</button>
-                    </div>
-
-                    <!-- Modal Wizard Content (Scrollable) -->
-                    <div class="p-4 overflow-y-auto space-y-4 flex-1 text-xs text-slate-700 dark:text-slate-300">
-
-                        <!-- Step Indicator -->
-                        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-                            <span id="ftl1-step-label" class="font-bold text-sky-600 dark:text-sky-400">Step 1 of 4: Flight &amp; Crew Details</span>
-                            <span class="text-[10px] text-slate-400">Form Ref: CAAM CAD 1901</span>
-                        </div>
-
-                        <!-- Step 1 Form Fields -->
-                        <div id="ftl1-step-1" class="space-y-3">
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">Flight Number</label>
-                                    <input type="text" id="ftl1-flight-no" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-100" value="MH1141">
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">Aircraft Reg</label>
-                                    <input type="text" id="ftl1-ac-reg" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-100" value="9M-MXA">
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <!-- Modal Footer Actions -->
-                    <div class="p-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 flex items-center justify-between gap-2">
-                        <button type="button" class="py-2 px-4 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 cursor-pointer" onclick="closeFtl1WizardModal()">Cancel</button>
-                        <button type="button" id="btn-ftl1-export" class="py-2 px-4 rounded-xl text-xs font-extrabold bg-amber-600 hover:bg-amber-500 text-white shadow-md cursor-pointer">Export &amp; Overlay PDF</button>
-                    </div>
-
-                </div>
-            </div>
-
         </main>
 
         <!-- Footer -->
@@ -1524,8 +1352,243 @@ if ('serviceWorker' in navigator) {
             © 2026 CertiFly • v2.0 (beta)
         </footer>
 
-        <script src="js/vendor/anime.min.js"></script>
-        <script type="module" src="main.js"></script>
+    </div> <!-- /max-w-md mx-auto wrapper -->
+
+    <!-- ================================================================= -->
+    <!-- MODAL OVERLAYS & DRAWERS                                          -->
+    <!-- ================================================================= -->
+    <!-- ================================================================= -->
+    <div id="recurrent-course-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 select-none">
+        <div class="w-full max-w-sm mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+
+            <!-- Modal Header -->
+            <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-900/90">
+                <div>
+                    <span class="text-[10px] font-extrabold text-sky-600 dark:text-sky-400 uppercase tracking-wider">QUALIFICATION SELECTOR</span>
+                    <h3 class="text-sm font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Select Qualification Module</h3>
+                </div>
+                <button type="button" class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-1 text-xs font-bold cursor-pointer" onclick="closeRecurrentCourseModal()">Close ✕</button>
+            </div>
+
+            <!-- Search Input Bar -->
+            <div class="p-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60">
+                <div class="relative flex items-center">
+                    <input type="text" id="recurrent-search-input" placeholder="Search module name or rule..." class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500 text-xs font-medium" oninput="filterRecurrentCourses()">
+                    <svg class="w-4 h-4 text-slate-400 absolute left-2.5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Grouped Module List Container -->
+            <div class="p-4 overflow-y-auto space-y-5 flex-1 text-xs text-slate-700 dark:text-slate-300">
+
+                <!-- GROUP 1: ANNUAL (12 CALENDAR MONTHS) -->
+                <div class="recurrent-group-block space-y-2">
+                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
+                        <span class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest">ANNUAL (12 CALENDAR MONTHS)</span>
+                        <span class="text-[9px] font-bold text-sky-600 dark:text-sky-400">6 Modules</span>
+                    </div>
+                    <div class="grid grid-cols-1 gap-1.5">
+
+                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-sky-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('LINE_CHECK', 'Line Check (LC)', 'Annual (12 Calendar Months)')">
+                            <span class="font-bold text-slate-800 dark:text-slate-100">Line Check (LC)</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30">12m</span>
+                        </button>
+
+                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-sky-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('SEP_AIRCRAFT_TYPE', 'SEP Type', 'Annual (12 Calendar Months)')">
+                            <span class="font-bold text-slate-800 dark:text-slate-100">SEP Type</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30">12m</span>
+                        </button>
+
+                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-sky-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('DOOR_DRILL', 'Door Drill', 'Annual (12 Calendar Months)')">
+                            <span class="font-bold text-slate-800 dark:text-slate-100">Door Drill</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30">12m</span>
+                        </button>
+
+                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-sky-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('CRM', 'CRM', 'Annual (12 Calendar Months)')">
+                            <span class="font-bold text-slate-800 dark:text-slate-100">CRM</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30">12m</span>
+                        </button>
+
+                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-sky-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('AVSEC', 'AVSEC', 'Annual (12 Calendar Months)')">
+                            <span class="font-bold text-slate-800 dark:text-slate-100">AVSEC</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30">12m</span>
+                        </button>
+
+                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-sky-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('ROUTE_AERODROME_COMPETENCE', 'Route &amp; A/D', 'Annual (12 Calendar Months)')">
+                            <span class="font-bold text-slate-800 dark:text-slate-100">Route &amp; A/D</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30">12m</span>
+                        </button>
+
+                    </div>
+                </div>
+
+                <!-- GROUP 2: BI-ANNUAL (24 CALENDAR MONTHS) -->
+                <div class="recurrent-group-block space-y-2">
+                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
+                        <span class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest">BI-ANNUAL (24 CALENDAR MONTHS)</span>
+                        <span class="text-[9px] font-bold text-purple-600 dark:text-purple-400">1 Module</span>
+                    </div>
+                    <div class="grid grid-cols-1 gap-1.5">
+
+                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-purple-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-purple-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('DGR_FUNCTION_7', 'DGR (Func 7)', 'Bi-Annual (24 Calendar Months)')">
+                            <span class="font-bold text-slate-800 dark:text-slate-100">DGR (Func 7)</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/30">24m</span>
+                        </button>
+
+                    </div>
+                </div>
+
+                <!-- GROUP 3: TRIENNIAL (36 CALENDAR MONTHS) -->
+                <div class="recurrent-group-block space-y-2">
+                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
+                        <span class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest">TRIENNIAL (36 CALENDAR MONTHS)</span>
+                        <span class="text-[9px] font-bold text-amber-600 dark:text-amber-400">3 Modules</span>
+                    </div>
+                    <div class="grid grid-cols-1 gap-1.5">
+
+                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-amber-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('FIRE_SMOKE_DRILL', 'Fire Drill', 'Triennial (36 Calendar Months)')">
+                            <span class="font-bold text-slate-800 dark:text-slate-100">Fire Drill</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">36m</span>
+                        </button>
+
+                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-amber-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('SMS', 'SMS', 'Triennial (36 Calendar Months)')">
+                            <span class="font-bold text-slate-800 dark:text-slate-100">SMS</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">36m</span>
+                        </button>
+
+                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-amber-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('WET_DITCHING_DRILL', 'Wet / Dinghy', 'Triennial (36 Calendar Months)')">
+                            <span class="font-bold text-slate-800 dark:text-slate-100">Wet / Dinghy</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">36m</span>
+                        </button>
+
+                    </div>
+                </div>
+
+                <!-- GROUP 4: SEMI-ANNUAL (180-DAY ROLLING) -->
+                <div class="recurrent-group-block space-y-2">
+                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
+                        <span class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest">SEMI-ANNUAL (180-DAY ROLLING)</span>
+                        <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">1 Module</span>
+                    </div>
+                    <div class="grid grid-cols-1 gap-1.5">
+
+                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-emerald-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('LVO_AUTOLAND', 'LVO / Autoland', 'Semi-Annual (180-Day Rolling)')">
+                            <span class="font-bold text-slate-800 dark:text-slate-100">LVO / Autoland</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30">180d</span>
+                        </button>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer Actions -->
+            <div class="p-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 flex items-center justify-end">
+                <button type="button" class="py-2 px-4 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 cursor-pointer" onclick="closeRecurrentCourseModal()">Cancel</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <div id="ftl1-wizard-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 select-none">
+        <div class="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+
+            <!-- Modal Header -->
+            <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-900/90">
+                <div>
+                    <span class="text-[10px] font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wider">CAAM/BOP/FTL/1 REPORT</span>
+                    <h3 class="text-sm font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Commander Discretion Assistant</h3>
+                </div>
+                <button type="button" class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-1 text-xs font-bold cursor-pointer" onclick="closeFtl1WizardModal()">Close ✕</button>
+            </div>
+
+            <!-- Modal Wizard Content (Scrollable) -->
+            <div class="p-4 overflow-y-auto space-y-4 flex-1 text-xs text-slate-700 dark:text-slate-300">
+
+                <!-- Step Indicator -->
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <span id="ftl1-step-label" class="font-bold text-sky-600 dark:text-sky-400">Step 1 of 4: Flight &amp; Crew Details</span>
+                    <span class="text-[10px] text-slate-400">Form Ref: CAAM CAD 1901</span>
+                </div>
+
+                <!-- Step 1 Form Fields -->
+                <div id="ftl1-step-1" class="space-y-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">Flight Number</label>
+                            <input type="text" id="ftl1-flight-no" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-100" value="MH1141">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">Aircraft Reg</label>
+                            <input type="text" id="ftl1-ac-reg" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-100" value="9M-MXA">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer Actions -->
+            <div class="p-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 flex items-center justify-between gap-2">
+                <button type="button" class="py-2 px-4 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 cursor-pointer" onclick="closeFtl1WizardModal()">Cancel</button>
+                <button type="button" id="btn-ftl1-export" class="py-2 px-4 rounded-xl text-xs font-extrabold bg-amber-600 hover:bg-amber-500 text-white shadow-md cursor-pointer">Export &amp; Overlay PDF</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <div id="efb-date-picker-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 select-none">
+        <div class="w-full max-w-sm mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+
+            <!-- Modal Header -->
+            <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/90">
+                <div>
+                    <span class="text-[9px] font-extrabold text-sky-600 dark:text-sky-400 uppercase tracking-wider block">EFB DATE PICKER</span>
+                    <h3 id="efb-date-picker-title" class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase">SELECT DATE</h3>
+                </div>
+                <button type="button" id="btn-close-efb-date-picker" class="py-1 px-2.5 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white bg-slate-200/60 dark:bg-slate-800 cursor-pointer transition-colors" onclick="closeEfbDatePicker()">Close ✕</button>
+            </div>
+
+            <!-- Embedded Preset Pills -->
+            <div class="p-2.5 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/40 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                <button type="button" class="py-1 px-2.5 rounded-lg text-[10px] font-bold bg-sky-500/10 dark:bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30 hover:bg-sky-500/20 transition-all shrink-0 cursor-pointer" onclick="setEfbDatePreset('today')">Today</button>
+                <button type="button" class="py-1 px-2.5 rounded-lg text-[10px] font-bold bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition-all shrink-0 cursor-pointer" onclick="setEfbDatePreset('eom')">End of Month</button>
+                <button type="button" class="py-1 px-2.5 rounded-lg text-[10px] font-bold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-300 transition-all shrink-0 cursor-pointer" onclick="setEfbDatePreset('+1y')">+1 Year</button>
+                <button type="button" class="py-1 px-2.5 rounded-lg text-[10px] font-bold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-300 transition-all shrink-0 cursor-pointer" onclick="setEfbDatePreset('-1y')">-1 Year</button>
+            </div>
+
+            <!-- Month & Year Navigation Header -->
+            <div class="p-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
+                <button type="button" class="py-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold transition-all cursor-pointer" onclick="changeEfbMonth(-1)">◄ Prev</button>
+                <span id="efb-calendar-month-label" class="text-xs font-extrabold text-slate-800 dark:text-slate-100 tracking-wide uppercase">OCTOBER 2026</span>
+                <button type="button" class="py-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold transition-all cursor-pointer" onclick="changeEfbMonth(1)">Next ►</button>
+            </div>
+
+            <!-- Calendar Day Grid -->
+            <div class="p-3">
+                <!-- Weekday Headers -->
+                <div class="grid grid-cols-7 gap-1 text-center text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase mb-2">
+                    <span>MO</span><span>TU</span><span>WE</span><span>TH</span><span>FR</span><span>SA</span><span>SU</span>
+                </div>
+                <!-- Days Container -->
+                <div id="efb-calendar-days-grid" class="grid grid-cols-7 gap-1 text-center text-xs font-bold">
+                    <!-- Rendered dynamically -->
+                </div>
+            </div>
+
+            <!-- Footer Action -->
+            <div class="p-2.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 flex items-center justify-end">
+                <button type="button" class="py-1.5 px-4 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white shadow-md transition-all cursor-pointer" onclick="closeEfbDatePicker()">Confirm Selection</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="js/vendor/anime.min.js"></script>
+    <script type="module" src="main.js"></script>
 </body>
 
 </html>
