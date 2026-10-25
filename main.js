@@ -1,4 +1,4 @@
-// main.js (2010_R196) - CertiFly Application Shell & Bento Dashboard Controller
+// main.js (2410_R206) - CertiFly Application Shell, 2-Tier Tools Controller & Smart Data Pipelining
 
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail, runToolCalculation, setToolsTab, getToolsState } from './js/tools.js';
@@ -3917,4 +3917,281 @@ function initToolsUI() {
   document.getElementById("btn-draft-ftl-email")?.addEventListener("click", () => {
     draftFtlEmail();
   });
+}
+
+
+// ============================================================================
+// STEP 3: 2-TIER TOOLS CONTROLLER, SWIPE GESTURES & SMART PIPELINING
+// ============================================================================
+export function initToolsUIController() {
+  initToolsModule();
+
+  // 1. Tier 1 Category Navigation Buttons
+  const catQualsBtn = document.getElementById("cat-tab-qualifications");
+  const catDutyBtn = document.getElementById("cat-tab-dutyrest");
+  if (catQualsBtn) catQualsBtn.addEventListener("click", () => switchToolCategory("qualifications"));
+  if (catDutyBtn) catDutyBtn.addEventListener("click", () => switchToolCategory("dutyrest"));
+
+  // 2. Tier 2 Sub-Tab Pill Buttons (Category A)
+  const catAPills = ["pill-tool-medical", "pill-tool-ppc", "pill-tool-recurrent", "pill-tool-recency"];
+  const catAToolIds = ["tool-medical", "tool-ppc", "tool-recurrent", "tool-recency"];
+  catAPills.forEach(id => {
+    const pill = document.getElementById(id);
+    if (pill) {
+      pill.addEventListener("click", () => {
+        const toolId = id.replace("pill-", "");
+        switchActiveTool(toolId);
+        dispatchActiveToolCalculation();
+      });
+    }
+  });
+
+  // 3. Tier 2 Sub-Tab Pill Buttons (Category B)
+  const catBPills = ["pill-tool-standby", "pill-tool-maxfdp", "pill-tool-preflight", "pill-tool-cumulative", "pill-tool-ftl1"];
+  catBPills.forEach(id => {
+    const pill = document.getElementById(id);
+    if (pill) {
+      pill.addEventListener("click", () => {
+        if (id === "pill-tool-ftl1") {
+          openFtl1WizardModal();
+        } else {
+          const toolId = id.replace("pill-", "");
+          switchActiveTool(toolId);
+          dispatchActiveToolCalculation();
+        }
+      });
+    }
+  });
+
+  // 4. Master Timezone & Standby Location Toggles
+  const tzUtcBtn = document.getElementById("tz-btn-utc");
+  const tzLocalBtn = document.getElementById("tz-btn-local");
+  if (tzUtcBtn) tzUtcBtn.addEventListener("click", () => setMasterTimezone("UTC"));
+  if (tzLocalBtn) tzLocalBtn.addEventListener("click", () => setMasterTimezone("LOCAL"));
+
+  const stbyHomeBtn = document.getElementById("btn-stby-loc-home");
+  const stbyAirportBtn = document.getElementById("btn-stby-loc-airport");
+  if (stbyHomeBtn) stbyHomeBtn.addEventListener("click", () => setStandbyLocation("HOME"));
+  if (stbyAirportBtn) stbyAirportBtn.addEventListener("click", () => setStandbyLocation("AIRPORT"));
+
+  // 5. Tool #3 Recurrent Course Modal Bindings
+  const courseTrigger = document.getElementById("btn-recurrent-course-trigger");
+  const courseModalClose = document.getElementById("btn-close-recurrent-modal");
+  const courseSearchInput = document.getElementById("recurrent-search-input");
+
+  if (courseTrigger) courseTrigger.addEventListener("click", openRecurrentCourseModal);
+  if (courseModalClose) courseModalClose.addEventListener("click", closeRecurrentCourseModal);
+  if (courseSearchInput) {
+    courseSearchInput.addEventListener("input", (e) => filterRecurrentCourses(e.target.value));
+  }
+
+  document.querySelectorAll(".recurrent-module-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const key = card.dataset.courseKey;
+      const name = card.dataset.courseName;
+      const category = card.dataset.courseCategory;
+      if (key && name && category) {
+        selectRecurrentCourse(key, name, category);
+        dispatchActiveToolCalculation();
+      }
+    });
+  });
+
+  // 6. Reset Links across Tool Cards
+  document.querySelectorAll("[onclick^=\"resetToolInputs\"]").forEach(btn => {
+    btn.removeAttribute("onclick");
+    btn.addEventListener("click", (e) => {
+      const toolCard = e.target.closest(".tool-card");
+      if (toolCard) {
+        const toolId = toolCard.id;
+        resetToolInputs(toolId);
+        dispatchActiveToolCalculation();
+      }
+    });
+  });
+
+  // 7. Real-Time Calculation Dispatchers on Input Changes
+  ["card-wrapper-cat-a", "card-wrapper-cat-b"].forEach(wrapperId => {
+    const wrapper = document.getElementById(wrapperId);
+    if (wrapper) {
+      wrapper.addEventListener("input", () => dispatchActiveToolCalculation());
+      wrapper.addEventListener("change", () => dispatchActiveToolCalculation());
+    }
+  });
+
+  // 8. Card Swipe Gesture Listeners (Recommended Hybrid Navigation)
+  setupCardSwipeGestures("card-wrapper-cat-a", catAToolIds);
+  setupCardSwipeGestures("card-wrapper-cat-b", ["tool-standby", "tool-maxfdp", "tool-preflight", "tool-cumulative"]);
+
+  // 9. Smart Data Pipeline & Slot 4 CTA Action Delegation
+  const outputCard = document.getElementById("tools-output-card");
+  if (outputCard) {
+    outputCard.addEventListener("click", (e) => {
+      const actionBtn = e.target.closest("button[data-action], [data-action]");
+      if (!actionBtn) return;
+      const actionType = actionBtn.dataset.action;
+
+      handleSmartPipelineCTA(actionType);
+    });
+  }
+
+  // 10. Restore LocalStorage Baselines
+  restoreToolsLocalStorage();
+
+  // Initial Calculation Run
+  dispatchActiveToolCalculation();
+}
+
+window.initToolsUIController = initToolsUIController;
+
+// ----------------------------------------------------------------------------
+// HELPER: CARD SWIPE GESTURES
+// ----------------------------------------------------------------------------
+function setupCardSwipeGestures(wrapperId, toolIdList) {
+  const wrapper = document.getElementById(wrapperId);
+  if (!wrapper) return;
+
+  let startX = 0;
+  let startY = 0;
+
+  wrapper.addEventListener("touchstart", (e) => {
+    if (e.touches.length === 1) {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }
+  }, { passive: true });
+
+  wrapper.addEventListener("touchend", (e) => {
+    if (e.changedTouches.length === 1) {
+      const endX = e.changedTouches[0].clientX;
+      const endY = e.changedTouches[0].clientY;
+      const deltaX = endX - startX;
+      const deltaY = endY - startY;
+
+      if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+        const state = getToolsState();
+        const activeToolId = state.activeSubTab;
+        const currentIndex = toolIdList.indexOf(activeToolId);
+
+        if (currentIndex !== -1) {
+          if (deltaX < 0 && currentIndex < toolIdList.length - 1) {
+            const nextToolId = toolIdList[currentIndex + 1];
+            switchActiveTool(nextToolId);
+            dispatchActiveToolCalculation();
+          } else if (deltaX > 0 && currentIndex > 0) {
+            const prevToolId = toolIdList[currentIndex - 1];
+            switchActiveTool(prevToolId);
+            dispatchActiveToolCalculation();
+          }
+        }
+      }
+    }
+  }, { passive: true });
+}
+
+// ----------------------------------------------------------------------------
+// HELPER: SMART DATA PIPELINES & SLOT 4 CTAs
+// ----------------------------------------------------------------------------
+function handleSmartPipelineCTA(actionType) {
+  const state = getToolsState();
+  const lastRes = state.lastCalculationResults[state.activeSubTab] || {};
+
+  switch (actionType) {
+    case "pipeline-fdp": {
+      switchToolCategory("dutyrest");
+      switchActiveTool("tool-maxfdp");
+      const reportTimeInput = document.getElementById("input-fdp-report-time");
+      if (reportTimeInput && lastRes.calloutTime) {
+        reportTimeInput.value = lastRes.calloutTime;
+      }
+      dispatchActiveToolCalculation();
+      break;
+    }
+
+    case "pipeline-rest": {
+      switchToolCategory("dutyrest");
+      switchActiveTool("tool-preflight");
+      const precedingDutyInput = document.getElementById("input-rest-preceding-duty");
+      if (precedingDutyInput && lastRes.finalMaxPermissibleFDPFormatted) {
+        precedingDutyInput.value = lastRes.finalMaxPermissibleFDPFormatted;
+      }
+      dispatchActiveToolCalculation();
+      break;
+    }
+
+    case "discretion": {
+      openFtl1WizardModal();
+      break;
+    }
+
+    case "pipeline-cumulative": {
+      switchToolCategory("dutyrest");
+      switchActiveTool("tool-cumulative");
+      dispatchActiveToolCalculation();
+      break;
+    }
+
+    case "add-calendar": {
+      generateCalendarReminderICS(state.activeSubTab, lastRes);
+      break;
+    }
+
+    case "share": {
+      shareComplianceVerification(state.activeSubTab, lastRes);
+      break;
+    }
+
+    case "email": {
+      const mailObj = draftFtlEmail({ flightNo: "MH1141", reportTime: "06:00", maxFdp: lastRes.finalMaxPermissibleFDPFormatted || "13h 15m" });
+      if (mailObj && mailObj.mailtoUrl) {
+        window.location.href = mailObj.mailtoUrl;
+      }
+      break;
+    }
+
+    default:
+      break;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// HELPER: LOCAL STORAGE BASELINES
+// ----------------------------------------------------------------------------
+function restoreToolsLocalStorage() {
+  try {
+    const recDay = localStorage.getItem("certifly_tool_recency_day");
+    const recNight = localStorage.getItem("certifly_tool_recency_night");
+    if (recDay && document.getElementById("input-recency-day")) document.getElementById("input-recency-day").value = recDay;
+    if (recNight && document.getElementById("input-recency-night")) document.getElementById("input-recency-night").value = recNight;
+
+    const cum7d = localStorage.getItem("certifly_tool_cum_duty_7d");
+    const cum28d = localStorage.getItem("certifly_tool_cum_flight_28d");
+    if (cum7d && document.getElementById("input-cum-duty-7d")) document.getElementById("input-cum-duty-7d").value = cum7d;
+    if (cum28d && document.getElementById("input-cum-flight-28d")) document.getElementById("input-cum-flight-28d").value = cum28d;
+  } catch (e) {
+    console.warn("LocalStorage access error in tools:", e);
+  }
+}
+
+function generateCalendarReminderICS(toolId, result) {
+  const title = `CertiFly Compliance Reminder - ${toolId.toUpperCase()}`;
+  const notes = `Target Deadline: ${result.newExpiryDate || result.cutoffTimestampUTC || "Check CertiFly App"}`;
+  const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//CertiFly PWA//EN\nBEGIN:VEVENT\nSUMMARY:${title}\nDESCRIPTION:${notes}\nEND:VEVENT\nEND:VCALENDAR`;
+  
+  const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `certifly-reminder-${toolId}.ics`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function shareComplianceVerification(toolId, result) {
+  const text = `CertiFly Compliance Check [${toolId.toUpperCase()}]: ${result.newExpiryDate || result.finalMaxPermissibleFDPFormatted || "VALID"}. Computed via CertiFly PWA.`;
+  if (navigator.share) {
+    navigator.share({ title: "CertiFly Compliance Verification", text }).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => alert("Verification copied to clipboard."));
+  }
 }
