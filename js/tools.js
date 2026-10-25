@@ -1,4 +1,4 @@
-// js/tools.js (2410_R219) - Tools Orchestrator, EFB Date Picker & Date Formatter
+// js/tools.js (2410_R220) - Tools Orchestrator, EFB Date Picker & Date Formatter
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -37,7 +37,7 @@ export function formatDateDDMMMYYYY(dateInput) {
   const month = months[d.getUTCMonth()];
   const year = d.getUTCFullYear();
 
-  return `${day} ${month} ${year}`;
+  return String(day) + ' ' + String(month) + ' ' + String(year);
 }
 
 
@@ -90,7 +90,7 @@ export function renderEfbCalendarGrid() {
   const curMonth = efbPickerState.activeDate.getUTCMonth();
 
   if (monthLabelEl) {
-    monthLabelEl.innerText = `${months[curMonth]} ${curYear}`;
+    monthLabelEl.innerText = String(months[curMonth]) + ' ' + String(curYear);
   }
 
   // Get first day of month and total days
@@ -107,12 +107,12 @@ export function renderEfbCalendarGrid() {
   }
 
   const today = new Date();
-  const todayIso = `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, '0')}-${String(today.getUTCDate()).padStart(2, '0')}`;
+  const todayIso = String(today.getUTCFullYear()) + '-' + String(String(today.getUTCMonth() + 1).padStart(2, '0')) + '-' + String(String(today.getUTCDate()).padStart(2, '0'));
 
   for (let day = 1; day <= totalDays; day++) {
     const dayStr = String(day).padStart(2, '0');
     const monthStr = String(curMonth + 1).padStart(2, '0');
-    const isoVal = `${curYear}-${monthStr}-${dayStr}`;
+    const isoVal = String(curYear) + '-' + String(monthStr) + '-' + String(dayStr);
 
     const isSelected = isoVal === selectedIso;
     const isToday = isoVal === todayIso;
@@ -126,7 +126,7 @@ export function renderEfbCalendarGrid() {
       btnClasses += 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800';
     }
 
-    html += `<button type="button" class="${btnClasses}" onclick="selectEfbDate('${isoVal}')">${day}</button>`;
+    html += '<button type="button" class="' + String(btnClasses) + '" onclick="selectEfbDate(\'' + String(isoVal) + '\')">' + String(day) + '</button>';
   }
 
   gridEl.innerHTML = html;
@@ -151,7 +151,7 @@ export function setEfbDatePreset(presetKey) {
     d.setUTCFullYear(d.getUTCFullYear() - 1);
   }
 
-  const isoVal = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+  const isoVal = String(d.getUTCFullYear()) + '-' + String(String(d.getUTCMonth() + 1).padStart(2, '0')) + '-' + String(String(d.getUTCDate()).padStart(2, '0'));
   selectEfbDate(isoVal);
 }
 
@@ -203,7 +203,7 @@ export function normalizeOutput(toolType, rawResult) {
     case 'medical': {
       const isPreserved = rawResult ? rawResult.anniversaryPreserved : true;
       const expiry = rawResult ? formatDateDDMMMYYYY(rawResult.newExpiryDate) : '31 OCT 2027';
-      const windowStr = (rawResult && rawResult.dameEarliestDate) ? `${formatDateDDMMMYYYY(rawResult.dameEarliestDate)} to ${formatDateDDMMMYYYY(rawResult.reExamDate || rawResult.newExpiryDate)}` : '16 SEP 2027 to 31 OCT 2027';
+      const windowStr = (rawResult && rawResult.dameEarliestDate) ? String(formatDateDDMMMYYYY(rawResult.dameEarliestDate)) + ' to ' + String(formatDateDDMMMYYYY(rawResult.reExamDate || rawResult.newExpiryDate)) : '16 SEP 2027 to 31 OCT 2027';
       return {
         statusBadge: isPreserved ? 'EXPIRY DATE PRESERVED' : 'EXPIRY RESET (EOM)',
         statusClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
@@ -212,7 +212,7 @@ export function normalizeOutput(toolType, rawResult) {
         targetClockLabel: '45-Day Re-Exam Window',
         targetClockValue: windowStr,
         breakdownGrid: [
-          { label: 'AGE BAND', value: (rawResult && rawResult.age !== undefined) ? `${rawResult.age} (Under 60)` : '38 (Under 60)' },
+          { label: 'AGE BAND', value: (rawResult && rawResult.age !== undefined) ? String(rawResult.age) + ' (Under 60)' : '38 (Under 60)' },
           { label: 'BASE VALIDITY', value: '12 Calendar Months' },
           { label: 'RENEWAL RULE', value: isPreserved ? 'Date Preserved (45D)' : 'Reset (EOM)' },
           { label: 'CREW OPERATING LIMIT', value: 'Unrestricted Single/Multi' }
@@ -225,7 +225,7 @@ export function normalizeOutput(toolType, rawResult) {
     case 'ppc': {
       const isPreserved = rawResult ? rawResult.anniversaryPreserved : true;
       const expiry = rawResult ? formatDateDDMMMYYYY(rawResult.newLPCExpiryDate || rawResult.newLpcExpiry) : '31 JUL 2027';
-      const opcStr = (rawResult && rawResult.opcWindowStart) ? `${formatDateDDMMMYYYY(rawResult.opcWindowStart)} to ${formatDateDDMMMYYYY(rawResult.opcWindowEnd)}` : '01 MAY 2027 to 31 JUL 2027';
+      const opcStr = (rawResult && rawResult.opcWindowStart) ? String(formatDateDDMMMYYYY(rawResult.opcWindowStart)) + ' to ' + String(formatDateDDMMMYYYY(rawResult.opcWindowEnd)) : '01 MAY 2027 to 31 JUL 2027';
       return {
         statusBadge: isPreserved ? 'EXPIRY DATE PRESERVED' : 'EXPIRY RESET (EOM)',
         statusClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
@@ -345,7 +345,7 @@ export function normalizeOutput(toolType, rawResult) {
         targetClockLabel: 'Minimum Rest Completion',
         targetClockValue: rawResult && rawResult.restCompletionTimeUtc ? rawResult.restCompletionTimeUtc : '20:15 UTC',
         breakdownGrid: [
-          { label: 'PRECEDING DUTY', value: (rawResult && rawResult.precedingDutyHours) ? `${rawResult.precedingDutyHours} Hours` : '10:00 Hours' },
+          { label: 'PRECEDING DUTY', value: (rawResult && rawResult.precedingDutyHours) ? String(rawResult.precedingDutyHours) + ' Hours' : '10:00 Hours' },
           { label: 'LOCATION', value: 'Home Base' },
           { label: 'BASE REST', value: '12:00 Hours' },
           { label: 'OUTSTATION ADD', value: '00:00 Hours' }
@@ -359,7 +359,7 @@ export function normalizeOutput(toolType, rawResult) {
 
     case 'cumulative': {
       const isOverLimit = rawResult ? (rawResult.isExceeded || rawResult.isOverCap) : false;
-      const duty7Val = (rawResult && rawResult.duty7Days) ? `${rawResult.duty7Days.currentFormatted || rawResult.duty7Days} / 55:00 HOURS` : '32:15 / 55:00 HOURS';
+      const duty7Val = (rawResult && rawResult.duty7Days) ? String(rawResult.duty7Days.currentFormatted || rawResult.duty7Days) + ' / 55:00 HOURS' : '32:15 / 55:00 HOURS';
       return {
         statusBadge: isOverLimit ? 'CAP EXCEEDED' : 'ROSTER CLEARED',
         statusClass: isOverLimit ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
@@ -484,7 +484,7 @@ export function runToolCalculation(toolType, inputData = {}) {
               let sampleAge = 45;
               if (ageBracket === 'UNDER_40') sampleAge = 30;
               else if (ageBracket === '60_PLUS') sampleAge = 62;
-              dob = `${nowYear - sampleAge}-01-01`;
+              dob = String(nowYear - sampleAge) + '-01-01';
             }
             rawResult = ClassObj.calculateValidity({
               dob,
@@ -577,13 +577,13 @@ export function renderNormalizedOutput(normalized) {
 
   // Slot 1: Solid Hero Banner
   if (heroEl && normalized.statusClass) {
-    heroEl.className = `p-4 text-white transition-colors duration-300 ${normalized.statusClass}`;
+    heroEl.className = 'p-4 text-white transition-colors duration-300 ' + String(normalized.statusClass);
   }
   if (badgeEl) badgeEl.innerText = normalized.statusBadge || 'CLEARED';
   if (timestampEl) {
     const now = new Date();
-    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-    timestampEl.innerText = `Computed ${timeStr} ${toolsState.masterTimezone}`;
+    const timeStr = String(String(now.getHours()).padStart(2, '0')) + ':' + String(String(now.getMinutes()).padStart(2, '0'));
+    timestampEl.innerText = 'Computed ' + String(timeStr) + ' ' + String(toolsState.masterTimezone);
   }
   if (titleEl) titleEl.innerText = normalized.headlineTitle || 'QUALIFICATION COMPLIANT';
   if (subtitleEl) subtitleEl.innerText = normalized.headlineValue || 'All regulatory parameters verified.';
@@ -595,8 +595,8 @@ export function renderNormalizedOutput(normalized) {
   // Slot 3: Stacked 2x2 Grid
   if (Array.isArray(normalized.breakdownGrid)) {
     normalized.breakdownGrid.forEach((item, idx) => {
-      const labelEl = document.getElementById(`grid-label-${idx + 1}`);
-      const valEl = document.getElementById(`grid-value-${idx + 1}`);
+      const labelEl = document.getElementById('grid-label-' + String(idx + 1));
+      const valEl = document.getElementById('grid-value-' + String(idx + 1));
       if (labelEl) labelEl.innerText = item.label ? item.label.toUpperCase() : '--';
       if (valEl) valEl.innerText = item.value || '--';
     });
@@ -616,7 +616,7 @@ export function renderNormalizedOutput(normalized) {
         } else if (act.type === 'share') {
           btnClass = 'py-2 px-3 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all text-center cursor-pointer';
         }
-        return `<button type="button" data-action="${act.type}" class="${btnClass}">${act.label}</button>`;
+        return '<button type="button" data-action="' + String(act.type) + '" class="' + String(btnClass) + '">' + String(act.label) + '</button>';
       }).join('');
     } else {
       ctaContainerEl.innerHTML = '';
@@ -934,9 +934,9 @@ export function getMaxAllowableFdp(reportTime, sectors) {
 
 export function draftFtlEmail(opts = {}) {
   const flight = opts.flightNo || 'MH123';
-  const subject = `FTL / Discretion Notification - FLT ${flight}`;
-  const body = `Crew Control / Flight Ops,\n\nPlease be advised of the FTL / Discretion details for FLT ${flight}:\n- Report Time: ${opts.reportTime || '--:--'}\n- Max Allowable FDP: ${opts.maxFdp || '--:--'}\n- On-Chocks Cutoff: ${opts.cutoff || '--:-- UTC'}\n\nGenerated via CertiFly PWA.`;
-  return { subject, body, mailtoUrl: `mailto:crewcontrol@malaysiaairlines.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}` };
+  const subject = 'FTL / Discretion Notification - FLT ' + String(flight);
+  const body = 'Crew Control / Flight Ops,\\n\\nPlease be advised of the FTL / Discretion details for FLT ' + String(flight) + ':\\n- Report Time: ' + String(opts.reportTime || '--:--') + '\\n- Max Allowable FDP: ' + String(opts.maxFdp || '--:--') + '\\n- On-Chocks Cutoff: ' + String(opts.cutoff || '--:-- UTC') + '\\n\\nGenerated via CertiFly PWA.';
+  return { subject, body, mailtoUrl: 'mailto:crewcontrol@malaysiaairlines.com?subject=' + String(encodeURIComponent(subject)) + '&body=' + String(encodeURIComponent(body)) };
 }
 
 export function renderSectorCardsUI() {}
