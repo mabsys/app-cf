@@ -1,4 +1,4 @@
-<!-- index.html (2410_R216) - CertiFly PWA Application Shell & Core Layout -->
+<!-- index.html (2410_R218) - CertiFly PWA Application Shell & Core Layout -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -1293,13 +1293,13 @@ if ('serviceWorker' in navigator) {
                 <div id="tools-output-card" class="mt-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xl transition-all duration-300">
 
                     <!-- SLOT 1: DYNAMIC HERO CARD (Solid State Background) -->
-                    <div id="output-slot-1-hero" class="p-4 bg-emerald-600 text-white transition-colors duration-300">
+                    <div id="output-slot-1-hero" class="p-4 bg-emerald-600 text-white transition-colors duration-300 rounded-t-2xl">
                         <div class="flex items-center justify-between">
                             <span id="output-hero-badge" class="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-black/20 text-white border border-white/20">VALID / CLEARED</span>
                             <span id="output-hero-timestamp" class="text-[11px] font-medium text-white/80">Computed 14:30 MYT</span>
                         </div>
-                        <h2 id="output-hero-title" class="text-base font-extrabold tracking-tight mt-1.5">QUALIFICATION COMPLIANT</h2>
-                        <p id="output-hero-subtitle" class="text-xs text-white/90 font-medium mt-0.5">All regulatory currency windows remain within prescribed limits.</p>
+                        <span id="output-hero-title" class="text-[10px] font-extrabold uppercase tracking-widest text-white/80 mt-2 block">QUALIFICATION COMPLIANT</span>
+                        <p id="output-hero-subtitle" class="text-2xl font-black text-white tracking-tight leading-none mt-1">All regulatory currency windows remain within prescribed limits.</p>
                     </div>
 
                     <!-- SLOT 2: TARGET ACTION CLOCK & CONSTRAINED BUDGET -->
@@ -1362,31 +1362,19 @@ if ('serviceWorker' in navigator) {
     <!-- MODAL OVERLAYS & DRAWERS                                          -->
     <!-- ================================================================= -->
     <!-- ================================================================= -->
-    <div id="recurrent-course-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 select-none">
-        <div class="w-11/12 max-w-[320px] mx-auto rounded-2xl shadow-2xl my-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+    <div id="recurrent-course-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 select-none">
+        <div class="w-11/12 max-w-[340px] mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-h-[75vh] my-auto flex flex-col overflow-hidden shadow-2xl">
 
             <!-- Modal Header -->
-            <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-900/90">
+            <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-900/90">
                 <div>
-                    <span class="text-[10px] font-extrabold text-sky-600 dark:text-sky-400 uppercase tracking-wider">QUALIFICATION SELECTOR</span>
-                    <h3 class="text-sm font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Select Qualification Module</h3>
-                </div>
-                <button type="button" class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-1 text-xs font-bold cursor-pointer" onclick="closeRecurrentCourseModal()">Close ✕</button>
-            </div>
-
-            <!-- Search Input Bar -->
-            <div class="p-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60">
-                <div class="relative flex items-center">
-                    <input type="text" id="recurrent-search-input" placeholder="Search module name or rule..." class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500 text-xs font-medium" oninput="filterRecurrentCourses()">
-                    <svg class="w-4 h-4 text-slate-400 absolute left-2.5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                    </svg>
+                    <span class="text-[9px] font-extrabold text-sky-600 dark:text-sky-400 uppercase tracking-wider block">QUALIFICATION SELECTOR</span>
+                    <h3 class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase">Select Qualification Module</h3>
                 </div>
             </div>
 
             <!-- Grouped Module List Container -->
-            <div class="p-4 overflow-y-auto space-y-5 flex-1 text-xs text-slate-700 dark:text-slate-300">
-
+            <div class="p-3.5 overflow-y-auto space-y-4 flex-1 text-xs text-slate-700 dark:text-slate-300 no-scrollbar">
                 <!-- GROUP 1: ANNUAL (12 CALENDAR MONTHS) -->
                 <div class="recurrent-group-block space-y-2">
                     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
@@ -1493,12 +1481,16 @@ if ('serviceWorker' in navigator) {
                 <button type="button" class="py-2 px-4 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 cursor-pointer" onclick="closeRecurrentCourseModal()">Cancel</button>
             </div>
 
+            <!-- Modal Footer Actions -->
+            <div class="p-2.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 flex items-center justify-end">
+                <button type="button" class="py-1.5 px-4 rounded-xl text-xs font-bold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 transition-all cursor-pointer" onclick="closeRecurrentCourseModal()">Cancel</button>
+            </div>
+
         </div>
     </div>
 
-    <!-- ================================================================= -->
     <div id="ftl1-wizard-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 select-none">
-        <div class="w-11/12 max-w-[340px] mx-auto rounded-2xl max-h-[75vh] my-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+        <div class="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
 
             <!-- Modal Header -->
             <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-900/90">
@@ -1545,7 +1537,7 @@ if ('serviceWorker' in navigator) {
 
     <!-- ================================================================= -->
     <div id="efb-date-picker-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 select-none">
-        <div class="w-11/12 max-w-[320px] mx-auto rounded-2xl shadow-2xl my-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        <div class="w-11/12 max-w-[320px] mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl my-auto flex flex-col overflow-hidden">
 
             <!-- Modal Header -->
             <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/90">
@@ -1553,7 +1545,6 @@ if ('serviceWorker' in navigator) {
                     <span class="text-[9px] font-extrabold text-sky-600 dark:text-sky-400 uppercase tracking-wider block">EFB DATE PICKER</span>
                     <h3 id="efb-date-picker-title" class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase">SELECT DATE</h3>
                 </div>
-                <button type="button" id="btn-close-efb-date-picker" class="py-1 px-2.5 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white bg-slate-200/60 dark:bg-slate-800 cursor-pointer transition-colors" onclick="closeEfbDatePicker()">Close ✕</button>
             </div>
 
             <!-- Embedded Preset Pills -->
@@ -1583,7 +1574,10 @@ if ('serviceWorker' in navigator) {
                 </div>
             </div>
 
-
+            <!-- Footer Action -->
+            <div class="p-2.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 flex items-center justify-end">
+                <button type="button" class="py-1.5 px-4 rounded-xl text-xs font-bold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 transition-all cursor-pointer" onclick="closeEfbDatePicker()">Cancel</button>
+            </div>
 
         </div>
     </div>
