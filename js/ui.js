@@ -1,5 +1,4 @@
-// js/ui.js (2010_R198) - CertiFly Complete View State, Theme & Navigation Controller
-
+// js/ui.js (2410_R206) - CertiFly Complete View State, Theme & Navigation Controller
 
 import { initToolsModule, runToolCalculation, setToolsTab, getToolsState, getSectorCount, setSectorCount, draftFtlEmail } from './tools.js';
 import { stopScanner, switchScanHubTab } from './scanner.js';
@@ -823,8 +822,10 @@ export function autoFillFromCredentials() {
 }
 
 export function initToolsViewUI() {
-  document.getElementById('tools-tab-validity-btn')?.addEventListener('click', () => switchTier1('validity'));
-  document.getElementById('tools-tab-fdp-btn')?.addEventListener('click', () => switchTier1('fdp'));
+  // Delegate tools view initialization to main.js / tools.js controller
+  if (window.initToolsUIController) {
+    window.initToolsUIController();
+  }
 
   const subNavMap = {
     'subtab-medical': 'medical',
@@ -920,4 +921,3 @@ if (typeof window !== 'undefined') {
   window.switchSubTab = switchSubTab;
   window.dispatchActiveToolCalculation = dispatchActiveToolCalculation;
 }
-
