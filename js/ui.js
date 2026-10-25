@@ -1,4 +1,4 @@
-// js/ui.js (2410_R208) - CertiFly Complete View State, Theme & Navigation Controller
+// ui.js (2410_R212) - CertiFly Navigation, View State, EFB Date Formatting & Tool Calculations
 
 import { initToolsModule, runToolCalculation, setToolsTab, getToolsState, getSectorCount, setSectorCount, draftFtlEmail } from './tools.js';
 import { stopScanner, switchScanHubTab } from './scanner.js';
@@ -716,13 +716,28 @@ export function switchSubTab(subTab) {
   });
 
   const panes = ['medical', 'ppc', 'recurrent', 'standby', 'max-fdp', 'pre-flight-rest', 'cumulative', 'caam-ftl1'];
-  panes.forEach(p => {
-    const paneEl = document.getElementById(`pane-${p}`);
-    if (paneEl) {
-      if (p === subTab) {
-        paneEl.classList.remove('hidden');
+  const toolCards = ['tool-medical', 'tool-ppc', 'tool-recurrent', 'tool-recency', 'tool-standby', 'tool-maxfdp', 'tool-preflight', 'tool-cumulative', 'tool-ftl1'];
+  const cardMap = {
+    'medical': 'tool-medical',
+    'ppc': 'tool-ppc',
+    'recurrent': 'tool-recurrent',
+    'recency': 'tool-recency',
+    'standby': 'tool-standby',
+    'max-fdp': 'tool-maxfdp',
+    'pre-flight-rest': 'tool-preflight',
+    'cumulative': 'tool-cumulative',
+    'caam-ftl1': 'tool-ftl1'
+  };
+
+  toolCards.forEach(cardId => {
+    const cardEl = document.getElementById(cardId);
+    if (cardEl) {
+      if (cardMap[subTab] === cardId) {
+        cardEl.classList.remove('hidden');
+        requestAnimationFrame(() => cardEl.classList.add('active'));
       } else {
-        paneEl.classList.add('hidden');
+        cardEl.classList.remove('active');
+        cardEl.classList.add('hidden');
       }
     }
   });
