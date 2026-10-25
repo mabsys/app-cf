@@ -1,4 +1,4 @@
-// js/tools.js (2410_R214) - Tools Orchestrator, EFB Date Picker & Date Formatter
+// js/tools.js (2410_R216) - Tools Orchestrator, EFB Date Picker & Date Formatter
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -348,10 +348,7 @@ export function normalizeOutput(toolType, rawResult) {
           'CAAM CAD 1 Personnel Licensing (PEL)',
           rawResult.reason || 'Expiry date calculated per CAAM age-tiered validity rules'
         ],
-        actions: [
-          { type: 'reminder', label: 'Add Calendar Reminder' },
-          { type: 'share', label: 'Share Verification' }
-        ]
+        actions: []
       };
     }
 
@@ -373,10 +370,7 @@ export function normalizeOutput(toolType, rawResult) {
           'CAAM CAD 1 & OM-D PPC/LPC Validity Rules',
           rawResult.calculationMethod || '3-month lookback window applied'
         ],
-        actions: [
-          { type: 'reminder', label: 'Add Calendar Reminder' },
-          { type: 'share', label: 'Share Verification' }
-        ]
+        actions: []
       };
     }
 
@@ -398,10 +392,7 @@ export function normalizeOutput(toolType, rawResult) {
           'CAAM & OM-D Recurrent Training Standards',
           rawResult.calculationMethod || 'Ground, Sim, SEP, and CRM validity tracking'
         ],
-        actions: [
-          { type: 'reminder', label: 'Add Calendar Reminder' },
-          { type: 'share', label: 'Share Verification' }
-        ]
+        actions: []
       };
     }
 
