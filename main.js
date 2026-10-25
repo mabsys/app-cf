@@ -1,9 +1,7 @@
-// main.js (2410_R213) - CertiFly Application Shell, Touch Gesture Swipe & EFB Date Picker 
+// main.js (2410_R214) - CertiFly Application Shell, Touch Gesture Swipe & EFB Date Picker Bindings
 
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setMasterTimezone, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, filterRecurrentCourses, resetToolInputs, openFtl1WizardModal, closeFtl1WizardModal, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
-// js/main.js (1410_R152) - Main Application Controller & Orchestrator
-
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
 import { parseAttestationText, validateAttestationContent, parseQualificationSlipText, validateQualificationSlipContent } from './js/parser.js';
@@ -4078,9 +4076,7 @@ function setupToolsCardSwipeGestures() {
     }
   });
 
-  // 8. Card Swipe Gesture Listeners (Recommended Hybrid Navigation)
-  setupCardSwipeGestures("card-wrapper-cat-a", catAToolIds);
-  setupCardSwipeGestures("card-wrapper-cat-b", ["tool-standby", "tool-maxfdp", "tool-preflight", "tool-cumulative"]);
+
 
   // 9. Smart Data Pipeline & Slot 4 CTA Action Delegation
   const outputCard = document.getElementById("tools-output-card");
