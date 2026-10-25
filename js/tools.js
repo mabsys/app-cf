@@ -1,4 +1,4 @@
-// js/tools.js (2410_R207) - Tools Orchestrator, Data Adapter, Window & Module Exports
+// js/tools.js (2410_R208) - Tools Orchestrator, Data Adapter, Window & Module Exports
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -285,10 +285,13 @@ export function runToolCalculation(toolType, inputData = {}) {
       case 'standby': {
         const ClassObj = StandbyEngineModule.StandbyFDPEngine || StandbyEngineModule.default;
         if (ClassObj && typeof ClassObj.calculateStandbyFDP === 'function') {
-          if (inputData.standbyStartISO || inputData.startTime) {
+          const startTime = inputData.standbyStartISO || inputData.startTime || inputData.start_time;
+          const calloutTime = inputData.calloutTimestampISO || inputData.calloutTime || inputData.report_time;
+          if (startTime && calloutTime && startTime.trim() !== '' && calloutTime.trim() !== '') {
             rawResult = ClassObj.calculateStandbyFDP({
-              standbyStartISO: inputData.standbyStartISO || inputData.startTime,
-              calloutTimestampISO: inputData.calloutTimestampISO || inputData.calloutTime
+              standbyStartISO: startTime,
+              calloutTimestampISO: calloutTime,
+              location: inputData.location || toolsState.standbyLocation || 'HOME'
             });
           }
         }
@@ -299,10 +302,10 @@ export function runToolCalculation(toolType, inputData = {}) {
         const ClassObj = MaxFdpEngineModule.MaxFDPEngine || MaxFdpEngineModule.default;
         if (ClassObj && typeof ClassObj.calculateMaxFDP === 'function') {
           const reportTime = inputData.reportTimestampISO || inputData.reportTime;
-          if (reportTime) {
+          if (reportTime && reportTime.trim() !== '') {
             rawResult = ClassObj.calculateMaxFDP({
               reportTimestampISO: reportTime,
-              sectorsPlanned: inputData.sectorsPlanned || inputData.sectors || 1,
+              sectorsPlanned: inputData.sectorsPlanned || inputData.sectors || getSectorCount() || 2,
               isAcclimatised: inputData.isAcclimatised ?? true
             });
           }
@@ -313,7 +316,10 @@ export function runToolCalculation(toolType, inputData = {}) {
       case 'pre-flight-rest': {
         const ClassObj = PreFlightRestEngineModule.PreFlightRestEngine || PreFlightRestEngineModule.default;
         if (ClassObj && typeof ClassObj.calculateMinRest === 'function') {
-          rawResult = ClassObj.calculateMinRest(inputData);
+          const precedingDuty = inputData.precedingDutyHours || inputData.precedingDuty;
+          if (precedingDuty && String(precedingDuty).trim() !== '') {
+            rawResult = ClassObj.calculateMinRest(inputData);
+          }
         }
         break;
       }
@@ -329,11 +335,23 @@ export function runToolCalculation(toolType, inputData = {}) {
       case 'medical': {
         const ClassObj = MedicalEngineModule.MedicalValidityEngine || MedicalEngineModule.default;
         if (ClassObj && typeof ClassObj.calculateValidity === 'function') {
-          rawResult = ClassObj.calculateValidity({
-            dob: inputData.dob || '1985-05-15',
-            examDate: inputData.examDate || inputData.conductDate,
-            currentExpiryDate: inputData.currentExpiryDate || null
-          });
+          const examDate = inputData.examDate || inputData.lastDate || inputData.medExamDate || inputData.conductDate;
+          if (examDate && examDate.trim() !== '') {
+            let dob = inputData.dob;
+            if (!dob) {
+              const ageBracket = inputData.ageBracket || '40_TO_59';
+              const nowYear = new Date().getUTCFullYear();
+              let sampleAge = 45;
+              if (ageBracket === 'UNDER_40') sampleAge = 30;
+              else if (ageBracket === '60_PLUS') sampleAge = 62;
+              dob = ;
+            }
+            rawResult = ClassObj.calculateValidity({
+              dob,
+              examDate,
+              currentExpiryDate: inputData.currentExpiryDate || null
+            });
+          }
         }
         break;
       }
@@ -341,10 +359,14 @@ export function runToolCalculation(toolType, inputData = {}) {
       case 'ppc': {
         const ClassObj = PpcEngineModule.PPCValidityEngine || PpcEngineModule.default;
         if (ClassObj && typeof ClassObj.calculateLPCExpiry === 'function') {
-          rawResult = ClassObj.calculateLPCExpiry(
-            inputData.lpcConductDateStr || inputData.conductDate,
-            inputData.currentLPCExpiryDateStr || inputData.expiryDate || null
-          );
+          const conductDate = inputData.lpcConductDateStr || inputData.conductDate;
+          const expiryDate = inputData.currentLPCExpiryDateStr || inputData.expiryDate;
+          if ((conductDate && conductDate.trim() !== '') || (expiryDate && expiryDate.trim() !== '')) {
+            rawResult = ClassObj.calculateLPCExpiry(
+              conductDate || expiryDate,
+              expiryDate || null
+            );
+          }
         }
         break;
       }
@@ -352,20 +374,33 @@ export function runToolCalculation(toolType, inputData = {}) {
       case 'recurrent': {
         const ClassObj = RecurrentEngineModule.RecurrentTrainingEngine || RecurrentEngineModule.default;
         if (ClassObj && typeof ClassObj.calculateExpiry === 'function') {
-          rawResult = ClassObj.calculateExpiry(
-            inputData.courseType || toolsState.recurrentCourseKey || 'LINE_CHECK',
-            inputData.completionDate || inputData.conductDate,
-            inputData.currentExpiryDate || null
-          );
+          const courseType = inputData.courseType || toolsState.recurrentCourseKey || 'LINE_CHECK';
+          const completionDate = inputData.completionDate || inputData.conductDate;
+          if (completionDate && completionDate.trim() !== '') {
+            rawResult = ClassObj.calculateExpiry(
+              courseType,
+              completionDate,
+              inputData.currentExpiryDate || null
+            );
+          }
         }
         break;
       }
 
       case 'recency': {
+        const dayCount = parseInt(inputData.dayCount || inputData.dayLandings || 0, 10);
+        const nightCount = parseInt(inputData.nightCount || inputData.nightLandings || 0, 10);
         rawResult = {
-          dayCount: parseInt(inputData.dayCount || 0, 10),
-          nightCount: parseInt(inputData.nightCount || 0, 10)
+          dayCount,
+          nightCount,
+          isCompliant: (dayCount >= 3 || nightCount >= 1),
+          totalLandings: dayCount + nightCount
         };
+        break;
+      }
+
+      case 'caam-ftl1': {
+        rawResult = inputData;
         break;
       }
 
@@ -373,7 +408,7 @@ export function runToolCalculation(toolType, inputData = {}) {
         break;
     }
   } catch (err) {
-    console.error(`Error executing engine for ${toolType}:`, err);
+    console.error(, err);
   }
 
   toolsState.lastCalculationResults[toolType] = rawResult;
