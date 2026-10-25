@@ -1,4 +1,4 @@
-// js/tools.js (2410_R212) - Tools Orchestrator, EFB Date Picker & Date Formatter
+// js/tools.js (2410_R214) - Tools Orchestrator, EFB Date Picker & Date Formatter
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -515,7 +515,7 @@ export function runToolCalculation(toolType, inputData = {}) {
               let sampleAge = 45;
               if (ageBracket === 'UNDER_40') sampleAge = 30;
               else if (ageBracket === '60_PLUS') sampleAge = 62;
-              dob = ;
+              dob = `${nowYear - sampleAge}-01-01`;
             }
             rawResult = ClassObj.calculateValidity({
               dob,
