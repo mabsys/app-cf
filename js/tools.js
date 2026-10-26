@@ -1,4 +1,4 @@
-// js/tools.js (2410_R221) - Tools Orchestrator, EFB Date Picker & Date Formatter
+// js/tools.js (2410_R222) - Tools Orchestrator, EFB Date Picker & Date Formatter
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -684,7 +684,7 @@ export function switchActiveTool(toolId) {
   const catAIdx = catATools.indexOf(cleanId);
 
   catATools.forEach(id => {
-    const pill = document.getElementById();
+    const pill = document.getElementById('pill-tool-' + id);
     if (pill) {
       if (id === cleanId) {
         pill.className = 'subtab-pill active flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-sky-500/40 bg-sky-500/20 text-sky-400 dark:text-sky-300 cursor-pointer';
@@ -693,7 +693,7 @@ export function switchActiveTool(toolId) {
       }
     }
 
-    const card = document.getElementById() || document.getElementById();
+    const card = document.getElementById('tool-' + id) || document.getElementById('tool-card-' + id);
     if (card) {
       if (id === cleanId) {
         card.classList.remove('hidden');
@@ -726,7 +726,7 @@ export function switchActiveTool(toolId) {
     if (id === 'pre-flight-rest') pillId = 'preflight';
     if (id === 'caam-ftl1') pillId = 'ftl1';
 
-    const pill = document.getElementById();
+    const pill = document.getElementById('pill-tool-' + id);
     if (pill) {
       if (id === cleanId) {
         pill.className = 'subtab-pill active flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-sky-500/40 bg-sky-500/20 text-sky-400 dark:text-sky-300 cursor-pointer';
@@ -736,7 +736,7 @@ export function switchActiveTool(toolId) {
     }
 
     let cardId = id === 'max-fdp' ? 'maxfdp' : (id === 'pre-flight-rest' ? 'preflight' : (id === 'caam-ftl1' ? 'ftl1' : id));
-    const card = document.getElementById() || document.getElementById();
+    const card = document.getElementById('tool-' + id) || document.getElementById('tool-card-' + id);
     if (card) {
       if (id === cleanId) {
         card.classList.remove('hidden');
@@ -846,7 +846,7 @@ export function resetToolInputs(toolId) {
   if (cleanId === 'ftl1') cleanId = 'caam-ftl1';
 
   const cardKey = cleanId === 'max-fdp' ? 'maxfdp' : (cleanId === 'pre-flight-rest' ? 'preflight' : (cleanId === 'caam-ftl1' ? 'ftl1' : cleanId));
-  const cardEl = document.getElementById() || document.getElementById() || document.getElementById(toolId);
+  const cardEl = document.getElementById('tool-' + cardKey) || document.getElementById('tool-card-' + cardKey) || document.getElementById(toolId);
 
   if (cardEl) {
     const inputs = cardEl.querySelectorAll('input, select');
