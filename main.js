@@ -1,4 +1,4 @@
-// main.js (2410_R217) - CertiFly Application Shell, Touch Gesture Swipe & EFB Date Picker Bindings
+// main.js (2410_R218) - CertiFly Application Shell, Touch Gesture Swipe & EFB Date Picker Bindings
 
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setMasterTimezone, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, openFtl1WizardModal, closeFtl1WizardModal, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
@@ -4004,11 +4004,19 @@ export function initToolsUIController() {
 
 function setupToolsCardSwipeGestures() {
   const catASubtabs = ['medical', 'ppc', 'recurrent', 'recency'];
-  const catBSubtabs = ['standby', 'max-fdp', 'pre-flight-rest', 'cumulative'];
+  const catBSubtabs = ['standby', 'max-fdp', 'pre-flight-rest', 'cumulative', 'caam-ftl1'];
 
   const wrappers = [
-    { id: 'card-wrapper-cat-a', subtabs: catASubtabs },
-    { id: 'card-wrapper-cat-b', subtabs: catBSubtabs }
+    { id: 'card-wrapper-cat-a', getSubtabs: () => catASubtabs },
+    { id: 'card-wrapper-cat-b', getSubtabs: () => catBSubtabs },
+    { 
+      id: 'tools-output-card', 
+      getSubtabs: () => {
+        const state = getToolsState ? getToolsState() : {};
+        const cur = state.activeSubTab || 'medical';
+        return catASubtabs.includes(cur) ? catASubtabs : catBSubtabs;
+      }
+    }
   ];
 
   wrappers.forEach(item => {
@@ -4037,16 +4045,17 @@ function setupToolsCardSwipeGestures() {
       if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
         const state = getToolsState ? getToolsState() : {};
         const currentSubtab = state.activeSubTab || 'medical';
-        const currentIndex = item.subtabs.indexOf(currentSubtab);
+        const subtabs = item.getSubtabs();
+        const currentIndex = subtabs.indexOf(currentSubtab);
 
         if (currentIndex !== -1) {
-          if (diffX < 0 && currentIndex < item.subtabs.length - 1) {
+          if (diffX < 0 && currentIndex < subtabs.length - 1) {
             // Swipe Left -> Next subtab
-            const nextTab = item.subtabs[currentIndex + 1];
+            const nextTab = subtabs[currentIndex + 1];
             switchActiveTool(nextTab);
           } else if (diffX > 0 && currentIndex > 0) {
             // Swipe Right -> Prev subtab
-            const prevTab = item.subtabs[currentIndex - 1];
+            const prevTab = subtabs[currentIndex - 1];
             switchActiveTool(prevTab);
           }
         }
