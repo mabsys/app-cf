@@ -1,4 +1,4 @@
-// js/tools.js (2410_R223) - Tools Orchestrator, EFB Date Picker & Date Formatter
+// js/tools.js (2410_R227) - Tools Orchestrator, EFB Date Picker & Date Formatter
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -684,10 +684,11 @@ export function switchActiveTool(toolId) {
   const catAIdx = catATools.indexOf(cleanId);
 
   catATools.forEach(id => {
-    const pill = document.getElementById('pill-tool-' + id);
+    const pill = document.getElementById('pill-tool-' + pillId);
     if (pill) {
       if (id === cleanId) {
         pill.className = 'subtab-pill active flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-sky-500/40 bg-sky-500/20 text-sky-400 dark:text-sky-300 cursor-pointer';
+        try { pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); } catch (e) {}
       } else {
         pill.className = 'subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer';
       }
@@ -726,10 +727,11 @@ export function switchActiveTool(toolId) {
     if (id === 'pre-flight-rest') pillId = 'preflight';
     if (id === 'caam-ftl1') pillId = 'ftl1';
 
-    const pill = document.getElementById('pill-tool-' + id);
+    const pill = document.getElementById('pill-tool-' + pillId);
     if (pill) {
       if (id === cleanId) {
         pill.className = 'subtab-pill active flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-sky-500/40 bg-sky-500/20 text-sky-400 dark:text-sky-300 cursor-pointer';
+        try { pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); } catch (e) {}
       } else {
         pill.className = 'subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer';
       }
@@ -758,6 +760,9 @@ export function switchActiveTool(toolId) {
       }
     });
   }
+
+  // Trigger calculation dispatcher for newly activated tool to refresh output card
+  dispatchActiveToolCalculation();
 }
 
 /**
