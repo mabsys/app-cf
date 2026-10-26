@@ -1,4 +1,4 @@
-// js/tools.js (2410_R227) - Tools Orchestrator, EFB Date Picker & Date Formatter
+// js/tools.js (2410_R229) - Tools Orchestrator, EFB Date Picker & Date Formatter
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -684,6 +684,7 @@ export function switchActiveTool(toolId) {
   const catAIdx = catATools.indexOf(cleanId);
 
   catATools.forEach(id => {
+    let pillId = id;
     const pill = document.getElementById('pill-tool-' + pillId);
     if (pill) {
       if (id === cleanId) {
@@ -738,7 +739,7 @@ export function switchActiveTool(toolId) {
     }
 
     let cardId = id === 'max-fdp' ? 'maxfdp' : (id === 'pre-flight-rest' ? 'preflight' : (id === 'caam-ftl1' ? 'ftl1' : id));
-    const card = document.getElementById('tool-' + id) || document.getElementById('tool-card-' + id);
+    const card = document.getElementById('tool-' + cardId) || document.getElementById('tool-card-' + cardId);
     if (card) {
       if (id === cleanId) {
         card.classList.remove('hidden');
