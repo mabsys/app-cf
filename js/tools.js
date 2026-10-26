@@ -1,4 +1,4 @@
-// js/tools.js (2410_R222) - Tools Orchestrator, EFB Date Picker & Date Formatter
+// js/tools.js (2410_R223) - Tools Orchestrator, EFB Date Picker & Date Formatter
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -859,15 +859,12 @@ export function resetToolInputs(toolId) {
         input.value = input.defaultValue || '';
       }
     });
-
-    const displayBtns = cardEl.querySelectorAll('[id^=display-]');
-    displayBtns.forEach(btn => {
-      btn.innerText = 'Select Date';
-    });
   }
 
-  if (window.dispatchActiveToolCalculation) {
-    window.dispatchActiveToolCalculation();
+  if (cleanId) {
+    delete toolsState.lastCalculationResults[cleanId];
+    const normalized = normalizeOutput(cleanId, null);
+    renderNormalizedOutput(normalized);
   }
 }
 
