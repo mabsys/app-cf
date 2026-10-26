@@ -1,4 +1,4 @@
-// js/tools.js (2410_R232) - Tools Orchestrator, EFB Date Picker & Date Formatter
+// js/tools.js (2410_R229) - Tools Orchestrator, EFB Date Picker & Date Formatter
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -201,27 +201,9 @@ let currentSectorCount = 2;
 export function normalizeOutput(toolType, rawResult) {
   switch (toolType) {
     case 'medical': {
-      if (!rawResult) {
-        return {
-          statusBadge: 'AWAITING INPUT',
-          statusClass: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700',
-          headlineTitle: 'NEW MEDICAL EXPIRY',
-          headlineValue: '--',
-          targetClockLabel: '45-Day Re-Exam Window',
-          targetClockValue: '-- to --',
-          breakdownGrid: [
-            { label: 'AGE BAND', value: '--' },
-            { label: 'BASE VALIDITY', value: '12 Calendar Months' },
-            { label: 'RENEWAL RULE', value: 'Date Preserved (45D)' },
-            { label: 'CREW OPERATING LIMIT', value: 'Unrestricted Single/Multi' }
-          ],
-          auditNotes: ['CAAM CAD 1 PEL Section 1.2.5.2 & OM-A 5.1.4.4'],
-          actions: []
-        };
-      }
-      const isPreserved = rawResult.anniversaryPreserved !== undefined ? rawResult.anniversaryPreserved : true;
-      const expiry = rawResult.newExpiryDate ? formatDateDDMMMYYYY(rawResult.newExpiryDate) : '--';
-      const windowStr = (rawResult.dameEarliestDate) ? formatDateDDMMMYYYY(rawResult.dameEarliestDate) + ' to ' + formatDateDDMMMYYYY(rawResult.reExamDate || rawResult.newExpiryDate) : '-- to --';
+      const isPreserved = rawResult ? rawResult.anniversaryPreserved : true;
+      const expiry = rawResult ? formatDateDDMMMYYYY(rawResult.newExpiryDate) : '31 OCT 2027';
+      const windowStr = (rawResult && rawResult.dameEarliestDate) ? String(formatDateDDMMMYYYY(rawResult.dameEarliestDate)) + ' to ' + String(formatDateDDMMMYYYY(rawResult.reExamDate || rawResult.newExpiryDate)) : '16 SEP 2027 to 31 OCT 2027';
       return {
         statusBadge: isPreserved ? 'EXPIRY DATE PRESERVED' : 'EXPIRY RESET (EOM)',
         statusClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
@@ -230,7 +212,7 @@ export function normalizeOutput(toolType, rawResult) {
         targetClockLabel: '45-Day Re-Exam Window',
         targetClockValue: windowStr,
         breakdownGrid: [
-          { label: 'AGE BAND', value: (rawResult.age !== undefined) ? String(rawResult.age) + ' (Under 60)' : '38 (Under 60)' },
+          { label: 'AGE BAND', value: (rawResult && rawResult.age !== undefined) ? String(rawResult.age) + ' (Under 60)' : '38 (Under 60)' },
           { label: 'BASE VALIDITY', value: '12 Calendar Months' },
           { label: 'RENEWAL RULE', value: isPreserved ? 'Date Preserved (45D)' : 'Reset (EOM)' },
           { label: 'CREW OPERATING LIMIT', value: 'Unrestricted Single/Multi' }
@@ -241,27 +223,9 @@ export function normalizeOutput(toolType, rawResult) {
     }
 
     case 'ppc': {
-      if (!rawResult) {
-        return {
-          statusBadge: 'AWAITING INPUT',
-          statusClass: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700',
-          headlineTitle: 'NEW PPC / LPC EXPIRY',
-          headlineValue: '--',
-          targetClockLabel: '3-Month Revalidation Window',
-          targetClockValue: '-- to --',
-          breakdownGrid: [
-            { label: 'RENEWAL RULE', value: 'Date Preserved (3-Mo Window)' },
-            { label: 'PERMISSIBLE OPC WINDOW', value: '-- to --' },
-            { label: 'BASE VALIDITY', value: '12 Months (End of Month)' },
-            { label: 'REFRESHER STATUS', value: 'Current (No Refresher Due)' }
-          ],
-          auditNotes: ['CAAM CAD 6.9.4.4 / CAD 1 PEL 2.1.5.10 / OM-A 5.1.4.6'],
-          actions: []
-        };
-      }
-      const isPreserved = rawResult.anniversaryPreserved !== undefined ? rawResult.anniversaryPreserved : true;
-      const expiry = formatDateDDMMMYYYY(rawResult.newLPCExpiryDate || rawResult.newLpcExpiry);
-      const opcStr = (rawResult.opcWindowStart) ? formatDateDDMMMYYYY(rawResult.opcWindowStart) + ' to ' + formatDateDDMMMYYYY(rawResult.opcWindowEnd) : '-- to --';
+      const isPreserved = rawResult ? rawResult.anniversaryPreserved : true;
+      const expiry = rawResult ? formatDateDDMMMYYYY(rawResult.newLPCExpiryDate || rawResult.newLpcExpiry) : '31 JUL 2027';
+      const opcStr = (rawResult && rawResult.opcWindowStart) ? String(formatDateDDMMMYYYY(rawResult.opcWindowStart)) + ' to ' + String(formatDateDDMMMYYYY(rawResult.opcWindowEnd)) : '01 MAY 2027 to 31 JUL 2027';
       return {
         statusBadge: isPreserved ? 'EXPIRY DATE PRESERVED' : 'EXPIRY RESET (EOM)',
         statusClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
@@ -271,7 +235,7 @@ export function normalizeOutput(toolType, rawResult) {
         targetClockValue: opcStr,
         breakdownGrid: [
           { label: 'RENEWAL RULE', value: isPreserved ? 'Date Preserved (3-Mo Window)' : 'Reset' },
-          { label: 'PERMISSIBLE OPC WINDOW', value: opcStr },
+          { label: 'PERMISSIBLE OPC WINDOW', value: '05 NOV 2026 to 01 APR 2027' },
           { label: 'BASE VALIDITY', value: '12 Months (End of Month)' },
           { label: 'REFRESHER STATUS', value: 'Current (No Refresher Due)' }
         ],
@@ -281,26 +245,8 @@ export function normalizeOutput(toolType, rawResult) {
     }
 
     case 'recurrent': {
-      if (!rawResult) {
-        return {
-          statusBadge: 'AWAITING INPUT',
-          statusClass: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700',
-          headlineTitle: 'RECURRENT MODULE EXPIRY',
-          headlineValue: '--',
-          targetClockLabel: 'Qualification Module',
-          targetClockValue: 'SELECT CONDUCT DATE',
-          breakdownGrid: [
-            { label: 'CATEGORY', value: toolsState.recurrentCourseCat || 'Annual (12 Calendar Months)' },
-            { label: 'COMPLETED', value: '--' },
-            { label: 'NEW EXPIRY', value: '--' },
-            { label: 'RENEWAL METHOD', value: '3-Month Lookback Window' }
-          ],
-          auditNotes: ['CAAM CAD 6.9.4 & OM-D Chapter 2 Recurrent Standards'],
-          actions: []
-        };
-      }
-      const expiry = formatDateDDMMMYYYY(rawResult.newExpiryDate);
-      const courseName = rawResult.name || toolsState.recurrentCourseName || 'Line Check (LC)';
+      const expiry = rawResult ? formatDateDDMMMYYYY(rawResult.newExpiryDate) : '31 DEC 2026';
+      const courseName = rawResult ? (rawResult.name || toolsState.recurrentCourseName) : 'Line Check (LC)';
       return {
         statusBadge: 'VALID / CLEARED',
         statusClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
@@ -309,8 +255,8 @@ export function normalizeOutput(toolType, rawResult) {
         targetClockLabel: 'Qualification Module',
         targetClockValue: String(courseName).toUpperCase(),
         breakdownGrid: [
-          { label: 'CATEGORY', value: rawResult.category || toolsState.recurrentCourseCat || 'Annual (12 Calendar Months)' },
-          { label: 'COMPLETED', value: rawResult.completionDate ? formatDateDDMMMYYYY(rawResult.completionDate) : '--' },
+          { label: 'CATEGORY', value: rawResult ? (rawResult.category || toolsState.recurrentCourseCat) : 'Annual (12 Calendar Months)' },
+          { label: 'COMPLETED', value: rawResult && rawResult.completionDate ? formatDateDDMMMYYYY(rawResult.completionDate) : '15 DEC 2025' },
           { label: 'NEW EXPIRY', value: expiry },
           { label: 'RENEWAL METHOD', value: '3-Month Lookback Window' }
         ],
@@ -320,27 +266,9 @@ export function normalizeOutput(toolType, rawResult) {
     }
 
     case 'recency': {
-      if (!rawResult) {
-        return {
-          statusBadge: 'AWAITING INPUT',
-          statusClass: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700',
-          headlineTitle: '90-DAY LANDING RECENCY',
-          headlineValue: '--',
-          targetClockLabel: 'Minimum Passenger Currency',
-          targetClockValue: '3 PF Take-Offs & Landings in 90 Days',
-          breakdownGrid: [
-            { label: 'DAY LANDINGS', value: '0 / 3' },
-            { label: 'NIGHT LANDINGS', value: '0 / 1' },
-            { label: 'ANCHOR DATE (3RD)', value: '--' },
-            { label: 'RECENCY EXPIRY', value: '--' }
-          ],
-          auditNotes: ['CAAM CAD 1 / OM-A Section 7.1 Passenger Currency'],
-          actions: []
-        };
-      }
-      const dayCount = rawResult.dayCount || 0;
-      const nightCount = rawResult.nightCount || 0;
-      const isCompliant = rawResult.isCompliant;
+      const dayCount = rawResult ? rawResult.dayCount : 3;
+      const nightCount = rawResult ? rawResult.nightCount : 1;
+      const isCompliant = rawResult ? rawResult.isCompliant : (dayCount >= 3 && nightCount >= 1);
       return {
         statusBadge: isCompliant ? 'CURRENCY MET' : 'RECENCY LAPSED',
         statusClass: isCompliant ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300',
@@ -360,40 +288,22 @@ export function normalizeOutput(toolType, rawResult) {
     }
 
     case 'standby': {
-      if (!rawResult) {
-        return {
-          statusBadge: 'AWAITING INPUT',
-          statusClass: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700',
-          headlineTitle: 'NET PERMISSIBLE FDP',
-          headlineValue: '--:--',
-          targetClockLabel: 'Standby End Cutoff',
-          targetClockValue: '--:-- UTC',
-          breakdownGrid: [
-            { label: 'STANDBY DURATION', value: '--:--' },
-            { label: 'FDP DEDUCTION', value: '--:--' },
-            { label: 'CASE TYPE', value: 'Case A (<6h)' },
-            { label: 'BASE MAX FDP', value: '13:00 Hours' }
-          ],
-          auditNotes: ['CAAM CAD 1901 Section 2.15 Standby Rules'],
-          actions: []
-        };
-      }
-      const isCaseB = rawResult.caseType === 'CASE_B' || rawResult.isCaseB;
-      const fdp = rawResult.netFdpFormatted || rawResult.allowableFdpFormatted || rawResult.netFdp || '--:--';
+      const isCaseB = rawResult ? (rawResult.caseType === 'CASE_B' || rawResult.isCaseB) : false;
+      const fdp = rawResult ? (rawResult.netFdpFormatted || rawResult.allowableFdpFormatted || rawResult.netFdp) : '13:00 HOURS';
       return {
         statusBadge: isCaseB ? 'CASE B (REDUCED)' : 'CASE A (STANDARD)',
         statusClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
         headlineTitle: 'NET PERMISSIBLE FDP',
         headlineValue: fdp,
         targetClockLabel: 'Standby End Cutoff',
-        targetClockValue: rawResult.cutoffTimestampUtc || '--:-- UTC',
+        targetClockValue: rawResult && rawResult.cutoffTimestampUtc ? rawResult.cutoffTimestampUtc : '14:00 UTC',
         breakdownGrid: [
-          { label: 'STANDBY DURATION', value: rawResult.standbyDurationFormatted || '--:--' },
-          { label: 'FDP DEDUCTION', value: rawResult.deductionFormatted || '--:--' },
+          { label: 'STANDBY DURATION', value: rawResult && rawResult.standbyDurationFormatted ? rawResult.standbyDurationFormatted : '04h 00m' },
+          { label: 'FDP DEDUCTION', value: rawResult && rawResult.deductionFormatted ? rawResult.deductionFormatted : '00h 00m' },
           { label: 'CASE TYPE', value: isCaseB ? 'Case B (>=6h)' : 'Case A (<6h)' },
           { label: 'BASE MAX FDP', value: '13:00 Hours' }
         ],
-        auditNotes: ['CAAM CAD 1901 Section 2.15 Standby Rules'],
+        auditNotes: ['CAAM CAD 1901 Section 2.11 Standby FDP Adjustments'],
         actions: [
           { type: 'pipeline-fdp', label: 'Apply To Max FDP Calculator' }
         ]
@@ -401,47 +311,19 @@ export function normalizeOutput(toolType, rawResult) {
     }
 
     case 'max-fdp': {
-      if (!rawResult) {
-        return {
-          statusBadge: 'AWAITING INPUT',
-          statusClass: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700',
-          headlineTitle: 'MAX ALLOWABLE FDP',
-          headlineValue: '--:--',
-          targetClockLabel: 'Latest On-Chocks Cutoff',
-          targetClockValue: '--:-- UTC',
-          breakdownGrid: [
-            { label: 'BASE FDP', value: '--:--' },
-            { label: 'RELIEF CREDIT', value: 'None' },
-            { label: 'SPLIT CREDIT', value: 'None' },
-            { label: 'MAX DISCRETION', value: '+02:00 Hours' }
-          ],
-          auditNotes: ['CAAM CAD 1901 Table A/B & OM-A Section 7.5'],
-          actions: []
-        };
-      }
-      const isDiscretionNeeded = rawResult.isDiscretionTriggered || rawResult.exceedsMaxFdp || rawResult.isDiscretionRequired;
-      const isProhibited = rawResult.isProhibited || rawResult.isLapsed;
-      let badgeText = 'CLEARED';
-      let badgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300';
-      if (isProhibited) {
-        badgeText = 'PROHIBITED';
-        badgeClass = 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300';
-      } else if (isDiscretionNeeded) {
-        badgeText = 'DISCRETION EXERCISED (+' + String(rawResult.discretionMinutesUsed || 45) + 'm)';
-        badgeClass = 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300';
-      }
-      const fdpVal = rawResult.finalMaxPermissibleFDPFormatted || rawResult.maxFdpFormatted || rawResult.maxFdp || '--:--';
+      const isDiscretionNeeded = rawResult ? (rawResult.isDiscretionTriggered || rawResult.exceedsMaxFdp || rawResult.isDiscretionRequired) : false;
+      const fdpVal = rawResult ? (rawResult.finalMaxPermissibleFDPFormatted || rawResult.maxFdpFormatted || rawResult.maxFdp) : '13:00 HOURS';
       return {
-        statusBadge: badgeText,
-        statusClass: badgeClass,
+        statusBadge: isDiscretionNeeded ? 'DISCRETION EXERCISED' : 'CLEARED',
+        statusClass: isDiscretionNeeded ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
         headlineTitle: 'MAX ALLOWABLE FDP',
         headlineValue: fdpVal,
         targetClockLabel: 'Latest On-Chocks Cutoff',
-        targetClockValue: rawResult.cutoffTimestampUTC || '--:-- UTC',
+        targetClockValue: rawResult && rawResult.cutoffTimestampUTC ? rawResult.cutoffTimestampUTC : '13:15 UTC',
         breakdownGrid: [
-          { label: 'BASE FDP', value: rawResult.baseAllowableFDPFormatted || '--:--' },
-          { label: 'RELIEF CREDIT', value: rawResult.bunkCreditFormatted || 'None' },
-          { label: 'SPLIT CREDIT', value: rawResult.splitCreditFormatted || 'None' },
+          { label: 'BASE FDP', value: rawResult && rawResult.baseAllowableFDPFormatted ? rawResult.baseAllowableFDPFormatted : '13:00 Hours' },
+          { label: 'RELIEF CREDIT', value: rawResult && rawResult.bunkCreditFormatted ? rawResult.bunkCreditFormatted : 'None' },
+          { label: 'SPLIT CREDIT', value: rawResult && rawResult.splitCreditFormatted ? rawResult.splitCreditFormatted : 'None' },
           { label: 'MAX DISCRETION', value: '+02:00 Hours' }
         ],
         auditNotes: ['CAAM CAD 1901 Table A/B & OM-A Section 7.5'],
@@ -453,35 +335,17 @@ export function normalizeOutput(toolType, rawResult) {
     }
 
     case 'pre-flight-rest': {
-      if (!rawResult) {
-        return {
-          statusBadge: 'AWAITING INPUT',
-          statusClass: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700',
-          headlineTitle: 'MANDATORY MINIMUM REST',
-          headlineValue: '--:--',
-          targetClockLabel: 'Minimum Rest Completion',
-          targetClockValue: '--:-- UTC',
-          breakdownGrid: [
-            { label: 'PRECEDING DUTY', value: '-- Hours' },
-            { label: 'LOCATION', value: 'Home Base' },
-            { label: 'BASE REST', value: '12:00 Hours' },
-            { label: 'OUTSTATION ADD', value: '00:00 Hours' }
-          ],
-          auditNotes: ['CAAM CAD 1901 Section 2.14 & OM-A Section 7.5.12'],
-          actions: []
-        };
-      }
-      const isReduced = rawResult.isRestReduced;
-      const restVal = rawResult.finalRequiredRestFormatted || rawResult.minRestFormatted || '--:--';
+      const isReduced = rawResult ? rawResult.isRestReduced : false;
+      const restVal = rawResult ? (rawResult.finalRequiredRestFormatted || rawResult.minRestFormatted) : '12:00 HOURS';
       return {
         statusBadge: isReduced ? 'REDUCED REST' : 'STANDARD REST',
         statusClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
         headlineTitle: 'MANDATORY MINIMUM REST',
         headlineValue: restVal,
         targetClockLabel: 'Minimum Rest Completion',
-        targetClockValue: rawResult.restCompletionTimeUtc || '--:-- UTC',
+        targetClockValue: rawResult && rawResult.restCompletionTimeUtc ? rawResult.restCompletionTimeUtc : '20:15 UTC',
         breakdownGrid: [
-          { label: 'PRECEDING DUTY', value: rawResult.precedingDutyHours ? String(rawResult.precedingDutyHours) + ' Hours' : '-- Hours' },
+          { label: 'PRECEDING DUTY', value: (rawResult && rawResult.precedingDutyHours) ? String(rawResult.precedingDutyHours) + ' Hours' : '10:00 Hours' },
           { label: 'LOCATION', value: 'Home Base' },
           { label: 'BASE REST', value: '12:00 Hours' },
           { label: 'OUTSTATION ADD', value: '00:00 Hours' }
@@ -494,26 +358,8 @@ export function normalizeOutput(toolType, rawResult) {
     }
 
     case 'cumulative': {
-      if (!rawResult) {
-        return {
-          statusBadge: 'AWAITING INPUT',
-          statusClass: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700',
-          headlineTitle: 'CUMULATIVE DUTY BUDGET',
-          headlineValue: '--:-- / --:--',
-          targetClockLabel: '7-Day Rolling Budget',
-          targetClockValue: '--:-- Hours Margin Remaining',
-          breakdownGrid: [
-            { label: '7-DAY DUTY', value: '--:-- / 55h' },
-            { label: '14-DAY DUTY', value: '--:-- / 95h' },
-            { label: '28-DAY FLYING', value: '--:-- / 100h' },
-            { label: 'CALENDAR YEAR', value: '--:-- / 900h' }
-          ],
-          auditNotes: ['CAAM CAD 1901 Cumulative Flying & Duty Limits'],
-          actions: []
-        };
-      }
-      const isOverLimit = rawResult.isExceeded || rawResult.isOverCap;
-      const duty7Val = rawResult.duty7Days ? (rawResult.duty7Days.currentFormatted || rawResult.duty7Days) : '--:-- / 55:00 HOURS';
+      const isOverLimit = rawResult ? (rawResult.isExceeded || rawResult.isOverCap) : false;
+      const duty7Val = (rawResult && rawResult.duty7Days) ? String(rawResult.duty7Days.currentFormatted || rawResult.duty7Days) + ' / 55:00 HOURS' : '32:15 / 55:00 HOURS';
       return {
         statusBadge: isOverLimit ? 'CAP EXCEEDED' : 'ROSTER CLEARED',
         statusClass: isOverLimit ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
@@ -533,36 +379,16 @@ export function normalizeOutput(toolType, rawResult) {
     }
 
     case 'caam-ftl1': {
-      if (!rawResult || (!rawResult.flightNo && !rawResult.acReg)) {
-        return {
-          statusBadge: 'AWAITING INPUT',
-          statusClass: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700',
-          headlineTitle: 'CAAM/BOP/FTL/1 REPORT',
-          headlineValue: 'FLIGHT --',
-          targetClockLabel: 'Official Discretion Form',
-          targetClockValue: 'Awaiting Flight Details',
-          breakdownGrid: [
-            { label: 'FLIGHT NO', value: '--' },
-            { label: 'AIRCRAFT', value: '--' },
-            { label: 'DISCRETION', value: '--' },
-            { label: 'COMMANDER', value: '--' }
-          ],
-          auditNotes: ['CAAM CAD 1901 Official Flight Discretion Report'],
-          actions: [
-            { type: 'generate-pdf', label: 'Download Official CAAM PDF' }
-          ]
-        };
-      }
       return {
         statusBadge: 'REPORT READY',
         statusClass: 'bg-sky-100 text-sky-800 dark:bg-sky-950/80 dark:text-sky-300',
         headlineTitle: 'CAAM/BOP/FTL/1 REPORT',
-        headlineValue: 'FLIGHT ' + (rawResult.flightNo || '--'),
+        headlineValue: 'FLIGHT MH123',
         targetClockLabel: 'Official Discretion Form',
         targetClockValue: 'CAAM Official FTL Document',
         breakdownGrid: [
-          { label: 'FLIGHT NO', value: rawResult.flightNo || '--' },
-          { label: 'AIRCRAFT', value: rawResult.acReg || '--' },
+          { label: 'FLIGHT NO', value: 'MH123' },
+          { label: 'AIRCRAFT', value: '9M-MTB' },
           { label: 'DISCRETION', value: '+00:45 Exercised' },
           { label: 'COMMANDER', value: 'CAPT AHMAD RAZALI' }
         ],
@@ -575,8 +401,8 @@ export function normalizeOutput(toolType, rawResult) {
 
     default:
       return {
-        statusBadge: 'AWAITING INPUT',
-        statusClass: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700',
+        statusBadge: 'READY',
+        statusClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
         headlineTitle: 'CALCULATOR',
         headlineValue: '--:--',
         targetClockLabel: 'Target Clock',
@@ -588,8 +414,9 @@ export function normalizeOutput(toolType, rawResult) {
   }
 }
 
-
-
+/**
+ * Master Tool Calculation Dispatcher
+ */
 export function runToolCalculation(toolType, inputData = {}) {
   let rawResult = null;
 
@@ -1024,84 +851,20 @@ export function resetToolInputs(toolId) {
   if (cleanId === 'preflight') cleanId = 'pre-flight-rest';
   if (cleanId === 'ftl1') cleanId = 'caam-ftl1';
 
-  switch (cleanId) {
-    case 'medical': {
-      const examDate = document.getElementById('input-med-exam-date');
-      const licType = document.getElementById('input-med-license-type');
-      const ageBracket = document.getElementById('input-med-age-bracket');
-      if (examDate) examDate.value = '';
-      if (licType) licType.value = 'ATPL';
-      if (ageBracket) ageBracket.value = '40_TO_59';
-      break;
-    }
-    case 'ppc': {
-      const conductDate = document.getElementById('input-ppc-conduct-date');
-      const expiryDate = document.getElementById('input-ppc-expiry-date');
-      if (conductDate) conductDate.value = '';
-      if (expiryDate) expiryDate.value = '';
-      break;
-    }
-    case 'recurrent': {
-      const courseHidden = document.getElementById('input-recurrent-course');
-      const courseLabel = document.getElementById('recurrent-course-label');
-      const courseSublabel = document.getElementById('recurrent-course-sublabel');
-      const conductDate = document.getElementById('input-recurrent-conduct-date');
-      if (courseHidden) courseHidden.value = 'LC';
-      if (courseLabel) courseLabel.innerText = 'Line Check (LC)';
-      if (courseSublabel) courseSublabel.innerText = 'Annual (12 Calendar Months)';
-      if (conductDate) conductDate.value = '';
-      toolsState.recurrentCourseKey = 'LC';
-      toolsState.recurrentCourseName = 'Line Check (LC)';
-      toolsState.recurrentCourseCat = 'Annual (12 Calendar Months)';
-      break;
-    }
-    case 'recency': {
-      const dayEl = document.getElementById('input-recency-day');
-      const nightEl = document.getElementById('input-recency-night');
-      if (dayEl) dayEl.value = '0';
-      if (nightEl) nightEl.value = '0';
-      break;
-    }
-    case 'standby': {
-      const stbyStart = document.getElementById('input-stby-start-time');
-      const stbyReport = document.getElementById('input-stby-report-time');
-      if (stbyStart) stbyStart.value = '06:00';
-      if (stbyReport) stbyReport.value = '10:00';
-      setStandbyLocation('HOME');
-      break;
-    }
-    case 'max-fdp': {
-      const reportTime = document.getElementById('input-fdp-report-time');
-      const sectors = document.getElementById('input-fdp-sectors');
-      const acclimatised = document.getElementById('input-fdp-acclimatised');
-      if (reportTime) reportTime.value = '06:00';
-      if (sectors) sectors.value = '2';
-      if (acclimatised) acclimatised.checked = true;
-      break;
-    }
-    case 'pre-flight-rest': {
-      const precDuty = document.getElementById('input-rest-preceding-duty');
-      const locType = document.getElementById('input-rest-location');
-      if (precDuty) precDuty.value = '10';
-      if (locType) locType.value = 'HOME';
-      break;
-    }
-    case 'cumulative': {
-      const cumDuty = document.getElementById('input-cum-duty-7d');
-      const cumFlt = document.getElementById('input-cum-flight-28d');
-      if (cumDuty) cumDuty.value = '';
-      if (cumFlt) cumFlt.value = '';
-      break;
-    }
-    case 'caam-ftl1': {
-      const fltNo = document.getElementById('ftl1-flight-no');
-      const acReg = document.getElementById('ftl1-ac-reg');
-      if (fltNo) fltNo.value = '';
-      if (acReg) acReg.value = '';
-      break;
-    }
-    default:
-      break;
+  const cardKey = cleanId === 'max-fdp' ? 'maxfdp' : (cleanId === 'pre-flight-rest' ? 'preflight' : (cleanId === 'caam-ftl1' ? 'ftl1' : cleanId));
+  const cardEl = document.getElementById('tool-' + cardKey) || document.getElementById('tool-card-' + cardKey) || document.getElementById(toolId);
+
+  if (cardEl) {
+    const inputs = cardEl.querySelectorAll('input, select');
+    inputs.forEach(input => {
+      if (input.type === 'checkbox' || input.type === 'radio') {
+        input.checked = input.defaultChecked;
+      } else if (input.type === 'number') {
+        input.value = input.defaultValue || '0';
+      } else {
+        input.value = input.defaultValue || '';
+      }
+    });
   }
 
   if (cleanId) {
@@ -1111,7 +874,9 @@ export function resetToolInputs(toolId) {
   }
 }
 
-
+/**
+ * Tool #9 Discretion Wizard Modal Handlers
+ */
 export function openFtl1WizardModal() {
   const modal = document.getElementById('ftl1-wizard-modal');
   if (modal) modal.classList.remove('hidden');
