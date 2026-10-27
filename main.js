@@ -1,6 +1,6 @@
-// ./main.js (2710_R240) - CertiFly Application Shell & Decoupled Tools View Controller
+// ./main.js (2710_R243) - Fix Relative Import Path for toolsView.js
 
-import { renderToolsView } from './views/toolsView.js';
+import { renderToolsView } from './js/views/toolsView.js';
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, draftFtlEmail, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setMasterTimezone, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, openFtl1WizardModal, closeFtl1WizardModal, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
 
