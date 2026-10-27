@@ -71,7 +71,13 @@ export function initHeroCardFlip() {
   containerEl.addEventListener('click', () => {
     isHeroFlipped = !isHeroFlipped;
 
-    if (isAnimeAvailable()) {
+    if (toBack) {
+    innerEl.classList.add('rotate-y-180');
+  } else {
+    innerEl.classList.remove('rotate-y-180');
+  }
+
+  if (isAnimeAvailable()) {
       runAnime({
         targets: cardEl,
         rotateY: isHeroFlipped ? 180 : 0,
@@ -310,6 +316,12 @@ export function animate3DCardFlip(toolId, toBack = true) {
   const innerEl = cardEl.querySelector('.card-3d-inner');
   if (!innerEl) return;
 
+  if (toBack) {
+    innerEl.classList.add('rotate-y-180');
+  } else {
+    innerEl.classList.remove('rotate-y-180');
+  }
+
   if (isAnimeAvailable()) {
     runAnime({
       targets: innerEl,
@@ -358,6 +370,12 @@ export function animateVerdictPop(toolId) {
 export function animateResetPulse(toolId) {
   const cardEl = document.getElementById(`tool-card-${toolId}`);
   if (!cardEl) return;
+
+  if (toBack) {
+    innerEl.classList.add('rotate-y-180');
+  } else {
+    innerEl.classList.remove('rotate-y-180');
+  }
 
   if (isAnimeAvailable()) {
     runAnime({
