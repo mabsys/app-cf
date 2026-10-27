@@ -1,4 +1,4 @@
-// js/animations.js (2010_R186) - CertiFly™ Anime.js Universal Animation Engine Controller (v3 & v4 Compatible)
+// js/animations.js (2710_R251) - CertiFly™ Anime.js Universal Animation Engine & 3D Tools Controller
 
 /**
  * Check if Anime.js library is loaded globally
@@ -294,6 +294,81 @@ export function animateOverviewDashboard(animData = {}) {
   animatePassportAndElpBars();
 }
 
+/* ==========================================================================
+   3D TOOLS VIEW ANIME.JS ANIMATION ENGINE SUITE
+   ========================================================================== */
+
+/**
+ * 6. 3D Card 180° Y-Axis Flip Controller
+ * @param {string} toolId - Target tool ID (e.g. 'medical', 'ppc', 'max-fdp')
+ * @param {boolean} toBack - True to reveal verdict back face, False for front input
+ */
+export function animate3DCardFlip(toolId, toBack = true) {
+  const cardEl = document.getElementById(`tool-card-${toolId}`);
+  if (!cardEl) return;
+
+  const innerEl = cardEl.querySelector('.card-3d-inner');
+  if (!innerEl) return;
+
+  if (isAnimeAvailable()) {
+    runAnime({
+      targets: innerEl,
+      rotateY: toBack ? 180 : 0,
+      duration: 550,
+      easing: 'easeOutBack(1.1)',
+      complete: () => {
+        if (toBack) {
+          animateVerdictPop(toolId);
+        }
+      }
+    });
+  } else {
+    innerEl.style.transform = `rotateY(${toBack ? 180 : 0}deg)`;
+  }
+}
+
+/**
+ * 7. 4-Tier Verdict Pop & Cascade Stagger
+ * @param {string} toolId - Target tool ID
+ */
+export function animateVerdictPop(toolId) {
+  if (!isAnimeAvailable()) return;
+
+  const backContainer = document.getElementById(`output-back-content-${toolId}`);
+  if (!backContainer) return;
+
+  const tiers = backContainer.querySelectorAll('> div > div, > div > p');
+  if (!tiers || tiers.length === 0) return;
+
+  runAnime({
+    targets: tiers,
+    scale: [0.92, 1],
+    opacity: [0, 1],
+    translateY: [8, 0],
+    delay: runStagger(60, { start: 20 }),
+    duration: 400,
+    easing: 'easeOutCubic'
+  });
+}
+
+/**
+ * 8. Card Input Reset Pulse Animation
+ * @param {string} toolId - Target tool ID
+ */
+export function animateResetPulse(toolId) {
+  const cardEl = document.getElementById(`tool-card-${toolId}`);
+  if (!cardEl) return;
+
+  if (isAnimeAvailable()) {
+    runAnime({
+      targets: cardEl,
+      scale: [1, 0.96, 1.02, 1],
+      duration: 320,
+      easing: 'easeInOutQuad'
+    });
+  }
+}
+
 // Global window fallback for non-module usage
 if (typeof window !== 'undefined') {
   window.CertiFlyAnimations = {
@@ -303,6 +378,9 @@ if (typeof window !== 'undefined') {
     animateLvoMarker,
     animateHistogramBars,
     animatePassportAndElpBars,
-    animateOverviewDashboard
+    animateOverviewDashboard,
+    animate3DCardFlip,
+    animateVerdictPop,
+    animateResetPulse
   };
 }
