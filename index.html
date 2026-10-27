@@ -1,4 +1,4 @@
-<!-- ./index.html (2710_R242) - CertiFly PWA Application Shell & Core Layout -->
+<!-- ./index.html (2710_R248) - CertiFly PWA Application Shell & Core Layout -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -987,7 +987,9 @@ if ('serviceWorker' in navigator) {
             </div>
 
             <!-- TOOLS VIEW (FLIGHT DECK COMPLIANCE TOOLS) -->
-            <div id="tools-view-container" class="w-full h-full"></div>
+            <div id="tools-view" class="app-view hidden w-full h-full">
+                <div id="tools-view-container" class="w-full h-full"></div>
+            </div>
 
         </main>
 
@@ -1220,15 +1222,14 @@ if ('serviceWorker' in navigator) {
 
     <script src="js/vendor/anime.min.js"></script>
     <script type="module" src="main.js"></script>
-        <script>
-  if (/[?&]debug=1/.test(location.search)) {
-    var s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/eruda';
-    s.onload = function () { eruda.init(); };
-    document.head.appendChild(s);
-  }
-</script>
-
+    <script>
+        if (/[?&]debug=1/.test(location.search)) {
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/eruda';
+        s.onload = function () { eruda.init(); };
+        document.head.appendChild(s);
+        }
+    </script>
 </body>
 
 </html>
