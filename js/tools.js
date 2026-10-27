@@ -1,4 +1,4 @@
-// ./js/tools.js (2710_R252) - Decoupled 3D Vertical Reel, 2-Faced Card Controller & 4-Tier Output Normalizer
+// ./js/tools.js (2710_R253) - Decoupled 3D Vertical Reel, 2-Faced Card Controller & 4-Tier Output Normalizer
 /* ==========================================================================
    CertiFly - Tools Controller ES Module (tools.js - R251)
    Decoupled 3D Vertical Reel, 2-Faced Card Controller & 4-Tier Output Normalizer
@@ -608,23 +608,31 @@ export function resetToolInputs(toolId) {
   switch (cleanId) {
     case 'medical': {
       const examDate = document.getElementById('input-med-exam-date');
+      const examDisp = document.getElementById('input-med-exam-date-display');
       const licType = document.getElementById('input-med-license-type');
       const ageBracket = document.getElementById('input-med-age-bracket');
       if (examDate) examDate.value = '';
+      if (examDisp) examDisp.innerText = 'Select Date';
       if (licType) licType.value = 'ATPL';
       if (ageBracket) ageBracket.value = '40_TO_59';
       break;
     }
     case 'ppc': {
       const conductDate = document.getElementById('input-ppc-conduct-date');
+      const conductDisp = document.getElementById('input-ppc-conduct-date-display');
       const expiryDate = document.getElementById('input-ppc-expiry-date');
+      const expiryDisp = document.getElementById('input-ppc-expiry-date-display');
       if (conductDate) conductDate.value = '';
+      if (conductDisp) conductDisp.innerText = 'Select Date';
       if (expiryDate) expiryDate.value = '';
+      if (expiryDisp) expiryDisp.innerText = 'Select Date';
       break;
     }
     case 'recurrent': {
       const conductDate = document.getElementById('input-recurrent-conduct-date');
+      const conductDisp = document.getElementById('input-recurrent-conduct-date-display');
       if (conductDate) conductDate.value = '';
+      if (conductDisp) conductDisp.innerText = 'Select Date';
       break;
     }
     case 'recency': {
@@ -809,6 +817,10 @@ export function setEfbDatePreset(presetKey) {
     d.setUTCDate(d.getUTCDate() + 30);
   } else if (presetKey === 'plus90') {
     d.setUTCDate(d.getUTCDate() + 90);
+  } else if (presetKey === '+1y' || presetKey === 'plus1y') {
+    d.setUTCFullYear(d.getUTCFullYear() + 1);
+  } else if (presetKey === '-1y' || presetKey === 'minus1y') {
+    d.setUTCFullYear(d.getUTCFullYear() - 1);
   }
 
   const isoVal = d.toISOString().split('T')[0];
