@@ -1,4 +1,4 @@
-// ./js/views/toolsView.js (2710_R250) - Decoupled 3D Vertical Reel & 2-Faced Card Renderer
+// ./js/views/toolsView.js (2710_R253) - Decoupled 3D Vertical Reel & 2-Faced Card Renderer
 /* ==========================================================================
    CertiFly - Tools View ES Module (toolsView.js - R250)
    Decoupled 3D Vertical Reel & 2-Faced Card Renderer
@@ -306,7 +306,11 @@ function renderMedicalCard() {
   const inputs = `
     <div>
       <label class="block text-[11px] font-semibold text-slate-400 mb-1">Last Exam Date</label>
-      <input type="date" id="input-med-exam-date" class="w-full px-3 py-2 rounded-xl bg-slate-800 text-white text-xs border border-slate-700 focus:outline-none focus:border-sky-500 font-mono">
+      <button type="button" onclick="openEfbDatePicker('input-med-exam-date', 'LAST EXAM DATE')" class="w-full px-3 py-2 rounded-xl bg-slate-800 text-left border border-slate-700 hover:border-sky-500/50 transition-all flex items-center justify-between cursor-pointer">
+        <span id="input-med-exam-date-display" class="text-xs font-mono font-bold text-white">Select Date</span>
+        <svg class="w-4 h-4 text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      </button>
+      <input type="hidden" id="input-med-exam-date" value="">
     </div>
     <div>
       <label class="block text-[11px] font-semibold text-slate-400 mb-1">License Type</label>
@@ -332,11 +336,19 @@ function renderPpcCard() {
   const inputs = `
     <div>
       <label class="block text-[11px] font-semibold text-slate-400 mb-1">Last Conduct Date</label>
-      <input type="date" id="input-ppc-conduct-date" class="w-full px-3 py-2 rounded-xl bg-slate-800 text-white text-xs border border-slate-700 focus:outline-none focus:border-sky-500 font-mono">
+      <button type="button" onclick="openEfbDatePicker('input-ppc-conduct-date', 'LAST CONDUCT DATE')" class="w-full px-3 py-2 rounded-xl bg-slate-800 text-left border border-slate-700 hover:border-sky-500/50 transition-all flex items-center justify-between cursor-pointer">
+        <span id="input-ppc-conduct-date-display" class="text-xs font-mono font-bold text-white">Select Date</span>
+        <svg class="w-4 h-4 text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      </button>
+      <input type="hidden" id="input-ppc-conduct-date" value="">
     </div>
     <div>
       <label class="block text-[11px] font-semibold text-slate-400 mb-1">Current Expiry Date (Optional)</label>
-      <input type="date" id="input-ppc-expiry-date" class="w-full px-3 py-2 rounded-xl bg-slate-800 text-white text-xs border border-slate-700 focus:outline-none focus:border-sky-500 font-mono">
+      <button type="button" onclick="openEfbDatePicker('input-ppc-expiry-date', 'CURRENT EXPIRY DATE')" class="w-full px-3 py-2 rounded-xl bg-slate-800 text-left border border-slate-700 hover:border-sky-500/50 transition-all flex items-center justify-between cursor-pointer">
+        <span id="input-ppc-expiry-date-display" class="text-xs font-mono font-bold text-white">Select Date</span>
+        <svg class="w-4 h-4 text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      </button>
+      <input type="hidden" id="input-ppc-expiry-date" value="">
     </div>
   `;
   return renderCardShell('ppc', 'PPC / LPC Validity', 'PPC', inputs);
@@ -357,7 +369,11 @@ function renderRecurrentCard() {
     </div>
     <div>
       <label class="block text-[11px] font-semibold text-slate-400 mb-1">Completion Date</label>
-      <input type="date" id="input-recurrent-conduct-date" class="w-full px-3 py-2 rounded-xl bg-slate-800 text-white text-xs border border-slate-700 focus:outline-none focus:border-sky-500 font-mono">
+      <button type="button" onclick="openEfbDatePicker('input-recurrent-conduct-date', 'COMPLETION DATE')" class="w-full px-3 py-2 rounded-xl bg-slate-800 text-left border border-slate-700 hover:border-sky-500/50 transition-all flex items-center justify-between cursor-pointer">
+        <span id="input-recurrent-conduct-date-display" class="text-xs font-mono font-bold text-white">Select Date</span>
+        <svg class="w-4 h-4 text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      </button>
+      <input type="hidden" id="input-recurrent-conduct-date" value="">
     </div>
   `;
   return renderCardShell('recurrent', 'Recurrent Module', 'Recurrent', inputs);
