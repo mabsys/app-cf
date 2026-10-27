@@ -1,6 +1,6 @@
-// ui.js (2410_R212) - CertiFly Navigation, View State, EFB Date Formatting & Tool Calculations
+// ./js/ui.js (2710_R247) - CertiFly View Controller & App State Management
 
-import { initToolsModule, runToolCalculation, setToolsTab, getToolsState, getSectorCount, setSectorCount, draftFtlEmail } from './tools.js';
+import { initToolsModule, runToolCalculation, setToolsTab, getToolsState, getSectorCount, setSectorCount } from './tools.js';
 import { stopScanner, switchScanHubTab } from './scanner.js';
 import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData } from './storage.js';
 import { topbarHTML } from './components/topbar.js';
@@ -909,32 +909,7 @@ export function initToolsViewUI() {
 
   document.getElementById('btn-autofill-credentials')?.addEventListener('click', () => autoFillFromCredentials());
 
-  const actionsContainer = document.getElementById('out-actions-container');
-  if (actionsContainer) {
-    actionsContainer.addEventListener('click', (e) => {
-      const btn = e.target.closest('button[data-action]');
-      if (!btn) return;
-      const action = btn.dataset.action;
 
-      if (action === 'discretion') {
-        switchTier1('fdp');
-        switchSubTab('caam-ftl1');
-      } else if (action === 'email') {
-        const report = document.getElementById('fdp-report-time')?.value || '08:00';
-        const mailObj = draftFtlEmail({ flightNo: 'MH123', reportTime: report });
-        if (mailObj?.mailtoUrl) window.location.href = mailObj.mailtoUrl;
-      } else if (action === 'pipeline-rest') {
-        switchTier1('fdp');
-        switchSubTab('pre-flight-rest');
-      } else if (action === 'pipeline-cumulative') {
-        switchTier1('fdp');
-        switchSubTab('cumulative');
-      } else if (action === 'pipeline-fdp') {
-        switchTier1('fdp');
-        switchSubTab('max-fdp');
-      }
-    });
-  }
 
   switchTier1('validity');
 }
