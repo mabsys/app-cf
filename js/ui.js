@@ -1,6 +1,6 @@
-// ./js/ui.js (2710_R254) - CertiFly Navigation, View Controller & UI State
+// ./js/ui.js (2710_R258) - CertiFly Navigation, View Controller & UI State
 
-import { initToolsModule, runToolCalculation, setToolsTab, getToolsState, getSectorCount, setSectorCount, draftFtlEmail } from './tools.js';
+import { initToolsModule, runToolCalculation, setToolsTab, getToolsState, getSectorCount, setSectorCount } from './tools.js';
 import { stopScanner, switchScanHubTab } from './scanner.js';
 import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData } from './storage.js';
 import { topbarHTML } from './components/topbar.js';
@@ -661,7 +661,7 @@ if (typeof window !== 'undefined') {
 import { getProfileData, getAttestationData } from './storage.js';
 
 let activeToolsTier = 'validity'; // 'validity' | 'fdp'
-let activeToolsSubTab = 'medical'; // 'medical'|'ppc'|'recurrent'|'standby'|'max-fdp'|'pre-flight-rest'|'cumulative'|'caam-ftl1'
+let activeToolsSubTab = 'medical'; // 'medical'|'ppc'|'recurrent'|'standby'|'max-fdp'|'pre-flight-rest'|'cumulative'
 
 export function switchTier1(tier) {
   activeToolsTier = tier;
@@ -715,8 +715,8 @@ export function switchSubTab(subTab) {
     }
   });
 
-  const panes = ['medical', 'ppc', 'recurrent', 'standby', 'max-fdp', 'pre-flight-rest', 'cumulative', 'caam-ftl1'];
-  const toolCards = ['tool-medical', 'tool-ppc', 'tool-recurrent', 'tool-recency', 'tool-standby', 'tool-maxfdp', 'tool-preflight', 'tool-cumulative', 'tool-ftl1'];
+  const panes = ['medical', 'ppc', 'recurrent', 'standby', 'max-fdp', 'pre-flight-rest', 'cumulative'];
+  const toolCards = ['tool-medical', 'tool-ppc', 'tool-recurrent', 'tool-recency', 'tool-standby', 'tool-maxfdp', 'tool-preflight', 'tool-cumulative'];
   const cardMap = {
     'medical': 'tool-medical',
     'ppc': 'tool-ppc',
@@ -726,7 +726,6 @@ export function switchSubTab(subTab) {
     'max-fdp': 'tool-maxfdp',
     'pre-flight-rest': 'tool-preflight',
     'cumulative': 'tool-cumulative',
-    'caam-ftl1': 'tool-ftl1'
   };
 
   toolCards.forEach(cardId => {
@@ -808,12 +807,7 @@ export function dispatchActiveToolCalculation() {
           flight28d: document.getElementById('input-cum-flight-28d')?.value || ''
         };
         break;
-      case 'caam-ftl1':
-        inputData = {
-          flightNo: document.getElementById('ftl1-flight-no')?.value || '',
-          acReg: document.getElementById('ftl1-ac-reg')?.value || ''
-        };
-        break;
+
     }
   } catch (err) {
     console.warn("Error gathering inputs for " + toolType + ":", err);
@@ -859,7 +853,6 @@ export function initToolsViewUI() {
     'subtab-max-fdp': 'max-fdp',
     'subtab-pre-flight-rest': 'pre-flight-rest',
     'subtab-cumulative': 'cumulative',
-    'subtab-caam-ftl1': 'caam-ftl1'
   };
 
   Object.entries(subNavMap).forEach(([btnId, subTabKey]) => {
@@ -909,32 +902,7 @@ export function initToolsViewUI() {
 
   document.getElementById('btn-autofill-credentials')?.addEventListener('click', () => autoFillFromCredentials());
 
-  const actionsContainer = document.getElementById('out-actions-container');
-  if (actionsContainer) {
-    actionsContainer.addEventListener('click', (e) => {
-      const btn = e.target.closest('button[data-action]');
-      if (!btn) return;
-      const action = btn.dataset.action;
 
-      if (action === 'discretion') {
-        switchTier1('fdp');
-        switchSubTab('caam-ftl1');
-      } else if (action === 'email') {
-        const report = document.getElementById('fdp-report-time')?.value || '08:00';
-        const mailObj = draftFtlEmail({ flightNo: 'MH123', reportTime: report });
-        if (mailObj?.mailtoUrl) window.location.href = mailObj.mailtoUrl;
-      } else if (action === 'pipeline-rest') {
-        switchTier1('fdp');
-        switchSubTab('pre-flight-rest');
-      } else if (action === 'pipeline-cumulative') {
-        switchTier1('fdp');
-        switchSubTab('cumulative');
-      } else if (action === 'pipeline-fdp') {
-        switchTier1('fdp');
-        switchSubTab('max-fdp');
-      }
-    });
-  }
 
   switchTier1('validity');
 }
