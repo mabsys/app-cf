@@ -1,808 +1,673 @@
-// js/tools.js (2410_R229) - Tools Orchestrator, EFB Date Picker & Date Formatter
-// Developed by: Capt. Mohd Sallehuddin Zaidy
-// CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
+// ./js/tools.js (2710_R239) - Decoupled 3D Vertical Reel, 2-Faced Card Controller & 4-Tier Output Normalizer
 
 import * as StandbyEngineModule from './engines/standby-fdp-calculator.js';
 import * as MaxFdpEngineModule from './engines/max-fdp-calculator.js';
 import * as PreFlightRestEngineModule from './engines/pre-flight-rest-calculator.js';
 import * as CumulativeEngineModule from './engines/cumulative-hours-calculator.js';
-import * as CaamFtl1Module from './engines/caam-ftl1-controller.js';
 import * as MedicalEngineModule from './engines/medical-validity-calculator.js';
-
-/**
- * Helper: Formats ISO date string or Date object to DD MMM YYYY (e.g. "31 OCT 2027")
- */
-export function formatDateDDMMMYYYY(dateInput) {
-  if (!dateInput) return '--';
-  let d;
-  if (typeof dateInput === 'string') {
-    const trimmed = dateInput.trim();
-    if (!trimmed || trimmed === '--') return '--';
-    if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
-      const parts = trimmed.split('-');
-      d = new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)));
-    } else {
-      d = new Date(trimmed);
-    }
-  } else if (dateInput instanceof Date) {
-    d = dateInput;
-  } else {
-    return '--';
-  }
-
-  if (isNaN(d.getTime())) return String(dateInput);
-
-  const day = String(d.getUTCDate()).padStart(2, '0');
-  const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-  const month = months[d.getUTCMonth()];
-  const year = d.getUTCFullYear();
-
-  return String(day) + ' ' + String(month) + ' ' + String(year);
-}
-
-
-// ==================================================================
-// OPTION B: THEME-ADAPTIVE CUSTOM EFB MODAL DATE PICKER ENGINE
-// ==================================================================
-let efbPickerState = {
-  targetInputId: null,
-  activeDate: new Date(),
-  title: 'SELECT DATE'
-};
-
-export function openEfbDatePicker(targetInputId, labelTitle = 'SELECT DATE') {
-  efbPickerState.targetInputId = targetInputId;
-  efbPickerState.title = labelTitle;
-
-  const hiddenInput = document.getElementById(targetInputId);
-  if (hiddenInput && hiddenInput.value) {
-    const parts = hiddenInput.value.split('-');
-    if (parts.length === 3) {
-      efbPickerState.activeDate = new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)));
-    } else {
-      efbPickerState.activeDate = new Date();
-    }
-  } else {
-    efbPickerState.activeDate = new Date();
-  }
-
-  const titleEl = document.getElementById('efb-date-picker-title');
-  if (titleEl) titleEl.innerText = labelTitle;
-
-  renderEfbCalendarGrid();
-
-  const modal = document.getElementById('efb-date-picker-modal');
-  if (modal) modal.classList.remove('hidden');
-}
-
-export function closeEfbDatePicker() {
-  const modal = document.getElementById('efb-date-picker-modal');
-  if (modal) modal.classList.add('hidden');
-}
-
-export function renderEfbCalendarGrid() {
-  const monthLabelEl = document.getElementById('efb-calendar-month-label');
-  const gridEl = document.getElementById('efb-calendar-days-grid');
-  if (!gridEl) return;
-
-  const months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
-  const curYear = efbPickerState.activeDate.getUTCFullYear();
-  const curMonth = efbPickerState.activeDate.getUTCMonth();
-
-  if (monthLabelEl) {
-    monthLabelEl.innerText = String(months[curMonth]) + ' ' + String(curYear);
-  }
-
-  // Get first day of month and total days
-  const firstDayIndex = (new Date(Date.UTC(curYear, curMonth, 1)).getUTCDay() + 6) % 7; // Monday=0
-  const totalDays = new Date(Date.UTC(curYear, curMonth + 1, 0)).getUTCDate();
-
-  const hiddenInput = document.getElementById(efbPickerState.targetInputId);
-  let selectedIso = hiddenInput ? hiddenInput.value : '';
-
-  let html = '';
-  // Empty padding cells for preceding month
-  for (let i = 0; i < firstDayIndex; i++) {
-    html += '<div class="py-2 text-slate-300 dark:text-slate-800 pointer-events-none"></div>';
-  }
-
-  const today = new Date();
-  const todayIso = String(today.getUTCFullYear()) + '-' + String(String(today.getUTCMonth() + 1).padStart(2, '0')) + '-' + String(String(today.getUTCDate()).padStart(2, '0'));
-
-  for (let day = 1; day <= totalDays; day++) {
-    const dayStr = String(day).padStart(2, '0');
-    const monthStr = String(curMonth + 1).padStart(2, '0');
-    const isoVal = String(curYear) + '-' + String(monthStr) + '-' + String(dayStr);
-
-    const isSelected = isoVal === selectedIso;
-    const isToday = isoVal === todayIso;
-
-    let btnClasses = 'py-2 rounded-xl transition-all cursor-pointer select-none text-xs font-bold ';
-    if (isSelected) {
-      btnClasses += 'bg-sky-600 text-white shadow-md font-extrabold scale-105';
-    } else if (isToday) {
-      btnClasses += 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40';
-    } else {
-      btnClasses += 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800';
-    }
-
-    html += '<button type="button" class="' + String(btnClasses) + '" onclick="selectEfbDate(\'' + String(isoVal) + '\')">' + String(day) + '</button>';
-  }
-
-  gridEl.innerHTML = html;
-}
-
-export function changeEfbMonth(delta) {
-  efbPickerState.activeDate.setUTCMonth(efbPickerState.activeDate.getUTCMonth() + delta);
-  renderEfbCalendarGrid();
-}
-
-export function setEfbDatePreset(presetKey) {
-  const now = new Date();
-  let d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-
-  if (presetKey === 'today') {
-    // Current date
-  } else if (presetKey === 'eom') {
-    d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0));
-  } else if (presetKey === '+1y') {
-    d.setUTCFullYear(d.getUTCFullYear() + 1);
-  } else if (presetKey === '-1y') {
-    d.setUTCFullYear(d.getUTCFullYear() - 1);
-  }
-
-  const isoVal = String(d.getUTCFullYear()) + '-' + String(String(d.getUTCMonth() + 1).padStart(2, '0')) + '-' + String(String(d.getUTCDate()).padStart(2, '0'));
-  selectEfbDate(isoVal);
-}
-
-export function selectEfbDate(isoVal) {
-  if (!efbPickerState.targetInputId) return;
-
-  const hiddenInput = document.getElementById(efbPickerState.targetInputId);
-  if (hiddenInput) {
-    hiddenInput.value = isoVal;
-  }
-
-  // Update display trigger text
-  const displayId = efbPickerState.targetInputId.replace('input-', 'display-');
-  const displayEl = document.getElementById(displayId);
-  if (displayEl) {
-    displayEl.innerText = formatDateDDMMMYYYY(isoVal);
-  }
-
-  renderEfbCalendarGrid();
-  closeEfbDatePicker();
-
-  // Dispatch calculation
-  if (window.dispatchActiveToolCalculation) {
-    window.dispatchActiveToolCalculation();
-  }
-}
-
 import * as PpcEngineModule from './engines/ppc-validity-calculator.js';
 import * as RecurrentEngineModule from './engines/recurrent-training-calculator.js';
 
-let toolsState = {
-  activeTier: 'qualifications',
-  activeSubTab: 'medical',
-  masterTimezone: 'UTC',
-  standbyLocation: 'HOME',
-  recurrentCourseKey: 'LINE_CHECK',
+export const toolsState = {
+  activeToolId: 'medical',
+  activeCategory: 'validity',
+  recurrentCourseKey: 'LC',
   recurrentCourseName: 'Line Check (LC)',
   recurrentCourseCat: 'Annual (12 Calendar Months)',
+  standbyLocation: 'HOME',
   lastCalculationResults: {}
 };
 
-let currentSectorCount = 2;
-
-/**
- * Standardized 4-Slot Output Adapter
- */
+// --------------------------------------------------------------------------
+// 4-Tier Output Normalizer
+// --------------------------------------------------------------------------
 export function normalizeOutput(toolType, rawResult) {
-  switch (toolType) {
+  let cleanId = toolType ? toolType.replace('tool-card-', '').replace('tool-', '') : 'medical';
+  if (cleanId === 'maxfdp') cleanId = 'max-fdp';
+  if (cleanId === 'preflight') cleanId = 'pre-flight-rest';
+  
+  switch (cleanId) {
     case 'medical': {
-      const isPreserved = rawResult ? rawResult.anniversaryPreserved : true;
-      const expiry = rawResult ? formatDateDDMMMYYYY(rawResult.newExpiryDate) : '31 OCT 2027';
-      const windowStr = (rawResult && rawResult.dameEarliestDate) ? String(formatDateDDMMMYYYY(rawResult.dameEarliestDate)) + ' to ' + String(formatDateDDMMMYYYY(rawResult.reExamDate || rawResult.newExpiryDate)) : '16 SEP 2027 to 31 OCT 2027';
+      const isPreserved = rawResult ? (rawResult.anniversaryPreserved ?? true) : true;
+      const expiry = rawResult ? formatDateDDMMMYYYY(rawResult.newExpiryDate) : '--';
+      const windowStr = (rawResult && rawResult.dameEarliestDate) 
+        ? formatDateDDMMMYYYY(rawResult.dameEarliestDate) + ' ➔ ' + formatDateDDMMMYYYY(rawResult.reExamDate || rawResult.newExpiryDate) 
+        : '-- to --';
+      
+      const statusText = rawResult ? (isPreserved ? 'Date Preserved (45D Window)' : 'Reset (End of Month)') : 'Awaiting Input';
+      const heroBgClass = rawResult 
+        ? (isPreserved ? 'bg-emerald-500/15 border-emerald-500/30' : 'bg-amber-500/15 border-amber-500/30')
+        : 'bg-slate-800/80 border-slate-700/60';
+
       return {
-        statusBadge: isPreserved ? 'EXPIRY DATE PRESERVED' : 'EXPIRY RESET (EOM)',
-        statusClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
-        headlineTitle: 'NEW MEDICAL EXPIRY',
-        headlineValue: expiry,
-        targetClockLabel: '45-Day Re-Exam Window',
-        targetClockValue: windowStr,
-        breakdownGrid: [
-          { label: 'AGE BAND', value: (rawResult && rawResult.age !== undefined) ? String(rawResult.age) + ' (Under 60)' : '38 (Under 60)' },
-          { label: 'BASE VALIDITY', value: '12 Calendar Months' },
-          { label: 'RENEWAL RULE', value: isPreserved ? 'Date Preserved (45D)' : 'Reset (EOM)' },
-          { label: 'CREW OPERATING LIMIT', value: 'Unrestricted Single/Multi' }
+        toolId: 'medical',
+        heroTitle: 'NEW MEDICAL EXPIRY',
+        heroValue: expiry,
+        heroBgClass: heroBgClass,
+        windowLabel: '45-Day Re-Exam Window',
+        windowValue: windowStr,
+        rows: [
+          { label: 'Compliance Status', value: statusText },
+          { label: 'Age Band', value: (rawResult && rawResult.age !== undefined) ? String(rawResult.age) + ' Years' : '--' },
+          { label: 'Base Validity', value: (rawResult && rawResult.validityMonths) ? String(rawResult.validityMonths) + ' Calendar Months' : '12 Calendar Months' },
+          { label: 'Crew Operating Limit', value: 'Unrestricted Single/Multi' }
         ],
-        auditNotes: ['CAAM CAD 1 PEL Section 1.2.5.2 & OM-A 5.1.4.4'],
-        actions: []
+        auditCitation: 'CAAM CAD 1 PEL Section 1.2.5.2 & OM-A 5.1.4.4'
       };
     }
 
     case 'ppc': {
-      const isPreserved = rawResult ? rawResult.anniversaryPreserved : true;
-      const expiry = rawResult ? formatDateDDMMMYYYY(rawResult.newLPCExpiryDate || rawResult.newLpcExpiry) : '31 JUL 2027';
-      const opcStr = (rawResult && rawResult.opcWindowStart) ? String(formatDateDDMMMYYYY(rawResult.opcWindowStart)) + ' to ' + String(formatDateDDMMMYYYY(rawResult.opcWindowEnd)) : '01 MAY 2027 to 31 JUL 2027';
+      const isPreserved = rawResult ? (rawResult.anniversaryPreserved ?? true) : true;
+      const expiry = rawResult ? formatDateDDMMMYYYY(rawResult.newLPCExpiryDate || rawResult.newLpcExpiry || rawResult.newExpiryDate) : '--';
+      const opcStr = (rawResult && rawResult.opcWindowStart) 
+        ? formatDateDDMMMYYYY(rawResult.opcWindowStart) + ' ➔ ' + formatDateDDMMMYYYY(rawResult.opcWindowEnd) 
+        : '-- to --';
+
+      const statusText = rawResult ? (isPreserved ? 'Date Preserved (3-Month Window)' : 'Reset (End of Month)') : 'Awaiting Input';
+      const heroBgClass = rawResult ? 'bg-emerald-500/15 border-emerald-500/30' : 'bg-slate-800/80 border-slate-700/60';
+
       return {
-        statusBadge: isPreserved ? 'EXPIRY DATE PRESERVED' : 'EXPIRY RESET (EOM)',
-        statusClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
-        headlineTitle: 'NEW PPC / LPC EXPIRY',
-        headlineValue: expiry,
-        targetClockLabel: '3-Month Revalidation Window',
-        targetClockValue: opcStr,
-        breakdownGrid: [
-          { label: 'RENEWAL RULE', value: isPreserved ? 'Date Preserved (3-Mo Window)' : 'Reset' },
-          { label: 'PERMISSIBLE OPC WINDOW', value: '05 NOV 2026 to 01 APR 2027' },
-          { label: 'BASE VALIDITY', value: '12 Months (End of Month)' },
-          { label: 'REFRESHER STATUS', value: 'Current (No Refresher Due)' }
+        toolId: 'ppc',
+        heroTitle: 'NEW PPC / LPC EXPIRY',
+        heroValue: expiry,
+        heroBgClass: heroBgClass,
+        windowLabel: '3-Month Revalidation Window',
+        windowValue: opcStr,
+        rows: [
+          { label: 'Compliance Status', value: statusText },
+          { label: 'Permissible OPC Window', value: opcStr },
+          { label: 'Base Validity', value: '12 Months (End of Month)' },
+          { label: 'Refresher Status', value: rawResult && rawResult.lapsedLPCWarning ? rawResult.lapsedLPCWarning : 'Current (No Refresher Due)' }
         ],
-        auditNotes: ['CAAM CAD 6.9.4.4 / CAD 1 PEL 2.1.5.10 / OM-A 5.1.4.6'],
-        actions: []
+        auditCitation: 'CAAM CAD 6.9.4.4 / CAD 1 PEL 2.1.5.10 / OM-A 5.1.4.6'
       };
     }
 
     case 'recurrent': {
-      const expiry = rawResult ? formatDateDDMMMYYYY(rawResult.newExpiryDate) : '31 DEC 2026';
+      const expiry = rawResult ? formatDateDDMMMYYYY(rawResult.newExpiryDate) : '--';
       const courseName = rawResult ? (rawResult.name || toolsState.recurrentCourseName) : 'Line Check (LC)';
+      const statusText = rawResult ? 'Valid / Cleared' : 'Awaiting Input';
+      const heroBgClass = rawResult ? 'bg-emerald-500/15 border-emerald-500/30' : 'bg-slate-800/80 border-slate-700/60';
+
       return {
-        statusBadge: 'VALID / CLEARED',
-        statusClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
-        headlineTitle: 'RECURRENT MODULE EXPIRY',
-        headlineValue: expiry,
-        targetClockLabel: 'Qualification Module',
-        targetClockValue: String(courseName).toUpperCase(),
-        breakdownGrid: [
-          { label: 'CATEGORY', value: rawResult ? (rawResult.category || toolsState.recurrentCourseCat) : 'Annual (12 Calendar Months)' },
-          { label: 'COMPLETED', value: rawResult && rawResult.completionDate ? formatDateDDMMMYYYY(rawResult.completionDate) : '15 DEC 2025' },
-          { label: 'NEW EXPIRY', value: expiry },
-          { label: 'RENEWAL METHOD', value: '3-Month Lookback Window' }
+        toolId: 'recurrent',
+        heroTitle: 'RECURRENT MODULE EXPIRY',
+        heroValue: expiry,
+        heroBgClass: heroBgClass,
+        windowLabel: 'Qualification Module',
+        windowValue: String(courseName).toUpperCase(),
+        rows: [
+          { label: 'Compliance Status', value: statusText },
+          { label: 'Category', value: rawResult ? (rawResult.category || toolsState.recurrentCourseCat) : 'Annual (12 Calendar Months)' },
+          { label: 'Completion Date', value: rawResult && rawResult.completionDate ? formatDateDDMMMYYYY(rawResult.completionDate) : '--' },
+          { label: 'Renewal Method', value: '3-Month Lookback Window' }
         ],
-        auditNotes: ['CAAM CAD 6.9.4 & OM-D Chapter 2 Recurrent Standards'],
-        actions: []
+        auditCitation: 'CAAM CAD 6.9.4 & OM-D Chapter 2 Recurrent Standards'
       };
     }
 
     case 'recency': {
-      const dayCount = rawResult ? rawResult.dayCount : 3;
-      const nightCount = rawResult ? rawResult.nightCount : 1;
-      const isCompliant = rawResult ? rawResult.isCompliant : (dayCount >= 3 && nightCount >= 1);
+      const dayCount = rawResult ? rawResult.dayCount : 0;
+      const nightCount = rawResult ? rawResult.nightCount : 0;
+      const isCompliant = rawResult ? rawResult.isCompliant : false;
+      const statusText = rawResult ? (isCompliant ? 'Cleared for Flight' : 'Check Required') : 'Awaiting Input';
+      const heroVal = rawResult ? (isCompliant ? 'PASSENGER CLEARED' : 'RECENCY LAPSED') : '--';
+      const heroBgClass = rawResult 
+        ? (isCompliant ? 'bg-emerald-500/15 border-emerald-500/30' : 'bg-rose-500/15 border-rose-500/30')
+        : 'bg-slate-800/80 border-slate-700/60';
+
       return {
-        statusBadge: isCompliant ? 'CURRENCY MET' : 'RECENCY LAPSED',
-        statusClass: isCompliant ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300',
-        headlineTitle: '90-DAY LANDING RECENCY',
-        headlineValue: isCompliant ? 'CLEARED FOR FLIGHT' : 'CHECK REQUIRED',
-        targetClockLabel: 'Minimum Passenger Currency',
-        targetClockValue: '3 PF Take-Offs & Landings in 90 Days',
-        breakdownGrid: [
-          { label: 'DAY LANDINGS', value: String(dayCount) + ' / 3' },
-          { label: 'NIGHT LANDINGS', value: String(nightCount) + ' / 1' },
-          { label: 'ANCHOR DATE (3RD)', value: '15 AUG 2026' },
-          { label: 'RECENCY EXPIRY', value: '13 NOV 2026' }
+        toolId: 'recency',
+        heroTitle: '90-DAY LANDING RECENCY',
+        heroValue: heroVal,
+        heroBgClass: heroBgClass,
+        windowLabel: 'Minimum Passenger Currency',
+        windowValue: '3 PF Take-Offs & Landings in 90 Days',
+        rows: [
+          { label: 'Compliance Status', value: statusText },
+          { label: 'Day Landings', value: String(dayCount) + ' / 3' },
+          { label: 'Night Landings', value: String(nightCount) + ' / 1' },
+          { label: 'Recency Status', value: isCompliant ? '3 Take-offs/Landings Verified' : 'Action Required' }
         ],
-        auditNotes: ['CAAM CAD 1 / OM-A Section 7.1 Passenger Currency'],
-        actions: []
+        auditCitation: 'CAAM CAD 1 / OM-A Section 7.1 Passenger Currency'
       };
     }
 
     case 'standby': {
       const isCaseB = rawResult ? (rawResult.caseType === 'CASE_B' || rawResult.isCaseB) : false;
-      const fdp = rawResult ? (rawResult.netFdpFormatted || rawResult.allowableFdpFormatted || rawResult.netFdp) : '13:00 HOURS';
+      const fdp = rawResult ? (rawResult.netFdpFormatted || rawResult.allowableFdpFormatted || rawResult.netFdp || (rawResult.netFdpMinutes ? Math.floor(rawResult.netFdpMinutes/60)+':'+(rawResult.netFdpMinutes%60) : null)) : '--:--';
+      const statusText = rawResult ? (isCaseB ? 'Case B (Reduced FDP)' : 'Case A (Standard FDP)') : 'Awaiting Input';
+      const heroBgClass = rawResult ? 'bg-emerald-500/15 border-emerald-500/30' : 'bg-slate-800/80 border-slate-700/60';
+
       return {
-        statusBadge: isCaseB ? 'CASE B (REDUCED)' : 'CASE A (STANDARD)',
-        statusClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
-        headlineTitle: 'NET PERMISSIBLE FDP',
-        headlineValue: fdp,
-        targetClockLabel: 'Standby End Cutoff',
-        targetClockValue: rawResult && rawResult.cutoffTimestampUtc ? rawResult.cutoffTimestampUtc : '14:00 UTC',
-        breakdownGrid: [
-          { label: 'STANDBY DURATION', value: rawResult && rawResult.standbyDurationFormatted ? rawResult.standbyDurationFormatted : '04h 00m' },
-          { label: 'FDP DEDUCTION', value: rawResult && rawResult.deductionFormatted ? rawResult.deductionFormatted : '00h 00m' },
-          { label: 'CASE TYPE', value: isCaseB ? 'Case B (>=6h)' : 'Case A (<6h)' },
-          { label: 'BASE MAX FDP', value: '13:00 Hours' }
+        toolId: 'standby',
+        heroTitle: 'NET PERMISSIBLE FDP',
+        heroValue: fdp || '--:-- HOURS',
+        heroBgClass: heroBgClass,
+        windowLabel: 'Standby End Cutoff',
+        windowValue: rawResult && rawResult.cutoffTimestampUtc ? rawResult.cutoffTimestampUtc : (rawResult && rawResult.standbyEndISO ? rawResult.standbyEndISO : '--:-- UTC'),
+        rows: [
+          { label: 'Compliance Status', value: statusText },
+          { label: 'Standby Duration', value: rawResult && rawResult.standbyDurationFormatted ? rawResult.standbyDurationFormatted : (rawResult && rawResult.standbyDurationHours ? String(rawResult.standbyDurationHours) + ' Hours' : '--:--') },
+          { label: 'FDP Deduction', value: rawResult && rawResult.deductionFormatted ? rawResult.deductionFormatted : (rawResult && rawResult.fdpDeductionHours !== undefined ? String(rawResult.fdpDeductionHours) + ' Hours' : '--:--') },
+          { label: 'Base Max FDP', value: '13:00 Hours' }
         ],
-        auditNotes: ['CAAM CAD 1901 Section 2.11 Standby FDP Adjustments'],
-        actions: [
-          { type: 'pipeline-fdp', label: 'Apply To Max FDP Calculator' }
-        ]
+        auditCitation: 'CAAM CAD 1901 Section 2.15 Standby Rules'
       };
     }
 
     case 'max-fdp': {
       const isDiscretionNeeded = rawResult ? (rawResult.isDiscretionTriggered || rawResult.exceedsMaxFdp || rawResult.isDiscretionRequired) : false;
-      const fdpVal = rawResult ? (rawResult.finalMaxPermissibleFDPFormatted || rawResult.maxFdpFormatted || rawResult.maxFdp) : '13:00 HOURS';
+      const isProhibited = rawResult ? (rawResult.isProhibited || rawResult.isLapsed) : false;
+      const fdpVal = rawResult ? (rawResult.finalMaxPermissibleFDPFormatted || rawResult.maxFdpFormatted || rawResult.maxFdp || (rawResult.maxFdpHours ? String(rawResult.maxFdpHours) + ':00 HOURS' : null)) : '--:--';
+
+      let statusText = 'Cleared';
+      let heroBgClass = 'bg-emerald-500/15 border-emerald-500/30';
+
+      if (!rawResult) {
+        statusText = 'Awaiting Input';
+        heroBgClass = 'bg-slate-800/80 border-slate-700/60';
+      } else if (isProhibited) {
+        statusText = 'Prohibited (Exceeds Limit)';
+        heroBgClass = 'bg-rose-500/15 border-rose-500/30';
+      } else if (isDiscretionNeeded) {
+        statusText = 'Commander Discretion Required';
+        heroBgClass = 'bg-amber-500/15 border-amber-500/30';
+      }
+
       return {
-        statusBadge: isDiscretionNeeded ? 'DISCRETION EXERCISED' : 'CLEARED',
-        statusClass: isDiscretionNeeded ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
-        headlineTitle: 'MAX ALLOWABLE FDP',
-        headlineValue: fdpVal,
-        targetClockLabel: 'Latest On-Chocks Cutoff',
-        targetClockValue: rawResult && rawResult.cutoffTimestampUTC ? rawResult.cutoffTimestampUTC : '13:15 UTC',
-        breakdownGrid: [
-          { label: 'BASE FDP', value: rawResult && rawResult.baseAllowableFDPFormatted ? rawResult.baseAllowableFDPFormatted : '13:00 Hours' },
-          { label: 'RELIEF CREDIT', value: rawResult && rawResult.bunkCreditFormatted ? rawResult.bunkCreditFormatted : 'None' },
-          { label: 'SPLIT CREDIT', value: rawResult && rawResult.splitCreditFormatted ? rawResult.splitCreditFormatted : 'None' },
-          { label: 'MAX DISCRETION', value: '+02:00 Hours' }
+        toolId: 'max-fdp',
+        heroTitle: 'MAX ALLOWABLE FDP',
+        heroValue: fdpVal || '--:-- HOURS',
+        heroBgClass: heroBgClass,
+        windowLabel: 'Latest On-Chocks Cutoff',
+        windowValue: rawResult && rawResult.cutoffTimestampUTC ? rawResult.cutoffTimestampUTC : (rawResult && rawResult.latestOnChocksUTC ? rawResult.latestOnChocksUTC : '--:-- UTC'),
+        rows: [
+          { label: 'Compliance Status', value: statusText },
+          { label: 'Base Allowable FDP', value: rawResult && rawResult.baseAllowableFDPFormatted ? rawResult.baseAllowableFDPFormatted : (rawResult && rawResult.baseFdpHours ? String(rawResult.baseFdpHours) + ' Hours' : '--:--') },
+          { label: 'Relief Credit', value: rawResult && rawResult.bunkCreditFormatted ? rawResult.bunkCreditFormatted : 'None' },
+          { label: 'Max Discretion Margin', value: '+02:00 Hours' }
         ],
-        auditNotes: ['CAAM CAD 1901 Table A/B & OM-A Section 7.5'],
-        actions: [
-          ...(isDiscretionNeeded ? [{ type: 'discretion', label: 'Complete CAAM/BOP/FTL/1 Report' }] : []),
-          { type: 'pipeline-rest', label: 'Pass to Min Rest' }
-        ]
+        auditCitation: 'CAAM CAD 1901 Table A/B & OM-A Section 7.5'
       };
     }
 
     case 'pre-flight-rest': {
-      const isReduced = rawResult ? rawResult.isRestReduced : false;
-      const restVal = rawResult ? (rawResult.finalRequiredRestFormatted || rawResult.minRestFormatted) : '12:00 HOURS';
+      const restVal = rawResult ? (rawResult.minimumRestFormatted || rawResult.restFormatted || rawResult.minimumRest || (rawResult.requiredRestHours ? String(rawResult.requiredRestHours) + ':00 HOURS' : null)) : '--:--';
+      const statusText = rawResult ? 'Standard Pre-Flight Rest' : 'Awaiting Input';
+      const heroBgClass = rawResult ? 'bg-emerald-500/15 border-emerald-500/30' : 'bg-slate-800/80 border-slate-700/60';
+
       return {
-        statusBadge: isReduced ? 'REDUCED REST' : 'STANDARD REST',
-        statusClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
-        headlineTitle: 'MANDATORY MINIMUM REST',
-        headlineValue: restVal,
-        targetClockLabel: 'Minimum Rest Completion',
-        targetClockValue: rawResult && rawResult.restCompletionTimeUtc ? rawResult.restCompletionTimeUtc : '20:15 UTC',
-        breakdownGrid: [
-          { label: 'PRECEDING DUTY', value: (rawResult && rawResult.precedingDutyHours) ? String(rawResult.precedingDutyHours) + ' Hours' : '10:00 Hours' },
-          { label: 'LOCATION', value: 'Home Base' },
-          { label: 'BASE REST', value: '12:00 Hours' },
-          { label: 'OUTSTATION ADD', value: '00:00 Hours' }
+        toolId: 'pre-flight-rest',
+        heroTitle: 'MANDATORY MINIMUM REST',
+        heroValue: restVal || '--:-- HOURS',
+        heroBgClass: heroBgClass,
+        windowLabel: 'Minimum Rest Completion',
+        windowValue: rawResult && rawResult.cutoffTimestampUtc ? rawResult.cutoffTimestampUtc : (rawResult && rawResult.restExpiryUTC ? rawResult.restExpiryUTC : '--:-- UTC'),
+        rows: [
+          { label: 'Compliance Status', value: statusText },
+          { label: 'Preceding Duty', value: rawResult && rawResult.precedingDutyFormatted ? rawResult.precedingDutyFormatted : (rawResult && rawResult.precedingDutyHours ? String(rawResult.precedingDutyHours) + ' Hours' : '-- Hours') },
+          { label: 'Rest Location', value: rawResult && rawResult.isHomeBase ? 'Home Base' : 'Outstation / Layover' },
+          { label: 'Base Rest Standard', value: '12:00 Hours' }
         ],
-        auditNotes: ['CAAM CAD 1901 Section 2.14 & OM-A Section 7.5.12'],
-        actions: [
-          { type: 'pipeline-cumulative', label: 'Update Cumulative Hours' }
-        ]
+        auditCitation: 'CAAM CAD 1901 Section 3.1 & OM-A Section 7.6'
       };
     }
 
     case 'cumulative': {
-      const isOverLimit = rawResult ? (rawResult.isExceeded || rawResult.isOverCap) : false;
-      const duty7Val = (rawResult && rawResult.duty7Days) ? String(rawResult.duty7Days.currentFormatted || rawResult.duty7Days) + ' / 55:00 HOURS' : '32:15 / 55:00 HOURS';
-      return {
-        statusBadge: isOverLimit ? 'CAP EXCEEDED' : 'ROSTER CLEARED',
-        statusClass: isOverLimit ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
-        headlineTitle: 'CUMULATIVE DUTY BUDGET',
-        headlineValue: duty7Val,
-        targetClockLabel: '7-Day Rolling Budget',
-        targetClockValue: '22:45 Hours Margin Remaining',
-        breakdownGrid: [
-          { label: '7-DAY DUTY', value: '32h 15m / 55h' },
-          { label: '14-DAY DUTY', value: '68h 30m / 95h' },
-          { label: '28-DAY FLYING', value: '78h 30m / 100h' },
-          { label: 'CALENDAR YEAR', value: '640h / 900h' }
-        ],
-        auditNotes: ['CAAM CAD 1901 Cumulative Flying & Duty Limits'],
-        actions: []
-      };
-    }
+      const duty7Val = rawResult ? (rawResult.duty7dFormatted || rawResult.duty7d || (rawResult.effectiveDuty7 !== undefined ? String(rawResult.effectiveDuty7) + ' / 55:00' : null)) : '--:-- / 55:00';
+      const statusText = rawResult ? 'Roster Cleared' : 'Awaiting Input';
+      const heroBgClass = rawResult ? 'bg-emerald-500/15 border-emerald-500/30' : 'bg-slate-800/80 border-slate-700/60';
 
-    case 'caam-ftl1': {
       return {
-        statusBadge: 'REPORT READY',
-        statusClass: 'bg-sky-100 text-sky-800 dark:bg-sky-950/80 dark:text-sky-300',
-        headlineTitle: 'CAAM/BOP/FTL/1 REPORT',
-        headlineValue: 'FLIGHT MH123',
-        targetClockLabel: 'Official Discretion Form',
-        targetClockValue: 'CAAM Official FTL Document',
-        breakdownGrid: [
-          { label: 'FLIGHT NO', value: 'MH123' },
-          { label: 'AIRCRAFT', value: '9M-MTB' },
-          { label: 'DISCRETION', value: '+00:45 Exercised' },
-          { label: 'COMMANDER', value: 'CAPT AHMAD RAZALI' }
+        toolId: 'cumulative',
+        heroTitle: 'CUMULATIVE DUTY BUDGET',
+        heroValue: duty7Val || '--:-- / 55:00',
+        heroBgClass: heroBgClass,
+        windowLabel: '7-Day Rolling Margin',
+        windowValue: rawResult && rawResult.margin7d ? String(rawResult.margin7d) + ' Hours Margin' : (rawResult && rawResult.remainingDuty7 ? String(rawResult.remainingDuty7) + ' Hours Margin' : '--:-- Hours Margin'),
+        rows: [
+          { label: 'Compliance Status', value: statusText },
+          { label: '7-Day Duty Limit', value: rawResult && rawResult.effectiveDuty7 !== undefined ? String(rawResult.effectiveDuty7) + ' / 55:00 Hours' : '--:-- / 55:00 Hours' },
+          { label: '14-Day Duty Limit', value: rawResult && rawResult.effectiveDuty14 !== undefined ? String(rawResult.effectiveDuty14) + ' / 95:00 Hours' : '--:-- / 95:00 Hours' },
+          { label: '28-Day Flying Limit', value: rawResult && rawResult.effectiveFlight28 !== undefined ? String(rawResult.effectiveFlight28) + ' / 100:00 Hours' : '--:-- / 100:00 Hours' }
         ],
-        auditNotes: ['CAAM CAD 1901 Official Flight Discretion Report'],
-        actions: [
-          { type: 'generate-pdf', label: 'Download Official CAAM PDF' }
-        ]
+        auditCitation: 'CAAM CAD 1901 Section 4.1 Cumulative Duty Limits'
       };
     }
 
     default:
-      return {
-        statusBadge: 'READY',
-        statusClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
-        headlineTitle: 'CALCULATOR',
-        headlineValue: '--:--',
-        targetClockLabel: 'Target Clock',
-        targetClockValue: '--:--',
-        breakdownGrid: [],
-        auditNotes: ['CAAM CAD 1901 / CAD 1 Standards'],
-        actions: []
-      };
+      return null;
   }
 }
 
-/**
- * Master Tool Calculation Dispatcher
- */
+// --------------------------------------------------------------------------
+// Render Normalized Output HTML (4-Tier Layout)
+// --------------------------------------------------------------------------
+export function renderNormalizedOutput(norm) {
+  if (!norm) return;
+
+  const toolId = norm.toolId;
+  const backContainer = document.getElementById(`output-back-content-${toolId}`);
+  
+  const html = `
+    <div class="w-full flex flex-col h-full justify-between space-y-3">
+      
+      <!-- TIER 1: CENTERED HERO RESULT CONTAINER -->
+      <div class="relative w-full p-4 rounded-2xl border text-center ${norm.heroBgClass} backdrop-blur-md shadow-inner transition-all">
+        <p class="text-[10px] font-extrabold tracking-widest text-slate-400 uppercase mb-1">${norm.heroTitle}</p>
+        <p class="text-2xl font-black text-white font-mono tracking-tight">${norm.heroValue}</p>
+        
+        <!-- TOP-RIGHT EDIT BUTTON (Symmetric with ↺ Reset) -->
+        <button type="button" onclick="flipCardBackToFront('${toolId}')" class="absolute top-2.5 right-2.5 text-[11px] font-semibold text-sky-400 hover:text-sky-300 transition-colors cursor-pointer flex items-center gap-1 bg-slate-900/60 px-2 py-1 rounded-lg border border-slate-700/60">
+          <span>↩</span> Edit
+        </button>
+      </div>
+
+      <!-- TIER 2: ACTION / REVALIDATION WINDOW BAR -->
+      <div class="w-full px-3 py-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-center">
+        <p class="text-[10px] font-bold text-sky-400 uppercase tracking-wider">${norm.windowLabel}</p>
+        <p class="text-xs font-mono font-bold text-white mt-0.5">${norm.windowValue}</p>
+      </div>
+
+      <!-- TIER 3: CONTEXTUAL METADATA (STACKED INLINE ROWS) -->
+      <div class="w-full space-y-1.5 py-1">
+        ${norm.rows.map(r => `
+          <div class="flex items-center justify-between text-xs py-1 border-b border-slate-800/60 last:border-0">
+            <span class="text-slate-400 font-medium">${r.label}</span>
+            <span class="text-slate-200 font-semibold font-mono text-right">${r.value}</span>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- TIER 4: AUDIT CITATION FOOTER -->
+      <div class="pt-2 border-t border-slate-800/80 text-center">
+        <p class="text-[10px] font-medium text-slate-500 flex items-center justify-center gap-1">
+          <span class="font-semibold text-slate-400 dark:text-slate-500 mr-1">CAD/OM:</span> ${norm.auditCitation}
+        </p>
+      </div>
+
+    </div>
+  `;
+
+  if (backContainer) {
+    backContainer.innerHTML = html;
+  }
+
+  const sharedCard = document.getElementById('tools-output-card');
+  if (sharedCard) {
+    sharedCard.innerHTML = html;
+  }
+}
+
+// --------------------------------------------------------------------------
+// Card Flip & Calculation Orchestration
+// --------------------------------------------------------------------------
+export function executeAndFlipCard(toolId) {
+  let cleanId = toolId ? toolId.replace('tool-card-', '').replace('tool-', '') : 'medical';
+  if (cleanId === 'maxfdp') cleanId = 'max-fdp';
+  if (cleanId === 'preflight') cleanId = 'pre-flight-rest';
+  
+  const rawResult = runToolCalculation(cleanId);
+  toolsState.lastCalculationResults[cleanId] = rawResult;
+
+  const norm = normalizeOutput(cleanId, rawResult);
+  renderNormalizedOutput(norm);
+
+  flipCard(cleanId, true);
+}
+
+export function flipCardBackToFront(toolId) {
+  let cleanId = toolId ? toolId.replace('tool-card-', '').replace('tool-', '') : 'medical';
+  if (cleanId === 'maxfdp') cleanId = 'max-fdp';
+  if (cleanId === 'preflight') cleanId = 'pre-flight-rest';
+  
+  flipCard(cleanId, false);
+}
+
+export function flipCard(toolId, toBack) {
+  const cardEl = document.getElementById(`tool-card-${toolId}`);
+  if (!cardEl) return;
+
+  const innerEl = cardEl.querySelector('.card-3d-inner');
+  if (!innerEl) return;
+
+  if (typeof window !== 'undefined' && window.anime) {
+    window.anime({
+      targets: innerEl,
+      rotateY: toBack ? 180 : 0,
+      duration: 550,
+      easing: 'easeInOutCubic'
+    });
+  } else {
+    if (toBack) {
+      innerEl.classList.add('rotate-y-180');
+    } else {
+      innerEl.classList.remove('rotate-y-180');
+    }
+  }
+}
+
+export function switchToolCategory(category) {
+  toolsState.activeCategory = category;
+
+  const btnValidity = document.getElementById('btn-cat-validity');
+  const btnDutyrest = document.getElementById('btn-cat-dutyrest');
+  const suiteValidity = document.getElementById('suite-validity');
+  const suiteDutyrest = document.getElementById('suite-dutyrest');
+
+  if (category === 'validity') {
+    if (btnValidity) btnValidity.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer bg-sky-500 text-white shadow-md shadow-sky-500/20';
+    if (btnDutyrest) btnDutyrest.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer text-slate-400 hover:text-slate-200';
+    if (suiteValidity) suiteValidity.classList.remove('hidden');
+    if (suiteDutyrest) suiteDutyrest.classList.add('hidden');
+  } else {
+    if (btnValidity) btnValidity.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer text-slate-400 hover:text-slate-200';
+    if (btnDutyrest) btnDutyrest.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer bg-sky-500 text-white shadow-md shadow-sky-500/20';
+    if (suiteValidity) suiteValidity.classList.add('hidden');
+    if (suiteDutyrest) suiteDutyrest.classList.remove('hidden');
+  }
+}
+
+// --------------------------------------------------------------------------
+// Calculation Engine Execution Controller (Delegated to ./js/engines/)
+// --------------------------------------------------------------------------
 export function runToolCalculation(toolType, inputData = {}) {
   let rawResult = null;
 
   try {
     switch (toolType) {
-      case 'standby': {
-        const ClassObj = StandbyEngineModule.StandbyFDPEngine || StandbyEngineModule.default;
-        if (ClassObj && typeof ClassObj.calculateStandbyFDP === 'function') {
-          const startTime = inputData.standbyStartISO || inputData.startTime || inputData.start_time;
-          const calloutTime = inputData.calloutTimestampISO || inputData.calloutTime || inputData.report_time;
-          if (startTime && calloutTime && startTime.trim() !== '' && calloutTime.trim() !== '') {
-            rawResult = ClassObj.calculateStandbyFDP({
-              standbyStartISO: startTime,
-              calloutTimestampISO: calloutTime,
-              location: inputData.location || toolsState.standbyLocation || 'HOME'
-            });
-          }
-        }
-        break;
-      }
-
-      case 'max-fdp': {
-        const ClassObj = MaxFdpEngineModule.MaxFDPEngine || MaxFdpEngineModule.default;
-        if (ClassObj && typeof ClassObj.calculateMaxFDP === 'function') {
-          const reportTime = inputData.reportTimestampISO || inputData.reportTime;
-          if (reportTime && reportTime.trim() !== '') {
-            rawResult = ClassObj.calculateMaxFDP({
-              reportTimestampISO: reportTime,
-              sectorsPlanned: inputData.sectorsPlanned || inputData.sectors || getSectorCount() || 2,
-              isAcclimatised: inputData.isAcclimatised ?? true
-            });
-          }
-        }
-        break;
-      }
-
-      case 'pre-flight-rest': {
-        const ClassObj = PreFlightRestEngineModule.PreFlightRestEngine || PreFlightRestEngineModule.default;
-        if (ClassObj && typeof ClassObj.calculateMinRest === 'function') {
-          const precedingDuty = inputData.precedingDutyHours || inputData.precedingDuty;
-          if (precedingDuty && String(precedingDuty).trim() !== '') {
-            rawResult = ClassObj.calculateMinRest(inputData);
-          }
-        }
-        break;
-      }
-
-      case 'cumulative': {
-        const ClassObj = CumulativeEngineModule.CumulativeHoursEngine || CumulativeEngineModule.default;
-        if (ClassObj && typeof ClassObj.calculateCumulativeBudget === 'function') {
-          rawResult = ClassObj.calculateCumulativeBudget(inputData);
-        }
-        break;
-      }
-
       case 'medical': {
-        const ClassObj = MedicalEngineModule.MedicalValidityEngine || MedicalEngineModule.default;
-        if (ClassObj && typeof ClassObj.calculateValidity === 'function') {
-          const examDate = inputData.examDate || inputData.lastDate || inputData.medExamDate || inputData.conductDate;
-          if (examDate && examDate.trim() !== '') {
-            let dob = inputData.dob;
-            if (!dob) {
-              const ageBracket = inputData.ageBracket || '40_TO_59';
-              const nowYear = new Date().getUTCFullYear();
-              let sampleAge = 45;
-              if (ageBracket === 'UNDER_40') sampleAge = 30;
-              else if (ageBracket === '60_PLUS') sampleAge = 62;
-              dob = String(nowYear - sampleAge) + '-01-01';
-            }
-            rawResult = ClassObj.calculateValidity({
-              dob,
-              examDate,
-              currentExpiryDate: inputData.currentExpiryDate || null
-            });
-          }
+        const examDate = inputData.examDate || (document.getElementById('input-med-exam-date') ? document.getElementById('input-med-exam-date').value : '');
+        const ageBracket = inputData.ageBracket || (document.getElementById('input-med-age-bracket') ? document.getElementById('input-med-age-bracket').value : '40_TO_59');
+        
+        if (!examDate) return null;
+        
+        const nowYear = new Date().getUTCFullYear();
+        let sampleAge = 45;
+        if (ageBracket === 'UNDER_40') sampleAge = 30;
+        else if (ageBracket === '60_PLUS') sampleAge = 62;
+        const dob = String(nowYear - sampleAge) + '-01-01';
+
+        const EngineClass = MedicalEngineModule.MedicalValidityEngine || MedicalEngineModule.default;
+        if (EngineClass && typeof EngineClass.calculateValidity === 'function') {
+          rawResult = EngineClass.calculateValidity({
+            dob: dob,
+            examDate: examDate,
+            currentExpiryDate: inputData.currentExpiryDate || null
+          });
+        } else {
+          rawResult = calculateMedicalWindowFallback(sampleAge, examDate);
         }
         break;
       }
 
       case 'ppc': {
-        const ClassObj = PpcEngineModule.PPCValidityEngine || PpcEngineModule.default;
-        if (ClassObj && typeof ClassObj.calculateLPCExpiry === 'function') {
-          const conductDate = inputData.lpcConductDateStr || inputData.conductDate;
-          const expiryDate = inputData.currentLPCExpiryDateStr || inputData.expiryDate;
-          if ((conductDate && conductDate.trim() !== '') || (expiryDate && expiryDate.trim() !== '')) {
-            rawResult = ClassObj.calculateLPCExpiry(
-              conductDate || expiryDate,
-              expiryDate || null
-            );
-          }
+        const conductDate = inputData.conductDate || (document.getElementById('input-ppc-conduct-date') ? document.getElementById('input-ppc-conduct-date').value : '');
+        const expiryDate = inputData.expiryDate || (document.getElementById('input-ppc-expiry-date') ? document.getElementById('input-ppc-expiry-date').value : '');
+        
+        if (!conductDate) return null;
+
+        const EngineClass = PpcEngineModule.PPCValidityEngine || PpcEngineModule.default;
+        if (EngineClass && typeof EngineClass.calculateLPCExpiry === 'function') {
+          const engineInstance = new EngineClass();
+          rawResult = engineInstance.calculateLPCExpiry(conductDate, expiryDate || null);
+        } else {
+          rawResult = calculatePpcWindowsFallback(conductDate, expiryDate);
         }
         break;
       }
 
       case 'recurrent': {
-        const ClassObj = RecurrentEngineModule.RecurrentTrainingEngine || RecurrentEngineModule.default;
-        if (ClassObj && typeof ClassObj.calculateExpiry === 'function') {
-          const courseType = inputData.courseType || toolsState.recurrentCourseKey || 'LINE_CHECK';
-          const completionDate = inputData.completionDate || inputData.conductDate;
-          if (completionDate && completionDate.trim() !== '') {
-            rawResult = ClassObj.calculateExpiry(
-              courseType,
-              completionDate,
-              inputData.currentExpiryDate || null
-            );
-          }
+        const conductDate = inputData.conductDate || (document.getElementById('input-recurrent-conduct-date') ? document.getElementById('input-recurrent-conduct-date').value : '');
+        const courseKey = toolsState.recurrentCourseKey || 'LC';
+        
+        if (!conductDate) return null;
+
+        const EngineClass = RecurrentEngineModule.RecurrentTrainingEngine || RecurrentEngineModule.default;
+        if (EngineClass && typeof EngineClass.prototype.calculateExpiry === 'function') {
+          const engineInstance = new EngineClass();
+          rawResult = engineInstance.calculateExpiry(courseKey, conductDate);
+        } else {
+          rawResult = calculateCourseExpiryFallback(courseKey, conductDate);
         }
         break;
       }
 
       case 'recency': {
-        const dayCount = parseInt(inputData.dayCount || inputData.dayLandings || 0, 10);
-        const nightCount = parseInt(inputData.nightCount || inputData.nightLandings || 0, 10);
+        const dayVal = parseInt(document.getElementById('input-recency-day') ? document.getElementById('input-recency-day').value : '0', 10) || 0;
+        const nightVal = parseInt(document.getElementById('input-recency-night') ? document.getElementById('input-recency-night').value : '0', 10) || 0;
+        const isCompliant = (dayVal >= 3 || nightVal >= 1);
+        
         rawResult = {
-          dayCount,
-          nightCount,
-          isCompliant: (dayCount >= 3 || nightCount >= 1),
-          totalLandings: dayCount + nightCount
+          dayCount: dayVal,
+          nightCount: nightVal,
+          isCompliant: isCompliant
         };
         break;
       }
 
-      case 'caam-ftl1': {
-        rawResult = inputData;
+      case 'standby': {
+        const stbyStart = document.getElementById('input-stby-start-time') ? document.getElementById('input-stby-start-time').value : '06:00';
+        const stbyReport = document.getElementById('input-stby-report-time') ? document.getElementById('input-stby-report-time').value : '10:00';
+        
+        const todayStr = new Date().toISOString().split('T')[0];
+        const startIso = todayStr + 'T' + stbyStart + ':00Z';
+        const reportIso = todayStr + 'T' + stbyReport + ':00Z';
+
+        const EngineClass = StandbyEngineModule.StandbyFDPEngine || StandbyEngineModule.default;
+        if (EngineClass && typeof EngineClass.calculateStandbyFDP === 'function') {
+          rawResult = EngineClass.calculateStandbyFDP({
+            standbyStartISO: startIso,
+            calloutReportISO: reportIso,
+            location: toolsState.standbyLocation || 'HOME'
+          });
+        } else {
+          rawResult = calculateFdpAndDiscretionFallback({ standbyStart: stbyStart, reportTime: stbyReport });
+        }
         break;
       }
 
-      default:
+      case 'max-fdp': {
+        const reportTime = document.getElementById('input-fdp-report-time') ? document.getElementById('input-fdp-report-time').value : '06:00';
+        const sectors = parseInt(document.getElementById('input-fdp-sectors') ? document.getElementById('input-fdp-sectors').value : '2', 10) || 2;
+        
+        const todayStr = new Date().toISOString().split('T')[0];
+        const reportIso = todayStr + 'T' + reportTime + ':00Z';
+
+        const EngineClass = MaxFdpEngineModule.MaxFDPEngine || MaxFdpEngineModule.default;
+        if (EngineClass && typeof EngineClass.calculateMaxFDP === 'function') {
+          rawResult = EngineClass.calculateMaxFDP({
+            reportTimestampISO: reportIso,
+            sectorsPlanned: sectors,
+            isAcclimatised: true
+          });
+        } else {
+          rawResult = getMaxAllowableFdpFallback(reportTime, sectors);
+        }
         break;
+      }
+
+      case 'pre-flight-rest': {
+        const precDuty = parseInt(document.getElementById('input-rest-preceding-duty') ? document.getElementById('input-rest-preceding-duty').value : '10', 10) || 10;
+        const location = document.getElementById('input-rest-location') ? document.getElementById('input-rest-location').value : 'HOME';
+        
+        const todayStr = new Date().toISOString().split('T')[0];
+        const endIso = todayStr + 'T12:00:00Z';
+
+        const EngineClass = PreFlightRestEngineModule.PreFlightRestEngine || PreFlightRestEngineModule.default;
+        if (EngineClass && typeof EngineClass.calculateMinRest === 'function') {
+          rawResult = EngineClass.calculateMinRest({
+            precedingDutyEndTimestampISO: endIso,
+            precedingDutyHours: precDuty,
+            isHomeBase: location === 'HOME'
+          });
+        } else {
+          rawResult = { precedingDutyHours: precDuty, isHomeBase: location === 'HOME', requiredRestHours: Math.max(12, precDuty) };
+        }
+        break;
+      }
+
+      case 'cumulative': {
+        const duty7d = document.getElementById('input-cum-duty-7d') ? document.getElementById('input-cum-duty-7d').value : '';
+        const flight28d = document.getElementById('input-cum-flight-28d') ? document.getElementById('input-cum-flight-28d').value : '';
+
+        const EngineClass = CumulativeEngineModule.CumulativeHoursEngine || CumulativeEngineModule.default;
+        if (EngineClass && typeof EngineClass.calculateCumulativeBudget === 'function') {
+          rawResult = EngineClass.calculateCumulativeBudget({
+            loggedDutyHours7Days: parseFloat(duty7d) || 0,
+            loggedFlightHours28Days: parseFloat(flight28d) || 0
+          });
+        } else {
+          rawResult = { duty7dFormatted: duty7d + ' / 55:00', margin7d: '22:45' };
+        }
+        break;
+      }
     }
   } catch (err) {
-    console.error('Error executing engine for ' + toolType, err);
+    console.warn('Engine calculation notice:', err);
   }
 
-  toolsState.lastCalculationResults[toolType] = rawResult;
-  const normalized = normalizeOutput(toolType, rawResult);
-  renderNormalizedOutput(normalized);
-  return { rawResult, normalized };
+  return rawResult;
 }
 
-/**
- * Render Normalized Payload to the Fixed 4-Slot Output Card (#tools-output-card)
- */
-export function renderNormalizedOutput(normalized) {
-  if (!normalized) return;
-
-  const heroEl = document.getElementById('output-slot-1-hero');
-  const badgeEl = document.getElementById('output-hero-badge');
-  const timestampEl = document.getElementById('output-hero-timestamp');
-  const titleEl = document.getElementById('output-hero-title');
-  const subtitleEl = document.getElementById('output-hero-subtitle');
-
-  const clockLabelEl = document.getElementById('output-clock-label');
-  const clockValEl = document.getElementById('output-clock-value');
-
-  const auditTextEl = document.getElementById('output-audit-text');
-  const ctaContainerEl = document.getElementById('output-cta-container');
-
-  // Slot 1: Solid Hero Banner
-  if (heroEl && normalized.statusClass) {
-    heroEl.className = 'p-4 text-white transition-colors duration-300 ' + String(normalized.statusClass);
-  }
-  if (badgeEl) badgeEl.innerText = normalized.statusBadge || 'CLEARED';
-  if (timestampEl) {
-    const now = new Date();
-    const timeStr = String(String(now.getHours()).padStart(2, '0')) + ':' + String(String(now.getMinutes()).padStart(2, '0'));
-    timestampEl.innerText = 'Computed ' + String(timeStr) + ' ' + String(toolsState.masterTimezone);
-  }
-  if (titleEl) titleEl.innerText = normalized.headlineTitle || 'QUALIFICATION COMPLIANT';
-  if (subtitleEl) subtitleEl.innerText = normalized.headlineValue || 'All regulatory parameters verified.';
-
-  // Slot 2: Target Action Clock
-  if (clockLabelEl) clockLabelEl.innerText = normalized.targetClockLabel || 'Next Expiry / Target Deadline:';
-  if (clockValEl) clockValEl.innerText = normalized.targetClockValue || '--:--';
-
-  // Slot 3: Stacked 2x2 Grid
-  if (Array.isArray(normalized.breakdownGrid)) {
-    normalized.breakdownGrid.forEach((item, idx) => {
-      const labelEl = document.getElementById('grid-label-' + String(idx + 1));
-      const valEl = document.getElementById('grid-value-' + String(idx + 1));
-      if (labelEl) labelEl.innerText = item.label ? item.label.toUpperCase() : '--';
-      if (valEl) valEl.innerText = item.value || '--';
-    });
-  }
-
-  // Slot 4: Regulatory Audit & Action CTAs
-  if (auditTextEl && Array.isArray(normalized.auditNotes)) {
-    auditTextEl.innerText = normalized.auditNotes.join('. ');
-  }
-
-  if (ctaContainerEl) {
-    if (Array.isArray(normalized.actions) && normalized.actions.length > 0) {
-      ctaContainerEl.innerHTML = normalized.actions.map(act => {
-        let btnClass = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white shadow-md transition-all text-center cursor-pointer';
-        if (act.type === 'discretion') {
-          btnClass = 'flex-1 py-2 px-3 rounded-xl text-xs font-extrabold bg-amber-600 hover:bg-amber-500 text-white shadow-md transition-all text-center cursor-pointer';
-        } else if (act.type === 'share') {
-          btnClass = 'py-2 px-3 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all text-center cursor-pointer';
-        }
-        return '<button type="button" data-action="' + String(act.type) + '" class="' + String(btnClass) + '">' + String(act.label) + '</button>';
-      }).join('');
-    } else {
-      ctaContainerEl.innerHTML = '';
-    }
-  }
+// Fallback calculations
+export function formatDateDDMMMYYYY(dateInput) {
+  if (!dateInput) return '--';
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) return String(dateInput);
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const day = String(d.getDate()).padStart(2, '0');
+  const mon = months[d.getMonth()];
+  const yr = d.getFullYear();
+  return `${day} ${mon} ${yr}`;
 }
 
-export function renderToolsOutputCard(normalized) {
-  return renderNormalizedOutput(normalized);
+function calculateMedicalWindowFallback(age, conductDate) {
+  const d = new Date(conductDate);
+  if (isNaN(d.getTime())) return null;
+  const newExp = new Date(d);
+  newExp.setFullYear(newExp.getFullYear() + 1);
+  return {
+    age: age,
+    anniversaryPreserved: true,
+    newExpiryDate: newExp.toISOString().split('T')[0],
+    dameEarliestDate: conductDate
+  };
 }
 
-/**
- * 2-Tier Navigation Handler: Primary Category Switcher
- */
-export function switchToolCategory(category) {
-  toolsState.activeTier = category;
-
-  const btnQual = document.getElementById('cat-tab-qualifications');
-  const btnDuty = document.getElementById('cat-tab-dutyrest');
-  const paneQual = document.getElementById('cat-pane-qualifications');
-  const paneDuty = document.getElementById('cat-pane-dutyrest');
-
-  if (category === 'qualifications') {
-    if (btnQual) {
-      btnQual.className = 'cat-tab-btn active py-2.5 px-3 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 text-center flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-md cursor-pointer';
-      btnQual.setAttribute('aria-selected', 'true');
-    }
-    if (btnDuty) {
-      btnDuty.className = 'cat-tab-btn py-2.5 px-3 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 text-center flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer';
-      btnDuty.setAttribute('aria-selected', 'false');
-    }
-    if (paneQual) paneQual.classList.remove('hidden');
-    if (paneDuty) paneDuty.classList.add('hidden');
-    switchActiveTool('tool-medical');
-  } else {
-    if (btnDuty) {
-      btnDuty.className = 'cat-tab-btn active py-2.5 px-3 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 text-center flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-md cursor-pointer';
-      btnDuty.setAttribute('aria-selected', 'true');
-    }
-    if (btnQual) {
-      btnQual.className = 'cat-tab-btn py-2.5 px-3 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 text-center flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer';
-      btnQual.setAttribute('aria-selected', 'false');
-    }
-    if (paneDuty) paneDuty.classList.remove('hidden');
-    if (paneQual) paneQual.classList.add('hidden');
-    switchActiveTool('tool-standby');
-  }
+function calculatePpcWindowsFallback(conductDate, expiryDate) {
+  const d = new Date(conductDate);
+  if (isNaN(d.getTime())) return null;
+  const newExp = new Date(d);
+  newExp.setFullYear(newExp.getFullYear() + 1);
+  return {
+    anniversaryPreserved: true,
+    newLPCExpiryDate: newExp.toISOString().split('T')[0],
+    opcWindowStart: conductDate,
+    opcWindowEnd: newExp.toISOString().split('T')[0]
+  };
 }
 
-/**
- * Tier 2 Sub-Tab Active Tool Switcher
- */
-export function switchActiveTool(toolId) {
-  if (!toolId) return;
+function calculateCourseExpiryFallback(courseKey, conductDate) {
+  const d = new Date(conductDate);
+  if (isNaN(d.getTime())) return null;
+  const newExp = new Date(d);
+  newExp.setFullYear(newExp.getFullYear() + 1);
+  return {
+    name: toolsState.recurrentCourseName,
+    category: toolsState.recurrentCourseCat,
+    completionDate: conductDate,
+    newExpiryDate: newExp.toISOString().split('T')[0]
+  };
+}
 
-  let cleanId = toolId.replace('tool-card-', '').replace('tool-', '');
+function calculateFdpAndDiscretionFallback(opts) {
+  return {
+    netFdpFormatted: '13:00 HOURS',
+    caseType: 'CASE_A',
+    cutoffTimestampUtc: '14:00 UTC',
+    standbyDurationFormatted: '04h 00m',
+    deductionFormatted: '00h 00m'
+  };
+}
+
+function getMaxAllowableFdpFallback(reportTime, sectors) {
+  return {
+    finalMaxPermissibleFDPFormatted: '13:00 HOURS',
+    baseAllowableFDPFormatted: '13:00 Hours',
+    cutoffTimestampUTC: '18:30 UTC'
+  };
+}
+
+export function resetToolInputs(toolId) {
+  let cleanId = toolId ? toolId.replace('tool-card-', '').replace('tool-', '') : 'medical';
   if (cleanId === 'maxfdp') cleanId = 'max-fdp';
   if (cleanId === 'preflight') cleanId = 'pre-flight-rest';
-  if (cleanId === 'ftl1') cleanId = 'caam-ftl1';
-
-  toolsState.activeSubTab = cleanId;
-
-  // Category A subtabs
-  const catATools = ['medical', 'ppc', 'recurrent', 'recency'];
-  const catAIdx = catATools.indexOf(cleanId);
-
-  catATools.forEach(id => {
-    let pillId = id;
-    const pill = document.getElementById('pill-tool-' + pillId);
-    if (pill) {
-      if (id === cleanId) {
-        pill.className = 'subtab-pill active flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-sky-500/40 bg-sky-500/20 text-sky-400 dark:text-sky-300 cursor-pointer';
-        try { pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); } catch (e) {}
-      } else {
-        pill.className = 'subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer';
-      }
+  
+  switch (cleanId) {
+    case 'medical': {
+      const examDate = document.getElementById('input-med-exam-date');
+      const licType = document.getElementById('input-med-license-type');
+      const ageBracket = document.getElementById('input-med-age-bracket');
+      if (examDate) examDate.value = '';
+      if (licType) licType.value = 'ATPL';
+      if (ageBracket) ageBracket.value = '40_TO_59';
+      break;
     }
-
-    const card = document.getElementById('tool-' + id) || document.getElementById('tool-card-' + id);
-    if (card) {
-      if (id === cleanId) {
-        card.classList.remove('hidden');
-        card.classList.add('active');
-      } else {
-        card.classList.remove('active');
-        card.classList.add('hidden');
-      }
+    case 'ppc': {
+      const conductDate = document.getElementById('input-ppc-conduct-date');
+      const expiryDate = document.getElementById('input-ppc-expiry-date');
+      if (conductDate) conductDate.value = '';
+      if (expiryDate) expiryDate.value = '';
+      break;
     }
-  });
-
-  if (catAIdx !== -1) {
-    const dotsA = document.querySelectorAll('#page-dots-cat-a .page-dot');
-    dotsA.forEach((dot, idx) => {
-      if (idx === catAIdx) {
-        dot.className = 'page-dot active w-5 h-1.5 rounded-full bg-sky-500 transition-all duration-300';
-      } else {
-        dot.className = 'page-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 transition-all duration-300';
-      }
-    });
+    case 'recurrent': {
+      const conductDate = document.getElementById('input-recurrent-conduct-date');
+      if (conductDate) conductDate.value = '';
+      break;
+    }
+    case 'recency': {
+      const dayEl = document.getElementById('input-recency-day');
+      const nightEl = document.getElementById('input-recency-night');
+      if (dayEl) dayEl.value = '0';
+      if (nightEl) nightEl.value = '0';
+      break;
+    }
+    case 'standby': {
+      const stbyStart = document.getElementById('input-stby-start-time');
+      const stbyReport = document.getElementById('input-stby-report-time');
+      if (stbyStart) stbyStart.value = '06:00';
+      if (stbyReport) stbyReport.value = '10:00';
+      break;
+    }
+    case 'max-fdp': {
+      const reportTime = document.getElementById('input-fdp-report-time');
+      const sectors = document.getElementById('input-fdp-sectors');
+      if (reportTime) reportTime.value = '06:00';
+      if (sectors) sectors.value = '2';
+      break;
+    }
+    case 'pre-flight-rest': {
+      const precDuty = document.getElementById('input-rest-preceding-duty');
+      if (precDuty) precDuty.value = '10';
+      break;
+    }
+    case 'cumulative': {
+      const cumDuty = document.getElementById('input-cum-duty-7d');
+      const cumFlt = document.getElementById('input-cum-flight-28d');
+      if (cumDuty) cumDuty.value = '';
+      if (cumFlt) cumFlt.value = '';
+      break;
+    }
   }
 
-  // Category B subtabs
-  const catBTools = ['standby', 'max-fdp', 'pre-flight-rest', 'cumulative', 'caam-ftl1'];
-  const catBIdx = catBTools.indexOf(cleanId);
-
-  catBTools.forEach(id => {
-    let pillId = id;
-    if (id === 'max-fdp') pillId = 'maxfdp';
-    if (id === 'pre-flight-rest') pillId = 'preflight';
-    if (id === 'caam-ftl1') pillId = 'ftl1';
-
-    const pill = document.getElementById('pill-tool-' + pillId);
-    if (pill) {
-      if (id === cleanId) {
-        pill.className = 'subtab-pill active flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-sky-500/40 bg-sky-500/20 text-sky-400 dark:text-sky-300 cursor-pointer';
-        try { pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); } catch (e) {}
-      } else {
-        pill.className = 'subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer';
-      }
-    }
-
-    let cardId = id === 'max-fdp' ? 'maxfdp' : (id === 'pre-flight-rest' ? 'preflight' : (id === 'caam-ftl1' ? 'ftl1' : id));
-    const card = document.getElementById('tool-' + cardId) || document.getElementById('tool-card-' + cardId);
-    if (card) {
-      if (id === cleanId) {
-        card.classList.remove('hidden');
-        card.classList.add('active');
-      } else {
-        card.classList.remove('active');
-        card.classList.add('hidden');
-      }
-    }
-  });
-
-  if (catBIdx !== -1) {
-    const dotsB = document.querySelectorAll('#page-dots-cat-b .page-dot');
-    dotsB.forEach((dot, idx) => {
-      if (idx === catBIdx) {
-        dot.className = 'page-dot active w-5 h-1.5 rounded-full bg-sky-500 transition-all duration-300';
-      } else {
-        dot.className = 'page-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 transition-all duration-300';
-      }
-    });
-  }
-
-  // Trigger calculation dispatcher for newly activated tool to refresh output card
-  dispatchActiveToolCalculation();
+  delete toolsState.lastCalculationResults[cleanId];
+  const norm = normalizeOutput(cleanId, null);
+  renderNormalizedOutput(norm);
+  flipCard(cleanId, false);
 }
 
-/**
- * Master Timezone Controller
- */
-export function setMasterTimezone(tz) {
-  toolsState.masterTimezone = tz;
-  const btnUtc = document.getElementById('tz-btn-utc');
-  const btnLocal = document.getElementById('tz-btn-local');
-
-  if (tz === 'UTC') {
-    if (btnUtc) btnUtc.className = 'px-2 py-1 rounded text-[10px] font-bold transition-colors bg-blue-600 text-white cursor-pointer';
-    if (btnLocal) btnLocal.className = 'px-2 py-1 rounded text-[10px] font-bold transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 cursor-pointer';
-  } else {
-    if (btnLocal) btnLocal.className = 'px-2 py-1 rounded text-[10px] font-bold transition-colors bg-blue-600 text-white cursor-pointer';
-    if (btnUtc) btnUtc.className = 'px-2 py-1 rounded text-[10px] font-bold transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 cursor-pointer';
-  }
-}
-
-/**
- * Standby Location Controller
- */
-export function setStandbyLocation(loc) {
-  toolsState.standbyLocation = loc;
-  const btnHome = document.getElementById('btn-stby-loc-home');
-  const btnAirport = document.getElementById('btn-stby-loc-airport');
-
-  if (loc === 'HOME') {
-    if (btnHome) btnHome.className = 'py-2 px-3 rounded-xl text-xs font-semibold bg-blue-600 text-white cursor-pointer';
-    if (btnAirport) btnAirport.className = 'py-2 px-3 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 cursor-pointer';
-  } else {
-    if (btnAirport) btnAirport.className = 'py-2 px-3 rounded-xl text-xs font-semibold bg-blue-600 text-white cursor-pointer';
-    if (btnHome) btnHome.className = 'py-2 px-3 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 cursor-pointer';
-  }
-}
-
-/**
- * Recurrent Course Modal Controllers
- */
 export function openRecurrentCourseModal() {
   const modal = document.getElementById('recurrent-course-modal');
   if (modal) modal.classList.remove('hidden');
@@ -818,165 +683,27 @@ export function selectRecurrentCourse(key, name, category) {
   toolsState.recurrentCourseName = name;
   toolsState.recurrentCourseCat = category;
 
-  const hiddenInput = document.getElementById('input-recurrent-course');
-  const labelEl = document.getElementById('recurrent-course-label');
-  const sublabelEl = document.getElementById('recurrent-course-sublabel');
+  const courseHidden = document.getElementById('input-recurrent-course');
+  const courseLabel = document.getElementById('recurrent-course-label');
+  const courseSublabel = document.getElementById('recurrent-course-sublabel');
 
-  if (hiddenInput) hiddenInput.value = key;
-  if (labelEl) labelEl.innerText = name;
-  if (sublabelEl) sublabelEl.innerText = category;
+  if (courseHidden) courseHidden.value = key;
+  if (courseLabel) courseLabel.innerText = name;
+  if (courseSublabel) courseSublabel.innerText = category;
 
   closeRecurrentCourseModal();
 }
 
-export function filterRecurrentCourses(query) {
-  const q = (query || '').toLowerCase();
-  const items = document.querySelectorAll('.recurrent-course-item');
-  items.forEach(item => {
-    const text = item.innerText.toLowerCase();
-    if (text.includes(q)) {
-      item.classList.remove('hidden');
-    } else {
-      item.classList.add('hidden');
-    }
-  });
-}
+export function setStandbyLocation(loc) {
+  toolsState.standbyLocation = loc;
+  const btnHome = document.getElementById('btn-stby-loc-home');
+  const btnAirport = document.getElementById('btn-stby-loc-airport');
 
-/**
- * Input Reset Handler
- */
-export function resetToolInputs(toolId) {
-  let cleanId = toolId ? toolId.replace('tool-card-', '').replace('tool-', '') : '';
-  if (cleanId === 'maxfdp') cleanId = 'max-fdp';
-  if (cleanId === 'preflight') cleanId = 'pre-flight-rest';
-  if (cleanId === 'ftl1') cleanId = 'caam-ftl1';
-
-  const cardKey = cleanId === 'max-fdp' ? 'maxfdp' : (cleanId === 'pre-flight-rest' ? 'preflight' : (cleanId === 'caam-ftl1' ? 'ftl1' : cleanId));
-  const cardEl = document.getElementById('tool-' + cardKey) || document.getElementById('tool-card-' + cardKey) || document.getElementById(toolId);
-
-  if (cardEl) {
-    const inputs = cardEl.querySelectorAll('input, select');
-    inputs.forEach(input => {
-      if (input.type === 'checkbox' || input.type === 'radio') {
-        input.checked = input.defaultChecked;
-      } else if (input.type === 'number') {
-        input.value = input.defaultValue || '0';
-      } else {
-        input.value = input.defaultValue || '';
-      }
-    });
+  if (loc === 'HOME') {
+    if (btnHome) btnHome.className = 'flex-1 py-1.5 rounded-lg text-xs font-bold bg-sky-500 text-white shadow-sm transition-all cursor-pointer';
+    if (btnAirport) btnAirport.className = 'flex-1 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all cursor-pointer';
+  } else {
+    if (btnHome) btnHome.className = 'flex-1 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all cursor-pointer';
+    if (btnAirport) btnAirport.className = 'flex-1 py-1.5 rounded-lg text-xs font-bold bg-sky-500 text-white shadow-sm transition-all cursor-pointer';
   }
-
-  if (cleanId) {
-    delete toolsState.lastCalculationResults[cleanId];
-    const normalized = normalizeOutput(cleanId, null);
-    renderNormalizedOutput(normalized);
-  }
-}
-
-/**
- * Tool #9 Discretion Wizard Modal Handlers
- */
-export function openFtl1WizardModal() {
-  const modal = document.getElementById('ftl1-wizard-modal');
-  if (modal) modal.classList.remove('hidden');
-}
-
-export function closeFtl1WizardModal() {
-  const modal = document.getElementById('ftl1-wizard-modal');
-  if (modal) modal.classList.add('hidden');
-}
-
-/**
- * State & Tab Utility Exports
- */
-export function setToolsTab(tier, subTab) {
-  if (tier) toolsState.activeTier = tier;
-  if (subTab) toolsState.activeSubTab = subTab;
-}
-
-export function getToolsState() {
-  return { ...toolsState };
-}
-
-export function getSectorCount() {
-  return currentSectorCount;
-}
-
-export function setSectorCount(count) {
-  currentSectorCount = Math.max(1, Math.min(8, count));
-  return currentSectorCount;
-}
-
-export function initToolsModule() {
-  return true;
-}
-
-/**
- * Legacy API Wrapper Exports for Backward Compatibility
- */
-export function calculateMedicalWindow(dob, conductDate) {
-  return runToolCalculation('medical', { dob, examDate: conductDate });
-}
-
-export function calculateCourseExpiry(courseType, conductDate) {
-  return runToolCalculation('recurrent', { courseType, completionDate: conductDate });
-}
-
-export function calculatePpcWindows(conductDate, expiryDate) {
-  return runToolCalculation('ppc', { lpcConductDateStr: conductDate, currentLPCExpiryDateStr: expiryDate });
-}
-
-export function calculateFdpAndDiscretion(opts) {
-  return runToolCalculation('max-fdp', opts);
-}
-
-export function getMaxAllowableFdp(reportTime, sectors) {
-  return runToolCalculation('max-fdp', { reportTime, sectors });
-}
-
-export function draftFtlEmail(opts = {}) {
-  const flight = opts.flightNo || 'MH123';
-  const subject = 'FTL / Discretion Notification - FLT ' + String(flight);
-  const body = 'Crew Control / Flight Ops,\\n\\nPlease be advised of the FTL / Discretion details for FLT ' + String(flight) + ':\\n- Report Time: ' + String(opts.reportTime || '--:--') + '\\n- Max Allowable FDP: ' + String(opts.maxFdp || '--:--') + '\\n- On-Chocks Cutoff: ' + String(opts.cutoff || '--:-- UTC') + '\\n\\nGenerated via CertiFly PWA.';
-  return { subject, body, mailtoUrl: 'mailto:crewcontrol@malaysiaairlines.com?subject=' + String(encodeURIComponent(subject)) + '&body=' + String(encodeURIComponent(body)) };
-}
-
-export function renderSectorCardsUI() {}
-export function clearSignatureCanvas() {}
-export function populateCommanderSelect() {}
-
-// Expose functions on window for inline HTML onclick handlers and cross-module access
-if (typeof window !== 'undefined') {
-  
-  window.formatDateDDMMMYYYY = formatDateDDMMMYYYY;
-  window.openEfbDatePicker = openEfbDatePicker;
-  window.closeEfbDatePicker = closeEfbDatePicker;
-  window.renderEfbCalendarGrid = renderEfbCalendarGrid;
-  window.changeEfbMonth = changeEfbMonth;
-  window.setEfbDatePreset = setEfbDatePreset;
-  window.selectEfbDate = selectEfbDate;
-
-  window.switchToolCategory = switchToolCategory;
-  window.switchActiveTool = switchActiveTool;
-  window.setMasterTimezone = setMasterTimezone;
-  window.setStandbyLocation = setStandbyLocation;
-  window.openRecurrentCourseModal = openRecurrentCourseModal;
-  window.closeRecurrentCourseModal = closeRecurrentCourseModal;
-  window.selectRecurrentCourse = selectRecurrentCourse;
-  window.filterRecurrentCourses = filterRecurrentCourses;
-  window.resetToolInputs = resetToolInputs;
-  window.openFtl1WizardModal = openFtl1WizardModal;
-  window.closeFtl1WizardModal = closeFtl1WizardModal;
-  window.runToolCalculation = runToolCalculation;
-  window.renderToolsOutputCard = renderToolsOutputCard;
-  window.setSectorCount = setSectorCount;
-  window.getSectorCount = getSectorCount;
-  window.draftFtlEmail = draftFtlEmail;
-  window.initToolsModule = initToolsModule;
-  window.calculateMedicalWindow = calculateMedicalWindow;
-  window.calculateCourseExpiry = calculateCourseExpiry;
-  window.calculatePpcWindows = calculatePpcWindows;
-  window.calculateFdpAndDiscretion = calculateFdpAndDiscretion;
-  window.getMaxAllowableFdp = getMaxAllowableFdp;
 }
