@@ -1,4 +1,8 @@
-// ./js/tools.js (2710_R239) - Decoupled 3D Vertical Reel, 2-Faced Card Controller & 4-Tier Output Normalizer
+// ./js/tools.js (2710_R246) - Decoupled 3D Vertical Reel, 2-Faced Card Controller & 4-Tier Output Normalizer
+/* ==========================================================================
+   CertiFly - Tools Controller ES Module (tools.js - R245)
+   Decoupled 3D Vertical Reel, 2-Faced Card Controller & 4-Tier Output Normalizer
+   ========================================================================== */
 
 import * as StandbyEngineModule from './engines/standby-fdp-calculator.js';
 import * as MaxFdpEngineModule from './engines/max-fdp-calculator.js';
@@ -294,10 +298,7 @@ export function renderNormalizedOutput(norm) {
     backContainer.innerHTML = html;
   }
 
-  const sharedCard = document.getElementById('tools-output-card');
-  if (sharedCard) {
-    sharedCard.innerHTML = html;
-  }
+
 }
 
 // --------------------------------------------------------------------------
@@ -706,4 +707,199 @@ export function setStandbyLocation(loc) {
     if (btnHome) btnHome.className = 'flex-1 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all cursor-pointer';
     if (btnAirport) btnAirport.className = 'flex-1 py-1.5 rounded-lg text-xs font-bold bg-sky-500 text-white shadow-sm transition-all cursor-pointer';
   }
+}
+
+
+// --------------------------------------------------------------------------
+// EFB Date Picker State & Handlers
+// --------------------------------------------------------------------------
+export const efbPickerState = {
+  activeDate: new Date(),
+  targetInputId: null,
+  title: 'SELECT DATE'
+};
+
+export function renderEfbCalendarGrid() {
+  const container = document.getElementById('efb-date-grid');
+  const monthYearLabel = document.getElementById('efb-picker-month-year');
+  if (!container || !efbPickerState.activeDate) return;
+
+  const year = efbPickerState.activeDate.getUTCFullYear();
+  const month = efbPickerState.activeDate.getUTCMonth();
+  const months = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+  if (monthYearLabel) monthYearLabel.innerText = `${months[month]} ${year}`;
+
+  const firstDay = new Date(Date.UTC(year, month, 1)).getUTCDay();
+  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+
+  let html = '';
+  for (let i = 0; i < firstDay; i++) {
+    html += '<div class="h-8"></div>';
+  }
+
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const isoDay = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const isToday = isoDay === todayStr;
+    const btnClass = isToday
+      ? 'h-8 w-8 mx-auto rounded-full bg-sky-500 text-white font-bold text-xs flex items-center justify-center cursor-pointer shadow-md'
+      : 'h-8 w-8 mx-auto rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs flex items-center justify-center cursor-pointer transition-colors';
+
+    html += `<button type="button" class="${btnClass}" onclick="selectEfbDate('${isoDay}')">${day}</button>`;
+  }
+
+  container.innerHTML = html;
+}
+
+export function openEfbDatePicker(targetInputId, labelTitle = 'SELECT DATE') {
+  efbPickerState.targetInputId = targetInputId;
+  efbPickerState.title = labelTitle;
+
+  const titleEl = document.getElementById('efb-date-picker-title');
+  if (titleEl) titleEl.innerText = labelTitle;
+
+  const hiddenInput = document.getElementById(targetInputId);
+  if (hiddenInput && hiddenInput.value) {
+    const parts = hiddenInput.value.split('-');
+    if (parts.length === 3) {
+      efbPickerState.activeDate = new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)));
+    }
+  } else {
+    efbPickerState.activeDate = new Date();
+  }
+
+  renderEfbCalendarGrid();
+
+  const modal = document.getElementById('efb-date-picker-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+export function closeEfbDatePicker() {
+  const modal = document.getElementById('efb-date-picker-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+export function selectEfbDate(isoVal) {
+  if (!efbPickerState.targetInputId) return;
+
+  const hiddenInput = document.getElementById(efbPickerState.targetInputId);
+  if (hiddenInput) {
+    hiddenInput.value = isoVal;
+  }
+
+  const displayId = efbPickerState.targetInputId + '-display';
+  const displayEl = document.getElementById(displayId);
+  if (displayEl) {
+    displayEl.innerText = formatDateDDMMMYYYY(isoVal);
+  }
+
+  closeEfbDatePicker();
+}
+
+export function setEfbDatePreset(presetKey) {
+  const now = new Date();
+  let d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+
+  if (presetKey === 'today') {
+    // Current date
+  } else if (presetKey === 'eom') {
+    d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0));
+  } else if (presetKey === 'plus30') {
+    d.setUTCDate(d.getUTCDate() + 30);
+  } else if (presetKey === 'plus90') {
+    d.setUTCDate(d.getUTCDate() + 90);
+  }
+
+  const isoVal = d.toISOString().split('T')[0];
+  selectEfbDate(isoVal);
+}
+
+export function changeEfbMonth(delta) {
+  if (!efbPickerState.activeDate) efbPickerState.activeDate = new Date();
+  efbPickerState.activeDate.setUTCMonth(efbPickerState.activeDate.getUTCMonth() + delta);
+  renderEfbCalendarGrid();
+}
+
+// --------------------------------------------------------------------------
+// State & Utility Exports for UI & Main Controller Compatibility
+// --------------------------------------------------------------------------
+let currentSectorCount = 2;
+
+export function setSectorCount(count) {
+  currentSectorCount = Math.max(1, Math.min(8, count));
+  return currentSectorCount;
+}
+
+export function getSectorCount() {
+  return currentSectorCount;
+}
+
+export function initToolsModule() {
+  return true;
+}
+
+export function setToolsTab(tier, subTab) {
+  if (tier) toolsState.activeTier = tier;
+  if (subTab) toolsState.activeSubTab = subTab;
+}
+
+export function getToolsState() {
+  return { ...toolsState };
+}
+
+export function switchActiveTool(toolId) {
+  if (!toolId) return;
+
+  let cleanId = toolId.replace('tool-card-', '').replace('tool-', '');
+  if (cleanId === 'maxfdp') cleanId = 'max-fdp';
+  if (cleanId === 'preflight') cleanId = 'pre-flight-rest';
+
+  toolsState.activeToolId = cleanId;
+  toolsState.activeSubTab = cleanId;
+}
+
+export function setMasterTimezone(tz) {
+  toolsState.masterTimezone = tz;
+}
+
+
+
+export function renderToolsOutputCard(normalized) {
+  return renderNormalizedOutput(normalized);
+}
+
+export function filterRecurrentCourses(query) {
+  const cards = document.querySelectorAll('.recurrent-module-card');
+  const q = (query || '').toLowerCase().trim();
+
+  cards.forEach(card => {
+    const text = (card.textContent || '').toLowerCase();
+    if (!q || text.includes(q)) {
+      card.classList.remove('hidden');
+    } else {
+      card.classList.add('hidden');
+    }
+  });
+}
+
+
+export function calculateMedicalWindow(dob, conductDate) {
+  return runToolCalculation('medical', { dob, examDate: conductDate });
+}
+
+export function calculateCourseExpiry(courseType, conductDate) {
+  return runToolCalculation('recurrent', { courseType, completionDate: conductDate });
+}
+
+export function calculatePpcWindows(conductDate, expiryDate) {
+  return runToolCalculation('ppc', { conductDate, expiryDate });
+}
+
+export function calculateFdpAndDiscretion(opts) {
+  return runToolCalculation('max-fdp', opts);
+}
+
+export function getMaxAllowableFdp(reportTime, sectors) {
+  return runToolCalculation('max-fdp', { reportTime, sectors });
 }
