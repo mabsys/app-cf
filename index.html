@@ -1,4 +1,4 @@
-<!-- ./index.html (2710_R254) - CertiFly PWA Application Shell & Flat Tools Layout -->
+<!-- ./index.html (2710_R256) - CertiFly PWA Application Shell & Flat Tools Layout -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -998,7 +998,7 @@ if ('serviceWorker' in navigator) {
                             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                             </svg>
-                            <span>Date</span>
+                            <span>Qualifications &amp; Validity</span>
                         </button>
 
                         <!-- Category B: Duty & Rest (Time-Centric) -->
@@ -1006,7 +1006,7 @@ if ('serviceWorker' in navigator) {
                             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <span>Time</span>
+                            <span>Duty &amp; Rest</span>
                         </button>
 
                     </div>
@@ -1175,12 +1175,10 @@ if ('serviceWorker' in navigator) {
                             <button id="pill-tool-maxfdp" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-maxfdp')">Max Allowable FDP</button>
                             <button id="pill-tool-preflight" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-preflight')">Pre-Flight Rest</button>
                             <button id="pill-tool-cumulative" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-cumulative')">Cumulative Hours</button>
-                            <button id="pill-tool-ftl1" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-300 hover:text-amber-700 dark:hover:text-amber-200 cursor-pointer" onclick="openFtl1WizardModal()">CAAM/BOP/FTL/1</button>
                         </div>
                         <!-- Carousel Page Dots -->
                         <div id="page-dots-cat-b" class="flex justify-center items-center gap-1.5 mt-1.5">
                             <span class="page-dot active w-5 h-1.5 rounded-full bg-blue-500 transition-all duration-300"></span>
-                            <span class="page-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 transition-all duration-300"></span>
                             <span class="page-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 transition-all duration-300"></span>
                             <span class="page-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 transition-all duration-300"></span>
                             <span class="page-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 transition-all duration-300"></span>
@@ -1338,10 +1336,6 @@ if ('serviceWorker' in navigator) {
                             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0 mt-0.5">AUDIT:</span>
                             <p id="output-audit-text" class="text-[11px] font-medium text-slate-600 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Section 2.14 and MAB OM-A Section 7.5.12. Compliant.</p>
                         </div>
-                        <div id="output-cta-container" class="flex items-center gap-2 pt-1">
-                            <button type="button" id="btn-cta-primary" class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all text-center cursor-pointer">Add Calendar Reminder</button>
-                            <button type="button" id="btn-cta-secondary" class="py-2.5 px-3 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-all text-center cursor-pointer">Share</button>
-                        </div>
                     </div>
 
                 </div>
@@ -1488,50 +1482,18 @@ if ('serviceWorker' in navigator) {
         </div>
     </div>
 
-    <div id="ftl1-wizard-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 select-none">
-        <div class="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
 
-            <!-- Modal Header -->
-            <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-900/90">
-                <div>
-                    <span class="text-[10px] font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wider">CAAM/BOP/FTL/1 REPORT</span>
-                    <h3 class="text-sm font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Commander Discretion Assistant</h3>
-                </div>
-                <button type="button" class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-1 text-xs font-bold cursor-pointer" onclick="closeFtl1WizardModal()">Close ✕</button>
-            </div>
+    </div>
 
-            <!-- Modal Wizard Content (Scrollable) -->
-            <div class="p-4 overflow-y-auto space-y-4 flex-1 text-xs text-slate-700 dark:text-slate-300">
+    </div>
 
-                <!-- Step Indicator -->
-                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-                    <span id="ftl1-step-label" class="font-bold text-blue-600 dark:text-blue-400">Step 1 of 4: Flight &amp; Crew Details</span>
-                    <span class="text-[10px] text-slate-400">Form Ref: CAAM CAD 1901</span>
-                </div>
+    <!-- Modal Footer Actions -->
+    <div class="p-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 flex items-center justify-between gap-2">
+        <button type="button" class="py-2 px-4 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 cursor-pointer" onclick="closeFtl1WizardModal()">Cancel</button>
+        <button type="button" id="btn-ftl1-export" class="py-2 px-4 rounded-xl text-xs font-extrabold bg-amber-600 hover:bg-amber-500 text-white shadow-md cursor-pointer">Export &amp; Overlay PDF</button>
+    </div>
 
-                <!-- Step 1 Form Fields -->
-                <div id="ftl1-step-1" class="space-y-3">
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">Flight Number</label>
-                            <input type="text" id="ftl1-flight-no" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-100" value="MH1141">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">Aircraft Reg</label>
-                            <input type="text" id="ftl1-ac-reg" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-100" value="9M-MXA">
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Modal Footer Actions -->
-            <div class="p-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 flex items-center justify-between gap-2">
-                <button type="button" class="py-2 px-4 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 cursor-pointer" onclick="closeFtl1WizardModal()">Cancel</button>
-                <button type="button" id="btn-ftl1-export" class="py-2 px-4 rounded-xl text-xs font-extrabold bg-amber-600 hover:bg-amber-500 text-white shadow-md cursor-pointer">Export &amp; Overlay PDF</button>
-            </div>
-
-        </div>
+    </div>
     </div>
 
     <!-- ================================================================= -->
@@ -1583,7 +1545,7 @@ if ('serviceWorker' in navigator) {
 
     <script src="js/vendor/anime.min.js"></script>
     <script type="module" src="main.js"></script>
-        <script>
+            <script>
         if (/[?&]debug=1/.test(location.search)) {
             var s = document.createElement('script');
             s.src = 'https://cdn.jsdelivr.net/npm/eruda';
@@ -1593,6 +1555,7 @@ if ('serviceWorker' in navigator) {
             document.head.appendChild(s);
         }
     </script>
+
 
 
 
