@@ -1,4 +1,4 @@
-// js/tools.js (2410_R229) - Tools Orchestrator, EFB Date Picker & Date Formatter
+// js/tools.js (2710_R257) - Tools Orchestrator, EFB Date Picker & Date Formatter
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -6,7 +6,6 @@ import * as StandbyEngineModule from './engines/standby-fdp-calculator.js';
 import * as MaxFdpEngineModule from './engines/max-fdp-calculator.js';
 import * as PreFlightRestEngineModule from './engines/pre-flight-rest-calculator.js';
 import * as CumulativeEngineModule from './engines/cumulative-hours-calculator.js';
-import * as CaamFtl1Module from './engines/caam-ftl1-controller.js';
 import * as MedicalEngineModule from './engines/medical-validity-calculator.js';
 
 /**
@@ -119,7 +118,7 @@ export function renderEfbCalendarGrid() {
 
     let btnClasses = 'py-2 rounded-xl transition-all cursor-pointer select-none text-xs font-bold ';
     if (isSelected) {
-      btnClasses += 'bg-sky-600 text-white shadow-md font-extrabold scale-105';
+      btnClasses += 'bg-blue-600 text-white shadow-md font-extrabold scale-105';
     } else if (isToday) {
       btnClasses += 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40';
     } else {
@@ -304,9 +303,7 @@ export function normalizeOutput(toolType, rawResult) {
           { label: 'BASE MAX FDP', value: '13:00 Hours' }
         ],
         auditNotes: ['CAAM CAD 1901 Section 2.11 Standby FDP Adjustments'],
-        actions: [
-          { type: 'pipeline-fdp', label: 'Apply To Max FDP Calculator' }
-        ]
+        actions: []
       };
     }
 
@@ -327,10 +324,7 @@ export function normalizeOutput(toolType, rawResult) {
           { label: 'MAX DISCRETION', value: '+02:00 Hours' }
         ],
         auditNotes: ['CAAM CAD 1901 Table A/B & OM-A Section 7.5'],
-        actions: [
-          ...(isDiscretionNeeded ? [{ type: 'discretion', label: 'Complete CAAM/BOP/FTL/1 Report' }] : []),
-          { type: 'pipeline-rest', label: 'Pass to Min Rest' }
-        ]
+        actions: []
       };
     }
 
@@ -351,9 +345,7 @@ export function normalizeOutput(toolType, rawResult) {
           { label: 'OUTSTATION ADD', value: '00:00 Hours' }
         ],
         auditNotes: ['CAAM CAD 1901 Section 2.14 & OM-A Section 7.5.12'],
-        actions: [
-          { type: 'pipeline-cumulative', label: 'Update Cumulative Hours' }
-        ]
+        actions: []
       };
     }
 
@@ -378,26 +370,7 @@ export function normalizeOutput(toolType, rawResult) {
       };
     }
 
-    case 'caam-ftl1': {
-      return {
-        statusBadge: 'REPORT READY',
-        statusClass: 'bg-sky-100 text-sky-800 dark:bg-sky-950/80 dark:text-sky-300',
-        headlineTitle: 'CAAM/BOP/FTL/1 REPORT',
-        headlineValue: 'FLIGHT MH123',
-        targetClockLabel: 'Official Discretion Form',
-        targetClockValue: 'CAAM Official FTL Document',
-        breakdownGrid: [
-          { label: 'FLIGHT NO', value: 'MH123' },
-          { label: 'AIRCRAFT', value: '9M-MTB' },
-          { label: 'DISCRETION', value: '+00:45 Exercised' },
-          { label: 'COMMANDER', value: 'CAPT AHMAD RAZALI' }
-        ],
-        auditNotes: ['CAAM CAD 1901 Official Flight Discretion Report'],
-        actions: [
-          { type: 'generate-pdf', label: 'Download Official CAAM PDF' }
-        ]
-      };
-    }
+
 
     default:
       return {
@@ -610,7 +583,7 @@ export function renderNormalizedOutput(normalized) {
   if (ctaContainerEl) {
     if (Array.isArray(normalized.actions) && normalized.actions.length > 0) {
       ctaContainerEl.innerHTML = normalized.actions.map(act => {
-        let btnClass = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white shadow-md transition-all text-center cursor-pointer';
+        let btnClass = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all text-center cursor-pointer';
         if (act.type === 'discretion') {
           btnClass = 'flex-1 py-2 px-3 rounded-xl text-xs font-extrabold bg-amber-600 hover:bg-amber-500 text-white shadow-md transition-all text-center cursor-pointer';
         } else if (act.type === 'share') {
@@ -675,8 +648,7 @@ export function switchActiveTool(toolId) {
   let cleanId = toolId.replace('tool-card-', '').replace('tool-', '');
   if (cleanId === 'maxfdp') cleanId = 'max-fdp';
   if (cleanId === 'preflight') cleanId = 'pre-flight-rest';
-  if (cleanId === 'ftl1') cleanId = 'caam-ftl1';
-
+  
   toolsState.activeSubTab = cleanId;
 
   // Category A subtabs
@@ -688,7 +660,7 @@ export function switchActiveTool(toolId) {
     const pill = document.getElementById('pill-tool-' + pillId);
     if (pill) {
       if (id === cleanId) {
-        pill.className = 'subtab-pill active flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-sky-500/40 bg-sky-500/20 text-sky-400 dark:text-sky-300 cursor-pointer';
+        pill.className = 'subtab-pill active flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-blue-500/40 bg-blue-500/20 text-blue-400 dark:text-blue-300 cursor-pointer';
         try { pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); } catch (e) {}
       } else {
         pill.className = 'subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer';
@@ -711,7 +683,7 @@ export function switchActiveTool(toolId) {
     const dotsA = document.querySelectorAll('#page-dots-cat-a .page-dot');
     dotsA.forEach((dot, idx) => {
       if (idx === catAIdx) {
-        dot.className = 'page-dot active w-5 h-1.5 rounded-full bg-sky-500 transition-all duration-300';
+        dot.className = 'page-dot active w-5 h-1.5 rounded-full bg-blue-500 transition-all duration-300';
       } else {
         dot.className = 'page-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 transition-all duration-300';
       }
@@ -719,26 +691,25 @@ export function switchActiveTool(toolId) {
   }
 
   // Category B subtabs
-  const catBTools = ['standby', 'max-fdp', 'pre-flight-rest', 'cumulative', 'caam-ftl1'];
+  const catBTools = ['standby', 'max-fdp', 'pre-flight-rest', 'cumulative'];
   const catBIdx = catBTools.indexOf(cleanId);
 
   catBTools.forEach(id => {
     let pillId = id;
     if (id === 'max-fdp') pillId = 'maxfdp';
     if (id === 'pre-flight-rest') pillId = 'preflight';
-    if (id === 'caam-ftl1') pillId = 'ftl1';
 
     const pill = document.getElementById('pill-tool-' + pillId);
     if (pill) {
       if (id === cleanId) {
-        pill.className = 'subtab-pill active flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-sky-500/40 bg-sky-500/20 text-sky-400 dark:text-sky-300 cursor-pointer';
+        pill.className = 'subtab-pill active flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-blue-500/40 bg-blue-500/20 text-blue-400 dark:text-blue-300 cursor-pointer';
         try { pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); } catch (e) {}
       } else {
         pill.className = 'subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer';
       }
     }
 
-    let cardId = id === 'max-fdp' ? 'maxfdp' : (id === 'pre-flight-rest' ? 'preflight' : (id === 'caam-ftl1' ? 'ftl1' : id));
+    let cardId = id === 'max-fdp' ? 'maxfdp' : (id === 'pre-flight-rest' ? 'preflight' : id);
     const card = document.getElementById('tool-' + cardId) || document.getElementById('tool-card-' + cardId);
     if (card) {
       if (id === cleanId) {
@@ -755,7 +726,7 @@ export function switchActiveTool(toolId) {
     const dotsB = document.querySelectorAll('#page-dots-cat-b .page-dot');
     dotsB.forEach((dot, idx) => {
       if (idx === catBIdx) {
-        dot.className = 'page-dot active w-5 h-1.5 rounded-full bg-sky-500 transition-all duration-300';
+        dot.className = 'page-dot active w-5 h-1.5 rounded-full bg-blue-500 transition-all duration-300';
       } else {
         dot.className = 'page-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 transition-all duration-300';
       }
@@ -849,8 +820,7 @@ export function resetToolInputs(toolId) {
   let cleanId = toolId ? toolId.replace('tool-card-', '').replace('tool-', '') : '';
   if (cleanId === 'maxfdp') cleanId = 'max-fdp';
   if (cleanId === 'preflight') cleanId = 'pre-flight-rest';
-  if (cleanId === 'ftl1') cleanId = 'caam-ftl1';
-
+  
   const cardKey = cleanId === 'max-fdp' ? 'maxfdp' : (cleanId === 'pre-flight-rest' ? 'preflight' : (cleanId === 'caam-ftl1' ? 'ftl1' : cleanId));
   const cardEl = document.getElementById('tool-' + cardKey) || document.getElementById('tool-card-' + cardKey) || document.getElementById(toolId);
 
@@ -874,18 +844,7 @@ export function resetToolInputs(toolId) {
   }
 }
 
-/**
- * Tool #9 Discretion Wizard Modal Handlers
- */
-export function openFtl1WizardModal() {
-  const modal = document.getElementById('ftl1-wizard-modal');
-  if (modal) modal.classList.remove('hidden');
-}
 
-export function closeFtl1WizardModal() {
-  const modal = document.getElementById('ftl1-wizard-modal');
-  if (modal) modal.classList.add('hidden');
-}
 
 /**
  * State & Tab Utility Exports
@@ -966,13 +925,10 @@ if (typeof window !== 'undefined') {
   window.selectRecurrentCourse = selectRecurrentCourse;
   window.filterRecurrentCourses = filterRecurrentCourses;
   window.resetToolInputs = resetToolInputs;
-  window.openFtl1WizardModal = openFtl1WizardModal;
-  window.closeFtl1WizardModal = closeFtl1WizardModal;
   window.runToolCalculation = runToolCalculation;
   window.renderToolsOutputCard = renderToolsOutputCard;
   window.setSectorCount = setSectorCount;
   window.getSectorCount = getSectorCount;
-  window.draftFtlEmail = draftFtlEmail;
   window.initToolsModule = initToolsModule;
   window.calculateMedicalWindow = calculateMedicalWindow;
   window.calculateCourseExpiry = calculateCourseExpiry;
