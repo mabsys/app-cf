@@ -1,6 +1,6 @@
-// ./js/views/toolsView.js (2710_R238) - Decoupled 3D Vertical Reel & 2-Faced Card Renderer
+// ./js/views/toolsView.js (2710_R245) - Decoupled 3D Vertical Reel & 2-Faced Card Renderer
 /* ==========================================================================
-   CertiFly - Tools View ES Module (toolsView.js)
+   CertiFly - Tools View ES Module (toolsView.js - R245)
    Decoupled 3D Vertical Reel & 2-Faced Card Renderer
    ========================================================================== */
 
@@ -51,12 +51,7 @@ export function renderToolsView(containerSelector = '#tools-view-container') {
         </div>
       </div>
 
-      <!-- SINGLE OUTPUT CARD ANCHOR (Shared Output Sheet) -->
-      <div id="tools-output-card-container" class="w-full px-4 pb-3 z-20 max-w-[380px] mx-auto hidden">
-        <div id="tools-output-card" class="bg-slate-800/90 backdrop-blur-xl border border-slate-700/80 rounded-3xl p-4 shadow-2xl transition-all duration-300">
-          <!-- Dynamically updated by renderNormalizedOutput -->
-        </div>
-      </div>
+
 
     </div>
   `;
@@ -263,5 +258,4 @@ function renderCumulativeCard() {
   `;
   return renderCardShell('cumulative', 'Cumulative Hours', 'Cumulative', inputs);
 }
-
 
