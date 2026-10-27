@@ -1,4 +1,4 @@
-// ./js/tools.js (2710_R251) - Decoupled 3D Vertical Reel, 2-Faced Card Controller & 4-Tier Output Normalizer
+// ./js/tools.js (2710_R252) - Decoupled 3D Vertical Reel, 2-Faced Card Controller & 4-Tier Output Normalizer
 /* ==========================================================================
    CertiFly - Tools Controller ES Module (tools.js - R251)
    Decoupled 3D Vertical Reel, 2-Faced Card Controller & 4-Tier Output Normalizer
@@ -902,4 +902,25 @@ export function calculateFdpAndDiscretion(opts) {
 
 export function getMaxAllowableFdp(reportTime, sectors) {
   return runToolCalculation('max-fdp', { reportTime, sectors });
+}
+
+
+if (typeof window !== 'undefined') {
+  window.executeAndFlipCard = executeAndFlipCard;
+  window.flipCardBackToFront = flipCardBackToFront;
+  window.flipCard = flipCard;
+  window.switchToolCategory = switchToolCategory;
+  window.resetToolInputs = resetToolInputs;
+  window.openRecurrentCourseModal = openRecurrentCourseModal;
+  window.closeRecurrentCourseModal = closeRecurrentCourseModal;
+  window.selectRecurrentCourse = selectRecurrentCourse;
+  window.setStandbyLocation = setStandbyLocation;
+  window.openEfbDatePicker = openEfbDatePicker;
+  window.closeEfbDatePicker = closeEfbDatePicker;
+  window.selectEfbDate = selectEfbDate;
+  window.setEfbDatePreset = setEfbDatePreset;
+  window.changeEfbMonth = changeEfbMonth;
+  window.setMasterTimezone = setMasterTimezone;
+  window.switchActiveTool = switchActiveTool;
+  window.runToolCalculation = runToolCalculation;
 }
