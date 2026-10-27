@@ -1,10 +1,10 @@
-
-// ./js/tools.js (2710_R246) - Decoupled 3D Vertical Reel, 2-Faced Card Controller & 4-Tier Output Normalizer
+// ./js/tools.js (2710_R251) - Decoupled 3D Vertical Reel, 2-Faced Card Controller & 4-Tier Output Normalizer
 /* ==========================================================================
-   CertiFly - Tools Controller ES Module (tools.js - R245)
+   CertiFly - Tools Controller ES Module (tools.js - R251)
    Decoupled 3D Vertical Reel, 2-Faced Card Controller & 4-Tier Output Normalizer
    ========================================================================== */
 
+import { animate3DCardFlip, animateResetPulse } from './animations.js';
 import * as StandbyEngineModule from './engines/standby-fdp-calculator.js';
 import * as MaxFdpEngineModule from './engines/max-fdp-calculator.js';
 import * as PreFlightRestEngineModule from './engines/pre-flight-rest-calculator.js';
@@ -328,20 +328,18 @@ export function flipCardBackToFront(toolId) {
 }
 
 export function flipCard(toolId, toBack) {
-  const cardEl = document.getElementById(`tool-card-${toolId}`);
-  if (!cardEl) return;
+  let cleanId = toolId ? toolId.replace('tool-card-', '').replace('tool-', '') : 'medical';
+  if (cleanId === 'maxfdp') cleanId = 'max-fdp';
+  if (cleanId === 'preflight') cleanId = 'pre-flight-rest';
 
-  const innerEl = cardEl.querySelector('.card-3d-inner');
-  if (!innerEl) return;
-
-  if (typeof window !== 'undefined' && window.anime) {
-    window.anime({
-      targets: innerEl,
-      rotateY: toBack ? 180 : 0,
-      duration: 550,
-      easing: 'easeInOutCubic'
-    });
+  if (typeof animate3DCardFlip === 'function') {
+    animate3DCardFlip(cleanId, toBack);
   } else {
+    const cardEl = document.getElementById(`tool-card-${cleanId}`);
+    if (!cardEl) return;
+    const innerEl = cardEl.querySelector('.card-3d-inner');
+    if (!innerEl) return;
+
     if (toBack) {
       innerEl.classList.add('rotate-y-180');
     } else {
@@ -667,6 +665,7 @@ export function resetToolInputs(toolId) {
   delete toolsState.lastCalculationResults[cleanId];
   const norm = normalizeOutput(cleanId, null);
   renderNormalizedOutput(norm);
+  if (typeof animateResetPulse === 'function') { animateResetPulse(cleanId); }
   flipCard(cleanId, false);
 }
 
