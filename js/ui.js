@@ -1,8 +1,10 @@
-// ./js/ui.js (2710_R258) - CertiFly Navigation, View Controller & UI State
+// ./js/ui.js (2810_R268) - CertiFly Navigation, View Controller & UI State
+// Developed by: Capt. Mohd Sallehuddin Zaidy
+// CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
 import { initToolsModule, runToolCalculation, setToolsTab, getToolsState, getSectorCount, setSectorCount } from './tools.js';
 import { stopScanner, switchScanHubTab } from './scanner.js';
-import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData } from './storage.js';
+import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData, getProfileData, getAttestationData } from './storage.js';
 import { topbarHTML } from './components/topbar.js';
 import { dockHTML } from './components/dock.js';
 import { menuHTML } from './components/menu.js';
@@ -658,96 +660,129 @@ if (typeof window !== 'undefined') {
 // PHASE 3: CERTIFLY™ TOOLS VIEW UI CONTROLLER
 // ==================================================================
 
-import { getProfileData, getAttestationData } from './storage.js';
+let activeCategory = 'qualifications'; // 'qualifications' | 'dutyrest'
+let activeToolCardId = 'tool-card-medical';
 
-let activeToolsTier = 'validity'; // 'validity' | 'fdp'
-let activeToolsSubTab = 'medical'; // 'medical'|'ppc'|'recurrent'|'standby'|'max-fdp'|'pre-flight-rest'|'cumulative'
+export function switchToolCategory(category) {
+  activeCategory = category;
 
-export function switchTier1(tier) {
-  activeToolsTier = tier;
-  
-  const valBtn = document.getElementById('tools-tab-validity-btn');
-  const fdpBtn = document.getElementById('tools-tab-fdp-btn');
+  const catQualsBtn = document.getElementById('cat-tab-qualifications');
+  const catDutyBtn = document.getElementById('cat-tab-dutyrest');
 
-  const activeClass = "tools-tab-btn py-2.5 px-2 rounded-xl text-[11px] font-extrabold transition-all bg-blue-600 text-white shadow-xs flex items-center justify-center gap-1.5 cursor-pointer";
-  const inactiveClass = "tools-tab-btn py-2.5 px-2 rounded-xl text-[11px] font-extrabold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 flex items-center justify-center gap-1.5 cursor-pointer";
+  const paneQuals = document.getElementById('cat-pane-qualifications');
+  const paneDuty = document.getElementById('cat-pane-dutyrest');
 
-  if (valBtn && fdpBtn) {
-    if (tier === 'validity') {
-      valBtn.className = activeClass;
-      fdpBtn.className = inactiveClass;
-    } else {
-      valBtn.className = inactiveClass;
-      fdpBtn.className = activeClass;
-    }
+  const activeClass = "cat-tab-btn active py-2.5 px-3 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 text-center flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-md cursor-pointer";
+  const inactiveClass = "cat-tab-btn py-2.5 px-3 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 text-center flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer";
+
+  if (category === 'qualifications') {
+    if (catQualsBtn) catQualsBtn.className = activeClass;
+    if (catDutyBtn) catDutyBtn.className = inactiveClass;
+    if (paneQuals) paneQuals.classList.remove('hidden');
+    if (paneDuty) paneDuty.classList.add('hidden');
+    switchActiveTool('tool-card-medical');
+  } else {
+    if (catQualsBtn) catQualsBtn.className = inactiveClass;
+    if (catDutyBtn) catDutyBtn.className = activeClass;
+    if (paneQuals) paneQuals.classList.add('hidden');
+    if (paneDuty) paneDuty.classList.remove('hidden');
+    switchActiveTool('tool-card-standby');
   }
-
-  const qualsNav = document.getElementById('tools-subnav-quals');
-  const ftlNav = document.getElementById('tools-subnav-ftl');
-
-  if (qualsNav && ftlNav) {
-    if (tier === 'validity') {
-      qualsNav.classList.remove('hidden');
-      ftlNav.classList.add('hidden');
-      switchSubTab('medical');
-    } else {
-      qualsNav.classList.add('hidden');
-      ftlNav.classList.remove('hidden');
-      switchSubTab('max-fdp');
-    }
-  }
-
-  setToolsTab(tier, activeToolsSubTab);
 }
 
-export function switchSubTab(subTab) {
-  activeToolsSubTab = subTab;
-  
-  const allSubBtns = document.querySelectorAll('#tools-subnav-quals button, #tools-subnav-ftl button');
-  const btnActive = "px-3 py-1.5 rounded-xl bg-blue-600 text-white shrink-0 font-extrabold shadow-xs transition-all cursor-pointer";
-  const btnInactive = "px-3 py-1.5 rounded-xl bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0 font-bold hover:text-slate-900 transition-all cursor-pointer";
+export function switchActiveTool(toolCardId) {
+  activeToolCardId = toolCardId;
 
-  allSubBtns.forEach(btn => {
-    if (btn.id === `subtab-${subTab}`) {
-      btn.className = btnActive;
-    } else {
-      btn.className = btnInactive;
-    }
-  });
+  const allToolCards = [
+    'tool-card-medical', 'tool-card-ppc', 'tool-card-recurrent', 'tool-card-recency',
+    'tool-card-standby', 'tool-card-maxfdp', 'tool-card-preflight', 'tool-card-cumulative'
+  ];
 
-  const panes = ['medical', 'ppc', 'recurrent', 'standby', 'max-fdp', 'pre-flight-rest', 'cumulative'];
-  const toolCards = ['tool-medical', 'tool-ppc', 'tool-recurrent', 'tool-recency', 'tool-standby', 'tool-maxfdp', 'tool-preflight', 'tool-cumulative'];
-  const cardMap = {
-    'medical': 'tool-medical',
-    'ppc': 'tool-ppc',
-    'recurrent': 'tool-recurrent',
-    'recency': 'tool-recency',
-    'standby': 'tool-standby',
-    'max-fdp': 'tool-maxfdp',
-    'pre-flight-rest': 'tool-preflight',
-    'cumulative': 'tool-cumulative',
-  };
-
-  toolCards.forEach(cardId => {
+  allToolCards.forEach(cardId => {
     const cardEl = document.getElementById(cardId);
-    if (cardEl) {
-      if (cardMap[subTab] === cardId) {
-        cardEl.classList.remove('hidden');
-        requestAnimationFrame(() => cardEl.classList.add('active'));
-      } else {
-        cardEl.classList.remove('active');
-        cardEl.classList.add('hidden');
+    if (!cardEl) return;
+
+    if (cardId === toolCardId) {
+      cardEl.classList.remove('hidden');
+      cardEl.classList.add('active');
+
+      // Un-flip 3D inner container to show input front face on tool switch
+      const inner3d = cardEl.querySelector('.card-3d-inner');
+      if (inner3d) {
+        inner3d.classList.remove('is-flipped');
       }
+    } else {
+      cardEl.classList.add('hidden');
+      cardEl.classList.remove('active');
     }
   });
 
-  setToolsTab(activeToolsTier, subTab);
+  // Update Category A Sub-tab pills
+  const catAPills = [
+    { id: 'pill-tool-medical', card: 'tool-card-medical', idx: 0 },
+    { id: 'pill-tool-ppc', card: 'tool-card-ppc', idx: 1 },
+    { id: 'pill-tool-recurrent', card: 'tool-card-recurrent', idx: 2 },
+    { id: 'pill-tool-recency', card: 'tool-card-recency', idx: 3 }
+  ];
+
+  let catAIdx = 0;
+  catAPills.forEach(item => {
+    const pillBtn = document.getElementById(item.id);
+    if (!pillBtn) return;
+    if (item.card === toolCardId) {
+      catAIdx = item.idx;
+      pillBtn.className = "subtab-pill active flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-blue-500/40 bg-blue-500/20 text-blue-400 dark:text-blue-300 cursor-pointer";
+    } else {
+      pillBtn.className = "subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer";
+    }
+  });
+
+  // Update Category B Sub-tab pills
+  const catBPills = [
+    { id: 'pill-tool-standby', card: 'tool-card-standby', idx: 0 },
+    { id: 'pill-tool-maxfdp', card: 'tool-card-maxfdp', idx: 1 },
+    { id: 'pill-tool-preflight', card: 'tool-card-preflight', idx: 2 },
+    { id: 'pill-tool-cumulative', card: 'tool-card-cumulative', idx: 3 }
+  ];
+
+  let catBIdx = 0;
+  catBPills.forEach(item => {
+    const pillBtn = document.getElementById(item.id);
+    if (!pillBtn) return;
+    if (item.card === toolCardId) {
+      catBIdx = item.idx;
+      pillBtn.className = "subtab-pill active flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-blue-500/40 bg-blue-500/20 text-blue-400 dark:text-blue-300 cursor-pointer";
+    } else {
+      pillBtn.className = "subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer";
+    }
+  });
+
+  // Update Carousel Page Dots
+  const dotsA = document.querySelectorAll('#page-dots-cat-a .page-dot');
+  dotsA.forEach((dot, idx) => {
+    if (idx === catAIdx) {
+      dot.className = "page-dot active w-5 h-1.5 rounded-full bg-blue-500 transition-all duration-300";
+    } else {
+      dot.className = "page-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 transition-all duration-300";
+    }
+  });
+
+  const dotsB = document.querySelectorAll('#page-dots-cat-b .page-dot');
+  dotsB.forEach((dot, idx) => {
+    if (idx === catBIdx) {
+      dot.className = "page-dot active w-5 h-1.5 rounded-full bg-blue-500 transition-all duration-300";
+    } else {
+      dot.className = "page-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 transition-all duration-300";
+    }
+  });
+
+  setToolsTab(activeCategory, toolCardId);
   dispatchActiveToolCalculation();
 }
 
 export function dispatchActiveToolCalculation() {
   const activeToolCard = document.querySelector('.tool-card.active');
-  const activeToolId = activeToolCard ? activeToolCard.id : 'tool-card-medical';
+  const activeToolId = activeToolCard ? activeToolCard.id : activeToolCardId;
   let toolType = activeToolId.replace('tool-card-', '');
   if (toolType === 'maxfdp') toolType = 'max-fdp';
   if (toolType === 'preflight') toolType = 'pre-flight-rest';
@@ -763,51 +798,64 @@ export function dispatchActiveToolCalculation() {
           ageBracket: document.getElementById('input-med-age-bracket')?.value || '40_TO_59'
         };
         break;
+
       case 'ppc':
         inputData = {
-          conductDate: document.getElementById('input-ppc-conduct-date')?.value || '',
-          expiryDate: document.getElementById('input-ppc-expiry-date')?.value || ''
-        };
-        break;
-      case 'recurrent':
-        inputData = {
-          courseType: document.getElementById('input-recurrent-course')?.value || 'LINE_CHECK',
-          conductDate: document.getElementById('input-recurrent-conduct-date')?.value || ''
-        };
-        break;
-      case 'recency':
-        inputData = {
-          dayCount: parseInt(document.getElementById('input-recency-day')?.value || '0', 10),
-          nightCount: parseInt(document.getElementById('input-recency-night')?.value || '0', 10)
-        };
-        break;
-      case 'standby':
-        inputData = {
-          startTime: document.getElementById('input-stby-start-time')?.value || '',
-          calloutTime: document.getElementById('input-stby-report-time')?.value || '',
-          location: window.toolsState?.standbyLocation || 'HOME'
-        };
-        break;
-      case 'max-fdp':
-        inputData = {
-          reportTime: document.getElementById('input-fdp-report-time')?.value || '',
-          sectors: parseInt(document.getElementById('input-fdp-sectors')?.value || '2', 10),
-          isAcclimatised: document.getElementById('input-fdp-acclimatised')?.checked ?? true
-        };
-        break;
-      case 'pre-flight-rest':
-        inputData = {
-          precedingDutyHours: document.getElementById('input-rest-preceding-duty')?.value || '',
-          locationType: document.getElementById('input-rest-location')?.value || 'HOME'
-        };
-        break;
-      case 'cumulative':
-        inputData = {
-          duty7d: document.getElementById('input-cum-duty-7d')?.value || '',
-          flight28d: document.getElementById('input-cum-flight-28d')?.value || ''
+          lpcConductDateStr: document.getElementById('input-ppc-conduct-date')?.value || '',
+          currentLPCExpiryDateStr: document.getElementById('input-ppc-expiry-date')?.value || ''
         };
         break;
 
+      case 'recurrent':
+        inputData = {
+          completionDate: document.getElementById('input-recurrent-conduct-date')?.value || '',
+          courseType: window.toolsState?.recurrentCourseKey || 'LINE_CHECK'
+        };
+        break;
+
+      case 'recency':
+        inputData = {
+          capacity: document.getElementById('input-recency-capacity')?.value || 'PIC',
+          flightDate: document.getElementById('input-recency-flight-date')?.value || '',
+          l1Date: document.getElementById('input-recency-l1-date')?.value || '',
+          l2Date: document.getElementById('input-recency-l2-date')?.value || '',
+          l3Date: document.getElementById('input-recency-l3-date')?.value || ''
+        };
+        break;
+
+      case 'standby':
+        inputData = {
+          startTime: document.getElementById('input-stby-start-time')?.value || '08:00',
+          reportTime: document.getElementById('input-stby-callout-time')?.value || '12:00',
+          location: document.getElementById('input-stby-location')?.value || 'HOME'
+        };
+        break;
+
+      case 'max-fdp':
+        inputData = {
+          reportTime: document.getElementById('input-maxfdp-report-time')?.value || '06:00',
+          sectors: parseInt(document.getElementById('input-maxfdp-sectors')?.value || '2', 10),
+          isAcclimatised: document.getElementById('input-maxfdp-acclimatised')?.value !== 'false',
+          reliefType: document.getElementById('input-maxfdp-relief')?.value || 'NONE',
+          splitRestHours: parseFloat(document.getElementById('input-maxfdp-split-rest')?.value || '0')
+        };
+        break;
+
+      case 'pre-flight-rest':
+        inputData = {
+          dutyHours: parseFloat(document.getElementById('input-preflight-duty-hours')?.value || '10'),
+          location: document.getElementById('input-preflight-location')?.value || 'HOME'
+        };
+        break;
+
+      case 'cumulative':
+        inputData = {
+          duty7d: document.getElementById('input-cum-duty-7d')?.value || '',
+          duty14d: document.getElementById('input-cum-duty-14d')?.value || '',
+          duty28d: document.getElementById('input-cum-duty-28d')?.value || '',
+          flight28d: document.getElementById('input-cum-flight-28d')?.value || ''
+        };
+        break;
     }
   } catch (err) {
     console.warn("Error gathering inputs for " + toolType + ":", err);
@@ -821,18 +869,16 @@ export function autoFillFromCredentials() {
   const caam = profile?.cachedCaamResults;
   const mab = getAttestationData() || profile?.cachedMabResults;
 
-  if (activeToolsSubTab === 'medical') {
-    const medLastInput = document.getElementById('medical-last-date');
-    const medAgeInput = document.getElementById('medical-pilot-age');
-    if (medLastInput && caam?.medicalExpiryISO) medLastInput.value = caam.medicalExpiryISO;
-    if (medAgeInput && profile?.dob) medAgeInput.value = profile.dob;
-  } else if (activeToolsSubTab === 'ppc') {
-    const ppcConductInput = document.getElementById('ppc-conduct-date');
-    const ppcExpiryInput = document.getElementById('ppc-expiry-date');
+  if (activeToolCardId === 'tool-card-medical') {
+    const medExamInput = document.getElementById('input-med-exam-date');
+    if (medExamInput && caam?.medicalExpiryISO) medExamInput.value = caam.medicalExpiryISO;
+  } else if (activeToolCardId === 'tool-card-ppc') {
+    const ppcConductInput = document.getElementById('input-ppc-conduct-date');
+    const ppcExpiryInput = document.getElementById('input-ppc-expiry-date');
     if (ppcConductInput && mab?.lineCheck?.checkDateISO) ppcConductInput.value = mab.lineCheck.checkDateISO;
     if (ppcExpiryInput && mab?.lineCheck?.expiryDateISO) ppcExpiryInput.value = mab.lineCheck.expiryDateISO;
-  } else if (activeToolsSubTab === 'recurrent') {
-    const recConductInput = document.getElementById('recurrent-conduct-date');
+  } else if (activeToolCardId === 'tool-card-recurrent') {
+    const recConductInput = document.getElementById('input-recurrent-conduct-date');
     if (recConductInput && mab?.lineCheck?.checkDateISO) recConductInput.value = mab.lineCheck.checkDateISO;
   }
 
@@ -845,71 +891,40 @@ export function initToolsViewUI() {
     window.initToolsUIController();
   }
 
-  const subNavMap = {
-    'subtab-medical': 'medical',
-    'subtab-ppc': 'ppc',
-    'subtab-recurrent': 'recurrent',
-    'subtab-standby': 'standby',
-    'subtab-max-fdp': 'max-fdp',
-    'subtab-pre-flight-rest': 'pre-flight-rest',
-    'subtab-cumulative': 'cumulative',
-  };
+  // Bind Category Segmented Control
+  document.getElementById('cat-tab-qualifications')?.addEventListener('click', () => switchToolCategory('qualifications'));
+  document.getElementById('cat-tab-dutyrest')?.addEventListener('click', () => switchToolCategory('dutyrest'));
 
-  Object.entries(subNavMap).forEach(([btnId, subTabKey]) => {
-    document.getElementById(btnId)?.addEventListener('click', () => switchSubTab(subTabKey));
+  // Bind Sub-Tab Pills
+  const subPills = [
+    { id: 'pill-tool-medical', card: 'tool-card-medical' },
+    { id: 'pill-tool-ppc', card: 'tool-card-ppc' },
+    { id: 'pill-tool-recurrent', card: 'tool-card-recurrent' },
+    { id: 'pill-tool-recency', card: 'tool-card-recency' },
+    { id: 'pill-tool-standby', card: 'tool-card-standby' },
+    { id: 'pill-tool-maxfdp', card: 'tool-card-maxfdp' },
+    { id: 'pill-tool-preflight', card: 'tool-card-preflight' },
+    { id: 'pill-tool-cumulative', card: 'tool-card-cumulative' }
+  ];
+
+  subPills.forEach(item => {
+    document.getElementById(item.id)?.addEventListener('click', () => switchActiveTool(item.card));
   });
 
-  const inputContainer = document.getElementById('tools-input-container');
+  const inputContainer = document.getElementById('tools-view');
   if (inputContainer) {
     inputContainer.addEventListener('input', () => dispatchActiveToolCalculation());
     inputContainer.addEventListener('change', () => dispatchActiveToolCalculation());
   }
 
-  document.getElementById('btn-fdp-inc')?.addEventListener('click', () => {
-    setSectorCount(getSectorCount() + 1);
-    const badge = document.getElementById('fdp-sector-count');
-    if (badge) badge.innerText = getSectorCount();
-    dispatchActiveToolCalculation();
-  });
-
-  document.getElementById('btn-fdp-dec')?.addEventListener('click', () => {
-    setSectorCount(getSectorCount() - 1);
-    const badge = document.getElementById('fdp-sector-count');
-    if (badge) badge.innerText = getSectorCount();
-    dispatchActiveToolCalculation();
-  });
-
-  document.querySelectorAll('.preset-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const targetId = e.currentTarget.dataset.target;
-      const preset = e.currentTarget.dataset.preset;
-      const inputEl = document.getElementById(targetId);
-      if (!inputEl) return;
-
-      const now = new Date();
-      let d = new Date();
-
-      if (preset === 'eom') {
-        d = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0));
-      } else if (preset === '+1y') {
-        d.setFullYear(now.getFullYear() + 1);
-      }
-
-      inputEl.value = d.toISOString().split('T')[0];
-      dispatchActiveToolCalculation();
-    });
-  });
-
-  document.getElementById('btn-autofill-credentials')?.addEventListener('click', () => autoFillFromCredentials());
-
-
-
-  switchTier1('validity');
+  switchToolCategory('qualifications');
 }
 
 if (typeof window !== 'undefined') {
   window.initToolsViewUI = initToolsViewUI;
-  window.switchTier1 = switchTier1;
-  window.switchSubTab = switchSubTab;
+  window.switchToolCategory = switchToolCategory;
+  window.switchActiveTool = switchActiveTool;
   window.dispatchActiveToolCalculation = dispatchActiveToolCalculation;
+  window.switchTier1 = switchToolCategory;
+  window.switchSubTab = switchActiveTool;
 }
