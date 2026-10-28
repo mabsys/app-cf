@@ -1,4 +1,4 @@
-// ./main.js (2810_R273) - CertiFly Application Shell & Orchestrator
+// ./main.js (2810_R274) - CertiFly Application Shell & Orchestrator
 
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
@@ -3929,28 +3929,33 @@ export function initToolsUIController() {
   if (catDutyBtn) catDutyBtn.addEventListener("click", () => switchToolCategory("dutyrest"));
 
   // 2. Tier 2 Sub-Tab Pill Buttons (Category A)
-  const catAPills = ["pill-tool-medical", "pill-tool-ppc", "pill-tool-recurrent", "pill-tool-recency"];
-  const catAToolIds = ["tool-medical", "tool-ppc", "tool-recurrent", "tool-recency"];
-  catAPills.forEach(id => {
-    const pill = document.getElementById(id);
+  const catAPillsMap = [
+    { pill: "pill-tool-medical", card: "tool-card-medical" },
+    { pill: "pill-tool-ppc", card: "tool-card-ppc" },
+    { pill: "pill-tool-recurrent", card: "tool-card-recurrent" },
+    { pill: "pill-tool-recency", card: "tool-card-recency" }
+  ];
+  catAPillsMap.forEach(item => {
+    const pill = document.getElementById(item.pill);
     if (pill) {
       pill.addEventListener("click", () => {
-        const toolId = id.replace("pill-", "");
-        switchActiveTool(toolId);
-        dispatchActiveToolCalculation();
+        switchActiveTool(item.card);
       });
     }
   });
 
   // 3. Tier 2 Sub-Tab Pill Buttons (Category B)
-  const catBPills = ["pill-tool-standby", "pill-tool-maxfdp", "pill-tool-preflight", "pill-tool-cumulative"];
-  catBPills.forEach(id => {
-    const pill = document.getElementById(id);
+  const catBPillsMap = [
+    { pill: "pill-tool-standby", card: "tool-card-standby" },
+    { pill: "pill-tool-maxfdp", card: "tool-card-maxfdp" },
+    { pill: "pill-tool-preflight", card: "tool-card-preflight" },
+    { pill: "pill-tool-cumulative", card: "tool-card-cumulative" }
+  ];
+  catBPillsMap.forEach(item => {
+    const pill = document.getElementById(item.pill);
     if (pill) {
       pill.addEventListener("click", () => {
-        const toolId = id.replace("pill-", "");
-        switchActiveTool(toolId);
-        dispatchActiveToolCalculation();
+        switchActiveTool(item.card);
       });
     }
   });
@@ -3995,8 +4000,8 @@ export function initToolsUIController() {
 }
 
 function setupToolsCardSwipeGestures() {
-  const catASubtabs = ['medical', 'ppc', 'recurrent', 'recency'];
-  const catBSubtabs = ['standby', 'max-fdp', 'pre-flight-rest', 'cumulative', 'caam-ftl1'];
+  const catASubtabs = ['tool-card-medical', 'tool-card-ppc', 'tool-card-recurrent', 'tool-card-recency'];
+  const catBSubtabs = ['tool-card-standby', 'tool-card-maxfdp', 'tool-card-preflight', 'tool-card-cumulative'];
 
   const wrappers = [
     { id: 'card-wrapper-cat-a', getSubtabs: () => catASubtabs },
@@ -4157,5 +4162,3 @@ function restoreToolsLocalStorage() {
     console.warn("LocalStorage access error in tools:", e);
   }
 }
-
-
