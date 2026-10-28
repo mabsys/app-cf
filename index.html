@@ -1,4 +1,4 @@
-<!-- ./index.html (2810_R263) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+<!-- ./index.html (2810_R264) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -996,7 +996,7 @@ if ('serviceWorker' in navigator) {
             </div>
 
             <!-- TOOLS VIEW (FLIGHT DECK COMPLIANCE TOOLS) -->
-            <div id="tools-view" class="app-view hidden flex flex-col gap-3.5 pb-32 w-full max-w-md mx-auto select-none overflow-x-hidden">
+            <div id="tools-view" class="app-view hidden flex flex-col gap-3.5 pb-32 w-full max-w-md mx-auto select-none">
 
                 <!-- TIER 1: CATEGORY SEGMENTED CONTROL (Primary Category Filter) -->
                 <nav class="bg-slate-200/80 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-300 dark:border-slate-700/60 shadow-inner">
@@ -1046,7 +1046,7 @@ if ('serviceWorker' in navigator) {
                     </div>
 
                     <!-- Active Tool Input Card Wrapper (Category A) -->
-                    <div id="card-wrapper-cat-a" class="w-full">
+                    <div id="card-wrapper-cat-a" class="w-full px-1 py-0.5">
 
                         <!-- TOOL CARD: MEDICAL CLASS 1 / 2 -->
                         <div id="tool-card-medical" class="tool-card active tool-card-3d-wrapper relative w-full h-[420px] perspective-1000">
@@ -1400,22 +1400,22 @@ if ('serviceWorker' in navigator) {
                                         </div>
 
                                         <div class="grid grid-cols-3 gap-1.5 pt-1">
-                                            <div>
-                                                <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">Landing 1</label>
+                                            <div class="flex flex-col justify-between">
+                                                <label class="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-1 h-7 flex items-end">Landing 1</label>
                                                 <button type="button" id="btn-recency-l1-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-lg p-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-100 text-center cursor-pointer" onclick="openEfbDatePicker('input-recency-l1-date', 'LANDING #1 DATE')">
                                                     <span id="input-recency-l1-date-display">DATE 1</span>
                                                 </button>
                                                 <input type="hidden" id="input-recency-l1-date" value="">
                                             </div>
-                                            <div>
-                                                <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">Landing 2</label>
+                                            <div class="flex flex-col justify-between">
+                                                <label class="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-1 h-7 flex items-end">Landing 2</label>
                                                 <button type="button" id="btn-recency-l2-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-lg p-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-100 text-center cursor-pointer" onclick="openEfbDatePicker('input-recency-l2-date', 'LANDING #2 DATE')">
                                                     <span id="input-recency-l2-date-display">DATE 2</span>
                                                 </button>
                                                 <input type="hidden" id="input-recency-l2-date" value="">
                                             </div>
-                                            <div>
-                                                <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">Landing 3 (Anchor)</label>
+                                            <div class="flex flex-col justify-between">
+                                                <label class="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-1 h-7 flex items-end leading-tight">Landing 3 (Anchor)</label>
                                                 <button type="button" id="btn-recency-l3-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-lg p-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-100 text-center cursor-pointer" onclick="openEfbDatePicker('input-recency-l3-date', 'LANDING #3 ANCHOR DATE')">
                                                     <span id="input-recency-l3-date-display">DATE 3</span>
                                                 </button>
@@ -1512,7 +1512,7 @@ if ('serviceWorker' in navigator) {
                     </div>
 
                     <!-- Active Tool Input Card Wrapper (Category B) -->
-                    <div id="card-wrapper-cat-b" class="w-full">
+                    <div id="card-wrapper-cat-b" class="w-full px-1 py-0.5">
 
                         <!-- TOOL CARD: STANDBY CALL-OUT -->
                         <div id="tool-card-standby" class="tool-card active tool-card-3d-wrapper relative w-full h-[420px] perspective-1000">
