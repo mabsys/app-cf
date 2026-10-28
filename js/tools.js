@@ -1,4 +1,4 @@
-// ./js/tools.js (2810_R265) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (2810_R267) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -432,7 +432,45 @@ export function executeAndFlipCard(toolType) {
     'cumulative': 'cumulative'
   };
 
-  const suffix = normKeyMap[toolType] || toolType;
+  const normType = normKeyMap[toolType] || toolType;
+
+  // Validate required inputs before flipping
+  if (normType === 'medical') {
+    const val = document.getElementById('input-med-exam-date')?.value;
+    if (!val) {
+      openEfbDatePicker('input-med-exam-date', 'MEDICAL EXAM DATE');
+      return;
+    }
+  } else if (normType === 'ppc') {
+    const cVal = document.getElementById('input-ppc-conduct-date')?.value;
+    const eVal = document.getElementById('input-ppc-expiry-date')?.value;
+    if (!cVal) {
+      openEfbDatePicker('input-ppc-conduct-date', 'CHECK CONDUCT DATE');
+      return;
+    }
+    if (!eVal) {
+      openEfbDatePicker('input-ppc-expiry-date', 'CURRENT EXPIRY DATE');
+      return;
+    }
+  } else if (normType === 'recurrent') {
+    const val = document.getElementById('input-recurrent-conduct-date')?.value;
+    if (!val) {
+      openEfbDatePicker('input-recurrent-conduct-date', 'COURSE CONDUCT DATE');
+      return;
+    }
+  } else if (normType === 'recency') {
+    const fVal = document.getElementById('input-recency-flight-date')?.value;
+    if (!fVal) {
+      openEfbDatePicker('input-recency-flight-date', 'PROPOSED FLIGHT DATE');
+      return;
+    }
+    const l1 = document.getElementById('input-recency-l1-date')?.value;
+    const l2 = document.getElementById('input-recency-l2-date')?.value;
+    const l3 = document.getElementById('input-recency-l3-date')?.value;
+    if (!l1) { openEfbDatePicker('input-recency-l1-date', 'LANDING #1 DATE'); return; }
+    if (!l2) { openEfbDatePicker('input-recency-l2-date', 'LANDING #2 DATE'); return; }
+    if (!l3) { openEfbDatePicker('input-recency-l3-date', 'LANDING #3 ANCHOR DATE'); return; }
+  }
 
   // 1. Gather inputs and execute calculation engine
   const rawResult = runToolCalculation(toolType);
