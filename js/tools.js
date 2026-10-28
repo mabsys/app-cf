@@ -1,4 +1,4 @@
-// ./js/tools.js (2810_R274) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (2810_R275) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -536,8 +536,10 @@ export function runToolCalculation(toolType, inputData = {}) {
         const examDate = inputData.examDate || document.getElementById('input-med-exam-date')?.value || new Date().toISOString().split('T')[0];
         const ageBracket = document.getElementById('input-med-age-bracket')?.value || '40_TO_59';
         const age = (ageBracket === 'UNDER_40') ? 35 : ((ageBracket === '40_TO_59') ? 45 : 62);
+        const refYear = new Date(examDate).getFullYear() || new Date().getFullYear();
+        const dobStr = (refYear - age) + "-01-01";
         if (MedicalEngineModule && typeof MedicalEngineModule.calculateMedicalValidity === 'function') {
-          result = MedicalEngineModule.calculateMedicalValidity(examDate, age);
+          result = MedicalEngineModule.calculateMedicalValidity(examDate, dobStr);
         } else {
           result = { newExpiryDate: examDate, dameEarliestDate: examDate, anniversaryPreserved: true, age };
         }
