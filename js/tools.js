@@ -1,4 +1,4 @@
-// ./js/tools.js (2810_R272) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (2810_R274) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -885,6 +885,20 @@ export function renderToolsOutputCard(normalized) {
 // ==================================================================
 // CATEGORY & TOOL SWITCHERS
 // ==================================================================
+export function normalizeToolCardId(rawId) {
+  if (!rawId) return 'tool-card-medical';
+  const s = String(rawId).toLowerCase().replace('_', '-').trim();
+  if (s.includes('med')) return 'tool-card-medical';
+  if (s.includes('ppc') || s.includes('lpc')) return 'tool-card-ppc';
+  if (s.includes('recurrent')) return 'tool-card-recurrent';
+  if (s.includes('recency')) return 'tool-card-recency';
+  if (s.includes('standby') || s.includes('stby')) return 'tool-card-standby';
+  if (s.includes('max') || s.includes('fdp')) return 'tool-card-maxfdp';
+  if (s.includes('pre') || s.includes('rest')) return 'tool-card-preflight';
+  if (s.includes('cum')) return 'tool-card-cumulative';
+  return s.startsWith('tool-card-') ? s : 'tool-card-' + s;
+}
+
 export function switchToolCategory(category) {
   toolsState.activeCategory = category;
 
@@ -911,7 +925,8 @@ export function switchToolCategory(category) {
   }
 }
 
-export function switchActiveTool(toolId) {
+export function switchActiveTool(rawId) {
+  const toolId = normalizeToolCardId(rawId);
   toolsState.activeToolId = toolId;
 
   // Update pills
@@ -943,10 +958,18 @@ export function switchActiveTool(toolId) {
 
   // Hide all tool cards, show active
   const allCards = document.querySelectorAll('.tool-card');
-  allCards.forEach(card => card.classList.add('hidden'));
+  allCards.forEach(card => {
+    card.classList.add('hidden');
+    card.classList.remove('active');
+    const inner3d = card.querySelector('.card-3d-inner');
+    if (inner3d) inner3d.classList.remove('is-flipped');
+  });
 
   const targetCard = document.getElementById(toolId);
-  if (targetCard) targetCard.classList.remove('hidden');
+  if (targetCard) {
+    targetCard.classList.remove('hidden');
+    targetCard.classList.add('active');
+  }
 }
 
 export function resetToolInputs(toolId) {
