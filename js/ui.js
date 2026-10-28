@@ -1,4 +1,4 @@
-// ./js/ui.js (2810_R274) - CertiFly Navigation, View Controller & UI State
+// ./js/ui.js (2810_R275) - CertiFly Navigation, View Controller & UI State
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -678,41 +678,75 @@ export function normalizeToolCardId(rawId) {
 }
 
 export function switchToolCategory(category) {
-  activeCategory = category;
+  const normCategory = (category === 'dutyrest' || category === 'time' || category === 'fdp') ? 'dutyrest' : 'qualifications';
+  toolsState.activeCategory = normCategory;
 
-  const catQualsBtn = document.getElementById('cat-tab-qualifications');
-  const catDutyBtn = document.getElementById('cat-tab-dutyrest');
+  const tabA = document.getElementById('cat-tab-qualifications');
+  const tabB = document.getElementById('cat-tab-dutyrest');
+  const paneA = document.getElementById('cat-pane-qualifications');
+  const paneB = document.getElementById('cat-pane-dutyrest');
 
-  const paneQuals = document.getElementById('cat-pane-qualifications');
-  const paneDuty = document.getElementById('cat-pane-dutyrest');
+  const activeTabClass = 'cat-tab-btn active py-2.5 px-3 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 text-center flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-md cursor-pointer';
+  const inactiveTabClass = 'cat-tab-btn py-2.5 px-3 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 text-center flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer';
 
-  const activeClass = "cat-tab-btn active py-2.5 px-3 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 text-center flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-md cursor-pointer";
-  const inactiveClass = "cat-tab-btn py-2.5 px-3 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 text-center flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer";
+  if (normCategory === 'qualifications') {
+    if (tabA) { tabA.className = activeTabClass; tabA.setAttribute('aria-selected', 'true'); }
+    if (tabB) { tabB.className = inactiveTabClass; tabB.setAttribute('aria-selected', 'false'); }
+    if (paneA) paneA.classList.remove('hidden');
+    if (paneB) paneB.classList.add('hidden');
 
-  if (category === 'qualifications') {
-    if (catQualsBtn) { catQualsBtn.className = activeClass; catQualsBtn.setAttribute('aria-selected', 'true'); }
-    if (catDutyBtn) { catDutyBtn.className = inactiveClass; catDutyBtn.setAttribute('aria-selected', 'false'); }
-    if (paneQuals) paneQuals.classList.remove('hidden');
-    if (paneDuty) paneDuty.classList.add('hidden');
-    switchActiveTool('tool-card-medical');
+    const catACards = ['tool-card-medical', 'tool-card-ppc', 'tool-card-recurrent', 'tool-card-recency'];
+    const targetCard = catACards.includes(toolsState.activeToolId) ? toolsState.activeToolId : 'tool-card-medical';
+    switchActiveTool(targetCard);
   } else {
-    if (catQualsBtn) { catQualsBtn.className = inactiveClass; catQualsBtn.setAttribute('aria-selected', 'false'); }
-    if (catDutyBtn) { catDutyBtn.className = activeClass; catDutyBtn.setAttribute('aria-selected', 'true'); }
-    if (paneQuals) paneQuals.classList.add('hidden');
-    if (paneDuty) paneDuty.classList.remove('hidden');
-    switchActiveTool('tool-card-standby');
+    if (tabA) { tabA.className = inactiveTabClass; tabA.setAttribute('aria-selected', 'false'); }
+    if (tabB) { tabB.className = activeTabClass; tabB.setAttribute('aria-selected', 'true'); }
+    if (paneA) paneA.classList.add('hidden');
+    if (paneB) paneB.classList.remove('hidden');
+
+    const catBCards = ['tool-card-standby', 'tool-card-maxfdp', 'tool-card-preflight', 'tool-card-cumulative'];
+    const targetCard = catBCards.includes(toolsState.activeToolId) ? toolsState.activeToolId : 'tool-card-standby';
+    switchActiveTool(targetCard);
   }
 }
 
 export function switchActiveTool(rawId) {
   const toolCardId = normalizeToolCardId(rawId);
-  activeToolCardId = toolCardId;
+  toolsState.activeToolId = toolCardId;
 
-  const allToolCards = [
-    'tool-card-medical', 'tool-card-ppc', 'tool-card-recurrent', 'tool-card-recency',
-    'tool-card-standby', 'tool-card-maxfdp', 'tool-card-preflight', 'tool-card-cumulative'
-  ];
+  const catACards = ['tool-card-medical', 'tool-card-ppc', 'tool-card-recurrent', 'tool-card-recency'];
+  const catBCards = ['tool-card-standby', 'tool-card-maxfdp', 'tool-card-preflight', 'tool-card-cumulative'];
 
+  const isCatA = catACards.includes(toolCardId);
+  toolsState.activeCategory = isCatA ? 'qualifications' : 'dutyrest';
+
+  const paneA = document.getElementById('cat-pane-qualifications');
+  const paneB = document.getElementById('cat-pane-dutyrest');
+  if (paneA && paneB) {
+    if (isCatA) {
+      paneA.classList.remove('hidden');
+      paneB.classList.add('hidden');
+    } else {
+      paneA.classList.add('hidden');
+      paneB.classList.remove('hidden');
+    }
+  }
+
+  const tabA = document.getElementById('cat-tab-qualifications');
+  const tabB = document.getElementById('cat-tab-dutyrest');
+  const activeTabClass = 'cat-tab-btn active py-2.5 px-3 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 text-center flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-md cursor-pointer';
+  const inactiveTabClass = 'cat-tab-btn py-2.5 px-3 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 text-center flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer';
+  if (tabA && tabB) {
+    if (isCatA) {
+      tabA.className = activeTabClass; tabA.setAttribute('aria-selected', 'true');
+      tabB.className = inactiveTabClass; tabB.setAttribute('aria-selected', 'false');
+    } else {
+      tabA.className = inactiveTabClass; tabA.setAttribute('aria-selected', 'false');
+      tabB.className = activeTabClass; tabB.setAttribute('aria-selected', 'true');
+    }
+  }
+
+  const allToolCards = [...catACards, ...catBCards];
   allToolCards.forEach(cardId => {
     const cardEl = document.getElementById(cardId);
     if (!cardEl) return;
@@ -721,7 +755,6 @@ export function switchActiveTool(rawId) {
       cardEl.classList.remove('hidden');
       cardEl.classList.add('active');
 
-      // Un-flip 3D inner container to show input front face on tool switch
       const inner3d = cardEl.querySelector('.card-3d-inner');
       if (inner3d) {
         inner3d.classList.remove('is-flipped');
@@ -732,7 +765,6 @@ export function switchActiveTool(rawId) {
     }
   });
 
-  // Update Category A Sub-tab pills
   const catAPills = [
     { id: 'pill-tool-medical', card: 'tool-card-medical', idx: 0 },
     { id: 'pill-tool-ppc', card: 'tool-card-ppc', idx: 1 },
@@ -752,7 +784,6 @@ export function switchActiveTool(rawId) {
     }
   });
 
-  // Update Category B Sub-tab pills
   const catBPills = [
     { id: 'pill-tool-standby', card: 'tool-card-standby', idx: 0 },
     { id: 'pill-tool-maxfdp', card: 'tool-card-maxfdp', idx: 1 },
@@ -772,7 +803,6 @@ export function switchActiveTool(rawId) {
     }
   });
 
-  // Update Carousel Page Dots
   const dotsA = document.querySelectorAll('#page-dots-cat-a .page-dot');
   dotsA.forEach((dot, idx) => {
     if (idx === catAIdx) {
@@ -791,7 +821,6 @@ export function switchActiveTool(rawId) {
     }
   });
 
-  setToolsTab(activeCategory, toolCardId);
   dispatchActiveToolCalculation();
 }
 
