@@ -1,4 +1,4 @@
-// ./main.js (2710_R254) - CertiFly Application Shell & Orchestrator
+// ./main.js (2810_R270) - CertiFly Application Shell & Orchestrator
 
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setMasterTimezone, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
@@ -2982,7 +2982,7 @@ function customRenderHistoryList() {
                   ${pinBadge}
                 </div>
                 <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5 tracking-tight truncate">
-                  ${licType} • ${licNo}
+                  ${licType} - ${licNo}
                 </span>
                 <span class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
                   Checked: ${timestampStr}
@@ -3625,7 +3625,7 @@ function renderMyQrPass() {
   let scanTimeStr = (caam && caam.scanTime) ? caam.scanTime : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
   if (nameElem) nameElem.innerText = displayName;
-  if (licenceElem) licenceElem.innerText = `${licenceType} • ${licenceNo}`;
+  if (licenceElem) licenceElem.innerText = `${licenceType} - ${licenceNo}`;
   if (freshnessElem) freshnessElem.innerText = scanTimeStr;
 
 
@@ -3913,10 +3913,6 @@ function initToolsUI() {
     if (badge) badge.innerText = getSectorCount();
   });
 
-  // Email Draft CTA
-  document.getElementById("btn-draft-ftl-email")?.addEventListener("click", () => {
-    draftFtlEmail();
-  });
 }
 
 
@@ -3947,18 +3943,14 @@ export function initToolsUIController() {
   });
 
   // 3. Tier 2 Sub-Tab Pill Buttons (Category B)
-  const catBPills = ["pill-tool-standby", "pill-tool-maxfdp", "pill-tool-preflight", "pill-tool-cumulative", "pill-tool-ftl1"];
+  const catBPills = ["pill-tool-standby", "pill-tool-maxfdp", "pill-tool-preflight", "pill-tool-cumulative"];
   catBPills.forEach(id => {
     const pill = document.getElementById(id);
     if (pill) {
       pill.addEventListener("click", () => {
-        if (id === "pill-tool-ftl1") {
-          openFtl1WizardModal();
-        } else {
-          const toolId = id.replace("pill-", "");
-          switchActiveTool(toolId);
-          dispatchActiveToolCalculation();
-        }
+        const toolId = id.replace("pill-", "");
+        switchActiveTool(toolId);
+        dispatchActiveToolCalculation();
       });
     }
   });
@@ -4087,17 +4079,7 @@ function setupToolsCardSwipeGestures() {
 
 
 
-  // 9. Smart Data Pipeline & Slot 4 CTA Action Delegation
-  const outputCard = document.getElementById("tools-output-card");
-  if (outputCard) {
-    outputCard.addEventListener("click", (e) => {
-      const actionBtn = e.target.closest("button[data-action], [data-action]");
-      if (!actionBtn) return;
-      const actionType = actionBtn.dataset.action;
 
-      handleSmartPipelineCTA(actionType);
-    });
-  }
 
   // 10. Restore LocalStorage Baselines
   restoreToolsLocalStorage();
@@ -4156,67 +4138,6 @@ function setupCardSwipeGestures(wrapperId, toolIdList) {
 // ----------------------------------------------------------------------------
 // HELPER: SMART DATA PIPELINES & SLOT 4 CTAs
 // ----------------------------------------------------------------------------
-function handleSmartPipelineCTA(actionType) {
-  const state = getToolsState();
-  const lastRes = state.lastCalculationResults[state.activeSubTab] || {};
-
-  switch (actionType) {
-    case "pipeline-fdp": {
-      switchToolCategory("dutyrest");
-      switchActiveTool("tool-maxfdp");
-      const reportTimeInput = document.getElementById("input-fdp-report-time");
-      if (reportTimeInput && lastRes.calloutTime) {
-        reportTimeInput.value = lastRes.calloutTime;
-      }
-      dispatchActiveToolCalculation();
-      break;
-    }
-
-    case "pipeline-rest": {
-      switchToolCategory("dutyrest");
-      switchActiveTool("tool-preflight");
-      const precedingDutyInput = document.getElementById("input-rest-preceding-duty");
-      if (precedingDutyInput && lastRes.finalMaxPermissibleFDPFormatted) {
-        precedingDutyInput.value = lastRes.finalMaxPermissibleFDPFormatted;
-      }
-      dispatchActiveToolCalculation();
-      break;
-    }
-
-    case "discretion": {
-      openFtl1WizardModal();
-      break;
-    }
-
-    case "pipeline-cumulative": {
-      switchToolCategory("dutyrest");
-      switchActiveTool("tool-cumulative");
-      dispatchActiveToolCalculation();
-      break;
-    }
-
-    case "add-calendar": {
-      generateCalendarReminderICS(state.activeSubTab, lastRes);
-      break;
-    }
-
-    case "share": {
-      shareComplianceVerification(state.activeSubTab, lastRes);
-      break;
-    }
-
-    case "email": {
-      const mailObj = draftFtlEmail({ flightNo: "MH1141", reportTime: "06:00", maxFdp: lastRes.finalMaxPermissibleFDPFormatted || "13h 15m" });
-      if (mailObj && mailObj.mailtoUrl) {
-        window.location.href = mailObj.mailtoUrl;
-      }
-      break;
-    }
-
-    default:
-      break;
-  }
-}
 
 // ----------------------------------------------------------------------------
 // HELPER: LOCAL STORAGE BASELINES
@@ -4237,25 +4158,4 @@ function restoreToolsLocalStorage() {
   }
 }
 
-function generateCalendarReminderICS(toolId, result) {
-  const title = `CertiFly Compliance Reminder - ${toolId.toUpperCase()}`;
-  const notes = `Target Deadline: ${result.newExpiryDate || result.cutoffTimestampUTC || "Check CertiFly App"}`;
-  const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//CertiFly PWA//EN\nBEGIN:VEVENT\nSUMMARY:${title}\nDESCRIPTION:${notes}\nEND:VEVENT\nEND:VCALENDAR`;
-  
-  const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `certifly-reminder-${toolId}.ics`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
-function shareComplianceVerification(toolId, result) {
-  const text = `CertiFly Compliance Check [${toolId.toUpperCase()}]: ${result.newExpiryDate || result.finalMaxPermissibleFDPFormatted || "VALID"}. Computed via CertiFly PWA.`;
-  if (navigator.share) {
-    navigator.share({ title: "CertiFly Compliance Verification", text }).catch(() => {});
-  } else if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => alert("Verification copied to clipboard."));
-  }
-}
