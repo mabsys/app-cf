@@ -1,4 +1,4 @@
-<!-- ./index.html (2810_R260) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+<!-- ./index.html (2810_R263) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -1094,9 +1094,9 @@ if ('serviceWorker' in navigator) {
                                             </div>
                                         </div>
 
-                                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50 text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
-                                            Calculates medical renewal expiry and dame re-exam window based on CAAM CAD 1 Personnel Licensing and OM-A 5.1.4 regulations.
-                                        </div>
+
+
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Calculates medical renewal expiry and dame re-exam window based on CAAM CAD 1 Personnel Licensing and OM-A 5.1.4 regulations.</p>
                                     </div>
 
                                     <!-- SLOT 4: ACTION FOOTER CTA -->
@@ -1197,9 +1197,9 @@ if ('serviceWorker' in navigator) {
                                             <input type="hidden" id="input-ppc-expiry-date" value="">
                                         </div>
 
-                                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50 text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
-                                            Evaluates 3-month lookback revalidation window and anniversary preservation rules for PPC / LPC under CAAM CAD 6.9.4.4 and OM-A 5.1.4.6.
-                                        </div>
+
+
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Evaluates 3-month lookback revalidation window and validity preservation rules for PPC / LPC under CAAM CAD 6.9.4.4 and OM-A 5.1.4.6.</p>
                                     </div>
 
                                     <!-- SLOT 4: ACTION FOOTER CTA -->
@@ -1297,9 +1297,9 @@ if ('serviceWorker' in navigator) {
                                             <input type="hidden" id="input-recurrent-conduct-date" value="">
                                         </div>
 
-                                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50 text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
-                                            Tracks annual (12M), bi-annual (24M), and triennial (36M) qualification validity windows under CAAM CAD 6.9.4 & OM-D Chapter 2.
-                                        </div>
+
+
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Tracks validity and lookback renewal windows across all recurrent training modules under OM-D Chapter 2 standards.</p>
                                     </div>
 
                                     <!-- SLOT 4: ACTION FOOTER CTA -->
@@ -1422,6 +1422,8 @@ if ('serviceWorker' in navigator) {
                                                 <input type="hidden" id="input-recency-l3-date" value="">
                                             </div>
                                         </div>
+
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Verifies 90-day landing currency for passenger carriage compliance under CAAM CAD 1 and OM-A 7.1 regulations.</p>
                                     </div>
 
                                     <!-- SLOT 4: ACTION FOOTER CTA -->
@@ -1492,18 +1494,6 @@ if ('serviceWorker' in navigator) {
 
                 <div id="cat-pane-dutyrest" class="category-pane hidden space-y-3.5" role="tabpanel" aria-labelledby="cat-tab-dutyrest">
 
-                    <!-- Master Timezone & Base Station Control Bar -->
-                    <div class="flex items-center justify-between bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/70 rounded-xl px-3 py-2 shadow-xs">
-                        <div class="flex items-center gap-2">
-                            <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Base Station:</span>
-                            <span class="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded">WMKK / KUL (UTC+8)</span>
-                        </div>
-                        <div class="flex items-center gap-1 bg-slate-200 dark:bg-slate-900 p-0.5 rounded-lg border border-slate-300 dark:border-slate-700/60">
-                            <button id="tz-btn-utc" type="button" class="px-2.5 py-1 rounded text-[10px] font-bold transition-colors bg-blue-600 text-white cursor-pointer" onclick="setMasterTimezone('UTC')">UTC</button>
-                            <button id="tz-btn-local" type="button" class="px-2.5 py-1 rounded text-[10px] font-bold transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="setMasterTimezone('LOCAL')">LOCAL</button>
-                        </div>
-                    </div>
-
                     <!-- Tier 2 Sub-Tab Pill Strip (Category B) -->
                     <div class="relative">
                         <div id="subtab-strip-cat-b" class="tools-subtab-strip flex items-center gap-2 overflow-x-auto py-1 px-0.5 no-scrollbar scroll-smooth">
@@ -1553,7 +1543,9 @@ if ('serviceWorker' in navigator) {
                                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Standby Start Time</label>
                                                 <button type="button" id="btn-standby-start-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-standby-start-time', 'STANDBY START TIME')">
                                                     <span id="btn-standby-start-display">08:00</span>
-                                                    <span class="text-slate-400 text-[10px]">⏰</span>
+                                                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
                                                 </button>
                                                 <input type="hidden" id="input-standby-start-time" value="08:00">
                                             </div>
@@ -1561,408 +1553,425 @@ if ('serviceWorker' in navigator) {
                                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Call-Out / Report Time</label>
                                                 <button type="button" id="btn-standby-report-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-standby-report-time', 'CALL-OUT REPORT TIME')">
                                                     <span id="btn-standby-report-display">12:00</span>
-                                                    <span class="text-slate-400 text-[10px]">⏰</span>
+                                                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
                                                 </button>
                                                 <input type="hidden" id="input-standby-report-time" value="12:00">
                                             </div>
                                         </div>
 
-                                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50 text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
-                                            Calculates FDP deductions for Case A (<6h) and Case B (≥6h) standby call-outs under CAAM CAD 1901 Section 2.11. </div>
-                                        </div>
 
-                                        <!-- SLOT 4: ACTION FOOTER CTA -->
-                                        <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
-                                            <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('standby')">Check</button>
-                                        </div>
 
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Calculates net FDP deductions for Case A and Case B standby call-outs based on CAAM CAD 1901 Section 2.11.</p>
                                     </div>
 
-                                    <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
-                                    <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-2xl select-none">
-
-                                        <!-- SLOT 1: HERO BANNER (NO BADGES) + EDIT CTA -->
-                                        <div id="output-slot-1-hero-standby" class="p-3.5 bg-blue-600 text-white rounded-xl flex items-center justify-between shrink-0 shadow-sm transition-colors duration-300">
-                                            <div class="space-y-0.5">
-                                                <span id="output-hero-title-standby" class="text-[10px] font-extrabold uppercase tracking-widest text-white/80 block">Standby Call-Out RESULTS</span>
-                                                <p id="output-hero-subtitle-standby" class="text-lg font-black text-white tracking-tight leading-none mt-0.5">VALID / CLEARED</p>
-                                            </div>
-                                            <button type="button" class="text-xs font-bold bg-white/20 hover:bg-white/30 active:scale-95 text-white px-3 py-1.5 rounded-lg transition-all cursor-pointer shrink-0 flex items-center gap-1" onclick="flipCardBackToInput('standby')">
-                                                <span>✎</span> Edit
-                                            </button>
-                                        </div>
-
-                                        <!-- SLOT 2: DEDICATED TARGET DATE / TIME WINDOW BAR -->
-                                        <div id="output-slot-2-clock-standby" class="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700/60 my-2 shrink-0 flex items-center justify-between">
-                                            <div>
-                                                <span id="output-clock-label-standby" class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Target Window / Deadline:</span>
-                                                <span id="output-clock-value-standby" class="text-xs font-extrabold text-blue-600 dark:text-blue-400 font-sans">--:--</span>
-                                            </div>
-                                        </div>
-
-                                        <!-- SLOT 3: STACKED 1-COLUMN DETAILS LIST (100% SANS-SERIF) -->
-                                        <div id="output-slot-3-grid-standby" class="flex-1 bg-slate-50/60 dark:bg-slate-800/40 rounded-xl p-3 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-center space-y-2 font-sans overflow-y-auto no-scrollbar">
-                                            <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
-                                                <span id="grid-label-1-standby" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 1</span>
-                                                <span id="grid-value-1-standby" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
-                                            </div>
-                                            <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
-                                                <span id="grid-label-2-standby" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 2</span>
-                                                <span id="grid-value-2-standby" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
-                                            </div>
-                                            <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
-                                                <span id="grid-label-3-standby" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 3</span>
-                                                <span id="grid-value-3-standby" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
-                                            </div>
-                                            <div class="flex items-center justify-between text-xs py-1">
-                                                <span id="grid-label-4-standby" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 4</span>
-                                                <span id="grid-value-4-standby" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
-                                            </div>
-                                        </div>
-
-                                        <!-- SLOT 4: CAAM / OM LEGAL AUDIT CITATION FOOTER -->
-                                        <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-start gap-1.5">
-                                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mt-0.5">AUDIT:</span>
-                                            <p id="output-audit-text-standby" class="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Section 2.11 Standby FDP Adjustments. Compliant.</p>
-                                        </div>
-
+                                    <!-- SLOT 4: ACTION FOOTER CTA -->
+                                    <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                        <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('standby')">Check</button>
                                     </div>
 
                                 </div>
-                            </div>
 
-                            <!-- TOOL CARD: MAX ALLOWABLE FDP -->
-                            <div id="tool-card-maxfdp" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[420px] perspective-1000">
-                                <div id="card-3d-inner-max-fdp" class="card-3d-inner w-full h-full relative transform-style-3d">
+                                <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
+                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-2xl select-none">
 
-                                    <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
-                                    <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
-
-                                        <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
-                                        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
-                                            <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Max Allowable FDP</span>
-                                            <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-maxfdp')">↺ Reset</button>
+                                    <!-- SLOT 1: HERO BANNER (NO BADGES) + EDIT CTA -->
+                                    <div id="output-slot-1-hero-standby" class="p-3.5 bg-blue-600 text-white rounded-xl flex items-center justify-between shrink-0 shadow-sm transition-colors duration-300">
+                                        <div class="space-y-0.5">
+                                            <span id="output-hero-title-standby" class="text-[10px] font-extrabold uppercase tracking-widest text-white/80 block">Standby Call-Out RESULTS</span>
+                                            <p id="output-hero-subtitle-standby" class="text-lg font-black text-white tracking-tight leading-none mt-0.5">VALID / CLEARED</p>
                                         </div>
-
-                                        <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
-                                        <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
-
-                                            <div class="grid grid-cols-2 gap-2">
-                                                <div>
-                                                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Report Time</label>
-                                                    <button type="button" id="btn-maxfdp-report-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-maxfdp-report-time', 'REPORT TIME')">
-                                                        <span id="btn-maxfdp-report-display">06:00</span>
-                                                        <span class="text-slate-400 text-[10px]">⏰</span>
-                                                    </button>
-                                                    <input type="hidden" id="input-maxfdp-report-time" value="06:00">
-                                                </div>
-                                                <div>
-                                                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Sectors Planned</label>
-                                                    <button type="button" id="btn-maxfdp-sectors-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbNumberPicker('input-maxfdp-sectors', 'SECTORS PLANNED', 1, 8)">
-                                                        <span id="btn-maxfdp-sectors-display">2 Sectors</span>
-                                                        <span class="text-slate-400 text-[10px]">#</span>
-                                                    </button>
-                                                    <input type="hidden" id="input-maxfdp-sectors" value="2">
-                                                </div>
-                                            </div>
-
-                                            <div class="grid grid-cols-2 gap-2">
-                                                <div>
-                                                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Acclimatisation</label>
-                                                    <button type="button" id="btn-maxfdp-acclim-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-maxfdp-acclimatised', 'ACCLIMATISATION STATUS', [{value:'true', label:'Acclimatised (Table A/B)'}, {value:'false', label:'Unknown / Unacclimatised'}])">
-                                                        <span id="btn-maxfdp-acclim-display">Acclimatised</span>
-                                                        <span class="text-slate-400 text-[10px]">▼</span>
-                                                    </button>
-                                                    <input type="hidden" id="input-maxfdp-acclimatised" value="true">
-                                                </div>
-                                                <div>
-                                                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">In-Flight Relief</label>
-                                                    <button type="button" id="btn-maxfdp-relief-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-maxfdp-relief', 'IN-FLIGHT RELIEF', [{value:'NONE', label:'None (Unaugmented)'}, {value:'CLASS_1_BUNK', label:'Class 1 Bunk'}, {value:'CLASS_2_SEAT', label:'Class 2 Seat'}])">
-                                                        <span id="btn-maxfdp-relief-display">None</span>
-                                                        <span class="text-slate-400 text-[10px]">▼</span>
-                                                    </button>
-                                                    <input type="hidden" id="input-maxfdp-relief" value="NONE">
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- SLOT 4: ACTION FOOTER CTA -->
-                                        <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
-                                            <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('max-fdp')">Check</button>
-                                        </div>
-
+                                        <button type="button" class="text-xs font-bold bg-white/20 hover:bg-white/30 active:scale-95 text-white px-3 py-1.5 rounded-lg transition-all cursor-pointer shrink-0 flex items-center gap-1" onclick="flipCardBackToInput('standby')">
+                                            <span>✎</span> Edit
+                                        </button>
                                     </div>
 
-                                    <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
-                                    <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-2xl select-none">
-
-                                        <!-- SLOT 1: HERO BANNER (NO BADGES) + EDIT CTA -->
-                                        <div id="output-slot-1-hero-max-fdp" class="p-3.5 bg-blue-600 text-white rounded-xl flex items-center justify-between shrink-0 shadow-sm transition-colors duration-300">
-                                            <div class="space-y-0.5">
-                                                <span id="output-hero-title-max-fdp" class="text-[10px] font-extrabold uppercase tracking-widest text-white/80 block">Max Allowable FDP RESULTS</span>
-                                                <p id="output-hero-subtitle-max-fdp" class="text-lg font-black text-white tracking-tight leading-none mt-0.5">VALID / CLEARED</p>
-                                            </div>
-                                            <button type="button" class="text-xs font-bold bg-white/20 hover:bg-white/30 active:scale-95 text-white px-3 py-1.5 rounded-lg transition-all cursor-pointer shrink-0 flex items-center gap-1" onclick="flipCardBackToInput('max-fdp')">
-                                                <span>✎</span> Edit
-                                            </button>
+                                    <!-- SLOT 2: DEDICATED TARGET DATE / TIME WINDOW BAR -->
+                                    <div id="output-slot-2-clock-standby" class="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700/60 my-2 shrink-0 flex items-center justify-between">
+                                        <div>
+                                            <span id="output-clock-label-standby" class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Target Window / Deadline:</span>
+                                            <span id="output-clock-value-standby" class="text-xs font-extrabold text-blue-600 dark:text-blue-400 font-sans">--:--</span>
                                         </div>
+                                    </div>
 
-                                        <!-- SLOT 2: DEDICATED TARGET DATE / TIME WINDOW BAR -->
-                                        <div id="output-slot-2-clock-max-fdp" class="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700/60 my-2 shrink-0 flex items-center justify-between">
-                                            <div>
-                                                <span id="output-clock-label-max-fdp" class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Target Window / Deadline:</span>
-                                                <span id="output-clock-value-max-fdp" class="text-xs font-extrabold text-blue-600 dark:text-blue-400 font-sans">--:--</span>
-                                            </div>
+                                    <!-- SLOT 3: STACKED 1-COLUMN DETAILS LIST (100% SANS-SERIF) -->
+                                    <div id="output-slot-3-grid-standby" class="flex-1 bg-slate-50/60 dark:bg-slate-800/40 rounded-xl p-3 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-center space-y-2 font-sans overflow-y-auto no-scrollbar">
+                                        <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
+                                            <span id="grid-label-1-standby" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 1</span>
+                                            <span id="grid-value-1-standby" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
                                         </div>
-
-                                        <!-- SLOT 3: STACKED 1-COLUMN DETAILS LIST (100% SANS-SERIF) -->
-                                        <div id="output-slot-3-grid-max-fdp" class="flex-1 bg-slate-50/60 dark:bg-slate-800/40 rounded-xl p-3 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-center space-y-2 font-sans overflow-y-auto no-scrollbar">
-                                            <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
-                                                <span id="grid-label-1-max-fdp" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 1</span>
-                                                <span id="grid-value-1-max-fdp" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
-                                            </div>
-                                            <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
-                                                <span id="grid-label-2-max-fdp" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 2</span>
-                                                <span id="grid-value-2-max-fdp" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
-                                            </div>
-                                            <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
-                                                <span id="grid-label-3-max-fdp" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 3</span>
-                                                <span id="grid-value-3-max-fdp" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
-                                            </div>
-                                            <div class="flex items-center justify-between text-xs py-1">
-                                                <span id="grid-label-4-max-fdp" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 4</span>
-                                                <span id="grid-value-4-max-fdp" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
-                                            </div>
+                                        <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
+                                            <span id="grid-label-2-standby" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 2</span>
+                                            <span id="grid-value-2-standby" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
                                         </div>
-
-                                        <!-- SLOT 4: CAAM / OM LEGAL AUDIT CITATION FOOTER -->
-                                        <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-start gap-1.5">
-                                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mt-0.5">AUDIT:</span>
-                                            <p id="output-audit-text-max-fdp" class="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Table A/B & OM-A Section 7.5. Compliant.</p>
+                                        <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
+                                            <span id="grid-label-3-standby" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 3</span>
+                                            <span id="grid-value-3-standby" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
                                         </div>
+                                        <div class="flex items-center justify-between text-xs py-1">
+                                            <span id="grid-label-4-standby" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 4</span>
+                                            <span id="grid-value-4-standby" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                        </div>
+                                    </div>
 
+                                    <!-- SLOT 4: CAAM / OM LEGAL AUDIT CITATION FOOTER -->
+                                    <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-start gap-1.5">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mt-0.5">AUDIT:</span>
+                                        <p id="output-audit-text-standby" class="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Section 2.11 Standby FDP Adjustments. Compliant.</p>
                                     </div>
 
                                 </div>
-                            </div>
 
-                            <!-- TOOL CARD: PRE-FLIGHT REST -->
-                            <div id="tool-card-preflight" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[420px] perspective-1000">
-                                <div id="card-3d-inner-pre-flight-rest" class="card-3d-inner w-full h-full relative transform-style-3d">
-
-                                    <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
-                                    <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
-
-                                        <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
-                                        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
-                                            <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Pre-Flight Rest</span>
-                                            <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-preflight')">↺ Reset</button>
-                                        </div>
-
-                                        <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
-                                        <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
-
-                                            <div class="grid grid-cols-2 gap-2">
-                                                <div>
-                                                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Preceding Duty</label>
-                                                    <button type="button" id="btn-preflight-duty-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbNumberPicker('input-preflight-duty-hours', 'PRECEDING DUTY HOURS', 0, 24)">
-                                                        <span id="btn-preflight-duty-display">10 Hours</span>
-                                                        <span class="text-slate-400 text-[10px]">#</span>
-                                                    </button>
-                                                    <input type="hidden" id="input-preflight-duty-hours" value="10">
-                                                </div>
-                                                <div>
-                                                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Duty Location</label>
-                                                    <button type="button" id="btn-preflight-loc-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-preflight-location', 'DUTY LOCATION', [{value:'HOME', label:'Home Base (12h Min Rest)'}, {value:'OUTSTATION', label:'Outstation Layover'}])">
-                                                        <span id="btn-preflight-loc-display">Home Base</span>
-                                                        <span class="text-slate-400 text-[10px]">▼</span>
-                                                    </button>
-                                                    <input type="hidden" id="input-preflight-location" value="HOME">
-                                                </div>
-                                            </div>
-
-                                            <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50 text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
-                                                Calculates mandatory minimum rest requirements based on preceding duty duration and location under CAAM CAD 1901 Section 2.14 and OM-A 7.5.12.
-                                            </div>
-                                        </div>
-
-                                        <!-- SLOT 4: ACTION FOOTER CTA -->
-                                        <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
-                                            <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('pre-flight-rest')">Check</button>
-                                        </div>
-
-                                    </div>
-
-                                    <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
-                                    <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-2xl select-none">
-
-                                        <!-- SLOT 1: HERO BANNER (NO BADGES) + EDIT CTA -->
-                                        <div id="output-slot-1-hero-pre-flight-rest" class="p-3.5 bg-blue-600 text-white rounded-xl flex items-center justify-between shrink-0 shadow-sm transition-colors duration-300">
-                                            <div class="space-y-0.5">
-                                                <span id="output-hero-title-pre-flight-rest" class="text-[10px] font-extrabold uppercase tracking-widest text-white/80 block">Pre-Flight Rest RESULTS</span>
-                                                <p id="output-hero-subtitle-pre-flight-rest" class="text-lg font-black text-white tracking-tight leading-none mt-0.5">VALID / CLEARED</p>
-                                            </div>
-                                            <button type="button" class="text-xs font-bold bg-white/20 hover:bg-white/30 active:scale-95 text-white px-3 py-1.5 rounded-lg transition-all cursor-pointer shrink-0 flex items-center gap-1" onclick="flipCardBackToInput('pre-flight-rest')">
-                                                <span>✎</span> Edit
-                                            </button>
-                                        </div>
-
-                                        <!-- SLOT 2: DEDICATED TARGET DATE / TIME WINDOW BAR -->
-                                        <div id="output-slot-2-clock-pre-flight-rest" class="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700/60 my-2 shrink-0 flex items-center justify-between">
-                                            <div>
-                                                <span id="output-clock-label-pre-flight-rest" class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Target Window / Deadline:</span>
-                                                <span id="output-clock-value-pre-flight-rest" class="text-xs font-extrabold text-blue-600 dark:text-blue-400 font-sans">--:--</span>
-                                            </div>
-                                        </div>
-
-                                        <!-- SLOT 3: STACKED 1-COLUMN DETAILS LIST (100% SANS-SERIF) -->
-                                        <div id="output-slot-3-grid-pre-flight-rest" class="flex-1 bg-slate-50/60 dark:bg-slate-800/40 rounded-xl p-3 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-center space-y-2 font-sans overflow-y-auto no-scrollbar">
-                                            <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
-                                                <span id="grid-label-1-pre-flight-rest" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 1</span>
-                                                <span id="grid-value-1-pre-flight-rest" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
-                                            </div>
-                                            <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
-                                                <span id="grid-label-2-pre-flight-rest" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 2</span>
-                                                <span id="grid-value-2-pre-flight-rest" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
-                                            </div>
-                                            <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
-                                                <span id="grid-label-3-pre-flight-rest" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 3</span>
-                                                <span id="grid-value-3-pre-flight-rest" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
-                                            </div>
-                                            <div class="flex items-center justify-between text-xs py-1">
-                                                <span id="grid-label-4-pre-flight-rest" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 4</span>
-                                                <span id="grid-value-4-pre-flight-rest" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
-                                            </div>
-                                        </div>
-
-                                        <!-- SLOT 4: CAAM / OM LEGAL AUDIT CITATION FOOTER -->
-                                        <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-start gap-1.5">
-                                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mt-0.5">AUDIT:</span>
-                                            <p id="output-audit-text-pre-flight-rest" class="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Section 2.14 & OM-A Section 7.5.12. Compliant.</p>
-                                        </div>
-
-                                    </div>
-
-                                </div>
-                            </div>
-
-                            <!-- TOOL CARD: CUMULATIVE HOURS -->
-                            <div id="tool-card-cumulative" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[420px] perspective-1000">
-                                <div id="card-3d-inner-cumulative" class="card-3d-inner w-full h-full relative transform-style-3d">
-
-                                    <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
-                                    <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
-
-                                        <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
-                                        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
-                                            <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Cumulative Hours</span>
-                                            <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-cumulative')">↺ Reset</button>
-                                        </div>
-
-                                        <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
-                                        <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
-
-                                            <div class="grid grid-cols-2 gap-2">
-                                                <div>
-                                                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">7-Day Duty</label>
-                                                    <button type="button" id="btn-cum-7d-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-cum-duty-7d', '7-DAY DUTY HOURS')">
-                                                        <span id="btn-cum-7d-display">32:15</span>
-                                                        <span class="text-slate-400 text-[10px]">⏰</span>
-                                                    </button>
-                                                    <input type="hidden" id="input-cum-duty-7d" value="32:15">
-                                                </div>
-                                                <div>
-                                                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">14-Day Duty</label>
-                                                    <button type="button" id="btn-cum-14d-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-cum-duty-14d', '14-DAY DUTY HOURS')">
-                                                        <span id="btn-cum-14d-display">68:30</span>
-                                                        <span class="text-slate-400 text-[10px]">⏰</span>
-                                                    </button>
-                                                    <input type="hidden" id="input-cum-duty-14d" value="68:30">
-                                                </div>
-                                            </div>
-
-                                            <div class="grid grid-cols-2 gap-2">
-                                                <div>
-                                                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">28-Day Duty</label>
-                                                    <button type="button" id="btn-cum-28d-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-cum-duty-28d', '28-DAY DUTY HOURS')">
-                                                        <span id="btn-cum-28d-display">120:00</span>
-                                                        <span class="text-slate-400 text-[10px]">⏰</span>
-                                                    </button>
-                                                    <input type="hidden" id="input-cum-duty-28d" value="120:00">
-                                                </div>
-                                                <div>
-                                                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">28-Day Flight</label>
-                                                    <button type="button" id="btn-cum-flt28d-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-cum-flight-28d', '28-DAY FLIGHT HOURS')">
-                                                        <span id="btn-cum-flt28d-display">78:30</span>
-                                                        <span class="text-slate-400 text-[10px]">⏰</span>
-                                                    </button>
-                                                    <input type="hidden" id="input-cum-flight-28d" value="78:30">
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- SLOT 4: ACTION FOOTER CTA -->
-                                        <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
-                                            <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('cumulative')">Check</button>
-                                        </div>
-
-                                    </div>
-
-                                    <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
-                                    <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-2xl select-none">
-
-                                        <!-- SLOT 1: HERO BANNER (NO BADGES) + EDIT CTA -->
-                                        <div id="output-slot-1-hero-cumulative" class="p-3.5 bg-blue-600 text-white rounded-xl flex items-center justify-between shrink-0 shadow-sm transition-colors duration-300">
-                                            <div class="space-y-0.5">
-                                                <span id="output-hero-title-cumulative" class="text-[10px] font-extrabold uppercase tracking-widest text-white/80 block">Cumulative Hours RESULTS</span>
-                                                <p id="output-hero-subtitle-cumulative" class="text-lg font-black text-white tracking-tight leading-none mt-0.5">VALID / CLEARED</p>
-                                            </div>
-                                            <button type="button" class="text-xs font-bold bg-white/20 hover:bg-white/30 active:scale-95 text-white px-3 py-1.5 rounded-lg transition-all cursor-pointer shrink-0 flex items-center gap-1" onclick="flipCardBackToInput('cumulative')">
-                                                <span>✎</span> Edit
-                                            </button>
-                                        </div>
-
-                                        <!-- SLOT 2: DEDICATED TARGET DATE / TIME WINDOW BAR -->
-                                        <div id="output-slot-2-clock-cumulative" class="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700/60 my-2 shrink-0 flex items-center justify-between">
-                                            <div>
-                                                <span id="output-clock-label-cumulative" class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Target Window / Deadline:</span>
-                                                <span id="output-clock-value-cumulative" class="text-xs font-extrabold text-blue-600 dark:text-blue-400 font-sans">--:--</span>
-                                            </div>
-                                        </div>
-
-                                        <!-- SLOT 3: STACKED 1-COLUMN DETAILS LIST (100% SANS-SERIF) -->
-                                        <div id="output-slot-3-grid-cumulative" class="flex-1 bg-slate-50/60 dark:bg-slate-800/40 rounded-xl p-3 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-center space-y-2 font-sans overflow-y-auto no-scrollbar">
-                                            <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
-                                                <span id="grid-label-1-cumulative" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 1</span>
-                                                <span id="grid-value-1-cumulative" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
-                                            </div>
-                                            <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
-                                                <span id="grid-label-2-cumulative" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 2</span>
-                                                <span id="grid-value-2-cumulative" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
-                                            </div>
-                                            <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
-                                                <span id="grid-label-3-cumulative" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 3</span>
-                                                <span id="grid-value-3-cumulative" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
-                                            </div>
-                                            <div class="flex items-center justify-between text-xs py-1">
-                                                <span id="grid-label-4-cumulative" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 4</span>
-                                                <span id="grid-value-4-cumulative" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
-                                            </div>
-                                        </div>
-
-                                        <!-- SLOT 4: CAAM / OM LEGAL AUDIT CITATION FOOTER -->
-                                        <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-start gap-1.5">
-                                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mt-0.5">AUDIT:</span>
-                                            <p id="output-audit-text-cumulative" class="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Cumulative Limits. Compliant.</p>
-                                        </div>
-
-                                    </div>
-
-                                </div>
                             </div>
                         </div>
 
+                        <!-- TOOL CARD: MAX ALLOWABLE FDP -->
+                        <div id="tool-card-maxfdp" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[420px] perspective-1000">
+                            <div id="card-3d-inner-max-fdp" class="card-3d-inner w-full h-full relative transform-style-3d">
+
+                                <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
+                                <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
+
+                                    <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
+                                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
+                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Max Allowable FDP</span>
+                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-maxfdp')">↺ Reset</button>
+                                    </div>
+
+                                    <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
+                                    <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
+
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Report Time</label>
+                                                <button type="button" id="btn-maxfdp-report-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-maxfdp-report-time', 'REPORT TIME')">
+                                                    <span id="btn-maxfdp-report-display">06:00</span>
+                                                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                </button>
+                                                <input type="hidden" id="input-maxfdp-report-time" value="06:00">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Sectors Planned</label>
+                                                <button type="button" id="btn-maxfdp-sectors-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbNumberPicker('input-maxfdp-sectors', 'SECTORS PLANNED', 1, 8)">
+                                                    <span id="btn-maxfdp-sectors-display">2 Sectors</span>
+                                                    <span class="text-slate-400 text-[10px]">#</span>
+                                                </button>
+                                                <input type="hidden" id="input-maxfdp-sectors" value="2">
+                                            </div>
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Acclimatisation</label>
+                                                <button type="button" id="btn-maxfdp-acclim-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-maxfdp-acclimatised', 'ACCLIMATISATION STATUS', [{value:'true', label:'Acclimatised (Table A/B)'}, {value:'false', label:'Unknown / Unacclimatised'}])">
+                                                    <span id="btn-maxfdp-acclim-display">Acclimatised</span>
+                                                    <span class="text-slate-400 text-[10px]">▼</span>
+                                                </button>
+                                                <input type="hidden" id="input-maxfdp-acclimatised" value="true">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">In-Flight Relief</label>
+                                                <button type="button" id="btn-maxfdp-relief-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-maxfdp-relief', 'IN-FLIGHT RELIEF', [{value:'NONE', label:'None (Unaugmented)'}, {value:'CLASS_1_BUNK', label:'Class 1 Bunk'}, {value:'CLASS_2_SEAT', label:'Class 2 Seat'}])">
+                                                    <span id="btn-maxfdp-relief-display">None</span>
+                                                    <span class="text-slate-400 text-[10px]">▼</span>
+                                                </button>
+                                                <input type="hidden" id="input-maxfdp-relief" value="NONE">
+                                            </div>
+                                        </div>
+
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Calculates maximum allowable FDP and on-chocks cutoff times based on CAAM CAD 1901 Table A/B limits and sector configurations.</p>
+                                    </div>
+
+                                    <!-- SLOT 4: ACTION FOOTER CTA -->
+                                    <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                        <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('max-fdp')">Check</button>
+                                    </div>
+
+                                </div>
+
+                                <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
+                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-2xl select-none">
+
+                                    <!-- SLOT 1: HERO BANNER (NO BADGES) + EDIT CTA -->
+                                    <div id="output-slot-1-hero-max-fdp" class="p-3.5 bg-blue-600 text-white rounded-xl flex items-center justify-between shrink-0 shadow-sm transition-colors duration-300">
+                                        <div class="space-y-0.5">
+                                            <span id="output-hero-title-max-fdp" class="text-[10px] font-extrabold uppercase tracking-widest text-white/80 block">Max Allowable FDP RESULTS</span>
+                                            <p id="output-hero-subtitle-max-fdp" class="text-lg font-black text-white tracking-tight leading-none mt-0.5">VALID / CLEARED</p>
+                                        </div>
+                                        <button type="button" class="text-xs font-bold bg-white/20 hover:bg-white/30 active:scale-95 text-white px-3 py-1.5 rounded-lg transition-all cursor-pointer shrink-0 flex items-center gap-1" onclick="flipCardBackToInput('max-fdp')">
+                                            <span>✎</span> Edit
+                                        </button>
+                                    </div>
+
+                                    <!-- SLOT 2: DEDICATED TARGET DATE / TIME WINDOW BAR -->
+                                    <div id="output-slot-2-clock-max-fdp" class="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700/60 my-2 shrink-0 flex items-center justify-between">
+                                        <div>
+                                            <span id="output-clock-label-max-fdp" class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Target Window / Deadline:</span>
+                                            <span id="output-clock-value-max-fdp" class="text-xs font-extrabold text-blue-600 dark:text-blue-400 font-sans">--:--</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- SLOT 3: STACKED 1-COLUMN DETAILS LIST (100% SANS-SERIF) -->
+                                    <div id="output-slot-3-grid-max-fdp" class="flex-1 bg-slate-50/60 dark:bg-slate-800/40 rounded-xl p-3 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-center space-y-2 font-sans overflow-y-auto no-scrollbar">
+                                        <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
+                                            <span id="grid-label-1-max-fdp" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 1</span>
+                                            <span id="grid-value-1-max-fdp" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
+                                            <span id="grid-label-2-max-fdp" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 2</span>
+                                            <span id="grid-value-2-max-fdp" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
+                                            <span id="grid-label-3-max-fdp" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 3</span>
+                                            <span id="grid-value-3-max-fdp" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-xs py-1">
+                                            <span id="grid-label-4-max-fdp" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 4</span>
+                                            <span id="grid-value-4-max-fdp" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- SLOT 4: CAAM / OM LEGAL AUDIT CITATION FOOTER -->
+                                    <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-start gap-1.5">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mt-0.5">AUDIT:</span>
+                                        <p id="output-audit-text-max-fdp" class="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Table A/B & OM-A Section 7.5. Compliant.</p>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- TOOL CARD: PRE-FLIGHT REST -->
+                        <div id="tool-card-preflight" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[420px] perspective-1000">
+                            <div id="card-3d-inner-pre-flight-rest" class="card-3d-inner w-full h-full relative transform-style-3d">
+
+                                <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
+                                <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
+
+                                    <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
+                                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
+                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Pre-Flight Rest</span>
+                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-preflight')">↺ Reset</button>
+                                    </div>
+
+                                    <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
+                                    <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
+
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Preceding Duty</label>
+                                                <button type="button" id="btn-preflight-duty-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbNumberPicker('input-preflight-duty-hours', 'PRECEDING DUTY HOURS', 0, 24)">
+                                                    <span id="btn-preflight-duty-display">10 Hours</span>
+                                                    <span class="text-slate-400 text-[10px]">#</span>
+                                                </button>
+                                                <input type="hidden" id="input-preflight-duty-hours" value="10">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Duty Location</label>
+                                                <button type="button" id="btn-preflight-loc-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-preflight-location', 'DUTY LOCATION', [{value:'HOME', label:'Home Base (12h Min Rest)'}, {value:'OUTSTATION', label:'Outstation Layover'}])">
+                                                    <span id="btn-preflight-loc-display">Home Base</span>
+                                                    <span class="text-slate-400 text-[10px]">▼</span>
+                                                </button>
+                                                <input type="hidden" id="input-preflight-location" value="HOME">
+                                            </div>
+                                        </div>
+
+
+
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Calculates mandatory minimum rest periods and outstation additions under CAAM CAD 1901 Section 2.14 and OM-A 7.5.12.</p>
+                                    </div>
+
+                                    <!-- SLOT 4: ACTION FOOTER CTA -->
+                                    <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                        <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('pre-flight-rest')">Check</button>
+                                    </div>
+
+                                </div>
+
+                                <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
+                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-2xl select-none">
+
+                                    <!-- SLOT 1: HERO BANNER (NO BADGES) + EDIT CTA -->
+                                    <div id="output-slot-1-hero-pre-flight-rest" class="p-3.5 bg-blue-600 text-white rounded-xl flex items-center justify-between shrink-0 shadow-sm transition-colors duration-300">
+                                        <div class="space-y-0.5">
+                                            <span id="output-hero-title-pre-flight-rest" class="text-[10px] font-extrabold uppercase tracking-widest text-white/80 block">Pre-Flight Rest RESULTS</span>
+                                            <p id="output-hero-subtitle-pre-flight-rest" class="text-lg font-black text-white tracking-tight leading-none mt-0.5">VALID / CLEARED</p>
+                                        </div>
+                                        <button type="button" class="text-xs font-bold bg-white/20 hover:bg-white/30 active:scale-95 text-white px-3 py-1.5 rounded-lg transition-all cursor-pointer shrink-0 flex items-center gap-1" onclick="flipCardBackToInput('pre-flight-rest')">
+                                            <span>✎</span> Edit
+                                        </button>
+                                    </div>
+
+                                    <!-- SLOT 2: DEDICATED TARGET DATE / TIME WINDOW BAR -->
+                                    <div id="output-slot-2-clock-pre-flight-rest" class="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700/60 my-2 shrink-0 flex items-center justify-between">
+                                        <div>
+                                            <span id="output-clock-label-pre-flight-rest" class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Target Window / Deadline:</span>
+                                            <span id="output-clock-value-pre-flight-rest" class="text-xs font-extrabold text-blue-600 dark:text-blue-400 font-sans">--:--</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- SLOT 3: STACKED 1-COLUMN DETAILS LIST (100% SANS-SERIF) -->
+                                    <div id="output-slot-3-grid-pre-flight-rest" class="flex-1 bg-slate-50/60 dark:bg-slate-800/40 rounded-xl p-3 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-center space-y-2 font-sans overflow-y-auto no-scrollbar">
+                                        <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
+                                            <span id="grid-label-1-pre-flight-rest" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 1</span>
+                                            <span id="grid-value-1-pre-flight-rest" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
+                                            <span id="grid-label-2-pre-flight-rest" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 2</span>
+                                            <span id="grid-value-2-pre-flight-rest" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
+                                            <span id="grid-label-3-pre-flight-rest" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 3</span>
+                                            <span id="grid-value-3-pre-flight-rest" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-xs py-1">
+                                            <span id="grid-label-4-pre-flight-rest" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 4</span>
+                                            <span id="grid-value-4-pre-flight-rest" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- SLOT 4: CAAM / OM LEGAL AUDIT CITATION FOOTER -->
+                                    <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-start gap-1.5">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mt-0.5">AUDIT:</span>
+                                        <p id="output-audit-text-pre-flight-rest" class="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Section 2.14 & OM-A Section 7.5.12. Compliant.</p>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- TOOL CARD: CUMULATIVE HOURS -->
+                        <div id="tool-card-cumulative" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[420px] perspective-1000">
+                            <div id="card-3d-inner-cumulative" class="card-3d-inner w-full h-full relative transform-style-3d">
+
+                                <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
+                                <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
+
+                                    <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
+                                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
+                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Cumulative Hours</span>
+                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-cumulative')">↺ Reset</button>
+                                    </div>
+
+                                    <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
+                                    <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
+
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">7-Day Duty</label>
+                                                <button type="button" id="btn-cum-7d-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-cum-duty-7d', '7-DAY DUTY HOURS')">
+                                                    <span id="btn-cum-7d-display">32:15</span>
+                                                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                </button>
+                                                <input type="hidden" id="input-cum-duty-7d" value="32:15">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">14-Day Duty</label>
+                                                <button type="button" id="btn-cum-14d-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-cum-duty-14d', '14-DAY DUTY HOURS')">
+                                                    <span id="btn-cum-14d-display">68:30</span>
+                                                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                </button>
+                                                <input type="hidden" id="input-cum-duty-14d" value="68:30">
+                                            </div>
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">28-Day Duty</label>
+                                                <button type="button" id="btn-cum-28d-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-cum-duty-28d', '28-DAY DUTY HOURS')">
+                                                    <span id="btn-cum-28d-display">120:00</span>
+                                                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                </button>
+                                                <input type="hidden" id="input-cum-duty-28d" value="120:00">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">28-Day Flight</label>
+                                                <button type="button" id="btn-cum-flt28d-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-cum-flight-28d', '28-DAY FLIGHT HOURS')">
+                                                    <span id="btn-cum-flt28d-display">78:30</span>
+                                                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                </button>
+                                                <input type="hidden" id="input-cum-flight-28d" value="78:30">
+                                            </div>
+                                        </div>
+
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Monitors rolling 7-day, 14-day, 28-day, and annual flight and duty limits against CAAM CAD 1901 regulations.</p>
+                                    </div>
+
+                                    <!-- SLOT 4: ACTION FOOTER CTA -->
+                                    <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                        <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('cumulative')">Check</button>
+                                    </div>
+
+                                </div>
+
+                                <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
+                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-2xl select-none">
+
+                                    <!-- SLOT 1: HERO BANNER (NO BADGES) + EDIT CTA -->
+                                    <div id="output-slot-1-hero-cumulative" class="p-3.5 bg-blue-600 text-white rounded-xl flex items-center justify-between shrink-0 shadow-sm transition-colors duration-300">
+                                        <div class="space-y-0.5">
+                                            <span id="output-hero-title-cumulative" class="text-[10px] font-extrabold uppercase tracking-widest text-white/80 block">Cumulative Hours RESULTS</span>
+                                            <p id="output-hero-subtitle-cumulative" class="text-lg font-black text-white tracking-tight leading-none mt-0.5">VALID / CLEARED</p>
+                                        </div>
+                                        <button type="button" class="text-xs font-bold bg-white/20 hover:bg-white/30 active:scale-95 text-white px-3 py-1.5 rounded-lg transition-all cursor-pointer shrink-0 flex items-center gap-1" onclick="flipCardBackToInput('cumulative')">
+                                            <span>✎</span> Edit
+                                        </button>
+                                    </div>
+
+                                    <!-- SLOT 2: DEDICATED TARGET DATE / TIME WINDOW BAR -->
+                                    <div id="output-slot-2-clock-cumulative" class="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700/60 my-2 shrink-0 flex items-center justify-between">
+                                        <div>
+                                            <span id="output-clock-label-cumulative" class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Target Window / Deadline:</span>
+                                            <span id="output-clock-value-cumulative" class="text-xs font-extrabold text-blue-600 dark:text-blue-400 font-sans">--:--</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- SLOT 3: STACKED 1-COLUMN DETAILS LIST (100% SANS-SERIF) -->
+                                    <div id="output-slot-3-grid-cumulative" class="flex-1 bg-slate-50/60 dark:bg-slate-800/40 rounded-xl p-3 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-center space-y-2 font-sans overflow-y-auto no-scrollbar">
+                                        <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
+                                            <span id="grid-label-1-cumulative" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 1</span>
+                                            <span id="grid-value-1-cumulative" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
+                                            <span id="grid-label-2-cumulative" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 2</span>
+                                            <span id="grid-value-2-cumulative" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
+                                            <span id="grid-label-3-cumulative" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 3</span>
+                                            <span id="grid-value-3-cumulative" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-xs py-1">
+                                            <span id="grid-label-4-cumulative" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">PARAMETER 4</span>
+                                            <span id="grid-value-4-cumulative" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- SLOT 4: CAAM / OM LEGAL AUDIT CITATION FOOTER -->
+                                    <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-start gap-1.5">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mt-0.5">AUDIT:</span>
+                                        <p id="output-audit-text-cumulative" class="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Cumulative Limits. Compliant.</p>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </div>
                     </div>
+
+                </div>
 
         </main>
 
