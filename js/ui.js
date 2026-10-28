@@ -1,4 +1,4 @@
-// ./js/ui.js (2810_R268) - CertiFly Navigation, View Controller & UI State
+// ./js/ui.js (2810_R274) - CertiFly Navigation, View Controller & UI State
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -663,6 +663,20 @@ if (typeof window !== 'undefined') {
 let activeCategory = 'qualifications'; // 'qualifications' | 'dutyrest'
 let activeToolCardId = 'tool-card-medical';
 
+export function normalizeToolCardId(rawId) {
+  if (!rawId) return 'tool-card-medical';
+  const s = String(rawId).toLowerCase().replace('_', '-').trim();
+  if (s.includes('med')) return 'tool-card-medical';
+  if (s.includes('ppc') || s.includes('lpc')) return 'tool-card-ppc';
+  if (s.includes('recurrent')) return 'tool-card-recurrent';
+  if (s.includes('recency')) return 'tool-card-recency';
+  if (s.includes('standby') || s.includes('stby')) return 'tool-card-standby';
+  if (s.includes('max') || s.includes('fdp')) return 'tool-card-maxfdp';
+  if (s.includes('pre') || s.includes('rest')) return 'tool-card-preflight';
+  if (s.includes('cum')) return 'tool-card-cumulative';
+  return s.startsWith('tool-card-') ? s : 'tool-card-' + s;
+}
+
 export function switchToolCategory(category) {
   activeCategory = category;
 
@@ -676,21 +690,22 @@ export function switchToolCategory(category) {
   const inactiveClass = "cat-tab-btn py-2.5 px-3 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 text-center flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer";
 
   if (category === 'qualifications') {
-    if (catQualsBtn) catQualsBtn.className = activeClass;
-    if (catDutyBtn) catDutyBtn.className = inactiveClass;
+    if (catQualsBtn) { catQualsBtn.className = activeClass; catQualsBtn.setAttribute('aria-selected', 'true'); }
+    if (catDutyBtn) { catDutyBtn.className = inactiveClass; catDutyBtn.setAttribute('aria-selected', 'false'); }
     if (paneQuals) paneQuals.classList.remove('hidden');
     if (paneDuty) paneDuty.classList.add('hidden');
     switchActiveTool('tool-card-medical');
   } else {
-    if (catQualsBtn) catQualsBtn.className = inactiveClass;
-    if (catDutyBtn) catDutyBtn.className = activeClass;
+    if (catQualsBtn) { catQualsBtn.className = inactiveClass; catQualsBtn.setAttribute('aria-selected', 'false'); }
+    if (catDutyBtn) { catDutyBtn.className = activeClass; catDutyBtn.setAttribute('aria-selected', 'true'); }
     if (paneQuals) paneQuals.classList.add('hidden');
     if (paneDuty) paneDuty.classList.remove('hidden');
     switchActiveTool('tool-card-standby');
   }
 }
 
-export function switchActiveTool(toolCardId) {
+export function switchActiveTool(rawId) {
+  const toolCardId = normalizeToolCardId(rawId);
   activeToolCardId = toolCardId;
 
   const allToolCards = [
