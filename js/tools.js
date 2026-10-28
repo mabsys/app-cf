@@ -1,4 +1,4 @@
-// ./js/tools.js (2810_R267) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (2810_R272) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1067,6 +1067,21 @@ export function initToolsModule() {
 // ==================================================================
 // WINDOW GLOBAL BINDINGS
 // ==================================================================
+
+export function setStandbyLocation(loc) {
+  toolsState.standbyLocation = loc;
+  const btnHome = document.getElementById('btn-stby-loc-home');
+  const btnAirport = document.getElementById('btn-stby-loc-airport');
+
+  if (loc === 'HOME') {
+    if (btnHome) btnHome.className = 'py-2 px-3 rounded-xl text-xs font-semibold bg-blue-600 text-white cursor-pointer';
+    if (btnAirport) btnAirport.className = 'py-2 px-3 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 cursor-pointer';
+  } else {
+    if (btnAirport) btnAirport.className = 'py-2 px-3 rounded-xl text-xs font-semibold bg-blue-600 text-white cursor-pointer';
+    if (btnHome) btnHome.className = 'py-2 px-3 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 cursor-pointer';
+  }
+}
+
 if (typeof window !== 'undefined') {
   window.formatDateDDMMMYYYY = formatDateDDMMMYYYY;
   
@@ -1102,6 +1117,7 @@ if (typeof window !== 'undefined') {
   window.switchToolCategory = switchToolCategory;
   window.switchActiveTool = switchActiveTool;
   window.resetToolInputs = resetToolInputs;
+  window.setStandbyLocation = setStandbyLocation;
   window.runToolCalculation = runToolCalculation;
   window.renderToolsOutputCard = renderToolsOutputCard;
   window.renderNormalizedOutput = renderNormalizedOutput;
