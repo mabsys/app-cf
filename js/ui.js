@@ -679,7 +679,8 @@ export function normalizeToolCardId(rawId) {
 
 export function switchToolCategory(category) {
   const normCategory = (category === 'dutyrest' || category === 'time' || category === 'fdp') ? 'dutyrest' : 'qualifications';
-  toolsState.activeCategory = normCategory;
+  const state = getToolsState ? getToolsState() : {};
+  if (state) state.activeCategory = normCategory;
 
   const tabA = document.getElementById('cat-tab-qualifications');
   const tabB = document.getElementById('cat-tab-dutyrest');
@@ -696,7 +697,7 @@ export function switchToolCategory(category) {
     if (paneB) paneB.classList.add('hidden');
 
     const catACards = ['tool-card-medical', 'tool-card-ppc', 'tool-card-recurrent', 'tool-card-recency'];
-    const targetCard = catACards.includes(toolsState.activeToolId) ? toolsState.activeToolId : 'tool-card-medical';
+    const targetCard = (state && catACards.includes(state.activeToolId)) ? state.activeToolId : 'tool-card-medical';
     switchActiveTool(targetCard);
   } else {
     if (tabA) { tabA.className = inactiveTabClass; tabA.setAttribute('aria-selected', 'false'); }
@@ -705,20 +706,21 @@ export function switchToolCategory(category) {
     if (paneB) paneB.classList.remove('hidden');
 
     const catBCards = ['tool-card-standby', 'tool-card-maxfdp', 'tool-card-preflight', 'tool-card-cumulative'];
-    const targetCard = catBCards.includes(toolsState.activeToolId) ? toolsState.activeToolId : 'tool-card-standby';
+    const targetCard = (state && catBCards.includes(state.activeToolId)) ? state.activeToolId : 'tool-card-standby';
     switchActiveTool(targetCard);
   }
 }
 
 export function switchActiveTool(rawId) {
   const toolCardId = normalizeToolCardId(rawId);
-  toolsState.activeToolId = toolCardId;
+  const state = getToolsState ? getToolsState() : {};
+  if (state) state.activeToolId = toolCardId;
 
   const catACards = ['tool-card-medical', 'tool-card-ppc', 'tool-card-recurrent', 'tool-card-recency'];
   const catBCards = ['tool-card-standby', 'tool-card-maxfdp', 'tool-card-preflight', 'tool-card-cumulative'];
 
   const isCatA = catACards.includes(toolCardId);
-  toolsState.activeCategory = isCatA ? 'qualifications' : 'dutyrest';
+  if (state) state.activeCategory = isCatA ? 'qualifications' : 'dutyrest';
 
   const paneA = document.getElementById('cat-pane-qualifications');
   const paneB = document.getElementById('cat-pane-dutyrest');
@@ -853,7 +855,7 @@ export function dispatchActiveToolCalculation() {
       case 'recurrent':
         inputData = {
           completionDate: document.getElementById('input-recurrent-conduct-date')?.value || '',
-          courseType: window.toolsState?.recurrentCourseKey || 'LINE_CHECK'
+          courseType: (getToolsState ? getToolsState()?.recurrentCourseKey : null) || 'LINE_CHECK'
         };
         break;
 
