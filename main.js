@@ -1,7 +1,7 @@
-// ./main.js (2810_R270) - CertiFly Application Shell & Orchestrator
+// ./main.js (2810_R271) - CertiFly Application Shell & Orchestrator
 
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
-import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setMasterTimezone, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
+import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setStandbyLocation, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
 import { parseAttestationText, validateAttestationContent, parseQualificationSlipText, validateQualificationSlipContent } from './js/parser.js';
@@ -3958,8 +3958,8 @@ export function initToolsUIController() {
   // 4. Master Timezone & Standby Location Toggles
   const tzUtcBtn = document.getElementById("tz-btn-utc");
   const tzLocalBtn = document.getElementById("tz-btn-local");
-  if (tzUtcBtn) tzUtcBtn.addEventListener("click", () => setMasterTimezone("UTC"));
-  if (tzLocalBtn) tzLocalBtn.addEventListener("click", () => setMasterTimezone("LOCAL"));
+  if (tzUtcBtn) tzUtcBtn.addEventListener("click", () => setStandbyLocation("UTC"));
+  if (tzLocalBtn) tzLocalBtn.addEventListener("click", () => setStandbyLocation("LOCAL"));
 
   const stbyHomeBtn = document.getElementById("btn-stby-loc-home");
   const stbyAirportBtn = document.getElementById("btn-stby-loc-airport");
