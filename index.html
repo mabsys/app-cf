@@ -1,4 +1,4 @@
-<!-- ./index.html (2910_R285) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+<!-- ./index.html (2910_R285_DOB) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -1085,12 +1085,16 @@ if ('serviceWorker' in navigator) {
                                                 <input type="hidden" id="input-med-license-type" value="ATPL">
                                             </div>
                                             <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Age Bracket</label>
-                                                <button type="button" id="btn-med-age-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-med-age-bracket', 'SELECT AGE BRACKET', [{value:'UNDER_40', label:'Under 40'}, {value:'40_TO_59', label:'40 to 59 (Annual)'}, {value:'60_PLUS', label:'60 and Over (6-Mo)'}])">
-                                                    <span id="btn-med-age-display">40 to 59</span>
-                                                    <span class="text-slate-400 text-[10px]">▼</span>
+                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Date of Birth</label>
+                                                <button type="button" id="btn-med-dob-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbDatePicker('input-med-dob', 'DATE OF BIRTH')">
+                                                    <span id="input-med-dob-display" class="font-sans">SELECT DOB</span>
+                                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                    </svg>
+
                                                 </button>
-                                                <input type="hidden" id="input-med-age-bracket" value="40_TO_59">
+                                                <input type="hidden" id="input-med-dob" value="">
+
                                             </div>
                                         </div>
 
