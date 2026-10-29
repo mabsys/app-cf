@@ -1,4 +1,4 @@
-// ./js/tools.js (2810_R278) - CertiFly Aviation Tools Engine Controller
+// ./js/tools.js (2810_R281) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -815,12 +815,10 @@ export function normalizeOutput(toolType, rawResult) {
   return null;
 }
 
-// ==================================================================
-// RENDERER FOR 4-SLOT BACK FACE OUTPUT CARDS
-// ==================================================================
-export function renderToolsOutputCardForTool(toolType, normalized) {
+function renderToolsOutputCardForTool(toolType, normalized) {
   if (!normalized) return;
-  const suffixMap = {
+
+  const keyMap = {
     'medical': 'medical',
     'ppc': 'ppc',
     'recurrent': 'recurrent',
@@ -832,62 +830,72 @@ export function renderToolsOutputCardForTool(toolType, normalized) {
     'pre-flight-rest': 'preflight',
     'cumulative': 'cumulative'
   };
-  const suffix = suffixMap[toolType] || toolType;
+
+  const suffix = keyMap[toolType] || toolType;
 
   const themeMap = {
     'emerald': {
       heroBg: 'bg-emerald-500',
-      clockBg: 'bg-emerald-100 dark:bg-slate-900',
+      clockBg: 'bg-emerald-100 dark:bg-emerald-900/50',
       clockText: 'text-emerald-600 dark:text-emerald-500'
     },
     'amber': {
       heroBg: 'bg-amber-500',
-      clockBg: 'bg-amber-100 dark:bg-slate-900',
+      clockBg: 'bg-amber-100 dark:bg-amber-900/50',
       clockText: 'text-amber-600 dark:text-amber-500'
     },
     'rose': {
       heroBg: 'bg-rose-600',
-      clockBg: 'bg-rose-100 dark:bg-slate-900',
+      clockBg: 'bg-rose-100 dark:bg-rose-900/50',
       clockText: 'text-rose-600 dark:text-rose-500'
     }
   };
 
   const theme = themeMap[normalized.statusTheme] || themeMap['emerald'];
 
-  // Slot 1: Hero
+  // Slot 1: Hero Banner
   const heroEl = document.getElementById(`output-slot-1-hero-${suffix}`);
   const titleEl = document.getElementById(`output-hero-title-${suffix}`);
-  const subTitleEl = document.getElementById(`output-hero-subtitle-${suffix}`);
-  if (heroEl) heroEl.className = `p-4 ${theme.heroBg} text-white transition-colors duration-300 rounded-t-2xl`;
-  if (titleEl) titleEl.innerText = normalized.headlineTitle;
-  if (subTitleEl) subTitleEl.innerText = normalized.headlineValue;
+  const subtitleEl = document.getElementById(`output-hero-subtitle-${suffix}`);
 
-  // Slot 2: Clock
+  if (heroEl) heroEl.className = `p-4 ${theme.heroBg} text-white transition-colors duration-300 rounded-t-2xl`;
+  if (titleEl) titleEl.innerText = normalized.headlineTitle || `${suffix.toUpperCase()} RESULTS`;
+  if (subtitleEl) subtitleEl.innerText = normalized.headlineValue || normalized.statusBadge || 'VALID / CLEARED';
+
+  // Slot 2: Target Window / Clock
   const clockSlotEl = document.getElementById(`output-slot-2-clock-${suffix}`);
   const clockLabelEl = document.getElementById(`output-clock-label-${suffix}`);
   const clockValEl = document.getElementById(`output-clock-value-${suffix}`);
-  if (clockSlotEl) clockSlotEl.className = `p-3.5 ${theme.clockBg} border-b border-slate-200 dark:border-slate-800 flex items-center justify-between transition-colors duration-300`;
-  if (clockLabelEl) clockLabelEl.innerText = normalized.targetClockLabel;
+
+  if (clockSlotEl) clockSlotEl.className = `p-3.5 ${theme.clockBg} border-b border-slate-200 dark:border-slate-800 flex items-center justify-between`;
+  if (clockLabelEl) clockLabelEl.innerText = normalized.targetClockLabel || 'Target Window / Deadline:';
   if (clockValEl) {
-    clockValEl.innerText = normalized.targetClockValue;
+    clockValEl.innerText = normalized.targetClockValue || '--:--';
     clockValEl.className = `text-sm font-extrabold ${theme.clockText} font-sans`;
   }
 
-  // Slot 3: Grid (3 Items)
-  if (normalized.breakdownGrid && Array.isArray(normalized.breakdownGrid)) {
-    normalized.breakdownGrid.forEach((item, idx) => {
-      const itemNum = idx + 1;
-      const labelEl = document.getElementById(`grid-label-${itemNum}-${suffix}`);
-      const valEl = document.getElementById(`grid-value-${itemNum}-${suffix}`);
-      if (labelEl) labelEl.innerText = item.label;
-      if (valEl) valEl.innerText = item.value;
-    });
+  // Slot 3: Breakdown Grid (3 items)
+  const items = normalized.breakdownGrid || [];
+  for (let i = 1; i <= 3; i++) {
+    const lblEl = document.getElementById(`grid-label-${i}-${suffix}`);
+    const valEl = document.getElementById(`grid-value-${i}-${suffix}`);
+
+    if (i <= items.length && items[i - 1]) {
+      if (lblEl) lblEl.innerText = items[i - 1].label || '';
+      if (valEl) {
+        valEl.innerText = items[i - 1].value || '';
+        valEl.className = 'text-xs font-bold text-slate-800 dark:text-slate-100 font-sans';
+      }
+    } else {
+      if (lblEl) lblEl.innerText = '';
+      if (valEl) valEl.innerText = '';
+    }
   }
 
-  // Slot 4: Audit Text
+  // Slot 4: Audit Citation Text
   const auditTextEl = document.getElementById(`output-audit-text-${suffix}`);
   if (auditTextEl && normalized.auditNotes) {
-    auditTextEl.innerText = normalized.auditNotes.join(' ');
+    auditTextEl.innerText = Array.isArray(normalized.auditNotes) ? normalized.auditNotes.join('. ') : normalized.auditNotes;
   }
 }
 
