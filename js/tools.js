@@ -1,4 +1,4 @@
-// ./js/tools.js (2910_R287) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (2910_R289) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -311,7 +311,7 @@ export function openEfbSelectModal(targetInputId, labelTitle = 'CHOOSE OPTION', 
     listEl.innerHTML = options.map(opt => {
       const isSelected = opt.value === currentVal;
       const borderClass = isSelected ? 'border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-800 dark:text-slate-100 hover:border-blue-400';
-      return `<button type="button" class="w-full p-3 rounded-xl border ${borderClass} font-bold text-xs text-left transition-all flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="selectEfbOption('${opt.value}', '${opt.label.replace(/'/g, "\'")}')">
+      return `<button type="button" class="w-full p-3 rounded-xl border ${borderClass} font-bold text-xs text-left transition-all flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="selectEfbOption('${opt.value}', '${opt.label.replace(/'/g, "'")}')">
         <span>${opt.label}</span>
         ${isSelected ? '<span class="text-blue-600 dark:text-blue-400 font-extrabold text-xs">SELECTED</span>' : ''}
       </button>`;
@@ -534,40 +534,100 @@ export function runToolCalculation(toolType, inputData = {}) {
     switch (normType) {
       case 'medical': {
         const examDate = inputData.examDate || document.getElementById('input-med-exam-date')?.value || new Date().toISOString().split('T')[0];
-        const ageBracket = document.getElementById('input-med-age-bracket')?.value || '40_TO_59';
-        const age = (ageBracket === 'UNDER_40') ? 35 : ((ageBracket === '40_TO_59') ? 45 : 62);
-        const refYear = new Date(examDate).getFullYear() || new Date().getFullYear();
-        const dobStr = (refYear - age) + "-01-01";
-        
+        let dobStr = inputData.dob || document.getElementById('input-med-dob')?.value;
+        const currentExpiryDate = inputData.currentExpiryDate || document.getElementById('input-med-current-expiry')?.value || null;
+
+        // Ensure valid dobStr with fallback to stored profile DOB or examYear - 40
+        if (!dobStr || isNaN(new Date(dobStr).getTime())) {
+          try {
+            const pData = localStorage.getItem('certifly_profile_data');
+            if (pData) {
+              const parsed = JSON.parse(pData);
+              dobStr = parsed?.dob || parsed?.cachedCaamResults?.dob || parsed?.cachedCaamResults?.dateOfBirth;
+            }
+          } catch (e) {}
+        }
+        if (!dobStr || isNaN(new Date(dobStr).getTime())) {
+          const examYear = new Date(examDate).getFullYear() || new Date().getFullYear();
+          dobStr = (examYear - 40) + "-01-01";
+        }
+
+        const calcParams = { dob: dobStr, examDate, currentExpiryDate };
+
         if (typeof MedicalEngineModule !== 'undefined') {
           if (typeof MedicalEngineModule.calculateValidity === 'function') {
-            result = MedicalEngineModule.calculateValidity({ dob: dobStr, examDate });
+            result = MedicalEngineModule.calculateValidity(calcParams);
+          } else if (MedicalEngineModule.MedicalValidityEngine && typeof MedicalEngineModule.MedicalValidityEngine.calculateValidity === 'function') {
+            result = MedicalEngineModule.MedicalValidityEngine.calculateValidity(calcParams);
+          } else if (MedicalEngineModule.default && typeof MedicalEngineModule.default.calculateValidity === 'function') {
+            result = MedicalEngineModule.default.calculateValidity(calcParams);
           } else if (typeof MedicalEngineModule.calculateMedicalValidity === 'function') {
-            result = MedicalEngineModule.calculateMedicalValidity(examDate, dobStr);
+            try {
+              result = MedicalEngineModule.calculateMedicalValidity(calcParams);
+            } catch (e) {
+              result = MedicalEngineModule.calculateMedicalValidity(examDate, dobStr);
+            }
           }
         }
-        
-        if (!result) {
-          const validityMonths = age >= 60 ? 6 : 12;
-          const exam = new Date(examDate);
-          const exp = new Date(exam);
-          exp.setMonth(exp.getMonth() + validityMonths);
-          const newExpStr = exp.toISOString().split('T')[0];
-          const dameEarliest = new Date(exp);
-          dameEarliest.setDate(dameEarliest.getDate() - 45);
-          
-          result = {
-            age,
-            isEligible: age < 65,
-            validityMonths,
-            anniversaryPreserved: true,
-            examDate,
-            newExpiryDate: newExpStr,
-            dameEarliestDate: dameEarliest.toISOString().split('T')[0],
-            restrictions: age >= 60 ? ["Multi-pilot crew operations only (Single-pilot prohibited)"] : []
-          };
+
+        if (!result && typeof MedicalValidityEngine !== 'undefined' && typeof MedicalValidityEngine.calculateValidity === 'function') {
+          result = MedicalValidityEngine.calculateValidity(calcParams);
         }
-        
+
+        // Full fallback calculation if engine method not resolved
+        if (!result) {
+          const dobDate = new Date(dobStr);
+          const exam = new Date(examDate);
+          let age = exam.getFullYear() - dobDate.getFullYear();
+          const mDiff = exam.getMonth() - dobDate.getMonth();
+          if (mDiff < 0 || (mDiff === 0 && exam.getDate() < dobDate.getDate())) age--;
+
+          if (age >= 65) {
+            result = {
+              age,
+              isEligible: false,
+              reason: 'Commercial Air Transport pilot privileges cease at Age 65.',
+              validityMonths: 0,
+              newExpiryDate: null,
+              dameEarliestDate: null,
+              restrictions: ['Ceased - Age 65+']
+            };
+          } else {
+            const validityMonths = age >= 60 ? 6 : 12;
+            let baseDate = new Date(exam);
+            let anniversaryPreserved = false;
+
+            if (currentExpiryDate) {
+              const currentExpiry = new Date(currentExpiryDate);
+              if (!isNaN(currentExpiry.getTime())) {
+                const diffTime = currentExpiry.getTime() - exam.getTime();
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                if (diffDays >= 0 && diffDays <= 45) {
+                  baseDate = new Date(currentExpiry);
+                  anniversaryPreserved = true;
+                }
+              }
+            }
+
+            const exp = new Date(baseDate);
+            exp.setMonth(exp.getMonth() + validityMonths);
+            const newExpStr = exp.toISOString().split('T')[0];
+            const dameEarliest = new Date(exp);
+            dameEarliest.setDate(dameEarliest.getDate() - 45);
+
+            result = {
+              age,
+              isEligible: true,
+              validityMonths,
+              anniversaryPreserved,
+              examDate: exam.toISOString().split('T')[0],
+              newExpiryDate: newExpStr,
+              dameEarliestDate: dameEarliest.toISOString().split('T')[0],
+              restrictions: age >= 60 ? ['Multi-pilot crew operations only (Single-pilot prohibited)'] : []
+            };
+          }
+        }
+
         if (result && result.newExpiryDate && !result.dameEarliestDate) {
           const expDate = new Date(result.newExpiryDate);
           const dameEarliest = new Date(expDate);
