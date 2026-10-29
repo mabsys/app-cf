@@ -1,4 +1,4 @@
-// ./js/tools.js (2810_R276) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (2810_R277) - CertiFly Aviation Tools Suite Controller
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -652,166 +652,162 @@ export function runToolCalculation(toolType, inputData = {}) {
 export function normalizeOutput(toolType, rawResult) {
   const normType = (toolType === 'maxfdp') ? 'max-fdp' : ((toolType === 'preflight') ? 'pre-flight-rest' : toolType);
 
+  let statusTheme = 'emerald';
+
   switch (normType) {
     case 'medical': {
       const isPreserved = rawResult ? rawResult.anniversaryPreserved : true;
+      const isLapsed = rawResult ? (rawResult.isEligible === false) : false;
+      statusTheme = isLapsed ? 'rose' : (isPreserved ? 'emerald' : 'amber');
       const expiry = rawResult ? formatDateDDMMMYYYY(rawResult.newExpiryDate) : '31 OCT 2027';
       const windowStr = (rawResult && rawResult.dameEarliestDate) ? `${formatDateDDMMMYYYY(rawResult.dameEarliestDate)} to ${formatDateDDMMMYYYY(rawResult.newExpiryDate)}` : '16 SEP 2027 to 31 OCT 2027';
       return {
-        statusBadge: isPreserved ? 'VALID / CLEARED' : 'EXPIRY RESET',
-        statusClass: 'bg-emerald-600',
-        headlineTitle: 'MEDICAL CLASS 1 / 2 RESULTS',
+        statusTheme,
+        headlineTitle: 'NEW MEDICAL EXPIRY',
         headlineValue: expiry,
-        targetClockLabel: 'DAME Re-Exam Window:',
+        targetClockLabel: 'Target Window / Deadline:',
         targetClockValue: windowStr,
         breakdownGrid: [
           { label: 'AGE BRACKET', value: (rawResult && rawResult.age) ? `${rawResult.age} Years` : '40 to 59 Years' },
           { label: 'BASE VALIDITY', value: '12 Calendar Months' },
-          { label: 'RENEWAL RULE', value: isPreserved ? 'Window Preserved (45 Days)' : 'Reset to End of Month' },
-          { label: 'OPERATING CAPACITY', value: 'Unrestricted Single / Multi Pilot' }
+          { label: 'RENEWAL RULE', value: isPreserved ? 'Window Preserved (45 Days)' : 'Reset to End of Month' }
         ],
-        auditNotes: ['CAAM CAD 1 Personnel Licensing Section 1.2.5.2 and OM-A 5.1.4. Compliant.']
+        auditNotes: ['Grounded in CAAM CAD 1 PEL Section 1.2.5.2 & OM-A 5.1.4.4. Compliant.']
       };
     }
 
     case 'ppc': {
       const isPreserved = rawResult ? rawResult.anniversaryPreserved : true;
+      statusTheme = isPreserved ? 'emerald' : 'amber';
       const expiry = rawResult ? formatDateDDMMMYYYY(rawResult.newLPCExpiryDate) : '31 JUL 2027';
       const opcStr = (rawResult && rawResult.opcWindowStart) ? `${formatDateDDMMMYYYY(rawResult.opcWindowStart)} to ${formatDateDDMMMYYYY(rawResult.opcWindowEnd)}` : '01 MAY 2027 to 31 JUL 2027';
       return {
-        statusBadge: isPreserved ? 'VALID / CLEARED' : 'EXPIRY RESET',
-        statusClass: 'bg-emerald-600',
-        headlineTitle: 'PPC / LPC DUAL-WINDOW RESULTS',
+        statusTheme,
+        headlineTitle: 'NEW PPC / LPC EXPIRY',
         headlineValue: expiry,
-        targetClockLabel: 'Lookback Revalidation Window:',
+        targetClockLabel: 'Target Window / Deadline:',
         targetClockValue: opcStr,
         breakdownGrid: [
           { label: 'REVALIDATION RULE', value: isPreserved ? 'Date Preserved (3-Month Window)' : 'Reset to EOM' },
-          { label: 'PERMISSIBLE OPC WINDOW', value: opcStr },
           { label: 'BASE VALIDITY', value: '12 Calendar Months' },
           { label: 'OPERATING STATUS', value: 'Qualified & Cleared' }
         ],
-        auditNotes: ['CAAM CAD 6.9.4.4, CAD 1 PEL 2.1.5.10, and OM-A 5.1.4.6. Compliant.']
+        auditNotes: ['Grounded in CAAM CAD 6.9.4.4, CAD 1 PEL 2.1.5.10 & OM-A 5.1.4.6. Compliant.']
       };
     }
 
     case 'recurrent': {
+      statusTheme = 'emerald';
       const expiry = rawResult ? formatDateDDMMMYYYY(rawResult.newExpiryDate) : '31 DEC 2026';
       const courseName = rawResult ? (rawResult.name || toolsState.recurrentCourseName) : 'Line Check (LC)';
       return {
-        statusBadge: 'VALID / CLEARED',
-        statusClass: 'bg-emerald-600',
-        headlineTitle: 'RECURRENT TRAINING RESULTS',
+        statusTheme,
+        headlineTitle: 'RECURRENT EXPIRY DATE',
         headlineValue: expiry,
         targetClockLabel: 'Qualification Module:',
         targetClockValue: String(courseName).toUpperCase(),
         breakdownGrid: [
           { label: 'MODULE CATEGORY', value: rawResult ? (rawResult.category || toolsState.recurrentCourseCat) : 'Annual (12 Calendar Months)' },
           { label: 'COMPLETION DATE', value: rawResult && rawResult.completionDate ? formatDateDDMMMYYYY(rawResult.completionDate) : '15 DEC 2025' },
-          { label: 'NEW EXPIRY', value: expiry },
           { label: 'RENEWAL METHOD', value: '3-Month Lookback Window' }
         ],
-        auditNotes: ['CAAM CAD 6.9.4 and OM-D Chapter 2 Recurrent Standards. Compliant.']
+        auditNotes: ['Grounded in CAAM CAD 6.9.4 & OM-D Chapter 2 Recurrent Standards. Compliant.']
       };
     }
 
     case 'recency': {
-      const dayCount = rawResult ? rawResult.dayCount : 3;
       const isCompliant = rawResult ? rawResult.isCompliant : true;
+      statusTheme = isCompliant ? 'emerald' : 'rose';
+      const dayCount = rawResult ? rawResult.dayCount : 3;
       return {
-        statusBadge: isCompliant ? 'CURRENCY MET' : 'RECENCY LAPSED',
-        statusClass: isCompliant ? 'bg-emerald-600' : 'bg-rose-600',
-        headlineTitle: 'LANDING RECENCY RESULTS',
-        headlineValue: isCompliant ? 'CLEARED FOR PASSENGER FLIGHT' : 'CHECK REQUIRED',
-        targetClockLabel: 'Passenger Currency Status:',
-        targetClockValue: `${dayCount} / 3 Take-offs & Landings Logged`,
+        statusTheme,
+        headlineTitle: 'LANDING RECENCY STATUS',
+        headlineValue: isCompliant ? `${dayCount} / 3 LANDINGS MET` : 'RECENCY LAPSED',
+        targetClockLabel: 'Target Window / Deadline:',
+        targetClockValue: rawResult && rawResult.expiryDate ? formatDateDDMMMYYYY(rawResult.expiryDate) : '90-Day Rolling Window',
         breakdownGrid: [
-          { label: 'DAY / NIGHT LANDINGS', value: `${dayCount} PF Landings in 90 Days` },
-          { label: 'PILOT CAPACITY', value: 'Captain (PIC) / FO' },
-          { label: 'ANCHOR DATE (3RD)', value: rawResult && rawResult.anchorDate ? formatDateDDMMMYYYY(rawResult.anchorDate) : '15 AUG 2026' },
-          { label: 'RECENCY STATUS', value: isCompliant ? 'Compliant in 90-Day Window' : 'Lapsed - Flight Check Required' }
+          { label: 'DAY LANDINGS', value: `${dayCount} Sector(s) Logged` },
+          { label: 'ANCHOR DATE', value: rawResult && rawResult.anchorDate ? formatDateDDMMMYYYY(rawResult.anchorDate) : '--' },
+          { label: 'PASSENGER CARRY', value: isCompliant ? 'Cleared (PIC / Co-Pilot)' : 'Prohibited (Re-qualification Required)' }
         ],
-        auditNotes: ['CAAM CAD 1 / OM-A Section 7.1 Passenger Currency. Compliant.']
+        auditNotes: ['Grounded in CAAM CAD 1 Section 2.1.5.2 & OM-A 5.1.2. Compliant.']
       };
     }
 
     case 'standby': {
-      const isCaseB = rawResult ? (rawResult.caseType === 'CASE_B' || rawResult.isCaseB) : false;
-      const fdp = rawResult ? (rawResult.netFdpFormatted || rawResult.allowableFdpFormatted || rawResult.netFdp) : '13:00 HOURS';
+      const isCaseB = rawResult ? (rawResult.caseType === 'CASE_B') : false;
+      statusTheme = 'emerald';
+      const fdp = rawResult ? (rawResult.netFdpFormatted || '13:00 HOURS') : '13:00 HOURS';
+      const cutoff = rawResult ? (rawResult.cutoffTimestampUtc || '14:00 UTC') : '14:00 UTC';
       return {
-        statusBadge: isCaseB ? 'CASE B (REDUCED)' : 'CASE A (STANDARD)',
-        statusClass: 'bg-emerald-600',
-        headlineTitle: 'STANDBY CALL-OUT RESULTS',
+        statusTheme,
+        headlineTitle: 'NET PERMISSIBLE FDP',
         headlineValue: fdp,
-        targetClockLabel: 'Standby On-Chocks Cutoff:',
-        targetClockValue: rawResult && rawResult.cutoffTimestampUtc ? rawResult.cutoffTimestampUtc : '14:00 UTC',
+        targetClockLabel: 'Latest On-Chocks Cutoff:',
+        targetClockValue: cutoff,
         breakdownGrid: [
           { label: 'STANDBY DURATION', value: rawResult && rawResult.standbyDurationFormatted ? rawResult.standbyDurationFormatted : '04h 00m' },
           { label: 'FDP DEDUCTION', value: rawResult && rawResult.deductionFormatted ? rawResult.deductionFormatted : '00h 00m' },
-          { label: 'CASE CLASSIFICATION', value: isCaseB ? 'Case B (>= 6 Hours Standby)' : 'Case A (< 6 Hours Standby)' },
-          { label: 'NET PERMISSIBLE FDP', value: fdp }
+          { label: 'CASE CLASSIFICATION', value: isCaseB ? 'Case B (>= 6 Hours Standby)' : 'Case A (< 6 Hours Standby)' }
         ],
-        auditNotes: ['CAAM CAD 1901 Section 2.11 Standby FDP Adjustments. Compliant.']
+        auditNotes: ['Grounded in CAAM CAD 1901 Section 2.11 Standby FDP Adjustments. Compliant.']
       };
     }
 
     case 'max-fdp': {
       const isDiscretionNeeded = rawResult ? (rawResult.isDiscretionTriggered || rawResult.exceedsMaxFdp) : false;
+      statusTheme = isDiscretionNeeded ? 'amber' : 'emerald';
       const fdpVal = rawResult ? (rawResult.finalMaxPermissibleFDPFormatted || rawResult.maxFdpFormatted) : '13:00 HOURS';
       return {
-        statusBadge: isDiscretionNeeded ? 'DISCRETION REQUIRED' : 'CLEARED',
-        statusClass: isDiscretionNeeded ? 'bg-amber-600' : 'bg-emerald-600',
-        headlineTitle: 'MAX ALLOWABLE FDP RESULTS',
+        statusTheme,
+        headlineTitle: 'MAX ALLOWABLE FDP',
         headlineValue: fdpVal,
         targetClockLabel: 'On-Chocks Cutoff Time:',
         targetClockValue: rawResult && rawResult.cutoffTimestampUTC ? rawResult.cutoffTimestampUTC : '13:15 UTC',
         breakdownGrid: [
           { label: 'BASE ALLOWABLE FDP', value: rawResult && rawResult.baseAllowableFDPFormatted ? rawResult.baseAllowableFDPFormatted : '13:00 Hours' },
-          { label: 'IN-FLIGHT RELIEF CREDIT', value: 'None' },
-          { label: 'SPLIT DUTY CREDIT', value: 'None' },
+          { label: 'EXTENSIONS CREDIT', value: rawResult && rawResult.reliefType && rawResult.reliefType !== 'NONE' ? rawResult.reliefType : 'None' },
           { label: 'MAX DISCRETION CAP', value: '+02:00 Hours' }
         ],
-        auditNotes: ['CAAM CAD 1901 Table A/B and OM-A Section 7.5. Compliant.']
+        auditNotes: ['Grounded in CAAM CAD 1901 Table A/B & OM-A Section 7.5. Compliant.']
       };
     }
 
     case 'pre-flight-rest': {
       const isReduced = rawResult ? rawResult.isRestReduced : false;
+      statusTheme = isReduced ? 'amber' : 'emerald';
       const restVal = rawResult ? (rawResult.finalRequiredRestFormatted || rawResult.minRestFormatted) : '12:00 HOURS';
       return {
-        statusBadge: isReduced ? 'REDUCED REST' : 'STANDARD REST',
-        statusClass: 'bg-emerald-600',
-        headlineTitle: 'PRE-FLIGHT REST RESULTS',
+        statusTheme,
+        headlineTitle: 'PRE-FLIGHT MINIMUM REST',
         headlineValue: restVal,
         targetClockLabel: 'Earliest Available Report:',
         targetClockValue: rawResult && rawResult.restCompletionTimeUtc ? rawResult.restCompletionTimeUtc : '20:15 UTC',
         breakdownGrid: [
           { label: 'PRECEDING DUTY', value: (rawResult && rawResult.precedingDutyHours) ? `${rawResult.precedingDutyHours} Hours` : '10 Hours' },
           { label: 'DUTY LOCATION', value: 'Home Base (WMKK / KUL)' },
-          { label: 'MANDATORY MIN REST', value: restVal },
           { label: 'OUTSTATION ADDITION', value: '+00:00 Hours' }
         ],
-        auditNotes: ['CAAM CAD 1901 Section 2.14 and OM-A Section 7.5.12. Compliant.']
+        auditNotes: ['Grounded in CAAM CAD 1901 Section 2.14 & OM-A Section 7.5.12. Compliant.']
       };
     }
 
     case 'cumulative': {
       const isOverLimit = rawResult ? (rawResult.isExceeded || rawResult.isOverCap) : false;
+      statusTheme = isOverLimit ? 'rose' : 'emerald';
       const duty7Val = (rawResult && rawResult.duty7Days) ? `${rawResult.duty7Days.currentFormatted || rawResult.duty7Days} / 55:00` : '32:15 / 55:00';
       return {
-        statusBadge: isOverLimit ? 'CAP EXCEEDED' : 'ROSTER CLEARED',
-        statusClass: isOverLimit ? 'bg-rose-600' : 'bg-emerald-600',
-        headlineTitle: 'CUMULATIVE HOURS RESULTS',
+        statusTheme,
+        headlineTitle: '7-DAY CUMULATIVE DUTY',
         headlineValue: duty7Val,
         targetClockLabel: '7-Day Rolling Duty Budget:',
         targetClockValue: '22:45 Hours Margin Remaining',
         breakdownGrid: [
-          { label: '7-DAY DUTY (CAP 55H)', value: duty7Val },
           { label: '14-DAY DUTY (CAP 95H)', value: '68:30 / 95:00' },
           { label: '28-DAY DUTY (CAP 190H)', value: '120:00 / 190:00' },
           { label: '28-DAY FLIGHT (CAP 100H)', value: '78:30 / 100:00' }
         ],
-        auditNotes: ['CAAM CAD 1901 Rolling Flight & Duty Time Caps. Compliant.']
+        auditNotes: ['Grounded in CAAM CAD 1901 Rolling Flight & Duty Time Caps. Compliant.']
       };
     }
   }
@@ -824,63 +820,74 @@ export function normalizeOutput(toolType, rawResult) {
 // ==================================================================
 export function renderToolsOutputCardForTool(toolType, normalized) {
   if (!normalized) return;
-
-  const keyMap = {
+  const suffixMap = {
     'medical': 'medical',
     'ppc': 'ppc',
     'recurrent': 'recurrent',
     'recency': 'recency',
     'standby': 'standby',
-    'maxfdp': 'max-fdp',
-    'max-fdp': 'max-fdp',
-    'preflight': 'pre-flight-rest',
-    'pre-flight-rest': 'pre-flight-rest',
+    'maxfdp': 'maxfdp',
+    'max-fdp': 'maxfdp',
+    'preflight': 'preflight',
+    'pre-flight-rest': 'preflight',
     'cumulative': 'cumulative'
   };
+  const suffix = suffixMap[toolType] || toolType;
 
-  const suffix = keyMap[toolType] || toolType;
+  const themeMap = {
+    'emerald': {
+      heroBg: 'bg-emerald-500',
+      clockBg: 'bg-emerald-100 dark:bg-slate-900',
+      clockText: 'text-emerald-600 dark:text-emerald-500'
+    },
+    'amber': {
+      heroBg: 'bg-amber-500',
+      clockBg: 'bg-amber-100 dark:bg-slate-900',
+      clockText: 'text-amber-600 dark:text-amber-500'
+    },
+    'rose': {
+      heroBg: 'bg-rose-600',
+      clockBg: 'bg-rose-100 dark:bg-slate-900',
+      clockText: 'text-rose-600 dark:text-rose-500'
+    }
+  };
 
-  // Slot 1: Hero Banner
+  const theme = themeMap[normalized.statusTheme] || themeMap['emerald'];
+
+  // Slot 1: Hero
   const heroEl = document.getElementById(`output-slot-1-hero-${suffix}`);
   const titleEl = document.getElementById(`output-hero-title-${suffix}`);
-  const subtitleEl = document.getElementById(`output-hero-subtitle-${suffix}`);
+  const subTitleEl = document.getElementById(`output-hero-subtitle-${suffix}`);
+  if (heroEl) heroEl.className = `p-4 ${theme.heroBg} text-white transition-colors duration-300 rounded-t-2xl`;
+  if (titleEl) titleEl.innerText = normalized.headlineTitle;
+  if (subTitleEl) subTitleEl.innerText = normalized.headlineValue;
 
-  if (heroEl && normalized.statusClass) {
-    heroEl.className = `p-4 text-white transition-colors duration-300 rounded-t-2xl flex items-center justify-between ${normalized.statusClass}`;
-  }
-
-  if (titleEl) titleEl.innerText = normalized.headlineTitle || `${suffix.toUpperCase()} RESULTS`;
-  if (subtitleEl) subtitleEl.innerText = normalized.headlineValue || normalized.statusBadge || 'VALID / CLEARED';
-
-  // Slot 2: Target Window
+  // Slot 2: Clock
+  const clockSlotEl = document.getElementById(`output-slot-2-clock-${suffix}`);
   const clockLabelEl = document.getElementById(`output-clock-label-${suffix}`);
   const clockValEl = document.getElementById(`output-clock-value-${suffix}`);
-
-  if (clockLabelEl) clockLabelEl.innerText = normalized.targetClockLabel || 'Target Window / Deadline:';
-  if (clockValEl) clockValEl.innerText = normalized.targetClockValue || '--:--';
-
-  // Slot 3: Stacked 1-Column Details List (100% sans-serif)
-  const items = normalized.breakdownGrid || [];
-  for (let i = 1; i <= 4; i++) {
-    const lblEl = document.getElementById(`grid-label-${i}-${suffix}`);
-    const valEl = document.getElementById(`grid-value-${i}-${suffix}`);
-
-    if (i <= items.length && items[i - 1]) {
-      if (lblEl) lblEl.innerText = items[i - 1].label || '';
-      if (valEl) {
-        valEl.innerText = items[i - 1].value || '';
-        valEl.className = 'text-xs font-bold text-slate-800 dark:text-slate-100 font-sans';
-      }
-    } else {
-      if (lblEl) lblEl.innerText = '';
-      if (valEl) valEl.innerText = '';
-    }
+  if (clockSlotEl) clockSlotEl.className = `p-3.5 ${theme.clockBg} border-b border-slate-200 dark:border-slate-800 flex items-center justify-between transition-colors duration-300`;
+  if (clockLabelEl) clockLabelEl.innerText = normalized.targetClockLabel;
+  if (clockValEl) {
+    clockValEl.innerText = normalized.targetClockValue;
+    clockValEl.className = `text-sm font-extrabold ${theme.clockText} font-mono`;
   }
 
-  // Slot 4: Audit Citation Text
+  // Slot 3: Grid (3 Items)
+  if (normalized.breakdownGrid && Array.isArray(normalized.breakdownGrid)) {
+    normalized.breakdownGrid.forEach((item, idx) => {
+      const itemNum = idx + 1;
+      const labelEl = document.getElementById(`grid-label-${itemNum}-${suffix}`);
+      const valEl = document.getElementById(`grid-value-${itemNum}-${suffix}`);
+      if (labelEl) labelEl.innerText = item.label;
+      if (valEl) valEl.innerText = item.value;
+    });
+  }
+
+  // Slot 4: Audit Text
   const auditTextEl = document.getElementById(`output-audit-text-${suffix}`);
   if (auditTextEl && normalized.auditNotes) {
-    auditTextEl.innerText = Array.isArray(normalized.auditNotes) ? normalized.auditNotes.join('. ') : normalized.auditNotes;
+    auditTextEl.innerText = normalized.auditNotes.join(' ');
   }
 }
 
@@ -1168,5 +1175,4 @@ if (typeof window !== 'undefined') {
   window.calculatePpcWindows = calculatePpcWindows;
   window.calculateFdpAndDiscretion = calculateFdpAndDiscretion;
   window.getMaxAllowableFdp = getMaxAllowableFdp;
-
 }
