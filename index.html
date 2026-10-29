@@ -1,4 +1,4 @@
-<!-- ./index.html (2810_R279) - CertiFly PWA Application Shell & 3D Tools View Layout -->
+<!-- ./index.html (2810_R280) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -1031,10 +1031,10 @@ if ('serviceWorker' in navigator) {
                     <!-- Tier 2 Sub-Tab Pill Strip (Category A) -->
                     <div class="relative">
                         <div id="subtab-strip-cat-a" class="tools-subtab-strip flex items-center gap-2 overflow-x-auto py-1 px-0.5 no-scrollbar scroll-smooth">
-                            <button id="pill-tool-medical" type="button" class="subtab-pill active flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-blue-500/40 bg-blue-500/20 text-blue-400 dark:text-blue-300 cursor-pointer" onclick="switchActiveTool('tool-medical')">Medical Class 1/2</button>
-                            <button id="pill-tool-ppc" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-ppc')">PPC / LPC Dual-Window</button>
-                            <button id="pill-tool-recurrent" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-recurrent')">Recurrent Training</button>
-                            <button id="pill-tool-recency" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-recency')">Landing Recency</button>
+                            <button id="pill-tool-medical" type="button" class="subtab-pill active flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-blue-500/40 bg-blue-500/20 text-blue-400 dark:text-blue-300 cursor-pointer" onclick="switchActiveTool('tool-card-medical')">Medical Class 1/2</button>
+                            <button id="pill-tool-ppc" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-card-ppc')">PPC / LPC Dual-Window</button>
+                            <button id="pill-tool-recurrent" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-card-recurrent')">Recurrent Training</button>
+                            <button id="pill-tool-recency" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-card-recency')">Landing Recency</button>
                         </div>
                         <!-- Carousel Page Dots -->
                         <div id="page-dots-cat-a" class="flex justify-center items-center gap-1.5 mt-1.5">
@@ -1051,12 +1051,14 @@ if ('serviceWorker' in navigator) {
                         <!-- TOOL CARD: MEDICAL CLASS 1 / 2 -->
                         <div id="tool-card-medical" class="tool-card active tool-card-3d-wrapper relative w-full h-[400px] perspective-1000">
                             <div id="card-3d-inner-medical" class="card-3d-inner w-full h-full relative transform-style-3d">
+
+                                <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
                                 <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
 
                                     <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Medical Class 1 / 2</span>
-                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-medical')"> ↺ Reset</button>
+                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs(\'tool-card-medical\')"> ↺ Reset</button>
                                     </div>
 
                                     <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
@@ -1103,7 +1105,9 @@ if ('serviceWorker' in navigator) {
                                     </div>
 
                                 </div>
-                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-between">
+
+                                <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
+                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-between">
 
                                     <!-- SLOT 1: DYNAMIC HERO CARD (Solid State Background) -->
                                     <div id="output-slot-1-hero-medical" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
@@ -1118,7 +1122,7 @@ if ('serviceWorker' in navigator) {
                                     <div id="output-slot-2-clock-medical" class="p-3.5 bg-emerald-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between transition-colors duration-300">
                                         <div>
                                             <span id="output-clock-label-medical" class="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-wider">Target Window / Deadline:</span>
-                                            <span id="output-clock-value-medical" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-500 font-sans">--:--</span>
+                                            <span id="output-clock-value-medical" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-500 font-sans">16 SEP 2027 to 31 OCT 2027</span>
                                         </div>
                                     </div>
 
@@ -1126,15 +1130,15 @@ if ('serviceWorker' in navigator) {
                                     <div id="output-slot-3-grid-medical" class="p-3.5 bg-slate-100/50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 grid grid-cols-1 gap-3">
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-1-medical" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">AGE BRACKET</span>
-                                            <span id="grid-value-1-medical" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-1-medical" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">40 to 59 Years</span>
                                         </div>
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-2-medical" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">BASE VALIDITY</span>
-                                            <span id="grid-value-2-medical" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-2-medical" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">12 Calendar Months</span>
                                         </div>
                                         <div class="flex items-center justify-between text-xs py-1">
                                             <span id="grid-label-3-medical" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">RENEWAL RULE</span>
-                                            <span id="grid-value-3-medical" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-3-medical" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">Window Preserved (45 Days)</span>
                                         </div>
                                     </div>
 
@@ -1145,17 +1149,22 @@ if ('serviceWorker' in navigator) {
                                             <p id="output-audit-text-medical" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1 PEL Section 1.2.5.2 & OM-A 5.1.4.4. Compliant.</p>
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
+
+                        <!-- TOOL CARD: PPC / LPC DUAL-WINDOW -->
                         <div id="tool-card-ppc" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[400px] perspective-1000">
                             <div id="card-3d-inner-ppc" class="card-3d-inner w-full h-full relative transform-style-3d">
+
+                                <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
                                 <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
 
                                     <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">PPC / LPC Dual-Window</span>
-                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-ppc')"> ↺ Reset</button>
+                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs(\'tool-card-ppc\')"> ↺ Reset</button>
                                     </div>
 
                                     <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
@@ -1194,7 +1203,9 @@ if ('serviceWorker' in navigator) {
                                     </div>
 
                                 </div>
-                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-between">
+
+                                <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
+                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-between">
 
                                     <!-- SLOT 1: DYNAMIC HERO CARD (Solid State Background) -->
                                     <div id="output-slot-1-hero-ppc" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
@@ -1209,7 +1220,7 @@ if ('serviceWorker' in navigator) {
                                     <div id="output-slot-2-clock-ppc" class="p-3.5 bg-emerald-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between transition-colors duration-300">
                                         <div>
                                             <span id="output-clock-label-ppc" class="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-wider">Target Window / Deadline:</span>
-                                            <span id="output-clock-value-ppc" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-500 font-sans">--:--</span>
+                                            <span id="output-clock-value-ppc" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-500 font-sans">01 MAY 2027 to 31 JUL 2027</span>
                                         </div>
                                     </div>
 
@@ -1217,15 +1228,15 @@ if ('serviceWorker' in navigator) {
                                     <div id="output-slot-3-grid-ppc" class="p-3.5 bg-slate-100/50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 grid grid-cols-1 gap-3">
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-1-ppc" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">REVALIDATION RULE</span>
-                                            <span id="grid-value-1-ppc" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-1-ppc" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">Date Preserved (3-Month Window)</span>
                                         </div>
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-2-ppc" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">BASE VALIDITY</span>
-                                            <span id="grid-value-2-ppc" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-2-ppc" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">12 Calendar Months</span>
                                         </div>
                                         <div class="flex items-center justify-between text-xs py-1">
                                             <span id="grid-label-3-ppc" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">OPERATING STATUS</span>
-                                            <span id="grid-value-3-ppc" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-3-ppc" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">Qualified & Cleared</span>
                                         </div>
                                     </div>
 
@@ -1236,17 +1247,22 @@ if ('serviceWorker' in navigator) {
                                             <p id="output-audit-text-ppc" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 6.9.4.4, CAD 1 PEL 2.1.5.10 & OM-A 5.1.4.6. Compliant.</p>
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
+
+                        <!-- TOOL CARD: RECURRENT TRAINING -->
                         <div id="tool-card-recurrent" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[400px] perspective-1000">
                             <div id="card-3d-inner-recurrent" class="card-3d-inner w-full h-full relative transform-style-3d">
+
+                                <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
                                 <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
 
                                     <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Recurrent Training</span>
-                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-recurrent')"> ↺ Reset</button>
+                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs(\'tool-card-recurrent\')"> ↺ Reset</button>
                                     </div>
 
                                     <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
@@ -1256,7 +1272,7 @@ if ('serviceWorker' in navigator) {
                                             <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Qualification Course</label>
                                             <button type="button" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openRecurrentCourseModal()">
                                                 <span id="recurrent-selected-course-label">Line Check (LC)</span>
-                                                <span class="text-blue-600 dark:text-blue-400 text-xs font-semibold">Change </span>
+                                                <span class="text-blue-600 dark:text-blue-400 text-xs font-semibold">Change ➔</span>
                                             </button>
                                         </div>
 
@@ -1282,7 +1298,9 @@ if ('serviceWorker' in navigator) {
                                     </div>
 
                                 </div>
-                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-between">
+
+                                <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
+                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-between">
 
                                     <!-- SLOT 1: DYNAMIC HERO CARD (Solid State Background) -->
                                     <div id="output-slot-1-hero-recurrent" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
@@ -1305,15 +1323,15 @@ if ('serviceWorker' in navigator) {
                                     <div id="output-slot-3-grid-recurrent" class="p-3.5 bg-slate-100/50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 grid grid-cols-1 gap-3">
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-1-recurrent" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">MODULE CATEGORY</span>
-                                            <span id="grid-value-1-recurrent" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-1-recurrent" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">Annual (12 Calendar Months)</span>
                                         </div>
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-2-recurrent" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">COMPLETION DATE</span>
-                                            <span id="grid-value-2-recurrent" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-2-recurrent" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">15 DEC 2025</span>
                                         </div>
                                         <div class="flex items-center justify-between text-xs py-1">
                                             <span id="grid-label-3-recurrent" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">RENEWAL METHOD</span>
-                                            <span id="grid-value-3-recurrent" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-3-recurrent" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">3-Month Lookback Window</span>
                                         </div>
                                     </div>
 
@@ -1324,17 +1342,22 @@ if ('serviceWorker' in navigator) {
                                             <p id="output-audit-text-recurrent" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 6.9.4 & OM-D Chapter 2 Recurrent Standards. Compliant.</p>
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
+
+                        <!-- TOOL CARD: LANDING RECENCY (90-DAY) -->
                         <div id="tool-card-recency" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[400px] perspective-1000">
                             <div id="card-3d-inner-recency" class="card-3d-inner w-full h-full relative transform-style-3d">
+
+                                <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
                                 <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
 
                                     <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Landing Recency (90-Day)</span>
-                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-recency')"> ↺ Reset</button>
+                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs(\'tool-card-recency\')"> ↺ Reset</button>
                                     </div>
 
                                     <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
@@ -1394,7 +1417,9 @@ if ('serviceWorker' in navigator) {
                                     </div>
 
                                 </div>
-                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-between">
+
+                                <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
+                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-between">
 
                                     <!-- SLOT 1: DYNAMIC HERO CARD (Solid State Background) -->
                                     <div id="output-slot-1-hero-recency" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
@@ -1417,15 +1442,15 @@ if ('serviceWorker' in navigator) {
                                     <div id="output-slot-3-grid-recency" class="p-3.5 bg-slate-100/50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 grid grid-cols-1 gap-3">
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-1-recency" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">DAY LANDINGS</span>
-                                            <span id="grid-value-1-recency" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-1-recency" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">3 Sector(s) Logged</span>
                                         </div>
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-2-recency" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">ANCHOR DATE</span>
-                                            <span id="grid-value-2-recency" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-2-recency" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">25 SEP 2026</span>
                                         </div>
                                         <div class="flex items-center justify-between text-xs py-1">
                                             <span id="grid-label-3-recency" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">PASSENGER CARRY</span>
-                                            <span id="grid-value-3-recency" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-3-recency" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">Cleared (PIC / Co-Pilot)</span>
                                         </div>
                                     </div>
 
@@ -1436,17 +1461,22 @@ if ('serviceWorker' in navigator) {
                                             <p id="output-audit-text-recency" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1 Section 2.1.5.2 & OM-A 5.1.2. Compliant.</p>
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
+
+                        <!-- TOOL CARD: STANDBY CALL-OUT -->
                         <div id="tool-card-standby" class="tool-card active tool-card-3d-wrapper relative w-full h-[400px] perspective-1000">
                             <div id="card-3d-inner-standby" class="card-3d-inner w-full h-full relative transform-style-3d">
+
+                                <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
                                 <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
 
                                     <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Standby Call-Out</span>
-                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-standby')"> ↺ Reset</button>
+                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs(\'tool-card-standby\')"> ↺ Reset</button>
                                     </div>
 
                                     <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
@@ -1494,7 +1524,9 @@ if ('serviceWorker' in navigator) {
                                     </div>
 
                                 </div>
-                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-between">
+
+                                <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
+                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-between">
 
                                     <!-- SLOT 1: DYNAMIC HERO CARD (Solid State Background) -->
                                     <div id="output-slot-1-hero-standby" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
@@ -1517,15 +1549,15 @@ if ('serviceWorker' in navigator) {
                                     <div id="output-slot-3-grid-standby" class="p-3.5 bg-slate-100/50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 grid grid-cols-1 gap-3">
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-1-standby" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">STANDBY DURATION</span>
-                                            <span id="grid-value-1-standby" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-1-standby" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">04h 00m</span>
                                         </div>
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-2-standby" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">FDP DEDUCTION</span>
-                                            <span id="grid-value-2-standby" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-2-standby" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">00h 00m</span>
                                         </div>
                                         <div class="flex items-center justify-between text-xs py-1">
                                             <span id="grid-label-3-standby" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">CASE CLASSIFICATION</span>
-                                            <span id="grid-value-3-standby" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-3-standby" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">Case A (< 6 Hours Standby)</span>
                                         </div>
                                     </div>
 
@@ -1536,17 +1568,22 @@ if ('serviceWorker' in navigator) {
                                             <p id="output-audit-text-standby" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Section 2.11 Standby FDP Adjustments. Compliant.</p>
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
+
+                        <!-- TOOL CARD: MAX ALLOWABLE FDP -->
                         <div id="tool-card-maxfdp" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[400px] perspective-1000">
                             <div id="card-3d-inner-max-fdp" class="card-3d-inner w-full h-full relative transform-style-3d">
+
+                                <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
                                 <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
 
                                     <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Max Allowable FDP</span>
-                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-maxfdp')"> ↺ Reset</button>
+                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs(\'tool-card-maxfdp\')"> ↺ Reset</button>
                                     </div>
 
                                     <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
@@ -1601,7 +1638,9 @@ if ('serviceWorker' in navigator) {
                                     </div>
 
                                 </div>
-                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-between">
+
+                                <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
+                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-between">
 
                                     <!-- SLOT 1: DYNAMIC HERO CARD (Solid State Background) -->
                                     <div id="output-slot-1-hero-maxfdp" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
@@ -1624,15 +1663,15 @@ if ('serviceWorker' in navigator) {
                                     <div id="output-slot-3-grid-maxfdp" class="p-3.5 bg-slate-100/50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 grid grid-cols-1 gap-3">
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-1-maxfdp" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">BASE ALLOWABLE FDP</span>
-                                            <span id="grid-value-1-maxfdp" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-1-maxfdp" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">13:00 Hours</span>
                                         </div>
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-2-maxfdp" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">EXTENSIONS CREDIT</span>
-                                            <span id="grid-value-2-maxfdp" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-2-maxfdp" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">None</span>
                                         </div>
                                         <div class="flex items-center justify-between text-xs py-1">
                                             <span id="grid-label-3-maxfdp" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">MAX DISCRETION CAP</span>
-                                            <span id="grid-value-3-maxfdp" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-3-maxfdp" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">+02:00 Hours</span>
                                         </div>
                                     </div>
 
@@ -1643,17 +1682,22 @@ if ('serviceWorker' in navigator) {
                                             <p id="output-audit-text-maxfdp" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Table A/B & OM-A Section 7.5. Compliant.</p>
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
+
+                        <!-- TOOL CARD: PRE-FLIGHT REST -->
                         <div id="tool-card-preflight" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[400px] perspective-1000">
                             <div id="card-3d-inner-pre-flight-rest" class="card-3d-inner w-full h-full relative transform-style-3d">
+
+                                <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
                                 <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
 
                                     <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Pre-Flight Rest</span>
-                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-preflight')"> ↺ Reset</button>
+                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs(\'tool-card-preflight\')"> ↺ Reset</button>
                                     </div>
 
                                     <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
@@ -1689,7 +1733,9 @@ if ('serviceWorker' in navigator) {
                                     </div>
 
                                 </div>
-                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-between">
+
+                                <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
+                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-between">
 
                                     <!-- SLOT 1: DYNAMIC HERO CARD (Solid State Background) -->
                                     <div id="output-slot-1-hero-preflight" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
@@ -1712,15 +1758,15 @@ if ('serviceWorker' in navigator) {
                                     <div id="output-slot-3-grid-preflight" class="p-3.5 bg-slate-100/50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 grid grid-cols-1 gap-3">
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-1-preflight" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">PRECEDING DUTY</span>
-                                            <span id="grid-value-1-preflight" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-1-preflight" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">10 Hours</span>
                                         </div>
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-2-preflight" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">DUTY LOCATION</span>
-                                            <span id="grid-value-2-preflight" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-2-preflight" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">Home Base (WMKK / KUL)</span>
                                         </div>
                                         <div class="flex items-center justify-between text-xs py-1">
                                             <span id="grid-label-3-preflight" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">OUTSTATION ADDITION</span>
-                                            <span id="grid-value-3-preflight" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-3-preflight" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">+00:00 Hours</span>
                                         </div>
                                     </div>
 
@@ -1731,17 +1777,22 @@ if ('serviceWorker' in navigator) {
                                             <p id="output-audit-text-preflight" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Section 2.14 & OM-A Section 7.5.12. Compliant.</p>
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
+
+                        <!-- TOOL CARD: CUMULATIVE HOURS -->
                         <div id="tool-card-cumulative" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[400px] perspective-1000">
                             <div id="card-3d-inner-cumulative" class="card-3d-inner w-full h-full relative transform-style-3d">
+
+                                <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
                                 <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
 
                                     <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Cumulative Hours</span>
-                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-cumulative')"> ↺ Reset</button>
+                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs(\'tool-card-cumulative\')"> ↺ Reset</button>
                                     </div>
 
                                     <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
@@ -1802,7 +1853,9 @@ if ('serviceWorker' in navigator) {
                                     </div>
 
                                 </div>
-                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-between">
+
+                                <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
+                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-between">
 
                                     <!-- SLOT 1: DYNAMIC HERO CARD (Solid State Background) -->
                                     <div id="output-slot-1-hero-cumulative" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
@@ -1817,7 +1870,7 @@ if ('serviceWorker' in navigator) {
                                     <div id="output-slot-2-clock-cumulative" class="p-3.5 bg-emerald-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between transition-colors duration-300">
                                         <div>
                                             <span id="output-clock-label-cumulative" class="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-wider">7-Day Rolling Duty Budget:</span>
-                                            <span id="output-clock-value-cumulative" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-500 font-sans">22:45 Hours Remaining</span>
+                                            <span id="output-clock-value-cumulative" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-500 font-sans">22:45 Hours Margin Remaining</span>
                                         </div>
                                     </div>
 
@@ -1825,15 +1878,15 @@ if ('serviceWorker' in navigator) {
                                     <div id="output-slot-3-grid-cumulative" class="p-3.5 bg-slate-100/50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 grid grid-cols-1 gap-3">
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-1-cumulative" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">14-DAY DUTY (CAP 95H)</span>
-                                            <span id="grid-value-1-cumulative" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-1-cumulative" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">68:30 / 95:00</span>
                                         </div>
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-2-cumulative" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">28-DAY DUTY (CAP 190H)</span>
-                                            <span id="grid-value-2-cumulative" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-2-cumulative" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">120:00 / 190:00</span>
                                         </div>
                                         <div class="flex items-center justify-between text-xs py-1">
                                             <span id="grid-label-3-cumulative" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">28-DAY FLIGHT (CAP 100H)</span>
-                                            <span id="grid-value-3-cumulative" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
+                                            <span id="grid-value-3-cumulative" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">78:30 / 100:00</span>
                                         </div>
                                     </div>
 
@@ -1844,6 +1897,278 @@ if ('serviceWorker' in navigator) {
                                             <p id="output-audit-text-cumulative" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Rolling Flight & Duty Time Caps. Compliant.</p>
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
+
+                    </div>
+                </div>
+                </section>
+            </div>
+
+            <div id="recurrent-course-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 select-none">
+                <div class="w-11/12 max-w-[340px] mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-h-[75vh] my-auto flex flex-col overflow-hidden shadow-2xl">
+
+                    <!-- Modal Header -->
+                    <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-900/90">
+                        <div>
+                            <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">QUALIFICATION SELECTOR</span>
+                            <h3 class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase">Select Qualification Module</h3>
+                        </div>
+                    </div>
+
+                    <!-- Grouped Module List Container -->
+                    <div class="p-3.5 overflow-y-auto space-y-4 flex-1 text-xs text-slate-700 dark:text-slate-300 no-scrollbar">
+                        <!-- GROUP 1: ANNUAL (12 CALENDAR MONTHS) -->
+                        <div class="recurrent-group-block space-y-2">
+                            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
+                                <span class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest">ANNUAL (12 CALENDAR MONTHS)</span>
+                                <span class="text-[9px] font-bold text-blue-600 dark:text-blue-400">6 Modules</span>
+                            </div>
+                            <div class="grid grid-cols-1 gap-1.5">
+
+                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('LINE_CHECK', 'Line Check (LC)', 'Annual (12 Calendar Months)')">
+                                    <span class="font-bold text-slate-800 dark:text-slate-100">Line Check (LC)</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30">12m</span>
+                                </button>
+
+                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('SEP_AIRCRAFT_TYPE', 'SEP Type', 'Annual (12 Calendar Months)')">
+                                    <span class="font-bold text-slate-800 dark:text-slate-100">SEP Type</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30">12m</span>
+                                </button>
+
+                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('DOOR_DRILL', 'Door Drill', 'Annual (12 Calendar Months)')">
+                                    <span class="font-bold text-slate-800 dark:text-slate-100">Door Drill</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30">12m</span>
+                                </button>
+
+                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('CRM', 'CRM', 'Annual (12 Calendar Months)')">
+                                    <span class="font-bold text-slate-800 dark:text-slate-100">CRM</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30">12m</span>
+                                </button>
+
+                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('AVSEC', 'AVSEC', 'Annual (12 Calendar Months)')">
+                                    <span class="font-bold text-slate-800 dark:text-slate-100">AVSEC</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30">12m</span>
+                                </button>
+
+                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('ROUTE_AERODROME_COMPETENCE', 'Route &amp; A/D', 'Annual (12 Calendar Months)')">
+                                    <span class="font-bold text-slate-800 dark:text-slate-100">Route &amp; A/D</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30">12m</span>
+                                </button>
+
+                            </div>
+                        </div>
+
+                        <!-- GROUP 2: BI-ANNUAL (24 CALENDAR MONTHS) -->
+                        <div class="recurrent-group-block space-y-2">
+                            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
+                                <span class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest">BI-ANNUAL (24 CALENDAR MONTHS)</span>
+                                <span class="text-[9px] font-bold text-purple-600 dark:text-purple-400">1 Module</span>
+                            </div>
+                            <div class="grid grid-cols-1 gap-1.5">
+
+                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-purple-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-purple-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('DGR_FUNCTION_7', 'DGR (Func 7)', 'Bi-Annual (24 Calendar Months)')">
+                                    <span class="font-bold text-slate-800 dark:text-slate-100">DGR (Func 7)</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/30">24m</span>
+                                </button>
+
+                            </div>
+                        </div>
+
+                        <!-- GROUP 3: TRIENNIAL (36 CALENDAR MONTHS) -->
+                        <div class="recurrent-group-block space-y-2">
+                            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
+                                <span class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest">TRIENNIAL (36 CALENDAR MONTHS)</span>
+                                <span class="text-[9px] font-bold text-amber-600 dark:text-amber-400">3 Modules</span>
+                            </div>
+                            <div class="grid grid-cols-1 gap-1.5">
+
+                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-amber-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('FIRE_SMOKE_DRILL', 'Fire Drill', 'Triennial (36 Calendar Months)')">
+                                    <span class="font-bold text-slate-800 dark:text-slate-100">Fire Drill</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">36m</span>
+                                </button>
+
+                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-amber-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('SMS', 'SMS', 'Triennial (36 Calendar Months)')">
+                                    <span class="font-bold text-slate-800 dark:text-slate-100">SMS</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">36m</span>
+                                </button>
+
+                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-amber-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('WET_DITCHING_DRILL', 'Wet / Dinghy', 'Triennial (36 Calendar Months)')">
+                                    <span class="font-bold text-slate-800 dark:text-slate-100">Wet / Dinghy</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">36m</span>
+                                </button>
+
+                            </div>
+                        </div>
+
+                        <!-- GROUP 4: SEMI-ANNUAL (180-DAY ROLLING) -->
+                        <div class="recurrent-group-block space-y-2">
+                            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
+                                <span class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest">SEMI-ANNUAL (180-DAY ROLLING)</span>
+                                <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">1 Module</span>
+                            </div>
+                            <div class="grid grid-cols-1 gap-1.5">
+
+                                <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-emerald-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('LVO_AUTOLAND', 'LVO / Autoland', 'Semi-Annual (180-Day Rolling)')">
+                                    <span class="font-bold text-slate-800 dark:text-slate-100">LVO / Autoland</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30">180d</span>
+                                </button>
+
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Modal Footer Actions -->
+                    <div class="p-2.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 flex items-center justify-end">
+                        <button type="button" class="py-1.5 px-4 rounded-xl text-xs font-bold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 transition-all cursor-pointer" onclick="closeRecurrentCourseModal()">Cancel</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <div id="efb-date-picker-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 select-none">
+                <div class="w-11/12 max-w-[320px] mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl my-auto flex flex-col overflow-hidden">
+
+                    <!-- Modal Header -->
+                    <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/90">
+                        <div>
+                            <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">EFB DATE PICKER</span>
+                            <h3 id="efb-date-picker-title" class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase">SELECT DATE</h3>
+                        </div>
+                    </div>
+
+                    <!-- Embedded Preset Pills -->
+                    <div class="p-2.5 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/40 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                        <button type="button" class="py-1 px-2.5 rounded-lg text-[10px] font-bold bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30 hover:bg-blue-500/20 transition-all shrink-0 cursor-pointer" onclick="setEfbDatePreset('today')">Today</button>
+                        <button type="button" class="py-1 px-2.5 rounded-lg text-[10px] font-bold bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition-all shrink-0 cursor-pointer" onclick="setEfbDatePreset('eom')">End of Month</button>
+                        <button type="button" class="py-1 px-2.5 rounded-lg text-[10px] font-bold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-300 transition-all shrink-0 cursor-pointer" onclick="setEfbDatePreset('+1y')">+1 Year</button>
+                        <button type="button" class="py-1 px-2.5 rounded-lg text-[10px] font-bold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-300 transition-all shrink-0 cursor-pointer" onclick="setEfbDatePreset('-1y')">-1 Year</button>
+                    </div>
+
+                    <!-- Month & Year Navigation Header -->
+                    <div class="p-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
+                        <button type="button" class="py-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold transition-all cursor-pointer" onclick="changeEfbMonth(-1)">◄ Prev</button>
+                        <span id="efb-calendar-month-label" class="text-xs font-extrabold text-slate-800 dark:text-slate-100 tracking-wide uppercase">OCTOBER 2026</span>
+                        <button type="button" class="py-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold transition-all cursor-pointer" onclick="changeEfbMonth(1)">Next ►</button>
+                    </div>
+
+                    <!-- Calendar Day Grid -->
+                    <div class="p-3">
+                        <!-- Weekday Headers -->
+                        <div class="grid grid-cols-7 gap-1 text-center text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase mb-2">
+                            <span>MO</span><span>TU</span><span>WE</span><span>TH</span><span>FR</span><span>SA</span><span>SU</span>
+                        </div>
+                        <!-- Days Container -->
+                        <div id="efb-calendar-days-grid" class="grid grid-cols-7 gap-1 text-center text-xs font-bold">
+                            <!-- Rendered dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Footer Action -->
+                    <div class="p-2.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 flex items-center justify-end">
+                        <button type="button" class="py-1.5 px-4 rounded-xl text-xs font-bold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 transition-all cursor-pointer" onclick="closeEfbDatePicker()">Cancel</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <script src="js/vendor/anime.min.js"></script>
+            <script type="module" src="main.js"></script>
+
+            <!-- CUSTOM EFB TIME PICKER MODAL -->
+            <div id="efb-time-picker-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 select-none">
+                <div class="w-11/12 max-w-[320px] mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+                    <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/90">
+                        <div>
+                            <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">EFB TIME PICKER</span>
+                            <h3 id="efb-time-picker-title" class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase">SELECT TIME</h3>
+                        </div>
+                        <button type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 text-xs font-bold cursor-pointer" onclick="closeEfbTimePicker()">✕</button>
+                    </div>
+
+                    <div class="p-4 space-y-4">
+                        <div class="flex items-center justify-center gap-3">
+                            <div class="flex flex-col items-center">
+                                <span class="text-[9px] font-bold text-slate-400 mb-1">HOURS</span>
+                                <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+                                    <button type="button" class="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-sm shadow-xs active:scale-95 cursor-pointer" onclick="stepEfbTimeHour(-1)">-</button>
+                                    <span id="efb-time-val-hh" class="w-10 text-center font-bold text-base text-blue-600 dark:text-blue-400">08</span>
+                                    <button type="button" class="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-sm shadow-xs active:scale-95 cursor-pointer" onclick="stepEfbTimeHour(1)">+</button>
+                                </div>
+                            </div>
+                            <span class="text-xl font-bold text-slate-400 pt-3">:</span>
+                            <div class="flex flex-col items-center">
+                                <span class="text-[9px] font-bold text-slate-400 mb-1">MINUTES</span>
+                                <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+                                    <button type="button" class="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-sm shadow-xs active:scale-95 cursor-pointer" onclick="stepEfbTimeMin(-5)">-</button>
+                                    <span id="efb-time-val-mm" class="w-10 text-center font-bold text-base text-blue-600 dark:text-blue-400">00</span>
+                                    <button type="button" class="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-sm shadow-xs active:scale-95 cursor-pointer" onclick="stepEfbTimeMin(5)">+</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-4 gap-1.5 pt-1">
+                            <button type="button" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer" onclick="setEfbTimePreset('06:00')">06:00</button>
+                            <button type="button" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer" onclick="setEfbTimePreset('08:00')">08:00</button>
+                            <button type="button" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer" onclick="setEfbTimePreset('14:00')">14:00</button>
+                            <button type="button" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer" onclick="setEfbTimePreset('22:00')">22:00</button>
+                        </div>
+                    </div>
+
+                    <div class="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex justify-end gap-2">
+                        <button type="button" class="py-1.5 px-3 rounded-xl text-xs font-semibold text-slate-500 cursor-pointer" onclick="closeEfbTimePicker()">Cancel</button>
+                        <button type="button" class="py-1.5 px-4 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-xs cursor-pointer" onclick="confirmEfbTimePicker()">Confirm Time</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CUSTOM EFB SELECT OPTION MODAL -->
+            <div id="efb-select-option-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 select-none">
+                <div class="w-11/12 max-w-[340px] mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-h-[75vh] flex flex-col overflow-hidden shadow-2xl">
+                    <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/90">
+                        <div>
+                            <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">EFB OPTION SELECTOR</span>
+                            <h3 id="efb-select-title" class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase">CHOOSE OPTION</h3>
+                        </div>
+                        <button type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 text-xs font-bold cursor-pointer" onclick="closeEfbSelectModal()">✕</button>
+                    </div>
+
+                    <div id="efb-select-options-list" class="p-3 overflow-y-auto space-y-2 flex-1">
+                        <!-- Dynamic Option Cards -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- CUSTOM EFB NUMBER STEPPER MODAL -->
+            <div id="efb-number-picker-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 select-none">
+                <div class="w-11/12 max-w-[300px] mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+                    <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/90">
+                        <div>
+                            <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">EFB NUMBER STEPPER</span>
+                            <h3 id="efb-number-title" class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase">SET VALUE</h3>
+                        </div>
+                        <button type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 text-xs font-bold cursor-pointer" onclick="closeEfbNumberPicker()">✕</button>
+                    </div>
+
+                    <div class="p-4 flex flex-col items-center justify-center space-y-3">
+                        <div class="flex items-center gap-3 bg-slate-100 dark:bg-slate-800 p-2 rounded-2xl border border-slate-200 dark:border-slate-700">
+                            <button type="button" class="w-10 h-10 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-lg shadow-xs active:scale-95 cursor-pointer" onclick="stepEfbNumberVal(-1)">-</button>
+                            <span id="efb-number-display-val" class="w-14 text-center font-bold text-xl text-blue-600 dark:text-blue-400">2</span>
+                            <button type="button" class="w-10 h-10 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-lg shadow-xs active:scale-95 cursor-pointer" onclick="stepEfbNumberVal(1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex justify-end gap-2">
+                        <button type="button" class="py-1.5 px-3 rounded-xl text-xs font-semibold text-slate-500 cursor-pointer" onclick="closeEfbNumberPicker()">Cancel</button>
+                        <button type="button" class="py-1.5 px-4 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-xs cursor-pointer" onclick="confirmEfbNumberPicker()">Set Value</button>
+                    </div>
+                </div>
+            </div>
+
+</body>
+
+</html>
