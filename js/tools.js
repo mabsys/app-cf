@@ -1,4 +1,4 @@
-// ./js/tools.js (2810_R277) - CertiFly Aviation Tools Suite Controller
+// ./js/tools.js (2810_R278) - CertiFly Aviation Tools Engine Controller
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -870,7 +870,7 @@ export function renderToolsOutputCardForTool(toolType, normalized) {
   if (clockLabelEl) clockLabelEl.innerText = normalized.targetClockLabel;
   if (clockValEl) {
     clockValEl.innerText = normalized.targetClockValue;
-    clockValEl.className = `text-sm font-extrabold ${theme.clockText} font-mono`;
+    clockValEl.className = `text-sm font-extrabold ${theme.clockText} font-sans`;
   }
 
   // Slot 3: Grid (3 Items)
