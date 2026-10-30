@@ -1,4 +1,4 @@
-// ./js/tools.js (3010_R293) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3010_R294) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -213,7 +213,7 @@ export function setEfbDatePreset(presetKey) {
 
   const mStr = String(targetDate.getMonth() + 1).padStart(2, '0');
   const dStr = String(targetDate.getDate()).padStart(2, '0');
-  const isoVal = ;
+  const isoVal = `${targetDate.getFullYear()}-${mStr}-${dStr}`;
 
   selectEfbDate(isoVal);
 }
@@ -812,7 +812,7 @@ case 'medical': {
         dameStartStr = formatDateDDMMMYYYY(d);
       }
 
-      const windowStr = ;
+      const windowStr = `${dameStartStr} to ${expiry}`;
       const isOML = age >= 60 || (rawResult && rawResult.restrictions && rawResult.restrictions.length > 0);
 
       let statusTheme = 'emerald';
@@ -1373,7 +1373,7 @@ export function initToolsModule() {
         dameStartStr = formatDateDDMMMYYYY(d);
       }
 
-      const windowStr = ;
+      const windowStr = `${dameStartStr} to ${expiry}`;
       const isOML = age >= 60 || (rawResult && rawResult.restrictions && rawResult.restrictions.length > 0);
 
       let statusTheme = 'emerald';
