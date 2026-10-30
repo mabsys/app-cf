@@ -1,4 +1,4 @@
-// ./js/tools.js (3010_R295) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3010_R296) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -129,7 +129,7 @@ export function renderEfbCalendarGrid() {
   const monthLabelEl = document.getElementById('efb-calendar-month-label');
   if (monthLabelEl) {
     monthLabelEl.innerText = `${months[efbDatePickerState.currentMonth]} ${efbDatePickerState.currentYear}`;
-    monthLabelEl.className = "text-xs font-bold text-slate-800 dark:text-slate-100 hover:text-blue-500 transition-colors cursor-pointer";
+    monthLabelEl.className = "py-1 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold transition-all cursor-pointer select-none text-center";
     monthLabelEl.title = "Tap to Select Year";
     monthLabelEl.onclick = () => openEfbYearSelectModal();
   }
