@@ -1,4 +1,4 @@
-// ./js/tools.js (3010_R294) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3010_R295) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -72,10 +72,11 @@ export function openEfbYearSelectModal() {
     years.push({ value: String(y), label: String(y) });
   }
   openEfbSelectModal('efb-date-picker-year-jump', 'SELECT YEAR', years);
-
+  
   const origSelect = window.selectEfbOption;
   window.selectEfbOption = function(val, label) {
-    if (efbSelectModalState.targetInputId === 'efb-date-picker-year-jump') {
+    const targetInputId = efbSelectModalState.targetInputId;
+    if (targetInputId === 'efb-date-picker-year-jump') {
       const yearNum = parseInt(val, 10);
       if (!isNaN(yearNum)) {
         efbDatePickerState.currentYear = yearNum;
@@ -191,11 +192,15 @@ export function changeEfbMonth(delta) {
 }
 
 export function setEfbDatePreset(presetKey) {
-  const today = new Date();
-  let baseDate = efbDatePickerState.selectedDate ? new Date(efbDatePickerState.selectedDate) : new Date();
-  if (isNaN(baseDate.getTime())) baseDate = new Date();
+  const inputEl = efbDatePickerState.targetInputId ? document.getElementById(efbDatePickerState.targetInputId) : null;
+  const currentVal = inputEl ? inputEl.value : '';
+  let baseDate = new Date();
+  if (currentVal) {
+    const d = new Date(currentVal);
+    if (!isNaN(d.getTime())) baseDate = d;
+  }
 
-  let targetDate = new Date();
+  let targetDate = new Date(baseDate);
 
   if (presetKey === 'today') {
     targetDate = new Date();
@@ -343,7 +348,7 @@ export function openEfbSelectModal(targetInputId, labelTitle = 'CHOOSE OPTION', 
     listEl.innerHTML = options.map(opt => {
       const isSelected = opt.value === currentVal;
       const borderClass = isSelected ? 'border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-800 dark:text-slate-100 hover:border-blue-400';
-      return `<button type="button" class="w-full p-3 rounded-xl border ${borderClass} font-bold text-xs text-left transition-all flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="selectEfbOption('${opt.value}', '${opt.label}')">
+      return `<button type="button" class="w-full p-3 rounded-xl border ${borderClass} font-bold text-xs text-left transition-all flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="selectEfbOption('${opt.value}', '${opt.label.replace(/'/g, "\'")}')">
         <span>${opt.label}</span>
         ${isSelected ? '<span class="text-blue-600 dark:text-blue-400 font-extrabold text-xs">SELECTED</span>' : ''}
       </button>`;
@@ -644,17 +649,12 @@ export function runToolCalculation(toolType, inputData = {}) {
             const targetYear = baseDate.getFullYear();
             const targetMonth = baseDate.getMonth() + validityMonths;
             const exp = new Date(targetYear, targetMonth + 1, 0);
-            const y = exp.getFullYear();
-            const m = String(exp.getMonth() + 1).padStart(2, '0');
-            const d = String(exp.getDate()).padStart(2, '0');
-            const newExpStr = `${y}-${m}-${d}`;
-
+            const yStr = exp.getFullYear();
+            const mStr = String(exp.getMonth() + 1).padStart(2, '0');
+            const dStr = String(exp.getDate()).padStart(2, '0');
+            const newExpStr = `${yStr}-${mStr}-${dStr}`;
             const dameEarliest = new Date(exp);
             dameEarliest.setDate(dameEarliest.getDate() - 45);
-            const dy = dameEarliest.getFullYear();
-            const dm = String(dameEarliest.getMonth() + 1).padStart(2, '0');
-            const dd = String(dameEarliest.getDate()).padStart(2, '0');
-            const dameEarliestStr = `${dy}-${dm}-${dd}`;
 
             result = {
               age,
@@ -663,7 +663,7 @@ export function runToolCalculation(toolType, inputData = {}) {
               anniversaryPreserved,
               examDate: exam.toISOString().split('T')[0],
               newExpiryDate: newExpStr,
-              dameEarliestDate: dameEarliestStr,
+              dameEarliestDate: dameEarliest.toISOString().split('T')[0],
               restrictions: age >= 60 ? ['Multi-pilot crew operations only (Single-pilot prohibited)'] : []
             };
           }
@@ -777,11 +777,13 @@ export function normalizeOutput(toolType, rawResult) {
   const normType = (toolType === 'maxfdp') ? 'max-fdp' : ((toolType === 'preflight') ? 'pre-flight-rest' : toolType);
 
   let statusTheme = 'emerald';
-case 'medical': {
+
+  switch (normType) {
+    case 'medical': {
       const isEligible = rawResult && rawResult.isEligible !== undefined ? rawResult.isEligible : true;
-      const age = rawResult && rawResult.age !== undefined ? rawResult.age : 45;
+      const age = rawResult && rawResult.age !== undefined ? rawResult.age : 40;
       const validityMonths = rawResult && rawResult.validityMonths !== undefined ? rawResult.validityMonths : (age >= 60 ? 6 : 12);
-      const isPreserved = rawResult ? rawResult.anniversaryPreserved : true;
+      const isPreserved = rawResult ? !!rawResult.anniversaryPreserved : false;
 
       if (!isEligible || age >= 65) {
         return {
@@ -793,7 +795,7 @@ case 'medical': {
           targetClockLabel: '45-DAYS RENEWAL WINDOW',
           targetClockValue: 'PRIVILEGES CEASED',
           breakdownGrid: [
-            { label: 'AGE', value:  },
+            { label: 'AGE', value: `${age} Years` },
             { label: 'VALIDITY', value: '0 Months' },
             { label: 'CREW LIMITATION', value: 'Commercial Privileges Ceased' }
           ],
@@ -833,67 +835,11 @@ case 'medical': {
         targetClockLabel: '45-DAYS RENEWAL WINDOW',
         targetClockValue: windowStr,
         breakdownGrid: [
-          { label: 'AGE', value:  },
-          { label: 'VALIDITY', value:  },
+          { label: 'AGE', value: `${age} Years` },
+          { label: 'VALIDITY', value: `${validityMonths} Months` },
           { label: 'CREW LIMITATION', value: isOML ? 'Multi-Pilot Only (OML)' : 'Unrestricted' }
         ],
-        auditNotes: ['CAAM CAD 1 PEL Section 1.2.5.2 & OM-A 5.1.4.4. Compliant.']
-      };
-    } (normType) {
-    case 'medical': {
-      const isEligible = rawResult && rawResult.isEligible !== undefined ? rawResult.isEligible : true;
-      const age = rawResult && rawResult.age !== undefined ? rawResult.age : 40;
-      const validityMonths = rawResult && rawResult.validityMonths ? rawResult.validityMonths : (age >= 60 ? 6 : 12);
-      const isPreserved = rawResult ? !!rawResult.anniversaryPreserved : false;
-      const expiry = rawResult && rawResult.newExpiryDate ? formatDateDDMMMYYYY(rawResult.newExpiryDate) : '31 OCT 2027';
-
-      let dameStartStr = '16 SEP 2027';
-      if (rawResult && rawResult.dameEarliestDate) {
-        dameStartStr = formatDateDDMMMYYYY(rawResult.dameEarliestDate);
-      } else if (rawResult && rawResult.newExpiryDate) {
-        const d = new Date(rawResult.newExpiryDate);
-        d.setDate(d.getDate() - 45);
-        dameStartStr = formatDateDDMMMYYYY(d);
-      }
-
-      const windowStr = `${dameStartStr} to ${expiry}`;
-      const isOML = age >= 60 || (rawResult && rawResult.restrictions && rawResult.restrictions.length > 0);
-
-      // Background color logic for Slot 1 and Slot 2 based on status outcomes
-      let heroClass = 'p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl';
-      let clockClass = 'p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between';
-
-      if (!isEligible || age >= 65) {
-        // Ceased (Rose)
-        heroClass = 'p-4 bg-rose-600 text-white transition-colors duration-300 rounded-t-2xl';
-        clockClass = 'p-3.5 bg-rose-100 dark:bg-rose-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between';
-      } else if (isPreserved) {
-        // Valid / Cleared / Anniversary Preserved (Emerald)
-        heroClass = 'p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl';
-        clockClass = 'p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between';
-      } else {
-        // Renewal Reset (Amber)
-        heroClass = 'p-4 bg-amber-500 text-white transition-colors duration-300 rounded-t-2xl';
-        clockClass = 'p-3.5 bg-amber-100 dark:bg-amber-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between';
-      }
-
-      const slot1El = document.getElementById('output-slot-1-hero-medical');
-      if (slot1El) slot1El.className = heroClass;
-
-      const slot2El = document.getElementById('output-slot-2-clock-medical');
-      if (slot2El) slot2El.className = clockClass;
-
-      return {
-        headlineTitle: 'NEW MEDICAL EXPIRY',
-        headlineValue: expiry,
-        targetClockLabel: '45-DAY RENEWAL WINDOW',
-        targetClockValue: windowStr,
-        breakdownGrid: [
-          { label: 'AGE AT EXAM', value: `${age} Years` },
-          { label: 'VALIDITY DURATION', value: `${validityMonths} Months` },
-          { label: 'CREW LIMITATION', value: isOML ? 'Multi-Pilot Only (OML)' : 'None' }
-        ],
-        auditText: 'Grounded in CAAM CAD 1 PEL Section 1.2.5.2 & OM-A 5.1.4.4. Compliant.'
+        auditNotes: ['Grounded in CAAM CAD 1 PEL Section 1.2.5.2 & OM-A 5.1.4.4. Compliant.']
       };
     }
 
@@ -1338,69 +1284,8 @@ export function clearSignatureCanvas() {}
 export function populateCommanderSelect() {}
 
 export function initToolsModule() {
-  // Set default initial statecase 'medical': {
-      const isEligible = rawResult && rawResult.isEligible !== undefined ? rawResult.isEligible : true;
-      const age = rawResult && rawResult.age !== undefined ? rawResult.age : 45;
-      const validityMonths = rawResult && rawResult.validityMonths !== undefined ? rawResult.validityMonths : (age >= 60 ? 6 : 12);
-      const isPreserved = rawResult ? rawResult.anniversaryPreserved : true;
-
-      if (!isEligible || age >= 65) {
-        return {
-          statusTheme: 'rose',
-          statusBadge: 'CEASED (AGE 65+)',
-          statusClass: 'bg-rose-600',
-          headlineTitle: 'NEW MEDICAL EXPIRY',
-          headlineValue: 'CEASED (AGE 65+)',
-          targetClockLabel: '45-DAYS RENEWAL WINDOW',
-          targetClockValue: 'PRIVILEGES CEASED',
-          breakdownGrid: [
-            { label: 'AGE', value:  },
-            { label: 'VALIDITY', value: '0 Months' },
-            { label: 'CREW LIMITATION', value: 'Commercial Privileges Ceased' }
-          ],
-          auditNotes: ['Commercial Air Transport pilot privileges cease at Age 65 per CAAM CAD 1 PEL.']
-        };
-      }
-
-      const expiry = rawResult && rawResult.newExpiryDate ? formatDateDDMMMYYYY(rawResult.newExpiryDate) : '31 OCT 2027';
-
-      let dameStartStr = '16 SEP 2027';
-      if (rawResult && rawResult.dameEarliestDate) {
-        dameStartStr = formatDateDDMMMYYYY(rawResult.dameEarliestDate);
-      } else if (rawResult && rawResult.newExpiryDate) {
-        const d = new Date(rawResult.newExpiryDate);
-        d.setDate(d.getDate() - 45);
-        dameStartStr = formatDateDDMMMYYYY(d);
-      }
-
-      const windowStr = `${dameStartStr} to ${expiry}`;
-      const isOML = age >= 60 || (rawResult && rawResult.restrictions && rawResult.restrictions.length > 0);
-
-      let statusTheme = 'emerald';
-      let statusBadge = 'VALID / CLEARED';
-      let statusClass = 'bg-emerald-600';
-      if (!isPreserved) {
-        statusTheme = 'amber';
-        statusBadge = 'EXPIRY RESET';
-        statusClass = 'bg-amber-600';
-      }
-
-      return {
-        statusTheme,
-        statusBadge,
-        statusClass,
-        headlineTitle: 'NEW MEDICAL EXPIRY',
-        headlineValue: expiry,
-        targetClockLabel: '45-DAYS RENEWAL WINDOW',
-        targetClockValue: windowStr,
-        breakdownGrid: [
-          { label: 'AGE', value:  },
-          { label: 'VALIDITY', value:  },
-          { label: 'CREW LIMITATION', value: isOML ? 'Multi-Pilot Only (OML)' : 'Unrestricted' }
-        ],
-        auditNotes: ['CAAM CAD 1 PEL Section 1.2.5.2 & OM-A 5.1.4.4. Compliant.']
-      };
-    }ToolCategory('qualifications');
+  // Set default initial state
+  switchToolCategory('qualifications');
 }
 
 // ==================================================================
