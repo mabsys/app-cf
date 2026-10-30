@@ -1,3 +1,5 @@
+// ./engines/ppc-validity-calculator.js (3010_R298) - PPC (OPC / LPC) Validity & Expiry Calculator Engine
+
 /**
  * PPC (OPC / LPC) Validity & Expiry Calculator Engine for Flight Crew (v2)
  * Grounded in CAD 6 Part 1, FOTM020, and OM-A Regulations
@@ -136,16 +138,35 @@ class PPCValidityEngine {
       opcWindowSummary: `OPC must be conducted between ${this.formatDate(earliestOPC)} and ${this.formatDate(latestOPC)}.`
     };
   }
+
+  /**
+   * Combined calculator method for PPC/LPC & OPC Windows
+   */
+  static calculatePPCValidity({ conductDate, currentExpiryDate = null }) {
+    const lpcResult = this.calculateLPCExpiry(conductDate, currentExpiryDate);
+    const opcResult = this.calculateOPCWindow(lpcResult.lpcConductDate, lpcResult.newLPCExpiryDate);
+    return {
+      ...lpcResult,
+      ...opcResult
+    };
+  }
 }
 
+// ES Module exports
+export { PPCValidityEngine };
+
+export function calculatePPCValidity(params) {
+  return PPCValidityEngine.calculatePPCValidity(params);
+}
+
+export function calculatePpcWindows(conductDate, expiryDate) {
+  return {
+    lpc: PPCValidityEngine.calculateLPCExpiry(conductDate, expiryDate),
+    opc: PPCValidityEngine.calculateOPCWindow(conductDate, expiryDate)
+  };
+}
+
+// CommonJS module export compatibility
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = PPCValidityEngine;
-}
-
-export { PPCValidityEngine }; 
-export function calculatePpcWindows(conductDate, expiryDate) { 
-  return { 
-    lpc: PPCValidityEngine.calculateLPCExpiry(conductDate, expiryDate), 
-    opc: PPCValidityEngine.calculateOPCWindow(conductDate, expiryDate) 
-  }; 
 }
