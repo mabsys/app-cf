@@ -1,4 +1,4 @@
-// ./js/tools.js (3010_R290) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3010_R291) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -74,8 +74,8 @@ export function openEfbYearSelectModal() {
   openEfbSelectModal('efb-date-picker-year-jump', 'SELECT YEAR', years);
   
   const origSelect = window.selectEfbOption;
-  window.selectEfbOption = function(targetInputId, val, label) {
-    if (targetInputId === 'efb-date-picker-year-jump') {
+  window.selectEfbOption = function(val, label) {
+    if (efbSelectModalState.targetInputId === 'efb-date-picker-year-jump') {
       const yearNum = parseInt(val, 10);
       if (!isNaN(yearNum)) {
         efbDatePickerState.currentYear = yearNum;
@@ -85,7 +85,7 @@ export function openEfbYearSelectModal() {
       return;
     }
     if (typeof origSelect === 'function') {
-      origSelect(targetInputId, val, label);
+      origSelect(val, label);
     }
   };
 }
@@ -638,11 +638,20 @@ export function runToolCalculation(toolType, inputData = {}) {
               }
             }
 
-            const exp = new Date(baseDate);
-            exp.setMonth(exp.getMonth() + validityMonths);
-            const newExpStr = exp.toISOString().split('T')[0];
+            const targetYear = baseDate.getFullYear();
+            const targetMonth = baseDate.getMonth() + validityMonths;
+            const exp = new Date(targetYear, targetMonth + 1, 0);
+            const y = exp.getFullYear();
+            const m = String(exp.getMonth() + 1).padStart(2, '0');
+            const d = String(exp.getDate()).padStart(2, '0');
+            const newExpStr = `${y}-${m}-${d}`;
+
             const dameEarliest = new Date(exp);
             dameEarliest.setDate(dameEarliest.getDate() - 45);
+            const dy = dameEarliest.getFullYear();
+            const dm = String(dameEarliest.getMonth() + 1).padStart(2, '0');
+            const dd = String(dameEarliest.getDate()).padStart(2, '0');
+            const dameEarliestStr = `${dy}-${dm}-${dd}`;
 
             result = {
               age,
@@ -651,7 +660,7 @@ export function runToolCalculation(toolType, inputData = {}) {
               anniversaryPreserved,
               examDate: exam.toISOString().split('T')[0],
               newExpiryDate: newExpStr,
-              dameEarliestDate: dameEarliest.toISOString().split('T')[0],
+              dameEarliestDate: dameEarliestStr,
               restrictions: age >= 60 ? ['Multi-pilot crew operations only (Single-pilot prohibited)'] : []
             };
           }
@@ -816,8 +825,8 @@ export function normalizeOutput(toolType, rawResult) {
         targetClockLabel: '45-DAY RENEWAL WINDOW',
         targetClockValue: windowStr,
         breakdownGrid: [
-          { label: 'AGE', value: `${age} Years` },
-          { label: 'VALIDITY', value: `${validityMonths} Months` },
+          { label: 'AGE AT EXAM', value: `${age} Years` },
+          { label: 'VALIDITY DURATION', value: `${validityMonths} Months` },
           { label: 'CREW LIMITATION', value: isOML ? 'Multi-Pilot Only (OML)' : 'None' }
         ],
         auditText: 'Grounded in CAAM CAD 1 PEL Section 1.2.5.2 & OM-A 5.1.4.4. Compliant.'
