@@ -1,4 +1,4 @@
-// ./js/tools.js (3010_R296) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3010_R297) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -680,13 +680,74 @@ export function runToolCalculation(toolType, inputData = {}) {
 
       case 'ppc': {
         const conductDate = inputData.conductDate || document.getElementById('input-ppc-conduct-date')?.value || new Date().toISOString().split('T')[0];
-        const expiryDate = inputData.expiryDate || document.getElementById('input-ppc-expiry-date')?.value || '';
-        result = {
-          newLPCExpiryDate: expiryDate || conductDate,
-          opcWindowStart: conductDate,
-          opcWindowEnd: expiryDate || conductDate,
-          anniversaryPreserved: true
-        };
+        const currentExpiryDate = inputData.expiryDate || document.getElementById('input-ppc-expiry-date')?.value || null;
+
+        const calcParams = { conductDate, currentExpiryDate };
+
+        if (typeof PPCEngineModule !== 'undefined') {
+          if (typeof PPCEngineModule.calculatePPCValidity === 'function') {
+            result = PPCEngineModule.calculatePPCValidity(calcParams);
+          } else if (PPCEngineModule.PPCValidityEngine && typeof PPCEngineModule.PPCValidityEngine.calculatePPCValidity === 'function') {
+            result = PPCEngineModule.PPCValidityEngine.calculatePPCValidity(calcParams);
+          } else if (PPCEngineModule.default && typeof PPCEngineModule.default.calculatePPCValidity === 'function') {
+            result = PPCEngineModule.default.calculatePPCValidity(calcParams);
+          }
+        }
+
+        if (!result && typeof PPCValidityEngine !== 'undefined' && typeof PPCValidityEngine.calculatePPCValidity === 'function') {
+          result = PPCValidityEngine.calculatePPCValidity(calcParams);
+        }
+
+        // Full standalone fallback calculation matching PPCValidityEngine logic
+        if (!result) {
+          const conduct = new Date(conductDate);
+          const currExp = currentExpiryDate ? new Date(currentExpiryDate) : null;
+          let newExp;
+          let anniversaryPreserved = false;
+          let lapsedLPCWarning = null;
+
+          if (currExp && !isNaN(currExp.getTime())) {
+            const threeMonthsPost = new Date(Date.UTC(currExp.getFullYear(), currExp.getMonth() + 3 + 1, 0));
+            if (conduct > threeMonthsPost) {
+              lapsedLPCWarning = 'LPC Expired > 3 Months: Mandatory ATO / simulator refresher footprint required prior to conducting proficiency check.';
+            }
+
+            const windowStart = new Date(currExp.getTime());
+            windowStart.setMonth(windowStart.getMonth() - 3);
+
+            if (conduct >= windowStart && conduct <= currExp) {
+              anniversaryPreserved = true;
+              newExp = new Date(Date.UTC(currExp.getFullYear() + 1, currExp.getMonth() + 1, 0));
+            }
+          }
+
+          if (!anniversaryPreserved) {
+            newExp = new Date(Date.UTC(conduct.getFullYear() + 1, conduct.getMonth() + 1, 0));
+          }
+
+          const earliestOPC = new Date(conduct.getTime());
+          earliestOPC.setMonth(earliestOPC.getMonth() + 4);
+
+          const latestOPC = new Date(newExp.getTime());
+          latestOPC.setMonth(latestOPC.getMonth() - 4);
+
+          const targetOPC = new Date(conduct.getTime());
+          targetOPC.setMonth(targetOPC.getMonth() + 6);
+
+          const fmtDate = (d) => d ? d.toISOString().split('T')[0] : null;
+
+          result = {
+            lpcConductDate: conductDate,
+            previousLPCExpiry: currentExpiryDate,
+            newLPCExpiryDate: fmtDate(newExp),
+            anniversaryPreserved,
+            calculationMethod: anniversaryPreserved ? 'Preserved Anniversary (+12M from prev expiry)' : 'Reset (+12M from exam EOM)',
+            lapsedLPCWarning,
+            earliestOPCDate: fmtDate(earliestOPC),
+            latestOPCDate: fmtDate(latestOPC),
+            targetOPCDate: fmtDate(targetOPC)
+          };
+        }
         break;
       }
 
@@ -844,22 +905,48 @@ export function normalizeOutput(toolType, rawResult) {
     }
 
     case 'ppc': {
-      const isPreserved = rawResult ? rawResult.anniversaryPreserved : true;
-      statusTheme = isPreserved ? 'emerald' : 'amber';
-      const expiry = rawResult ? formatDateDDMMMYYYY(rawResult.newLPCExpiryDate) : '31 JUL 2027';
-      const opcStr = (rawResult && rawResult.opcWindowStart) ? `${formatDateDDMMMYYYY(rawResult.opcWindowStart)} to ${formatDateDDMMMYYYY(rawResult.opcWindowEnd)}` : '01 MAY 2027 to 31 JUL 2027';
+      const isPreserved = rawResult ? !!rawResult.anniversaryPreserved : true;
+      const lapsedWarning = rawResult ? rawResult.lapsedLPCWarning : null;
+      const expiryStr = rawResult && rawResult.newLPCExpiryDate ? formatDateDDMMMYYYY(rawResult.newLPCExpiryDate) : '31 JUL 2027';
+
+      let opcWindowStr = '01 MAY 2027 to 31 JUL 2027';
+      if (rawResult && rawResult.earliestOPCDate && rawResult.latestOPCDate) {
+        opcWindowStr = `${formatDateDDMMMYYYY(rawResult.earliestOPCDate)} to ${formatDateDDMMMYYYY(rawResult.latestOPCDate)}`;
+      }
+
+      let targetOpcStr = '--';
+      if (rawResult && rawResult.targetOPCDate) {
+        targetOpcStr = `${formatDateDDMMMYYYY(rawResult.targetOPCDate)} (~6M Midpoint)`;
+      }
+
+      let statusTheme = 'emerald';
+      let statusBadge = 'VALID / CLEARED';
+      let statusClass = 'bg-emerald-600';
+
+      if (lapsedWarning) {
+        statusTheme = 'rose';
+        statusBadge = 'LAPSED (> 3 MONTHS)';
+        statusClass = 'bg-rose-600';
+      } else if (!isPreserved) {
+        statusTheme = 'amber';
+        statusBadge = 'EXPIRY RESET';
+        statusClass = 'bg-amber-600';
+      }
+
       return {
         statusTheme,
+        statusBadge,
+        statusClass,
         headlineTitle: 'NEW PPC / LPC EXPIRY',
-        headlineValue: expiry,
-        targetClockLabel: 'Target Window / Deadline:',
-        targetClockValue: opcStr,
+        headlineValue: expiryStr,
+        targetClockLabel: 'NEXT OPC WINDOW (4–8 MONTHS)',
+        targetClockValue: opcWindowStr,
         breakdownGrid: [
-          { label: 'REVALIDATION RULE', value: isPreserved ? 'Date Preserved (3-Month Window)' : 'Reset to EOM' },
-          { label: 'BASE VALIDITY', value: '12 Calendar Months' },
-          { label: 'OPERATING STATUS', value: 'Qualified & Cleared' }
+          { label: 'REVALIDATION RULE', value: isPreserved ? 'Anniversary Preserved (3M Window)' : 'Expiry Reset (12M from Exam)' },
+          { label: 'NEXT OPC TARGET', value: targetOpcStr },
+          { label: 'OPERATING STATUS', value: lapsedWarning ? 'Lapsed > 3M: ATO Refresher Req.' : 'Qualified & Cleared' }
         ],
-        auditNotes: ['Grounded in CAAM CAD 6.9.4.4, CAD 1 PEL 2.1.5.10 & OM-A 5.1.4.6. Compliant.']
+        auditNotes: [lapsedWarning || 'Grounded in CAAM CAD 6.9.4.4, CAD 1 PEL 2.1.5.10 & OM-A 5.1.4.6. Compliant.']
       };
     }
 
