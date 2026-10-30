@@ -1,4 +1,5 @@
-<!-- ./index.html (2910_R285_DOB) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+<!-- ./index.html (3010_R290) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -20,11 +21,11 @@
     <!-- UNCOMMENT THIS BLOCK ONCE DEV IS COMPLETE
 <script>
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .then((reg) => console.log('CertiFly Service Worker registered successfully:', reg.scope))
-      .catch((err) => console.error('Service Worker registration failed:', err));
-  });
+window.addEventListener('load', () => {
+navigator.serviceWorker.register('sw.js')
+.then((reg) => console.log('CertiFly Service Worker registered successfully:', reg.scope))
+.catch((err) => console.error('Service Worker registration failed:', err));
+});
 }
 </script> -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -40,7 +41,6 @@ if ('serviceWorker' in navigator) {
         .no-scrollbar::-webkit-scrollbar { display: none !important; }
         .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
     </style>
-
     <style>
         .perspective-1000 { perspective: 1000px; -webkit-perspective: 1000px; }
         .transform-style-3d { transform-style: preserve-3d; -webkit-transform-style: preserve-3d; }
@@ -82,6 +82,7 @@ if ('serviceWorker' in navigator) {
 
             <!-- DASHBOARD VIEW -->
             <div id="dashboard-view" class="app-view hidden flex flex-col gap-4">
+
                 <!-- 2. SEGMENTED 3-PILL TAB CONTROLLER -->
                 <div class="bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl grid grid-cols-3 gap-1 text-center shadow-xs">
                     <button id="res-tab-btn-overview" onclick="switchResultTab('overview')" type="button" class="res-tab-btn py-2 px-1 rounded-xl text-[11px] font-extrabold transition-all bg-blue-600 text-white shadow-xs flex items-center justify-center gap-1.5">
@@ -119,38 +120,27 @@ if ('serviceWorker' in navigator) {
 
                     <!-- 1. HERO LEGALITY RINGS CARD (3D FLIP CONTAINER) -->
                     <div id="overview-hero-container" class="[perspective:1000px] cursor-pointer group select-none touch-manipulation active:scale-[0.995] transition-transform duration-100">
-
                         <div id="overview-hero-card" class="relative w-full rounded-3xl [transform-style:preserve-3d] [will-change:transform]">
 
                             <!-- FRONT FACE -->
                             <div class="relative bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-200 dark:border-slate-800 flex flex-col gap-3 [backface-visibility:hidden]">
-
-                                <!-- Floating Question Mark Icon (Top Right) -->
                                 <div class="absolute top-3.5 right-4 text-blue-500/70 dark:text-blue-400/70 hover:text-blue-600 transition-colors pointer-events-none">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M12 18h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>
 
-                                <!-- Top: Live Generic Time-Based Greeting (font-bold) -->
                                 <div class="text-center border-b border-slate-100 dark:border-slate-800/80 pb-2 pr-4">
                                     <span id="overview-greeting" class="text-base font-bold text-slate-900 dark:text-white">Good Morning</span>
                                 </div>
 
-                                <!-- Content Row: SVG Rings + Readiness Summary -->
                                 <div class="flex items-stretch justify-between gap-4">
-                                    <!-- Left: Concentric SVG Rings & Legend -->
                                     <div class="flex flex-col items-center shrink-0 gap-2">
                                         <div class="relative w-24 h-24 flex items-center justify-center">
                                             <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
-                                                <!-- Outer Ring Track (MAB Attestation) r=42 -->
                                                 <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
-                                                <!-- Outer Ring Progress (MAB - blue-700 #1D4ED8) -->
                                                 <circle id="ring-mab" cx="50" cy="50" r="42" fill="none" stroke="#1D4ED8" stroke-width="7" stroke-dasharray="263.89" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
-
-                                                <!-- Inner Ring Track (CAAM Licence) r=30 -->
                                                 <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
-                                                <!-- Inner Ring Progress (CAAM - Royal Blue #3B82F6) -->
                                                 <circle id="ring-caam" cx="50" cy="50" r="30" fill="none" stroke="#3B82F6" stroke-width="7" stroke-dasharray="188.50" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
                                             </svg>
                                             <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
@@ -158,37 +148,30 @@ if ('serviceWorker' in navigator) {
                                                 <span id="ov-ring-unit" class="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mt-0.5">DAYS</span>
                                             </div>
                                         </div>
-                                        <!-- Ring Legend -->
                                         <div class="flex items-center gap-2.5 text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                                             <span class="flex items-center gap-1"><span id="legend-dot-caam" class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>CAAM</span>
                                             <span class="flex items-center gap-1"><span id="legend-dot-mab" class="w-1.5 h-1.5 rounded-full bg-blue-700"></span>MAB</span>
                                         </div>
                                     </div>
 
-                                    <!-- Right: Readiness Summary Block -->
                                     <div class="flex-1 flex flex-col justify-between min-w-0">
                                         <div class="flex items-center justify-between">
                                             <span class="text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Crew Status:</span>
                                             <span id="ov-ring-label" class="px-2.5 py-0.5 rounded-md text-xs font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">OPERATIONAL</span>
                                         </div>
-
                                         <div id="ov-ring-bottleneck" class="flex-1 my-1.5 text-[10px] font-bold p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 flex items-start gap-1.5 leading-snug break-words">
                                             <span id="ov-bottleneck-led" class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] shrink-0 mt-0.5"></span>
                                             <span id="ov-bottleneck-text" class="break-words">All Items Valid</span>
                                         </div>
-
                                         <div class="pt-1.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[9px] text-slate-400">
                                             <span class="leading-snug">Last Synced: <strong id="overview-scan-timestamp" class="text-slate-800 dark:text-slate-200 font-extrabold">--:--</strong></span>
                                         </div>
                                     </div>
                                 </div>
-
                             </div>
 
                             <!-- BACK FACE -->
                             <div class="absolute inset-0 w-full h-full bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4 [backface-visibility:hidden] [transform:rotateY(180deg)]">
-
-                                <!-- Left Box: Replicated Concentric Rings & Days Counter -->
                                 <div class="flex flex-col items-center shrink-0 gap-2">
                                     <div class="relative w-24 h-24 flex items-center justify-center">
                                         <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
@@ -208,15 +191,11 @@ if ('serviceWorker' in navigator) {
                                     </div>
                                 </div>
 
-                                <!-- Right Box: Header & Descriptions -->
                                 <div class="flex-1 flex flex-col justify-between h-full min-w-0 pr-1">
                                     <div>
                                         <h3 class="text-sm font-extrabold text-slate-900 dark:text-white tracking-wide border-b border-slate-100 dark:border-slate-800 pb-1 mb-1.5">Overview</h3>
-                                        <p class="text-[9.5px] leading-tight text-slate-600 dark:text-slate-300 font-medium">
-                                            This card is a Quick Summary of your flight duty eligibility and items that may require your immediate action.
-                                        </p>
+                                        <p class="text-[9.5px] leading-tight text-slate-600 dark:text-slate-300 font-medium">This card is a Quick Summary of your flight duty eligibility and items that may require your immediate action.</p>
                                     </div>
-
                                     <div class="space-y-1.5 text-[9.5px]">
                                         <div>
                                             <strong class="font-bold text-slate-900 dark:text-slate-100 block">Rings</strong>
@@ -228,22 +207,17 @@ if ('serviceWorker' in navigator) {
                                         </div>
                                     </div>
                                 </div>
-
                             </div>
 
                         </div>
-
                     </div>
 
                     <!-- 2. BENTO GRID: CAAM STATUTORY & FLEET CURRENCY TILES (2x2) -->
                     <div class="grid grid-cols-2 gap-2.5">
-
-                        <!-- TILE 1: CAAM LICENCE -->
                         <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
                             <div class="flex items-center justify-between">
                                 <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">LICENCE VALIDITY</span>
                             </div>
-                            <!-- Horizontal Sparkline Progress Bar -->
                             <div class="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
                                 <div id="ov-caam-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
                             </div>
@@ -253,12 +227,10 @@ if ('serviceWorker' in navigator) {
                             </div>
                         </div>
 
-                        <!-- TILE 2: CLASS 1 MEDICAL -->
                         <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
                             <div class="flex items-center justify-between">
                                 <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Class 1 Medical</span>
                             </div>
-                            <!-- Horizontal Sparkline Progress Bar -->
                             <div class="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
                                 <div id="ov-medical-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
                             </div>
@@ -268,12 +240,10 @@ if ('serviceWorker' in navigator) {
                             </div>
                         </div>
 
-                        <!-- TILE 3: B737 TYPE RATING & IR -->
                         <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
                             <div class="flex items-center justify-between">
                                 <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">LPC / IR VALIDITY</span>
                             </div>
-                            <!-- Horizontal Sparkline Progress Bar -->
                             <div class="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
                                 <div id="ov-type-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
                             </div>
@@ -283,12 +253,10 @@ if ('serviceWorker' in navigator) {
                             </div>
                         </div>
 
-                        <!-- TILE 4: MAB LINE CHECK -->
                         <div onclick="switchResultTab('mab')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
                             <div class="flex items-center justify-between">
                                 <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">MAB Line Check</span>
                             </div>
-                            <!-- Horizontal Sparkline Progress Bar -->
                             <div class="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
                                 <div id="ov-linecheck-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
                             </div>
@@ -297,7 +265,6 @@ if ('serviceWorker' in navigator) {
                                 <div id="ov-linecheck-route" class="text-[9px] font-bold text-slate-400 mt-0.5 truncate">Route: --</div>
                             </div>
                         </div>
-
                     </div>
 
                     <!-- 3. LVO RECENCY BENTO BOX (1x1 FULL WIDTH) -->
@@ -306,22 +273,15 @@ if ('serviceWorker' in navigator) {
                             <span class="text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">LVO Recency</span>
                             <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400">View Details &rarr;</span>
                         </div>
-
-                        <!-- 180-Day Recency Gradient Sparkline Track with Inverted House Pointer Marker -->
                         <div class="relative w-full pt-1 pb-3">
-                            <div class="relative w-full h-3 rounded-full overflow-hidden shadow-inner border border-slate-200/60 dark:border-slate-800/80" style="background: linear-gradient(to right, #10B981 0%, #10B981 83.3%, #F59E0B 83.3%, #F59E0B 91.7%, #EF4444 91.7%, #EF4444 100%);">
-                            </div>
-                            <!-- Inverted House-Shaped Pointer Marker (Points directly down at scale labels) -->
+                            <div class="relative w-full h-3 rounded-full overflow-hidden shadow-inner border border-slate-200/60 dark:border-slate-800/80" style="background: linear-gradient(to right, #10B981 0%, #10B981 83.3%, #F59E0B 83.3%, #F59E0B 91.7%, #EF4444 91.7%, #EF4444 100%);"></div>
                             <div id="ov-lvo-marker" class="absolute top-3 w-3 h-3 bg-slate-900 dark:bg-white transition-all duration-500 shadow-md -translate-x-1/2 z-10" style="left: 0%; clip-path: polygon(0% 0%, 100% 0%, 100% 55%, 50% 100%, 0% 55%);"></div>
-                            <!-- Scale Labels (180D -> 90D -> 0D) -->
                             <div class="relative w-full flex justify-between text-[7.5px] font-black text-slate-400 dark:text-slate-500 select-none mt-2.5">
                                 <span>180D</span>
                                 <span class="absolute left-1/2 -translate-x-1/2">90D</span>
                                 <span>0D</span>
                             </div>
                         </div>
-
-                        <!-- Metadata Footer -->
                         <div class="flex items-center justify-between text-[9.5px] text-slate-500 dark:text-slate-400 pt-0.5 border-t border-slate-100 dark:border-slate-800/80">
                             <span>Check Date: <strong id="ov-lvo-checkdate" class="text-slate-800 dark:text-slate-200 font-extrabold">--</strong></span>
                             <strong id="ov-lvo-days-text" class="text-slate-800 dark:text-slate-200 font-extrabold">-- Days Remaining</strong>
@@ -334,24 +294,17 @@ if ('serviceWorker' in navigator) {
                             <span class="text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Mandatory Recurrents & Drills</span>
                             <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 cursor-pointer" onclick="switchResultTab('mab')">View All &rarr;</span>
                         </div>
-
-                        <!-- Vertical Sparkline Histogram Chart Area -->
                         <div class="flex gap-2 items-stretch h-28 pt-1">
-                            <!-- Y-Axis Scale Labels -->
                             <div class="w-5 shrink-0 flex flex-col justify-between text-[8px] font-black text-slate-400 dark:text-slate-500 select-none py-0.5 text-right">
                                 <span>1Y</span>
                                 <span>6M</span>
                                 <span>0D</span>
                             </div>
-
-                            <!-- Plot Box with Reference Guide Lines -->
                             <div class="flex-1 relative h-full flex items-end justify-between gap-1.5 px-1 bg-slate-50/50 dark:bg-slate-950/40 rounded-xl p-1.5 border border-slate-100/80 dark:border-slate-800/60 overflow-hidden">
-                                <!-- Horizontal Guide Lines -->
                                 <div class="absolute left-0 right-0 top-1.5 border-b border-dashed border-slate-200 dark:border-slate-800/80 pointer-events-none"></div>
                                 <div class="absolute left-0 right-0 top-[50%] border-b border-dashed border-slate-200 dark:border-slate-800/80 pointer-events-none"></div>
                                 <div class="absolute left-0 right-0 bottom-0 border-b border-slate-200 dark:border-slate-700 pointer-events-none"></div>
 
-                                <!-- Vertical Sparkline Bars (Spread evenly across X-axis) -->
                                 <div id="vbar-col-actype" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
                                     <div id="vbar-drill-actype" class="w-full max-w-[14px] bg-teal-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
                                 </div>
@@ -382,65 +335,30 @@ if ('serviceWorker' in navigator) {
                             </div>
                         </div>
 
-                        <!-- Legend Grid Below Chart -->
                         <div id="drills-legend-grid" class="grid grid-cols-3 gap-y-1.5 gap-x-2 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 text-[9px] font-bold text-slate-600 dark:text-slate-300">
-                            <div id="legend-drill-actype" class="flex items-center gap-1.5 truncate">
-                                <span id="dot-legend-actype" class="w-2 h-2 rounded-full bg-teal-500 shrink-0"></span>
-                                <span id="txt-legend-actype" class="truncate">B737</span>
-                            </div>
-                            <div id="legend-drill-door" class="flex items-center gap-1.5 truncate">
-                                <span id="dot-legend-door" class="w-2 h-2 rounded-full bg-cyan-500 shrink-0"></span>
-                                <span class="truncate">Door Drill</span>
-                            </div>
-                            <div id="legend-drill-wet" class="flex items-center gap-1.5 truncate">
-                                <span id="dot-legend-wet" class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
-                                <span class="truncate">Wet Drill</span>
-                            </div>
-                            <div id="legend-drill-fire" class="flex items-center gap-1.5 truncate">
-                                <span id="dot-legend-fire" class="w-2 h-2 rounded-full bg-violet-500 shrink-0"></span>
-                                <span class="truncate">Fire Drill</span>
-                            </div>
-                            <div id="legend-drill-crm" class="flex items-center gap-1.5 truncate">
-                                <span id="dot-legend-crm" class="w-2 h-2 rounded-full bg-purple-500 shrink-0"></span>
-                                <span class="truncate">CRM</span>
-                            </div>
-                            <div id="legend-drill-sms" class="flex items-center gap-1.5 truncate">
-                                <span id="dot-legend-sms" class="w-2 h-2 rounded-full bg-fuchsia-500 shrink-0"></span>
-                                <span class="truncate">SMS</span>
-                            </div>
-                            <div id="legend-drill-dg" class="flex items-center gap-1.5 truncate">
-                                <span id="dot-legend-dg" class="w-2 h-2 rounded-full bg-pink-500 shrink-0"></span>
-                                <span class="truncate">DG-7</span>
-                            </div>
-                            <div id="legend-drill-avsec" class="flex items-center gap-1.5 truncate">
-                                <span id="dot-legend-avsec" class="w-2 h-2 rounded-full bg-indigo-500 shrink-0"></span>
-                                <span class="truncate">AVSEC</span>
-                            </div>
-                            <div id="legend-drill-supervisory" class="flex items-center gap-1.5 truncate">
-                                <span id="dot-legend-supervisory" class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
-                                <span class="truncate">DFE / FI</span>
-                            </div>
+                            <div id="legend-drill-actype" class="flex items-center gap-1.5 truncate"><span id="dot-legend-actype" class="w-2 h-2 rounded-full bg-teal-500 shrink-0"></span><span id="txt-legend-actype" class="truncate">B737</span></div>
+                            <div id="legend-drill-door" class="flex items-center gap-1.5 truncate"><span id="dot-legend-door" class="w-2 h-2 rounded-full bg-cyan-500 shrink-0"></span><span class="truncate">Door Drill</span></div>
+                            <div id="legend-drill-wet" class="flex items-center gap-1.5 truncate"><span id="dot-legend-wet" class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span><span class="truncate">Wet Drill</span></div>
+                            <div id="legend-drill-fire" class="flex items-center gap-1.5 truncate"><span id="dot-legend-fire" class="w-2 h-2 rounded-full bg-violet-500 shrink-0"></span><span class="truncate">Fire Drill</span></div>
+                            <div id="legend-drill-crm" class="flex items-center gap-1.5 truncate"><span id="dot-legend-crm" class="w-2 h-2 rounded-full bg-purple-500 shrink-0"></span><span class="truncate">CRM</span></div>
+                            <div id="legend-drill-sms" class="flex items-center gap-1.5 truncate"><span id="dot-legend-sms" class="w-2 h-2 rounded-full bg-fuchsia-500 shrink-0"></span><span class="truncate">SMS</span></div>
+                            <div id="legend-drill-dg" class="flex items-center gap-1.5 truncate"><span id="dot-legend-dg" class="w-2 h-2 rounded-full bg-pink-500 shrink-0"></span><span class="truncate">DG-7</span></div>
+                            <div id="legend-drill-avsec" class="flex items-center gap-1.5 truncate"><span id="dot-legend-avsec" class="w-2 h-2 rounded-full bg-indigo-500 shrink-0"></span><span class="truncate">AVSEC</span></div>
+                            <div id="legend-drill-supervisory" class="flex items-center gap-1.5 truncate"><span id="dot-legend-supervisory" class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span><span class="truncate">DFE / FI</span></div>
                         </div>
                     </div>
 
-
-
                     <!-- 4. GROUP 1: NON-EXPIRY & PASSPORT FOOTER BENTO (2x1) -->
                     <div class="grid grid-cols-2 gap-2.5">
-
-                        <!-- PASSPORT TILE -->
                         <div onclick="openMenu(); setTimeout(() => { const nav = document.querySelector('[data-target=pane-profile]'); if(nav) nav.click(); }, 150);" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
                             <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">PASSPORT VALIDITY</span>
-                            <!-- Horizontal Sparkline Progress Bar with 0D, 6M, 1Y Scale -->
                             <div class="relative w-full pt-0.5 pb-2">
                                 <div class="relative w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
                                     <div class="absolute top-0 bottom-0 left-[49.4%] w-0.5 bg-rose-400/40 dark:bg-rose-500/40 z-0"></div>
                                     <div id="ov-passport-bar" class="h-full bg-indigo-500 rounded-full transition-all duration-500 relative z-10" style="width: 100%;"></div>
                                 </div>
                                 <div class="relative w-full flex justify-between text-[7.5px] font-black text-slate-400 dark:text-slate-500 select-none mt-1">
-                                    <span>0D</span>
-                                    <span class="absolute left-[49.4%] -translate-x-1/2 text-rose-500/80 dark:text-rose-400/80">6M</span>
-                                    <span>1Y</span>
+                                    <span>0D</span><span class="absolute left-[49.4%] -translate-x-1/2 text-rose-500/80 dark:text-rose-400/80">6M</span><span>1Y</span>
                                 </div>
                             </div>
                             <div>
@@ -450,22 +368,14 @@ if ('serviceWorker' in navigator) {
                             </div>
                         </div>
 
-                        <!-- ELP VALIDITY TILE -->
                         <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
                             <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">ELP VALIDITY</span>
-                            <!-- Horizontal Sparkline Progress Bar with Dynamic Scale -->
                             <div class="relative w-full pt-0.5 pb-2">
                                 <div class="relative w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
                                     <div id="ov-elp-bar" class="h-full bg-purple-500 rounded-full transition-all duration-500 relative z-10" style="width: 100%;"></div>
                                 </div>
                                 <div id="ov-elp-scale" class="relative w-full flex justify-between text-[7.5px] font-black text-slate-400 dark:text-slate-500 select-none mt-1">
-                                    <span>0Y</span>
-                                    <span>1Y</span>
-                                    <span>2Y</span>
-                                    <span>3Y</span>
-                                    <span>4Y</span>
-                                    <span>5Y</span>
-                                    <span>6Y</span>
+                                    <span>0Y</span><span>1Y</span><span>2Y</span><span>3Y</span><span>4Y</span><span>5Y</span><span>6Y</span>
                                 </div>
                             </div>
                             <div>
@@ -474,7 +384,6 @@ if ('serviceWorker' in navigator) {
                                 <div id="ov-elp-years" class="text-[9px] font-bold text-slate-400 mt-0.5">--</div>
                             </div>
                         </div>
-
                     </div>
 
                 </div>
@@ -511,6 +420,7 @@ if ('serviceWorker' in navigator) {
                             </div>
                         </div>
                     </div>
+
                     <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
                         <div class="border-b-2 border-slate-200 dark:border-slate-800 pb-2 flex justify-between items-center">
                             <span class="text-slate-500 text-[11px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
@@ -522,6 +432,7 @@ if ('serviceWorker' in navigator) {
                         </div>
                         <div id="qualifications-list" class="flex flex-col"></div>
                     </div>
+
                     <button id="open-original-btn" type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-3.5 rounded-2xl transition duration-150 text-xs uppercase tracking-wider shadow-md flex items-center justify-center gap-2 cursor-pointer">
                         <span>Proceed to eCLIPSE Licence Page</span>
                         <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24">
@@ -539,9 +450,7 @@ if ('serviceWorker' in navigator) {
                             </svg>
                             <div class="flex-1">
                                 <h4 class="text-xs font-black uppercase tracking-wider text-rose-700 dark:text-rose-300">MAB Attestation VOID / Stale</h4>
-                                <p id="mab-void-reason" class="text-[10px] text-rose-800 dark:text-rose-200 mt-1 leading-relaxed">
-                                    Attestation PDF is older than 30 days or a qualification has lapsed. Please re-upload your latest monthly PDF.
-                                </p>
+                                <p id="mab-void-reason" class="text-[10px] text-rose-800 dark:text-rose-200 mt-1 leading-relaxed">Attestation PDF is older than 30 days or a qualification has lapsed. Please re-upload your latest monthly PDF.</p>
                                 <button onclick="openMenu(); setTimeout(() => { const nav = document.querySelector('[data-target=pane-profile]'); if(nav) nav.click(); }, 150);" type="button" class="mt-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[10px] uppercase py-2 px-3.5 rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer">
                                     <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
@@ -562,6 +471,7 @@ if ('serviceWorker' in navigator) {
                             </span>
                             <span id="mab-doc-ref" class="hidden text-[9px] font-bold text-slate-400"></span>
                         </div>
+
                         <div class="flex flex-col gap-2.5">
                             <div>
                                 <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block">Pilot Name</span>
@@ -581,20 +491,16 @@ if ('serviceWorker' in navigator) {
                                 <span>Published: <strong id="mab-published-date" class="text-slate-700 dark:text-slate-300 font-bold">-</strong></span>
                                 <span id="mab-freshness-tag" class="text-emerald-600 dark:text-emerald-400 font-extrabold uppercase">-</span>
                             </div>
-
-                            <!-- COMPACT QUALIFICATION SLIP STATUS PILL -->
                             <div id="mab-qs-badge-container" class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                                 <div id="mab-qs-badge" class="px-3 py-1.5 rounded-xl text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-between">
                                     <span id="mab-qs-status-text">Qualification Slip: Not Configured</span>
                                     <span id="mab-qs-cert-no" class="text-[9px] font-semibold text-slate-400">CERT -</span>
                                 </div>
                             </div>
-
                         </div>
                     </div>
 
                     <div class="flex flex-col gap-3">
-                        <!-- LINE CHECK -->
                         <div id="mab-linecheck-box" class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-md flex flex-col gap-3">
                             <div class="border-b-2 border-slate-200 dark:border-slate-800 pb-2">
                                 <span class="text-slate-500 text-[11px] uppercase tracking-wide font-extrabold flex items-center gap-1.5">
@@ -634,7 +540,6 @@ if ('serviceWorker' in navigator) {
                             </div>
                         </div>
 
-                        <!-- LVO AUTOLAND CARD -->
                         <div id="mab-lvo-box" class="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-md flex flex-col gap-4">
                             <div class="border-b-2 border-slate-200 dark:border-slate-800 pb-2">
                                 <span class="text-slate-500 text-[11px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
@@ -675,7 +580,6 @@ if ('serviceWorker' in navigator) {
                             </div>
                         </div>
 
-                        <!-- SAFETY & RECURRENT TRAININGS -->
                         <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
                             <div class="border-b-2 border-slate-200 dark:border-slate-800 pb-2">
                                 <span class="text-slate-500 text-[11px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
@@ -688,17 +592,14 @@ if ('serviceWorker' in navigator) {
                             <div id="mab-drills-list" class="flex flex-col"></div>
                         </div>
 
-                        <!-- STACKED DOCUMENT ACTION BAR -->
                         <div id="mab-doc-actions-container" class="flex flex-col gap-2.5 pt-2 pb-4">
                             <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block px-1">Official Document Access</span>
-
                             <button id="mab-view-attestation-btn" type="button" class="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]">
                                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                                 </svg>
                                 <span>View Company Attestation PDF</span>
                             </button>
-
                             <button id="mab-view-qs-btn" type="button" class="w-full h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-extrabold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-not-allowed border border-slate-200 dark:border-slate-700/60" disabled>
                                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -706,7 +607,6 @@ if ('serviceWorker' in navigator) {
                                 <span>View Qualification Slip (QS)</span>
                             </button>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -722,7 +622,6 @@ if ('serviceWorker' in navigator) {
 
             <!-- TARGETED UPDATE 2: RESULT VIEW (Single-Licence Inspection Sheet) -->
             <div id="result-view" class="app-view hidden flex flex-col gap-4">
-                <!-- 2. Verification Notice Card -->
                 <div id="res-reminder" class="p-3 bg-red-500/10 border border-red-500/50 rounded-2xl flex items-start gap-2.5 text-red-600 dark:text-red-400">
                     <svg class="w-4 h-4 text-red-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
@@ -732,7 +631,6 @@ if ('serviceWorker' in navigator) {
                     </p>
                 </div>
 
-                <!-- 3. Master Compliance Status Card -->
                 <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-5 shadow-lg flex flex-col items-center justify-center text-center gap-1.5">
                     <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">Master Compliance Status</span>
                     <h3 id="res-header" class="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wide">Licence Valid</h3>
@@ -742,7 +640,6 @@ if ('serviceWorker' in navigator) {
                     <p id="res-scan-timestamp" class="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-semibold mt-1">Last Checked: --:--</p>
                 </div>
 
-                <!-- 4. Crew Profile & Medical Limitations Card (Unified) -->
                 <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
                     <div class="border-b-2 border-slate-200 dark:border-slate-800 pb-2 flex justify-between items-center">
                         <span class="text-slate-500 text-[11px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
@@ -774,7 +671,6 @@ if ('serviceWorker' in navigator) {
                     </div>
                 </div>
 
-                <!-- 5. CAAM Qualifications Breakdown List -->
                 <div class="bg-white dark:bg-slate-900 shadow-lg rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
                     <div class="border-b border-slate-100 dark:border-slate-800 pb-2 flex justify-between items-center">
                         <span class="text-slate-500 text-[10px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
@@ -787,17 +683,13 @@ if ('serviceWorker' in navigator) {
                     <div id="res-qualifications-list" class="flex flex-col"></div>
                 </div>
 
-                <!-- 6. Bottom Action Footer (Post-Review CTAs) -->
                 <div id="res-actions-footer" class="flex flex-col gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
-                    <!-- Primary CTA: Official Government Source Link -->
                     <button id="res-open-original-btn" type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-3.5 px-4 rounded-2xl transition duration-150 text-xs uppercase tracking-wider shadow-md flex items-center justify-center gap-2 cursor-pointer">
                         <span>View Official CAAM Licence Page</span>
                         <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24">
                             <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm4.28 10.28a.75.75 0 000-1.06l-3-3a.75.75 0 10-1.06 1.06l1.72 1.72H8.25a.75.75 0 000 1.5h5.69l-1.72 1.72a.75.75 0 101.06 1.06l3-3Z" clip-rule="evenodd" />
                         </svg>
                     </button>
-
-                    <!-- Secondary Toolbar Grid -->
                     <div class="grid grid-cols-2 gap-2">
                         <button id="btn-reverify-online" type="button" class="py-2.5 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer">
                             <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -814,6 +706,7 @@ if ('serviceWorker' in navigator) {
                     </div>
                 </div>
             </div>
+
             <!-- STANDALONE HISTORY VIEW (#history-view) -->
             <div id="history-view" class="app-view hidden flex flex-col gap-4">
                 <div id="history-directory" class="bg-white dark:bg-slate-900 shadow-lg rounded-3xl p-4 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
@@ -831,12 +724,14 @@ if ('serviceWorker' in navigator) {
                             </span>
                         </div>
                     </div>
+
                     <div class="relative flex items-center">
                         <input type="text" id="history-search-input" placeholder="Search Pilot Name, CAAM #, Rating..." class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs font-medium">
                         <svg class="w-4 h-4 text-slate-400 absolute left-2.5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                         </svg>
                     </div>
+
                     <div class="grid grid-cols-4 gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-center text-[10px] font-bold">
                         <button id="filter-all-btn" type="button" class="py-1.5 px-1 rounded-lg bg-blue-600 text-white shadow-xs transition-all">
                             All <br>(<span id="count-all">0</span>)
@@ -851,9 +746,11 @@ if ('serviceWorker' in navigator) {
                             Expired <br>(<span id="count-expired">0</span>)
                         </button>
                     </div>
+
                     <div id="history-list" class="flex flex-col">
                         <div class="text-[11px] text-slate-400 italic py-3 text-center">No recent verified crew yet.</div>
                     </div>
+
                     <div id="history-bulk-action-bar" class="hidden sticky bottom-16 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl flex items-center justify-between gap-2 my-2 transition-all">
                         <button id="btn-bulk-select-all" type="button" class="py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 shrink-0">
                             <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -882,7 +779,6 @@ if ('serviceWorker' in navigator) {
 
             <!-- SCANNER VIEW (PILOT SCAN HUB) -->
             <div id="scanner-view" class="app-view hidden flex flex-col gap-4">
-                <!-- 3-Pill Segmented Switcher Header -->
                 <div class="bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl grid grid-cols-3 gap-1 text-center shadow-xs">
                     <button id="tab-camera-btn" type="button" class="py-2 px-1 rounded-xl text-[11px] font-extrabold transition-all bg-blue-600 text-white shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
                         <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -1021,11 +917,9 @@ if ('serviceWorker' in navigator) {
                     </div>
                 </nav>
 
-
                 <!-- =============================================================== -->
                 <!-- CATEGORY A PANE: QUALIFICATIONS & VALIDITY (Date-Centric)        -->
                 <!-- =============================================================== -->
-
                 <div id="cat-pane-qualifications" class="category-pane space-y-3.5" role="tabpanel" aria-labelledby="cat-tab-qualifications">
 
                     <!-- Tier 2 Sub-Tab Pill Strip (Category A) -->
@@ -1036,6 +930,7 @@ if ('serviceWorker' in navigator) {
                             <button id="pill-tool-recurrent" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-card-recurrent')">Recurrent Training</button>
                             <button id="pill-tool-recency" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-card-recency')">Landing Recency</button>
                         </div>
+
                         <!-- Carousel Page Dots -->
                         <div id="page-dots-cat-a" class="flex justify-center items-center gap-1.5 mt-1.5">
                             <span class="page-dot active w-5 h-1.5 rounded-full bg-blue-500 transition-all duration-300"></span>
@@ -1054,66 +949,59 @@ if ('serviceWorker' in navigator) {
 
                                 <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
                                 <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
-
-                                    <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Medical Class 1 / 2</span>
                                         <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-medical')"> ↺ Reset</button>
                                     </div>
 
-                                    <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
                                     <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
-
+                                        <!-- Medical Row 1: Pilot Date of Birth (DOB Trigger) -->
                                         <div>
-                                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Last Medical Exam Date</label>
-                                            <button type="button" id="btn-med-exam-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="openEfbDatePicker('input-med-exam-date', 'MEDICAL EXAM DATE')">
-                                                <span id="input-med-exam-date-display" class="font-sans">SELECT DATE</span>
+                                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Date of Birth</label>
+                                            <button type="button" id="btn-med-dob-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="openEfbDatePicker('input-med-dob', 'DATE OF BIRTH')">
+                                                <span id="input-med-dob-display" class="font-sans">SELECT DOB</span>
                                                 <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                                 </svg>
                                             </button>
-                                            <input type="hidden" id="input-med-exam-date" value="">
+                                            <input type="hidden" id="input-med-dob" value="">
                                         </div>
 
+                                        <!-- Medical Row 2: Examination Date & Current Expiry Anchor Date -->
                                         <div class="grid grid-cols-2 gap-2.5">
                                             <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Licence Type</label>
-                                                <button type="button" id="btn-med-license-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-med-license-type', 'SELECT LICENCE TYPE', [{value:'ATPL', label:'ATPL / CPL'}, {value:'MPL', label:'MPL'}, {value:'PPL', label:'PPL'}])">
-                                                    <span id="btn-med-license-display">ATPL / CPL</span>
-                                                    <span class="text-slate-400 text-[10px]">▼</span>
-                                                </button>
-                                                <input type="hidden" id="input-med-license-type" value="ATPL">
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Date of Birth</label>
-                                                <button type="button" id="btn-med-dob-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbDatePicker('input-med-dob', 'DATE OF BIRTH')">
-                                                    <span id="input-med-dob-display" class="font-sans">SELECT DOB</span>
+                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Examination Date</label>
+                                                <button type="button" id="btn-med-exam-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="openEfbDatePicker('input-med-exam-date', 'MEDICAL EXAM DATE')">
+                                                    <span id="input-med-exam-date-display" class="font-sans">SELECT DATE</span>
                                                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                                     </svg>
-
                                                 </button>
-                                                <input type="hidden" id="input-med-dob" value="">
+                                                <input type="hidden" id="input-med-exam-date" value="">
+                                            </div>
 
+                                            <div>
+                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Current Expiry Date</label>
+                                                <button type="button" id="btn-med-current-expiry-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="openEfbDatePicker('input-med-current-expiry', 'CURRENT EXPIRY DATE')">
+                                                    <span id="input-med-current-expiry-display" class="font-sans">SELECT EXPIRY</span>
+                                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                    </svg>
+                                                </button>
+                                                <input type="hidden" id="input-med-current-expiry" value="">
                                             </div>
                                         </div>
-
-
 
                                         <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Calculates medical renewal expiry and dame re-exam window based on CAAM CAD 1 Personnel Licensing and OM-A 5.1.4 regulations.</p>
                                     </div>
 
-                                    <!-- SLOT 4: ACTION FOOTER CTA -->
                                     <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
                                         <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('medical')">Check</button>
                                     </div>
-
                                 </div>
 
                                 <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
                                 <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-start">
-
-                                    <!-- SLOT 1: DYNAMIC HERO CARD (Solid State Background) -->
                                     <div id="output-slot-1-hero-medical" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
                                         <div class="flex items-center justify-between pb-1 shrink-0">
                                             <span id="output-hero-title-medical" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">NEW MEDICAL EXPIRY</span>
@@ -1122,7 +1010,6 @@ if ('serviceWorker' in navigator) {
                                         <p id="output-hero-subtitle-medical" class="text-2xl font-black text-white tracking-tight leading-none mt-1">31 OCT 2026</p>
                                     </div>
 
-                                    <!-- SLOT 2: TARGET ACTION CLOCK & CONSTRAINED BUDGET -->
                                     <div id="output-slot-2-clock-medical" class="p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                                         <div>
                                             <span id="output-clock-label-medical" class="block text-[10px] font-bold text-slate-500 dark:text-slate-100 uppercase tracking-wider">45-DAYS RENEWAL WINDOW</span>
@@ -1130,14 +1017,13 @@ if ('serviceWorker' in navigator) {
                                         </div>
                                     </div>
 
-                                    <!-- SLOT 3: STACKED 2-LINE BREAKDOWN GRID -->
                                     <div id="output-slot-3-grid-medical" class="p-3.5 bg-white dark:bg-slate-900/50 grid grid-cols-1 gap-3">
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
-                                            <span id="grid-label-1-medical" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">AGE</span>
+                                            <span id="grid-label-1-medical" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">AGE AT EXAM</span>
                                             <span id="grid-value-1-medical" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
                                         </div>
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
-                                            <span id="grid-label-2-medical" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">VALIDITY</span>
+                                            <span id="grid-label-2-medical" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">VALIDITY DURATION</span>
                                             <span id="grid-value-2-medical" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
                                         </div>
                                         <div class="flex items-center justify-between text-xs py-1">
@@ -1146,35 +1032,26 @@ if ('serviceWorker' in navigator) {
                                         </div>
                                     </div>
 
-                                    <!-- SLOT 4: REGULATORY AUDIT & ACTION CTAs -->
                                     <div id="output-slot-4-audit-medical" class="p-3.5 bg-white dark:bg-slate-900/50 space-y-3 border-t border-slate-100 dark:border-slate-800">
                                         <div class="flex items-start gap-2">
                                             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0">AUDIT:</span>
                                             <p id="output-audit-text-medical" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1 PEL Section 1.2.5.2 & OM-A 5.1.4.4. Compliant.</p>
                                         </div>
                                     </div>
-
                                 </div>
-
                             </div>
                         </div>
 
                         <!-- TOOL CARD: PPC / LPC DUAL-WINDOW -->
                         <div id="tool-card-ppc" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
                             <div id="card-3d-inner-ppc" class="card-3d-inner w-full h-full relative transform-style-3d">
-
-                                <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
                                 <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
-
-                                    <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">PPC / LPC Dual-Window</span>
                                         <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-ppc')"> ↺ Reset</button>
                                     </div>
 
-                                    <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
                                     <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
-
                                         <div>
                                             <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Check Conduct Date</label>
                                             <button type="button" id="btn-ppc-conduct-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbDatePicker('input-ppc-conduct-date', 'CHECK CONDUCT DATE')">
@@ -1197,22 +1074,15 @@ if ('serviceWorker' in navigator) {
                                             <input type="hidden" id="input-ppc-expiry-date" value="">
                                         </div>
 
-
-
                                         <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Evaluates 3-month lookback revalidation window and validity preservation rules for PPC / LPC under CAAM CAD 6.9.4.4 and OM-A 5.1.4.6.</p>
                                     </div>
 
-                                    <!-- SLOT 4: ACTION FOOTER CTA -->
                                     <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
                                         <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('ppc')">Check</button>
                                     </div>
-
                                 </div>
 
-                                <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
                                 <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-start">
-
-                                    <!-- SLOT 1: DYNAMIC HERO CARD (Solid State Background) -->
                                     <div id="output-slot-1-hero-ppc" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
                                         <div class="flex items-center justify-between pb-1 shrink-0">
                                             <span id="output-hero-title-ppc" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">NEW PPC / LPC EXPIRY</span>
@@ -1221,7 +1091,6 @@ if ('serviceWorker' in navigator) {
                                         <p id="output-hero-subtitle-ppc" class="text-2xl font-black text-white tracking-tight leading-none mt-1">31 JUL 2027</p>
                                     </div>
 
-                                    <!-- SLOT 2: TARGET ACTION CLOCK & CONSTRAINED BUDGET -->
                                     <div id="output-slot-2-clock-ppc" class="p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                                         <div>
                                             <span id="output-clock-label-ppc" class="block text-[10px] font-bold text-slate-500 dark:text-slate-100 uppercase tracking-wider">Target Window / Deadline:</span>
@@ -1229,7 +1098,6 @@ if ('serviceWorker' in navigator) {
                                         </div>
                                     </div>
 
-                                    <!-- SLOT 3: STACKED 2-LINE BREAKDOWN GRID -->
                                     <div id="output-slot-3-grid-ppc" class="p-3.5 bg-white dark:bg-slate-900/50 grid grid-cols-1 gap-3">
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-1-ppc" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">REVALIDATION RULE</span>
@@ -1245,35 +1113,26 @@ if ('serviceWorker' in navigator) {
                                         </div>
                                     </div>
 
-                                    <!-- SLOT 4: REGULATORY AUDIT & ACTION CTAs -->
                                     <div id="output-slot-4-audit-ppc" class="p-3.5 bg-white dark:bg-slate-900/50 space-y-3 border-t border-slate-100 dark:border-slate-800">
                                         <div class="flex items-start gap-2">
                                             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0">AUDIT:</span>
                                             <p id="output-audit-text-ppc" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 6.9.4.4, CAD 1 PEL 2.1.5.10 & OM-A 5.1.4.6. Compliant.</p>
                                         </div>
                                     </div>
-
                                 </div>
-
                             </div>
                         </div>
 
                         <!-- TOOL CARD: RECURRENT TRAINING -->
                         <div id="tool-card-recurrent" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
                             <div id="card-3d-inner-recurrent" class="card-3d-inner w-full h-full relative transform-style-3d">
-
-                                <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
                                 <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
-
-                                    <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Recurrent Training</span>
                                         <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-recurrent')"> ↺ Reset</button>
                                     </div>
 
-                                    <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
                                     <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
-
                                         <div>
                                             <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Qualification Course</label>
                                             <button type="button" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openRecurrentCourseModal()">
@@ -1293,22 +1152,15 @@ if ('serviceWorker' in navigator) {
                                             <input type="hidden" id="input-recurrent-conduct-date" value="">
                                         </div>
 
-
-
                                         <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Tracks validity and lookback renewal windows across all recurrent training modules under OM-D Chapter 2 standards.</p>
                                     </div>
 
-                                    <!-- SLOT 4: ACTION FOOTER CTA -->
                                     <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
                                         <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('recurrent')">Check</button>
                                     </div>
-
                                 </div>
 
-                                <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
                                 <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-start">
-
-                                    <!-- SLOT 1: DYNAMIC HERO CARD (Solid State Background) -->
                                     <div id="output-slot-1-hero-recurrent" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
                                         <div class="flex items-center justify-between pb-1 shrink-0">
                                             <span id="output-hero-title-recurrent" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">RECURRENT EXPIRY DATE</span>
@@ -1317,7 +1169,6 @@ if ('serviceWorker' in navigator) {
                                         <p id="output-hero-subtitle-recurrent" class="text-2xl font-black text-white tracking-tight leading-none mt-1">31 DEC 2026</p>
                                     </div>
 
-                                    <!-- SLOT 2: TARGET ACTION CLOCK & CONSTRAINED BUDGET -->
                                     <div id="output-slot-2-clock-recurrent" class="p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                                         <div>
                                             <span id="output-clock-label-recurrent" class="block text-[10px] font-bold text-slate-500 dark:text-slate-100 uppercase tracking-wider">Qualification Module:</span>
@@ -1325,7 +1176,6 @@ if ('serviceWorker' in navigator) {
                                         </div>
                                     </div>
 
-                                    <!-- SLOT 3: STACKED 2-LINE BREAKDOWN GRID -->
                                     <div id="output-slot-3-grid-recurrent" class="p-3.5 bg-white dark:bg-slate-900/50 grid grid-cols-1 gap-3">
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-1-recurrent" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">MODULE CATEGORY</span>
@@ -1341,35 +1191,26 @@ if ('serviceWorker' in navigator) {
                                         </div>
                                     </div>
 
-                                    <!-- SLOT 4: REGULATORY AUDIT & ACTION CTAs -->
                                     <div id="output-slot-4-audit-recurrent" class="p-3.5 bg-white dark:bg-slate-900/50 space-y-3 border-t border-slate-100 dark:border-slate-800">
                                         <div class="flex items-start gap-2">
                                             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0">AUDIT:</span>
                                             <p id="output-audit-text-recurrent" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 6.9.4 & OM-D Chapter 2 Recurrent Standards. Compliant.</p>
                                         </div>
                                     </div>
-
                                 </div>
-
                             </div>
                         </div>
 
                         <!-- TOOL CARD: LANDING RECENCY (90-DAY) -->
                         <div id="tool-card-recency" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
                             <div id="card-3d-inner-recency" class="card-3d-inner w-full h-full relative transform-style-3d">
-
-                                <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
                                 <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
-
-                                    <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Landing Recency (90-Day)</span>
                                         <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-recency')"> ↺ Reset</button>
                                     </div>
 
-                                    <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
                                     <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
-
                                         <div class="grid grid-cols-2 gap-2">
                                             <div>
                                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Capacity</label>
@@ -1379,6 +1220,7 @@ if ('serviceWorker' in navigator) {
                                                 </button>
                                                 <input type="hidden" id="input-recency-capacity" value="PIC">
                                             </div>
+
                                             <div>
                                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Proposed Flight Date</label>
                                                 <button type="button" id="btn-recency-flight-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbDatePicker('input-recency-flight-date', 'PROPOSED FLIGHT DATE')">
@@ -1399,6 +1241,7 @@ if ('serviceWorker' in navigator) {
                                                 </button>
                                                 <input type="hidden" id="input-recency-l1-date" value="">
                                             </div>
+
                                             <div class="flex flex-col justify-between">
                                                 <label class="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-1 h-7 flex items-end">Landing 2</label>
                                                 <button type="button" id="btn-recency-l2-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-lg p-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-100 text-center cursor-pointer" onclick="openEfbDatePicker('input-recency-l2-date', 'LANDING #2 DATE')">
@@ -1406,6 +1249,7 @@ if ('serviceWorker' in navigator) {
                                                 </button>
                                                 <input type="hidden" id="input-recency-l2-date" value="">
                                             </div>
+
                                             <div class="flex flex-col justify-between">
                                                 <label class="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-1 h-7 flex items-end leading-tight">Landing 3 (Anchor)</label>
                                                 <button type="button" id="btn-recency-l3-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-lg p-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-100 text-center cursor-pointer" onclick="openEfbDatePicker('input-recency-l3-date', 'LANDING #3 ANCHOR DATE')">
@@ -1418,17 +1262,12 @@ if ('serviceWorker' in navigator) {
                                         <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Verifies 90-day landing currency for passenger carriage compliance under CAAM CAD 1 and OM-A 7.1 regulations.</p>
                                     </div>
 
-                                    <!-- SLOT 4: ACTION FOOTER CTA -->
                                     <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
                                         <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('recency')">Check</button>
                                     </div>
-
                                 </div>
 
-                                <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
                                 <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-start">
-
-                                    <!-- SLOT 1: DYNAMIC HERO CARD (Solid State Background) -->
                                     <div id="output-slot-1-hero-recency" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
                                         <div class="flex items-center justify-between pb-1 shrink-0">
                                             <span id="output-hero-title-recency" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">LANDING RECENCY STATUS</span>
@@ -1437,7 +1276,6 @@ if ('serviceWorker' in navigator) {
                                         <p id="output-hero-subtitle-recency" class="text-2xl font-black text-white tracking-tight leading-none mt-1">3 / 3 LANDINGS MET</p>
                                     </div>
 
-                                    <!-- SLOT 2: TARGET ACTION CLOCK & CONSTRAINED BUDGET -->
                                     <div id="output-slot-2-clock-recency" class="p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                                         <div>
                                             <span id="output-clock-label-recency" class="block text-[10px] font-bold text-slate-500 dark:text-slate-100 uppercase tracking-wider">Target Window / Deadline:</span>
@@ -1445,7 +1283,6 @@ if ('serviceWorker' in navigator) {
                                         </div>
                                     </div>
 
-                                    <!-- SLOT 3: STACKED 2-LINE BREAKDOWN GRID -->
                                     <div id="output-slot-3-grid-recency" class="p-3.5 bg-white dark:bg-slate-900/50 grid grid-cols-1 gap-3">
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-1-recency" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">DAY LANDINGS</span>
@@ -1461,14 +1298,12 @@ if ('serviceWorker' in navigator) {
                                         </div>
                                     </div>
 
-                                    <!-- SLOT 4: REGULATORY AUDIT & ACTION CTAs -->
                                     <div id="output-slot-4-audit-recency" class="p-3.5 bg-white dark:bg-slate-900/50 space-y-3 border-t border-slate-100 dark:border-slate-800">
                                         <div class="flex items-start gap-2">
                                             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0">AUDIT:</span>
                                             <p id="output-audit-text-recency" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1 Section 2.1.5.2 & OM-A 5.1.2. Compliant.</p>
                                         </div>
                                     </div>
-
                                 </div>
                             </div>
                         </div>
@@ -1478,7 +1313,6 @@ if ('serviceWorker' in navigator) {
                 <!-- =============================================================== -->
                 <!-- CATEGORY B PANE: DUTY & REST LIMITS (Time-Centric)             -->
                 <!-- =============================================================== -->
-
                 <div id="cat-pane-dutyrest" class="category-pane hidden space-y-3.5" role="tabpanel" aria-labelledby="cat-tab-dutyrest">
 
                     <!-- Tier 2 Sub-Tab Pill Strip (Category B) -->
@@ -1489,6 +1323,7 @@ if ('serviceWorker' in navigator) {
                             <button id="pill-tool-preflight" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-card-preflight')">Pre-Flight Rest</button>
                             <button id="pill-tool-cumulative" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-card-cumulative')">Cumulative Hours</button>
                         </div>
+
                         <!-- Carousel Page Dots -->
                         <div id="page-dots-cat-b" class="flex justify-center items-center gap-1.5 mt-1.5">
                             <span class="page-dot active w-5 h-1.5 rounded-full bg-blue-500 transition-all duration-300"></span>
@@ -1504,19 +1339,13 @@ if ('serviceWorker' in navigator) {
                         <!-- TOOL CARD: STANDBY CALL-OUT -->
                         <div id="tool-card-standby" class="tool-card active tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
                             <div id="card-3d-inner-standby" class="card-3d-inner w-full h-full relative transform-style-3d">
-
-                                <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
                                 <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
-
-                                    <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Standby Call-Out</span>
                                         <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-standby')"> ↺ Reset</button>
                                     </div>
 
-                                    <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
                                     <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
-
                                         <div>
                                             <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Standby Location</label>
                                             <div class="grid grid-cols-2 gap-2">
@@ -1536,6 +1365,7 @@ if ('serviceWorker' in navigator) {
                                                 </button>
                                                 <input type="hidden" id="input-standby-start-time" value="08:00">
                                             </div>
+
                                             <div>
                                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Call-Out / Report Time</label>
                                                 <button type="button" id="btn-standby-report-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-standby-report-time', 'CALL-OUT REPORT TIME')">
@@ -1548,22 +1378,15 @@ if ('serviceWorker' in navigator) {
                                             </div>
                                         </div>
 
-
-
                                         <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Calculates net FDP deductions for Case A and Case B standby call-outs based on CAAM CAD 1901 Section 2.11.</p>
                                     </div>
 
-                                    <!-- SLOT 4: ACTION FOOTER CTA -->
                                     <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
                                         <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('standby')">Check</button>
                                     </div>
-
                                 </div>
 
-                                <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
                                 <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-start">
-
-                                    <!-- SLOT 1: DYNAMIC HERO CARD (Solid State Background) -->
                                     <div id="output-slot-1-hero-standby" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
                                         <div class="flex items-center justify-between pb-1 shrink-0">
                                             <span id="output-hero-title-standby" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">NET PERMISSIBLE FDP</span>
@@ -1572,7 +1395,6 @@ if ('serviceWorker' in navigator) {
                                         <p id="output-hero-subtitle-standby" class="text-2xl font-black text-white tracking-tight leading-none mt-1">13:00 HOURS</p>
                                     </div>
 
-                                    <!-- SLOT 2: TARGET ACTION CLOCK & CONSTRAINED BUDGET -->
                                     <div id="output-slot-2-clock-standby" class="p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                                         <div>
                                             <span id="output-clock-label-standby" class="block text-[10px] font-bold text-slate-500 dark:text-slate-100 uppercase tracking-wider">Latest On-Chocks Cutoff:</span>
@@ -1580,7 +1402,6 @@ if ('serviceWorker' in navigator) {
                                         </div>
                                     </div>
 
-                                    <!-- SLOT 3: STACKED 2-LINE BREAKDOWN GRID -->
                                     <div id="output-slot-3-grid-standby" class="p-3.5 bg-white dark:bg-slate-900/50 grid grid-cols-1 gap-3">
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-1-standby" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">STANDBY DURATION</span>
@@ -1596,35 +1417,26 @@ if ('serviceWorker' in navigator) {
                                         </div>
                                     </div>
 
-                                    <!-- SLOT 4: REGULATORY AUDIT & ACTION CTAs -->
                                     <div id="output-slot-4-audit-standby" class="p-3.5 bg-white dark:bg-slate-900/50 space-y-3 border-t border-slate-100 dark:border-slate-800">
                                         <div class="flex items-start gap-2">
                                             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0">AUDIT:</span>
                                             <p id="output-audit-text-standby" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Section 2.11 Standby FDP Adjustments. Compliant.</p>
                                         </div>
                                     </div>
-
                                 </div>
-
                             </div>
                         </div>
 
                         <!-- TOOL CARD: MAX ALLOWABLE FDP -->
                         <div id="tool-card-maxfdp" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
                             <div id="card-3d-inner-max-fdp" class="card-3d-inner w-full h-full relative transform-style-3d">
-
-                                <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
                                 <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
-
-                                    <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Max Allowable FDP</span>
                                         <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-maxfdp')"> ↺ Reset</button>
                                     </div>
 
-                                    <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
                                     <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
-
                                         <div class="grid grid-cols-2 gap-2">
                                             <div>
                                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Report Time</label>
@@ -1636,6 +1448,7 @@ if ('serviceWorker' in navigator) {
                                                 </button>
                                                 <input type="hidden" id="input-maxfdp-report-time" value="06:00">
                                             </div>
+
                                             <div>
                                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Sectors Planned</label>
                                                 <button type="button" id="btn-maxfdp-sectors-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbNumberPicker('input-maxfdp-sectors', 'SECTORS PLANNED', 1, 8)">
@@ -1649,12 +1462,13 @@ if ('serviceWorker' in navigator) {
                                         <div class="grid grid-cols-2 gap-2">
                                             <div>
                                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Acclimatisation</label>
-                                                <button type="button" id="btn-maxfdp-acclim-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-maxfdp-acclimatised', 'ACCLIMATISATION STATUS', [{value:'true', label:'Acclimatised (Table A/B)'}, {value:'false', label:'Unknown / Unacclimatised'}])">
+                                                <button type="button" id="btn-maxfdp-acclim-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-maxfdp-acclimatised', 'ACCLIMATISATION STATE', [{value:'true', label:'Acclimatised'}, {value:'false', label:'Unacclimatised'}])">
                                                     <span id="btn-maxfdp-acclim-display">Acclimatised</span>
                                                     <span class="text-slate-400 text-[10px]">▼</span>
                                                 </button>
                                                 <input type="hidden" id="input-maxfdp-acclimatised" value="true">
                                             </div>
+
                                             <div>
                                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">In-Flight Relief</label>
                                                 <button type="button" id="btn-maxfdp-relief-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-maxfdp-relief', 'IN-FLIGHT RELIEF', [{value:'NONE', label:'None (Unaugmented)'}, {value:'CLASS_1_BUNK', label:'Class 1 Bunk'}, {value:'CLASS_2_SEAT', label:'Class 2 Seat'}])">
@@ -1668,17 +1482,12 @@ if ('serviceWorker' in navigator) {
                                         <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Calculates maximum allowable FDP and on-chocks cutoff times based on CAAM CAD 1901 Table A/B limits and sector configurations.</p>
                                     </div>
 
-                                    <!-- SLOT 4: ACTION FOOTER CTA -->
                                     <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
                                         <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('max-fdp')">Check</button>
                                     </div>
-
                                 </div>
 
-                                <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
                                 <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-start">
-
-                                    <!-- SLOT 1: DYNAMIC HERO CARD (Solid State Background) -->
                                     <div id="output-slot-1-hero-maxfdp" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
                                         <div class="flex items-center justify-between pb-1 shrink-0">
                                             <span id="output-hero-title-maxfdp" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">MAX ALLOWABLE FDP</span>
@@ -1687,7 +1496,6 @@ if ('serviceWorker' in navigator) {
                                         <p id="output-hero-subtitle-maxfdp" class="text-2xl font-black text-white tracking-tight leading-none mt-1">13:00 HOURS</p>
                                     </div>
 
-                                    <!-- SLOT 2: TARGET ACTION CLOCK & CONSTRAINED BUDGET -->
                                     <div id="output-slot-2-clock-maxfdp" class="p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                                         <div>
                                             <span id="output-clock-label-maxfdp" class="block text-[10px] font-bold text-slate-500 dark:text-slate-100 uppercase tracking-wider">On-Chocks Cutoff Time:</span>
@@ -1695,7 +1503,6 @@ if ('serviceWorker' in navigator) {
                                         </div>
                                     </div>
 
-                                    <!-- SLOT 3: STACKED 2-LINE BREAKDOWN GRID -->
                                     <div id="output-slot-3-grid-maxfdp" class="p-3.5 bg-white dark:bg-slate-900/50 grid grid-cols-1 gap-3">
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-1-maxfdp" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">BASE ALLOWABLE FDP</span>
@@ -1711,35 +1518,26 @@ if ('serviceWorker' in navigator) {
                                         </div>
                                     </div>
 
-                                    <!-- SLOT 4: REGULATORY AUDIT & ACTION CTAs -->
                                     <div id="output-slot-4-audit-maxfdp" class="p-3.5 bg-white dark:bg-slate-900/50 space-y-3 border-t border-slate-100 dark:border-slate-800">
                                         <div class="flex items-start gap-2">
                                             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0">AUDIT:</span>
                                             <p id="output-audit-text-maxfdp" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Table A/B & OM-A Section 7.5. Compliant.</p>
                                         </div>
                                     </div>
-
                                 </div>
-
                             </div>
                         </div>
 
                         <!-- TOOL CARD: PRE-FLIGHT REST -->
                         <div id="tool-card-preflight" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
                             <div id="card-3d-inner-pre-flight-rest" class="card-3d-inner w-full h-full relative transform-style-3d">
-
-                                <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
                                 <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
-
-                                    <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Pre-Flight Rest</span>
                                         <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-preflight')"> ↺ Reset</button>
                                     </div>
 
-                                    <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
                                     <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
-
                                         <div class="grid grid-cols-2 gap-2">
                                             <div>
                                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Preceding Duty</label>
@@ -1749,6 +1547,7 @@ if ('serviceWorker' in navigator) {
                                                 </button>
                                                 <input type="hidden" id="input-preflight-duty-hours" value="10">
                                             </div>
+
                                             <div>
                                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Duty Location</label>
                                                 <button type="button" id="btn-preflight-loc-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-preflight-location', 'DUTY LOCATION', [{value:'HOME', label:'Home Base (12h Min Rest)'}, {value:'OUTSTATION', label:'Outstation Layover'}])">
@@ -1759,22 +1558,15 @@ if ('serviceWorker' in navigator) {
                                             </div>
                                         </div>
 
-
-
                                         <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Calculates mandatory minimum rest periods and outstation additions under CAAM CAD 1901 Section 2.14 and OM-A 7.5.12.</p>
                                     </div>
 
-                                    <!-- SLOT 4: ACTION FOOTER CTA -->
                                     <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
                                         <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('pre-flight-rest')">Check</button>
                                     </div>
-
                                 </div>
 
-                                <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
                                 <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-start">
-
-                                    <!-- SLOT 1: DYNAMIC HERO CARD (Solid State Background) -->
                                     <div id="output-slot-1-hero-preflight" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
                                         <div class="flex items-center justify-between pb-1 shrink-0">
                                             <span id="output-hero-title-preflight" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">PRE-FLIGHT MINIMUM REST</span>
@@ -1783,7 +1575,6 @@ if ('serviceWorker' in navigator) {
                                         <p id="output-hero-subtitle-preflight" class="text-2xl font-black text-white tracking-tight leading-none mt-1">12:00 HOURS</p>
                                     </div>
 
-                                    <!-- SLOT 2: TARGET ACTION CLOCK & CONSTRAINED BUDGET -->
                                     <div id="output-slot-2-clock-preflight" class="p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                                         <div>
                                             <span id="output-clock-label-preflight" class="block text-[10px] font-bold text-slate-500 dark:text-slate-100 uppercase tracking-wider">Earliest Available Report:</span>
@@ -1791,7 +1582,6 @@ if ('serviceWorker' in navigator) {
                                         </div>
                                     </div>
 
-                                    <!-- SLOT 3: STACKED 2-LINE BREAKDOWN GRID -->
                                     <div id="output-slot-3-grid-preflight" class="p-3.5 bg-white dark:bg-slate-900/50 grid grid-cols-1 gap-3">
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-1-preflight" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">PRECEDING DUTY</span>
@@ -1807,35 +1597,26 @@ if ('serviceWorker' in navigator) {
                                         </div>
                                     </div>
 
-                                    <!-- SLOT 4: REGULATORY AUDIT & ACTION CTAs -->
                                     <div id="output-slot-4-audit-preflight" class="p-3.5 bg-white dark:bg-slate-900/50 space-y-3 border-t border-slate-100 dark:border-slate-800">
                                         <div class="flex items-start gap-2">
                                             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0">AUDIT:</span>
                                             <p id="output-audit-text-preflight" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Section 2.14 & OM-A Section 7.5.12. Compliant.</p>
                                         </div>
                                     </div>
-
                                 </div>
-
                             </div>
                         </div>
 
                         <!-- TOOL CARD: CUMULATIVE HOURS -->
                         <div id="tool-card-cumulative" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
                             <div id="card-3d-inner-cumulative" class="card-3d-inner w-full h-full relative transform-style-3d">
-
-                                <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
                                 <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
-
-                                    <!-- SLOT 1: MINIMAL HEADER BANNER (NO BADGES) -->
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Cumulative Hours</span>
                                         <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-cumulative')"> ↺ Reset</button>
                                     </div>
 
-                                    <!-- SLOT 2 & 3: FLEXIBLE INPUTS & FILLER HINT TEXT -->
                                     <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
-
                                         <div class="grid grid-cols-2 gap-2">
                                             <div>
                                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">7-Day Duty</label>
@@ -1847,6 +1628,7 @@ if ('serviceWorker' in navigator) {
                                                 </button>
                                                 <input type="hidden" id="input-cum-duty-7d" value="32:15">
                                             </div>
+
                                             <div>
                                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">14-Day Duty</label>
                                                 <button type="button" id="btn-cum-14d-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-cum-duty-14d', '14-DAY DUTY HOURS')">
@@ -1870,6 +1652,7 @@ if ('serviceWorker' in navigator) {
                                                 </button>
                                                 <input type="hidden" id="input-cum-duty-28d" value="120:00">
                                             </div>
+
                                             <div>
                                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">28-Day Flight</label>
                                                 <button type="button" id="btn-cum-flt28d-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-cum-flight-28d', '28-DAY FLIGHT HOURS')">
@@ -1885,17 +1668,12 @@ if ('serviceWorker' in navigator) {
                                         <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Monitors rolling 7-day, 14-day, 28-day, and annual flight and duty limits against CAAM CAD 1901 regulations.</p>
                                     </div>
 
-                                    <!-- SLOT 4: ACTION FOOTER CTA -->
                                     <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
                                         <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('cumulative')">Check</button>
                                     </div>
-
                                 </div>
 
-                                <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
                                 <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-start">
-
-                                    <!-- SLOT 1: DYNAMIC HERO CARD (Solid State Background) -->
                                     <div id="output-slot-1-hero-cumulative" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
                                         <div class="flex items-center justify-between pb-1 shrink-0">
                                             <span id="output-hero-title-cumulative" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">7-DAY CUMULATIVE DUTY</span>
@@ -1904,7 +1682,6 @@ if ('serviceWorker' in navigator) {
                                         <p id="output-hero-subtitle-cumulative" class="text-2xl font-black text-white tracking-tight leading-none mt-1">32:15 / 55:00</p>
                                     </div>
 
-                                    <!-- SLOT 2: TARGET ACTION CLOCK & CONSTRAINED BUDGET -->
                                     <div id="output-slot-2-clock-cumulative" class="p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                                         <div>
                                             <span id="output-clock-label-cumulative" class="block text-[10px] font-bold text-slate-500 dark:text-slate-100 uppercase tracking-wider">7-Day Rolling Duty Budget:</span>
@@ -1912,7 +1689,6 @@ if ('serviceWorker' in navigator) {
                                         </div>
                                     </div>
 
-                                    <!-- SLOT 3: STACKED 2-LINE BREAKDOWN GRID -->
                                     <div id="output-slot-3-grid-cumulative" class="p-3.5 bg-white dark:bg-slate-900/50 grid grid-cols-1 gap-3">
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
                                             <span id="grid-label-1-cumulative" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">14-DAY DUTY (CAP 95H)</span>
@@ -1928,18 +1704,19 @@ if ('serviceWorker' in navigator) {
                                         </div>
                                     </div>
 
-                                    <!-- SLOT 4: REGULATORY AUDIT & ACTION CTAs -->
                                     <div id="output-slot-4-audit-cumulative" class="p-3.5 bg-white dark:bg-slate-900/50 space-y-3 border-t border-slate-100 dark:border-slate-800">
                                         <div class="flex items-start gap-2">
                                             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0">AUDIT:</span>
                                             <p id="output-audit-text-cumulative" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Rolling Flight & Duty Time Caps. Compliant.</p>
                                         </div>
                                     </div>
-
                                 </div>
-
                             </div>
+                        </div>
 
+                    </div>
+                </div>
+            </div>
         </main>
 
         <!-- Footer -->
@@ -1952,11 +1729,10 @@ if ('serviceWorker' in navigator) {
     <!-- ================================================================= -->
     <!-- MODAL OVERLAYS & DRAWERS                                          -->
     <!-- ================================================================= -->
-    <!-- ================================================================= -->
+
+    <!-- RECURRENT COURSE SELECTOR MODAL -->
     <div id="recurrent-course-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 select-none">
         <div class="w-11/12 max-w-[340px] mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-h-[75vh] my-auto flex flex-col overflow-hidden shadow-2xl">
-
-            <!-- Modal Header -->
             <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-900/90">
                 <div>
                     <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">QUALIFICATION SELECTOR</span>
@@ -1964,8 +1740,8 @@ if ('serviceWorker' in navigator) {
                 </div>
             </div>
 
-            <!-- Grouped Module List Container -->
             <div class="p-3.5 overflow-y-auto space-y-4 flex-1 text-xs text-slate-700 dark:text-slate-300 no-scrollbar">
+
                 <!-- GROUP 1: ANNUAL (12 CALENDAR MONTHS) -->
                 <div class="recurrent-group-block space-y-2">
                     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
@@ -1973,7 +1749,6 @@ if ('serviceWorker' in navigator) {
                         <span class="text-[9px] font-bold text-blue-600 dark:text-blue-400">6 Modules</span>
                     </div>
                     <div class="grid grid-cols-1 gap-1.5">
-
                         <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('LINE_CHECK', 'Line Check (LC)', 'Annual (12 Calendar Months)')">
                             <span class="font-bold text-slate-800 dark:text-slate-100">Line Check (LC)</span>
                             <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30">12m</span>
@@ -1999,11 +1774,10 @@ if ('serviceWorker' in navigator) {
                             <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30">12m</span>
                         </button>
 
-                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('ROUTE_AERODROME_COMPETENCE', 'Route &amp; A/D', 'Annual (12 Calendar Months)')">
+                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('ROUTE_AERODROME_COMPETENCE', 'Route & A/D', 'Annual (12 Calendar Months)')">
                             <span class="font-bold text-slate-800 dark:text-slate-100">Route &amp; A/D</span>
                             <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30">12m</span>
                         </button>
-
                     </div>
                 </div>
 
@@ -2014,12 +1788,10 @@ if ('serviceWorker' in navigator) {
                         <span class="text-[9px] font-bold text-purple-600 dark:text-purple-400">1 Module</span>
                     </div>
                     <div class="grid grid-cols-1 gap-1.5">
-
                         <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-purple-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-purple-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('DGR_FUNCTION_7', 'DGR (Func 7)', 'Bi-Annual (24 Calendar Months)')">
                             <span class="font-bold text-slate-800 dark:text-slate-100">DGR (Func 7)</span>
                             <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/30">24m</span>
                         </button>
-
                     </div>
                 </div>
 
@@ -2030,7 +1802,6 @@ if ('serviceWorker' in navigator) {
                         <span class="text-[9px] font-bold text-amber-600 dark:text-amber-400">3 Modules</span>
                     </div>
                     <div class="grid grid-cols-1 gap-1.5">
-
                         <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-amber-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('FIRE_SMOKE_DRILL', 'Fire Drill', 'Triennial (36 Calendar Months)')">
                             <span class="font-bold text-slate-800 dark:text-slate-100">Fire Drill</span>
                             <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">36m</span>
@@ -2045,7 +1816,6 @@ if ('serviceWorker' in navigator) {
                             <span class="font-bold text-slate-800 dark:text-slate-100">Wet / Dinghy</span>
                             <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">36m</span>
                         </button>
-
                     </div>
                 </div>
 
@@ -2056,30 +1826,24 @@ if ('serviceWorker' in navigator) {
                         <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">1 Module</span>
                     </div>
                     <div class="grid grid-cols-1 gap-1.5">
-
                         <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-emerald-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('LVO_AUTOLAND', 'LVO / Autoland', 'Semi-Annual (180-Day Rolling)')">
                             <span class="font-bold text-slate-800 dark:text-slate-100">LVO / Autoland</span>
                             <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30">180d</span>
                         </button>
-
                     </div>
                 </div>
 
             </div>
 
-            <!-- Modal Footer Actions -->
             <div class="p-2.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 flex items-center justify-end">
                 <button type="button" class="py-1.5 px-4 rounded-xl text-xs font-bold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 transition-all cursor-pointer" onclick="closeRecurrentCourseModal()">Cancel</button>
             </div>
-
         </div>
     </div>
 
-    <!-- ================================================================= -->
+    <!-- EFB DATE PICKER MODAL -->
     <div id="efb-date-picker-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 select-none">
         <div class="w-11/12 max-w-[320px] mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl my-auto flex flex-col overflow-hidden">
-
-            <!-- Modal Header -->
             <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/90">
                 <div>
                     <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">EFB DATE PICKER</span>
@@ -2087,7 +1851,6 @@ if ('serviceWorker' in navigator) {
                 </div>
             </div>
 
-            <!-- Embedded Preset Pills -->
             <div class="p-2.5 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/40 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
                 <button type="button" class="py-1 px-2.5 rounded-lg text-[10px] font-bold bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30 hover:bg-blue-500/20 transition-all shrink-0 cursor-pointer" onclick="setEfbDatePreset('today')">Today</button>
                 <button type="button" class="py-1 px-2.5 rounded-lg text-[10px] font-bold bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition-all shrink-0 cursor-pointer" onclick="setEfbDatePreset('eom')">End of Month</button>
@@ -2095,30 +1858,22 @@ if ('serviceWorker' in navigator) {
                 <button type="button" class="py-1 px-2.5 rounded-lg text-[10px] font-bold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-300 transition-all shrink-0 cursor-pointer" onclick="setEfbDatePreset('-1y')">-1 Year</button>
             </div>
 
-            <!-- Month & Year Navigation Header -->
             <div class="p-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
                 <button type="button" class="py-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold transition-all cursor-pointer" onclick="changeEfbMonth(-1)">◄ Prev</button>
                 <span id="efb-calendar-month-label" class="text-xs font-extrabold text-slate-800 dark:text-slate-100 tracking-wide uppercase">OCTOBER 2026</span>
                 <button type="button" class="py-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold transition-all cursor-pointer" onclick="changeEfbMonth(1)">Next ►</button>
             </div>
 
-            <!-- Calendar Day Grid -->
             <div class="p-3">
-                <!-- Weekday Headers -->
                 <div class="grid grid-cols-7 gap-1 text-center text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase mb-2">
                     <span>MO</span><span>TU</span><span>WE</span><span>TH</span><span>FR</span><span>SA</span><span>SU</span>
                 </div>
-                <!-- Days Container -->
-                <div id="efb-calendar-days-grid" class="grid grid-cols-7 gap-1 text-center text-xs font-bold">
-                    <!-- Rendered dynamically -->
-                </div>
+                <div id="efb-calendar-days-grid" class="grid grid-cols-7 gap-1 text-center text-xs font-bold"></div>
             </div>
 
-            <!-- Footer Action -->
             <div class="p-2.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 flex items-center justify-end">
                 <button type="button" class="py-1.5 px-4 rounded-xl text-xs font-bold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 transition-all cursor-pointer" onclick="closeEfbDatePicker()">Cancel</button>
             </div>
-
         </div>
     </div>
 
@@ -2214,6 +1969,7 @@ if ('serviceWorker' in navigator) {
             </div>
         </div>
     </div>
+
     <script>
         if (/[?&]debug=1/.test(location.search)) {
             var s = document.createElement('script');
