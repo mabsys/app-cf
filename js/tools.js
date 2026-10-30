@@ -1,4 +1,4 @@
-// ./js/tools.js (2910_R289) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3010_R290) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -64,6 +64,32 @@ let efbDatePickerState = {
   selectedDate: null
 };
 
+export function openEfbYearSelectModal() {
+  const years = [];
+  const startYear = 1955;
+  const endYear = 2035;
+  for (let y = endYear; y >= startYear; y--) {
+    years.push({ value: String(y), label: String(y) });
+  }
+  openEfbSelectModal('efb-date-picker-year-jump', 'SELECT YEAR', years);
+  
+  const origSelect = window.selectEfbOption;
+  window.selectEfbOption = function(targetInputId, val, label) {
+    if (targetInputId === 'efb-date-picker-year-jump') {
+      const yearNum = parseInt(val, 10);
+      if (!isNaN(yearNum)) {
+        efbDatePickerState.currentYear = yearNum;
+        renderEfbCalendarGrid();
+      }
+      closeEfbSelectModal();
+      return;
+    }
+    if (typeof origSelect === 'function') {
+      origSelect(targetInputId, val, label);
+    }
+  };
+}
+
 export function openEfbDatePicker(targetInputId, labelTitle = 'SELECT DATE') {
   efbDatePickerState.targetInputId = targetInputId;
   const inputEl = document.getElementById(targetInputId);
@@ -102,6 +128,9 @@ export function renderEfbCalendarGrid() {
   const monthLabelEl = document.getElementById('efb-calendar-month-label');
   if (monthLabelEl) {
     monthLabelEl.innerText = `${months[efbDatePickerState.currentMonth]} ${efbDatePickerState.currentYear}`;
+    monthLabelEl.className = "text-xs font-bold text-slate-800 dark:text-slate-100 hover:text-blue-500 transition-colors cursor-pointer";
+    monthLabelEl.title = "Tap to Select Year";
+    monthLabelEl.onclick = () => openEfbYearSelectModal();
   }
 
   const daysGridEl = document.getElementById('efb-calendar-days-grid');
@@ -311,7 +340,7 @@ export function openEfbSelectModal(targetInputId, labelTitle = 'CHOOSE OPTION', 
     listEl.innerHTML = options.map(opt => {
       const isSelected = opt.value === currentVal;
       const borderClass = isSelected ? 'border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-800 dark:text-slate-100 hover:border-blue-400';
-      return `<button type="button" class="w-full p-3 rounded-xl border ${borderClass} font-bold text-xs text-left transition-all flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="selectEfbOption('${opt.value}', '${opt.label.replace(/'/g, "'")}')">
+      return `<button type="button" class="w-full p-3 rounded-xl border ${borderClass} font-bold text-xs text-left transition-all flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="selectEfbOption('${opt.value}', '${opt.label.replace(/'/g, "\'")}')">
         <span>${opt.label}</span>
         ${isSelected ? '<span class="text-blue-600 dark:text-blue-400 font-extrabold text-xs">SELECTED</span>' : ''}
       </button>`;
@@ -740,10 +769,10 @@ export function normalizeOutput(toolType, rawResult) {
   switch (normType) {
     case 'medical': {
       const isEligible = rawResult && rawResult.isEligible !== undefined ? rawResult.isEligible : true;
-      const age = rawResult && rawResult.age !== undefined ? rawResult.age : 45;
+      const age = rawResult && rawResult.age !== undefined ? rawResult.age : 40;
       const validityMonths = rawResult && rawResult.validityMonths ? rawResult.validityMonths : (age >= 60 ? 6 : 12);
-      const isPreserved = rawResult ? rawResult.anniversaryPreserved : true;
-      const expiry = rawResult ? formatDateDDMMMYYYY(rawResult.newExpiryDate) : '31 OCT 2027';
+      const isPreserved = rawResult ? !!rawResult.anniversaryPreserved : false;
+      const expiry = rawResult && rawResult.newExpiryDate ? formatDateDDMMMYYYY(rawResult.newExpiryDate) : '31 OCT 2027';
 
       let dameStartStr = '16 SEP 2027';
       if (rawResult && rawResult.dameEarliestDate) {
@@ -757,29 +786,41 @@ export function normalizeOutput(toolType, rawResult) {
       const windowStr = `${dameStartStr} to ${expiry}`;
       const isOML = age >= 60 || (rawResult && rawResult.restrictions && rawResult.restrictions.length > 0);
 
-      let statusBadge = 'VALID / CLEARED';
-      let statusClass = 'bg-emerald-600';
+      // Background color logic for Slot 1 and Slot 2 based on status outcomes
+      let heroClass = 'p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl';
+      let clockClass = 'p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between';
+
       if (!isEligible || age >= 65) {
-        statusBadge = 'CEASED (AGE 65+)';
-        statusClass = 'bg-rose-600';
-      } else if (!isPreserved) {
-        statusBadge = 'EXPIRY RESET';
-        statusClass = 'bg-emerald-600';
+        // Ceased (Rose)
+        heroClass = 'p-4 bg-rose-600 text-white transition-colors duration-300 rounded-t-2xl';
+        clockClass = 'p-3.5 bg-rose-100 dark:bg-rose-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between';
+      } else if (isPreserved) {
+        // Valid / Cleared / Anniversary Preserved (Emerald)
+        heroClass = 'p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl';
+        clockClass = 'p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between';
+      } else {
+        // Renewal Reset (Amber)
+        heroClass = 'p-4 bg-amber-500 text-white transition-colors duration-300 rounded-t-2xl';
+        clockClass = 'p-3.5 bg-amber-100 dark:bg-amber-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between';
       }
 
+      const slot1El = document.getElementById('output-slot-1-hero-medical');
+      if (slot1El) slot1El.className = heroClass;
+
+      const slot2El = document.getElementById('output-slot-2-clock-medical');
+      if (slot2El) slot2El.className = clockClass;
+
       return {
-        statusBadge,
-        statusClass,
         headlineTitle: 'NEW MEDICAL EXPIRY',
         headlineValue: expiry,
-        targetClockLabel: '45-DAYS RENEWAL WINDOW',
+        targetClockLabel: '45-DAY RENEWAL WINDOW',
         targetClockValue: windowStr,
         breakdownGrid: [
           { label: 'AGE', value: `${age} Years` },
           { label: 'VALIDITY', value: `${validityMonths} Months` },
-          { label: 'CREW LIMITATION', value: isOML ? 'Multi-Pilot Only (OML)' : 'Unrestricted' }
+          { label: 'CREW LIMITATION', value: isOML ? 'Multi-Pilot Only (OML)' : 'None' }
         ],
-        auditNotes: ['CAAM CAD 1 PEL Section 1.2.5.2 & OM-A 5.1.4.4. Compliant.']
+        auditText: 'Grounded in CAAM CAD 1 PEL Section 1.2.5.2 & OM-A 5.1.4.4. Compliant.'
       };
     }
 
@@ -1120,6 +1161,15 @@ export function resetToolInputs(toolId) {
   const key = keyMap[toolId] || toolId;
   flipCardBackToInput(key);
 
+  if (key === 'medical') {
+    const dobDisplay = document.getElementById('input-med-dob-display');
+    if (dobDisplay) dobDisplay.innerText = 'SELECT DOB';
+    const examDisplay = document.getElementById('input-med-exam-date-display');
+    if (examDisplay) examDisplay.innerText = 'SELECT DATE';
+    const expiryDisplay = document.getElementById('input-med-current-expiry-display');
+    if (expiryDisplay) expiryDisplay.innerText = 'SELECT EXPIRY';
+  }
+
   const container = document.getElementById(toolId);
   if (container) {
     const inputs = container.querySelectorAll('input[type="hidden"]');
@@ -1241,6 +1291,7 @@ if (typeof window !== 'undefined') {
   window.formatDateDDMMMYYYY = formatDateDDMMMYYYY;
   
   // EFB Modals
+  window.openEfbYearSelectModal = openEfbYearSelectModal;
   window.openEfbDatePicker = openEfbDatePicker;
   window.closeEfbDatePicker = closeEfbDatePicker;
   window.renderEfbCalendarGrid = renderEfbCalendarGrid;
