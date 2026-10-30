@@ -1,3 +1,5 @@
+// ./engines/medical-validity-calculator.js (3010_R292) - Medical Certificate Validity Engine & CAAM End-Of-Month Rule
+
 /**
  * Medical Certificate Validity & Interruption Engine (v2)
  * Grounded in MCAR / CAAM Regulations and OM-A Policies
@@ -59,9 +61,23 @@ class MedicalValidityEngine {
       }
     }
 
-    // 4. Calculate New Expiry Date
-    const newExpiryDate = new Date(baseDate);
-    newExpiryDate.setMonth(newExpiryDate.getMonth() + validityMonths);
+    // 4. Calculate New Expiry Date (Forced to End of Month per CAAM CAD 1 PEL 1.2.5.2)
+    const targetYear = baseDate.getFullYear();
+    const targetMonth = baseDate.getMonth() + validityMonths;
+    const newExpiryDate = new Date(targetYear, targetMonth + 1, 0);
+
+    const year = newExpiryDate.getFullYear();
+    const month = String(newExpiryDate.getMonth() + 1).padStart(2, '0');
+    const day = String(newExpiryDate.getDate()).padStart(2, '0');
+    const newExpiryStr = `${year}-${month}-${day}`;
+
+    // Calculate DAME Earliest Date (45 days prior to newExpiryDate)
+    const dameEarliestDate = new Date(newExpiryDate);
+    dameEarliestDate.setDate(dameEarliestDate.getDate() - 45);
+    const dYear = dameEarliestDate.getFullYear();
+    const dMonth = String(dameEarliestDate.getMonth() + 1).padStart(2, '0');
+    const dDay = String(dameEarliestDate.getDate()).padStart(2, '0');
+    const dameEarliestStr = `${dYear}-${dMonth}-${dDay}`;
 
     return {
       age,
@@ -69,7 +85,8 @@ class MedicalValidityEngine {
       validityMonths,
       anniversaryPreserved,
       examDate: exam.toISOString().split('T')[0],
-      newExpiryDate: newExpiryDate.toISOString().split('T')[0],
+      newExpiryDate: newExpiryStr,
+      dameEarliestDate: dameEarliestStr,
       restrictions: age >= 60 ? ["Multi-pilot crew operations only (Single-pilot prohibited)"] : []
     };
   }
@@ -126,12 +143,13 @@ class MedicalValidityEngine {
   }
 }
 
-// Node.js module export compatibility
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = MedicalValidityEngine;
+// ES Module exports
+export { MedicalValidityEngine };
+export function calculateMedicalValidity(params) {
+  return MedicalValidityEngine.calculateValidity(params);
 }
 
-export { MedicalValidityEngine }; 
-export function calculateMedicalValidity(params) { 
-  return MedicalValidityEngine.calculateValidity(params); 
+// CommonJS module export compatibility
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = MedicalValidityEngine;
 }
