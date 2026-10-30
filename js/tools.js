@@ -1,4 +1,4 @@
-// ./js/tools.js (3010_R291) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3010_R293) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -72,7 +72,7 @@ export function openEfbYearSelectModal() {
     years.push({ value: String(y), label: String(y) });
   }
   openEfbSelectModal('efb-date-picker-year-jump', 'SELECT YEAR', years);
-  
+
   const origSelect = window.selectEfbOption;
   window.selectEfbOption = function(val, label) {
     if (efbSelectModalState.targetInputId === 'efb-date-picker-year-jump') {
@@ -192,16 +192,19 @@ export function changeEfbMonth(delta) {
 
 export function setEfbDatePreset(presetKey) {
   const today = new Date();
+  let baseDate = efbDatePickerState.selectedDate ? new Date(efbDatePickerState.selectedDate) : new Date();
+  if (isNaN(baseDate.getTime())) baseDate = new Date();
+
   let targetDate = new Date();
 
   if (presetKey === 'today') {
-    targetDate = today;
+    targetDate = new Date();
   } else if (presetKey === 'eom') {
-    targetDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    targetDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0);
   } else if (presetKey === '+1y') {
-    targetDate = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
+    targetDate = new Date(baseDate.getFullYear() + 1, baseDate.getMonth(), baseDate.getDate());
   } else if (presetKey === '-1y') {
-    targetDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+    targetDate = new Date(baseDate.getFullYear() - 1, baseDate.getMonth(), baseDate.getDate());
   }
 
   efbDatePickerState.currentYear = targetDate.getFullYear();
@@ -210,7 +213,7 @@ export function setEfbDatePreset(presetKey) {
 
   const mStr = String(targetDate.getMonth() + 1).padStart(2, '0');
   const dStr = String(targetDate.getDate()).padStart(2, '0');
-  const isoVal = `${targetDate.getFullYear()}-${mStr}-${dStr}`;
+  const isoVal = ;
 
   selectEfbDate(isoVal);
 }
@@ -340,7 +343,7 @@ export function openEfbSelectModal(targetInputId, labelTitle = 'CHOOSE OPTION', 
     listEl.innerHTML = options.map(opt => {
       const isSelected = opt.value === currentVal;
       const borderClass = isSelected ? 'border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-800 dark:text-slate-100 hover:border-blue-400';
-      return `<button type="button" class="w-full p-3 rounded-xl border ${borderClass} font-bold text-xs text-left transition-all flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="selectEfbOption('${opt.value}', '${opt.label.replace(/'/g, "\'")}')">
+      return `<button type="button" class="w-full p-3 rounded-xl border ${borderClass} font-bold text-xs text-left transition-all flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="selectEfbOption('${opt.value}', '${opt.label}')">
         <span>${opt.label}</span>
         ${isSelected ? '<span class="text-blue-600 dark:text-blue-400 font-extrabold text-xs">SELECTED</span>' : ''}
       </button>`;
@@ -774,8 +777,69 @@ export function normalizeOutput(toolType, rawResult) {
   const normType = (toolType === 'maxfdp') ? 'max-fdp' : ((toolType === 'preflight') ? 'pre-flight-rest' : toolType);
 
   let statusTheme = 'emerald';
+case 'medical': {
+      const isEligible = rawResult && rawResult.isEligible !== undefined ? rawResult.isEligible : true;
+      const age = rawResult && rawResult.age !== undefined ? rawResult.age : 45;
+      const validityMonths = rawResult && rawResult.validityMonths !== undefined ? rawResult.validityMonths : (age >= 60 ? 6 : 12);
+      const isPreserved = rawResult ? rawResult.anniversaryPreserved : true;
 
-  switch (normType) {
+      if (!isEligible || age >= 65) {
+        return {
+          statusTheme: 'rose',
+          statusBadge: 'CEASED (AGE 65+)',
+          statusClass: 'bg-rose-600',
+          headlineTitle: 'NEW MEDICAL EXPIRY',
+          headlineValue: 'CEASED (AGE 65+)',
+          targetClockLabel: '45-DAYS RENEWAL WINDOW',
+          targetClockValue: 'PRIVILEGES CEASED',
+          breakdownGrid: [
+            { label: 'AGE', value:  },
+            { label: 'VALIDITY', value: '0 Months' },
+            { label: 'CREW LIMITATION', value: 'Commercial Privileges Ceased' }
+          ],
+          auditNotes: ['Commercial Air Transport pilot privileges cease at Age 65 per CAAM CAD 1 PEL.']
+        };
+      }
+
+      const expiry = rawResult && rawResult.newExpiryDate ? formatDateDDMMMYYYY(rawResult.newExpiryDate) : '31 OCT 2027';
+
+      let dameStartStr = '16 SEP 2027';
+      if (rawResult && rawResult.dameEarliestDate) {
+        dameStartStr = formatDateDDMMMYYYY(rawResult.dameEarliestDate);
+      } else if (rawResult && rawResult.newExpiryDate) {
+        const d = new Date(rawResult.newExpiryDate);
+        d.setDate(d.getDate() - 45);
+        dameStartStr = formatDateDDMMMYYYY(d);
+      }
+
+      const windowStr = ;
+      const isOML = age >= 60 || (rawResult && rawResult.restrictions && rawResult.restrictions.length > 0);
+
+      let statusTheme = 'emerald';
+      let statusBadge = 'VALID / CLEARED';
+      let statusClass = 'bg-emerald-600';
+      if (!isPreserved) {
+        statusTheme = 'amber';
+        statusBadge = 'EXPIRY RESET';
+        statusClass = 'bg-amber-600';
+      }
+
+      return {
+        statusTheme,
+        statusBadge,
+        statusClass,
+        headlineTitle: 'NEW MEDICAL EXPIRY',
+        headlineValue: expiry,
+        targetClockLabel: '45-DAYS RENEWAL WINDOW',
+        targetClockValue: windowStr,
+        breakdownGrid: [
+          { label: 'AGE', value:  },
+          { label: 'VALIDITY', value:  },
+          { label: 'CREW LIMITATION', value: isOML ? 'Multi-Pilot Only (OML)' : 'Unrestricted' }
+        ],
+        auditNotes: ['CAAM CAD 1 PEL Section 1.2.5.2 & OM-A 5.1.4.4. Compliant.']
+      };
+    } (normType) {
     case 'medical': {
       const isEligible = rawResult && rawResult.isEligible !== undefined ? rawResult.isEligible : true;
       const age = rawResult && rawResult.age !== undefined ? rawResult.age : 40;
@@ -1274,8 +1338,69 @@ export function clearSignatureCanvas() {}
 export function populateCommanderSelect() {}
 
 export function initToolsModule() {
-  // Set default initial state
-  switchToolCategory('qualifications');
+  // Set default initial statecase 'medical': {
+      const isEligible = rawResult && rawResult.isEligible !== undefined ? rawResult.isEligible : true;
+      const age = rawResult && rawResult.age !== undefined ? rawResult.age : 45;
+      const validityMonths = rawResult && rawResult.validityMonths !== undefined ? rawResult.validityMonths : (age >= 60 ? 6 : 12);
+      const isPreserved = rawResult ? rawResult.anniversaryPreserved : true;
+
+      if (!isEligible || age >= 65) {
+        return {
+          statusTheme: 'rose',
+          statusBadge: 'CEASED (AGE 65+)',
+          statusClass: 'bg-rose-600',
+          headlineTitle: 'NEW MEDICAL EXPIRY',
+          headlineValue: 'CEASED (AGE 65+)',
+          targetClockLabel: '45-DAYS RENEWAL WINDOW',
+          targetClockValue: 'PRIVILEGES CEASED',
+          breakdownGrid: [
+            { label: 'AGE', value:  },
+            { label: 'VALIDITY', value: '0 Months' },
+            { label: 'CREW LIMITATION', value: 'Commercial Privileges Ceased' }
+          ],
+          auditNotes: ['Commercial Air Transport pilot privileges cease at Age 65 per CAAM CAD 1 PEL.']
+        };
+      }
+
+      const expiry = rawResult && rawResult.newExpiryDate ? formatDateDDMMMYYYY(rawResult.newExpiryDate) : '31 OCT 2027';
+
+      let dameStartStr = '16 SEP 2027';
+      if (rawResult && rawResult.dameEarliestDate) {
+        dameStartStr = formatDateDDMMMYYYY(rawResult.dameEarliestDate);
+      } else if (rawResult && rawResult.newExpiryDate) {
+        const d = new Date(rawResult.newExpiryDate);
+        d.setDate(d.getDate() - 45);
+        dameStartStr = formatDateDDMMMYYYY(d);
+      }
+
+      const windowStr = ;
+      const isOML = age >= 60 || (rawResult && rawResult.restrictions && rawResult.restrictions.length > 0);
+
+      let statusTheme = 'emerald';
+      let statusBadge = 'VALID / CLEARED';
+      let statusClass = 'bg-emerald-600';
+      if (!isPreserved) {
+        statusTheme = 'amber';
+        statusBadge = 'EXPIRY RESET';
+        statusClass = 'bg-amber-600';
+      }
+
+      return {
+        statusTheme,
+        statusBadge,
+        statusClass,
+        headlineTitle: 'NEW MEDICAL EXPIRY',
+        headlineValue: expiry,
+        targetClockLabel: '45-DAYS RENEWAL WINDOW',
+        targetClockValue: windowStr,
+        breakdownGrid: [
+          { label: 'AGE', value:  },
+          { label: 'VALIDITY', value:  },
+          { label: 'CREW LIMITATION', value: isOML ? 'Multi-Pilot Only (OML)' : 'Unrestricted' }
+        ],
+        auditNotes: ['CAAM CAD 1 PEL Section 1.2.5.2 & OM-A 5.1.4.4. Compliant.']
+      };
+    }ToolCategory('qualifications');
 }
 
 // ==================================================================
