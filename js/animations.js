@@ -1,4 +1,4 @@
-// ./js/animations.js (3110_R314) - CertiFly Centralized Motion & Animation Engine
+// ./js/animations.js (3110_R315) - CertiFly Centralized Motion & Animation Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -31,6 +31,15 @@ export function runAnime(params = {}) {
       if (v4Easing === "easeOutQuad") v4Easing = "outQuad";
       else if (v4Easing === "easeOutCubic") v4Easing = "outCubic";
       else if (v4Easing === "easeOutExpo") v4Easing = "outExpo";
+      else if (typeof v4Easing === "string" && v4Easing.startsWith("cubicBezier")) {
+        if (typeof anime.cubicBezier === "function") {
+          const match = v4Easing.match(/cubicBezier\(([^,]+),([^,]+),([^,]+),([^)]+)\)/);
+          if (match) v4Easing = anime.cubicBezier(parseFloat(match[1]), parseFloat(match[2]), parseFloat(match[3]), parseFloat(match[4]));
+          else v4Easing = "outCubic";
+        } else {
+          v4Easing = "outCubic";
+        }
+      }
       else if (typeof v4Easing === "string" && v4Easing.startsWith("easeOutBack")) {
         const match = v4Easing.match(/easeOutBack\(([^)]+)\)/);
         v4Easing = match ? "outBack(" + match[1] + ")" : "outBack";
@@ -319,7 +328,7 @@ export function animateRecencyCardExpansion(cardEl, variantWrapper, isMulti) {
       targets: cardEl,
       height: "400px",
       duration: 320,
-      easing: "cubicBezier(0.25, 1, 0.5, 1)"
+      easing: "easeOutCubic"
     });
 
     // 2. Slide & Fade In 2nd Variant Date Row
@@ -355,7 +364,7 @@ export function animateRecencyCardExpansion(cardEl, variantWrapper, isMulti) {
       targets: cardEl,
       height: "350px",
       duration: 320,
-      easing: "cubicBezier(0.25, 1, 0.5, 1)"
+      easing: "easeOutCubic"
     });
   }
 }
