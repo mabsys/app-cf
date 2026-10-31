@@ -1,4 +1,4 @@
-// ./js/tools.js (3110_R316) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3110_R320) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -953,12 +953,56 @@ export function runToolCalculation(toolType, inputData = {}) {
       }
 
       case 'standby': {
-        const startTime = document.getElementById('input-standby-time')?.value || '08:00';
-        const loc = document.getElementById('input-standby-loc')?.value || 'HOME';
-        if (StandbyEngineModule && typeof StandbyEngineModule.calculateStandbyFDP === 'function') {
-          result = StandbyEngineModule.calculateStandbyFDP({ standbyStartLocalStr: startTime, standbyLocation: loc });
-        } else {
-          result = { netFdpFormatted: '13:00 HOURS', cutoffTimestampUtc: '14:00 UTC', caseType: loc === 'HOME' ? 'CASE_A' : 'CASE_B' };
+        const startTime = document.getElementById('input-standby-start-time')?.value || '08:00';
+        const reportTime = document.getElementById('input-standby-report-time')?.value || '12:00';
+        const loc = toolsState.standbyLocation || document.getElementById('input-standby-location')?.value || 'HOME';
+
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = now.getMonth();
+        const d = now.getDate();
+
+        const convertLocalTimeToUTCISO = (timeStr, isReportTime = false, startStr = null) => {
+          const [hh, mm] = (timeStr || '08:00').split(':').map(val => parseInt(val, 10) || 0);
+          let targetDay = d;
+          if (isReportTime && startStr) {
+            const [sH, sM] = startStr.split(':').map(val => parseInt(val, 10) || 0);
+            if (hh < sH || (hh === sH && mm < sM)) {
+              targetDay = d + 1;
+            }
+          }
+          const localDate = new Date(Date.UTC(y, m, targetDay, hh - 8, mm, 0));
+          return localDate.toISOString();
+        };
+
+        const standbyStartISO = convertLocalTimeToUTCISO(startTime, false);
+        const calloutReportISO = convertLocalTimeToUTCISO(reportTime, true, startTime);
+
+        const calcParams = {
+          standbyStartISO,
+          calloutReportISO,
+          localTimezoneOffsetHours: 8,
+          standbyLocation: loc,
+          noticeGivenHours: 2.0,
+          isAcclimatised: true,
+          precedingRestCategory: 'UP_TO_18_OR_OVER_30',
+          flightCrewCount: 2,
+          sectorsPlanned: 1,
+          longestSectorHours: 0
+        };
+
+        if (typeof StandbyEngineModule !== 'undefined') {
+          if (typeof StandbyEngineModule.calculateStandbyFDP === 'function') {
+            result = StandbyEngineModule.calculateStandbyFDP(calcParams);
+          } else if (StandbyEngineModule.StandbyFDPEngine && typeof StandbyEngineModule.StandbyFDPEngine.calculateStandbyFDP === 'function') {
+            result = StandbyEngineModule.StandbyFDPEngine.calculateStandbyFDP(calcParams);
+          } else if (StandbyEngineModule.default && typeof StandbyEngineModule.default.calculateStandbyFDP === 'function') {
+            result = StandbyEngineModule.default.calculateStandbyFDP(calcParams);
+          }
+        }
+
+        if (!result && typeof StandbyFDPEngine !== 'undefined' && typeof StandbyFDPEngine.calculateStandbyFDP === 'function') {
+          result = StandbyFDPEngine.calculateStandbyFDP(calcParams);
         }
         break;
       }
@@ -1213,21 +1257,82 @@ export function normalizeOutput(toolType, rawResult) {
 
     case 'standby': {
       const isCaseB = rawResult ? (rawResult.caseType === 'CASE_B') : false;
-      statusTheme = 'emerald';
-      const fdp = rawResult ? (rawResult.netFdpFormatted || '13:00 HOURS') : '13:00 HOURS';
-      const cutoff = rawResult ? (rawResult.cutoffTimestampUtc || '14:00 UTC') : '14:00 UTC';
+      const isExceeded = rawResult && rawResult.warnings && rawResult.warnings.length > 0;
+      
+      let statusTheme = 'emerald';
+      let statusBadge = isCaseB ? 'CASE B (>= 6H STBY)' : 'CASE A (< 6H STBY)';
+      let statusClass = 'bg-emerald-600';
+
+      if (isExceeded) {
+        statusTheme = 'rose';
+        statusBadge = 'STBY LIMIT EXCEEDED (>12H)';
+        statusClass = 'bg-rose-600';
+      } else if (isCaseB) {
+        statusTheme = 'amber';
+        statusClass = 'bg-amber-600';
+      }
+
+      const fdp = rawResult ? `${rawResult.netPermissibleFDPFormatted || '13:00'} HOURS` : '13:00 HOURS';
+      
+      let cutoffStr = '1800Z / 02:00 MYT';
+      let utcS = '';
+      if (rawResult && (rawResult.cutoffTimestampUTC || rawResult.cutoffTimestampUtc)) {
+        const utcRaw = rawResult.cutoffTimestampUTC || rawResult.cutoffTimestampUtc;
+        const uParts = utcRaw.split(' ');
+        if (uParts.length >= 2) {
+          utcS = uParts[1].replace(':', '') + 'Z';
+        } else {
+          utcS = utcRaw.replace(':', '') + 'Z';
+        }
+      }
+
+      let localS = '';
+      if (rawResult && rawResult.cutoffTimestampLocal) {
+        const lParts = rawResult.cutoffTimestampLocal.split(' ');
+        localS = lParts.length >= 2 ? `${lParts[1]} MYT` : `${rawResult.cutoffTimestampLocal} MYT`;
+      }
+
+      if (utcS && localS) {
+        cutoffStr = `${utcS} / ${localS}`;
+      } else if (localS) {
+        cutoffStr = localS;
+      } else if (utcS) {
+        cutoffStr = utcS;
+      }
+
+      const standbyDurationStr = rawResult && rawResult.standbyDurationFormatted 
+        ? `${rawResult.standbyDurationFormatted.replace(':', 'h ')}m` 
+        : '04h 00m';
+
+      const deductionStr = rawResult && rawResult.fdpDeductionFormatted 
+        ? `${rawResult.fdpDeductionFormatted.replace(':', 'h ')}m` 
+        : '00h 00m';
+
+      const caseLabelStr = rawResult && rawResult.caseLabel 
+        ? rawResult.caseLabel 
+        : (isCaseB ? 'Case B (>= 6 Hours Standby)' : 'Case A (< 6 Hours Standby)');
+
+      const warningsStr = rawResult && rawResult.warnings && rawResult.warnings.length > 0 ? rawResult.warnings.join(' ') : null;
+      const auditNoteStr = warningsStr
+        ? `${warningsStr} ${rawResult.notes ? rawResult.notes.map(n => n.endsWith('.') ? n : n + '.').join(' ') : ''}`
+        : (rawResult && rawResult.notes && rawResult.notes.length > 0
+          ? rawResult.notes.map(n => n.endsWith('.') ? n : n + '.').join(' ')
+          : 'Grounded in CAAM CAD 1901 Section 2.11 Standby FDP Adjustments. Compliant.');
+
       return {
         statusTheme,
+        statusBadge,
+        statusClass,
         headlineTitle: 'NET PERMISSIBLE FDP',
         headlineValue: fdp,
         targetClockLabel: 'Latest On-Chocks Cutoff:',
-        targetClockValue: cutoff,
+        targetClockValue: cutoffStr,
         breakdownGrid: [
-          { label: 'STANDBY DURATION', value: rawResult && rawResult.standbyDurationFormatted ? rawResult.standbyDurationFormatted : '04h 00m' },
-          { label: 'FDP DEDUCTION', value: rawResult && rawResult.deductionFormatted ? rawResult.deductionFormatted : '00h 00m' },
-          { label: 'CASE CLASSIFICATION', value: isCaseB ? 'Case B (>= 6 Hours Standby)' : 'Case A (< 6 Hours Standby)' }
+          { label: 'STANDBY DURATION', value: standbyDurationStr },
+          { label: 'FDP DEDUCTION', value: deductionStr },
+          { label: 'CASE CLASSIFICATION', value: caseLabelStr }
         ],
-        auditNotes: ['Grounded in CAAM CAD 1901 Section 2.11 Standby FDP Adjustments. Compliant.']
+        auditNotes: [auditNoteStr]
       };
     }
 
@@ -1699,6 +1804,8 @@ export function initToolsModule() {
 
 export function setStandbyLocation(loc) {
   toolsState.standbyLocation = loc;
+  const inputLoc = document.getElementById('input-standby-location');
+  if (inputLoc) inputLoc.value = loc;
   const btnHome = document.getElementById('btn-stby-loc-home');
   const btnAirport = document.getElementById('btn-stby-loc-airport');
 
