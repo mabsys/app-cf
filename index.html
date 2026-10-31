@@ -1,4 +1,4 @@
-<!-- ./index.html (3110_R307) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+<!-- ./index.html (3110_R308) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -54,7 +54,7 @@ navigator.serviceWorker.register('sw.js')
 <body class="bg-slate-50 dark:bg-slate-950 min-h-screen font-sans text-slate-800 dark:text-slate-200 flex flex-col justify-between">
 
     <!-- Floating Top Overlay Alert -->
-    <div id="offline-overlay" class="hidden fixed top-0 left-0 right-0 z-[1] bg-red-600 text-white text-[10px] font-black uppercase tracking-widest text-center py-3 px-4 shadow-xl flex items-center justify-center gap-2 animate-pulse">
+    <div id="offline-overlay" class="hidden fixed top-0 left-0 right-0 z-[1] bg-red-600 text-white text-[10px] font-black uppercase tracking-widest text-center py-3 px-4 shadow-md flex items-center justify-center gap-2 animate-pulse">
         <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
@@ -751,7 +751,7 @@ navigator.serviceWorker.register('sw.js')
                         <div class="text-[11px] text-slate-400 italic py-3 text-center">No recent verified crew yet.</div>
                     </div>
 
-                    <div id="history-bulk-action-bar" class="hidden sticky bottom-16 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl flex items-center justify-between gap-2 my-2 transition-all">
+                    <div id="history-bulk-action-bar" class="hidden sticky bottom-16 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-md flex items-center justify-between gap-2 my-2 transition-all">
                         <button id="btn-bulk-select-all" type="button" class="py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 shrink-0">
                             <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -948,7 +948,7 @@ navigator.serviceWorker.register('sw.js')
                             <div id="card-3d-inner-medical" class="card-3d-inner w-full h-full relative transform-style-3d">
 
                                 <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
-                                <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
+                                <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-md select-none">
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Medical Expiry</span>
                                         <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-medical')"> ↺ Reset</button>
@@ -1001,7 +1001,7 @@ navigator.serviceWorker.register('sw.js')
                                 </div>
 
                                 <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
-                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-start">
+                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-start">
                                     <div id="output-slot-1-hero-medical" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
                                         <div class="flex items-center justify-between pb-1 shrink-0">
                                             <span id="output-hero-title-medical" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">NEW MEDICAL EXPIRY</span>
@@ -1045,7 +1045,7 @@ navigator.serviceWorker.register('sw.js')
                         <!-- TOOL CARD: LPC / OPC CURRENCY -->
                         <div id="tool-card-ppc" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
                             <div id="card-3d-inner-ppc" class="card-3d-inner w-full h-full relative transform-style-3d">
-                                <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
+                                <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-md select-none">
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">LPC / OPC Currency</span>
                                         <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-ppc')"> ↺ Reset</button>
@@ -1082,7 +1082,7 @@ navigator.serviceWorker.register('sw.js')
                                     </div>
                                 </div>
 
-                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-start">
+                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-start">
                                     <div id="output-slot-1-hero-ppc" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
                                         <div class="flex items-center justify-between pb-1 shrink-0">
                                             <span id="output-hero-title-ppc" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">NEW PPC / LPC EXPIRY</span>
@@ -1126,7 +1126,7 @@ navigator.serviceWorker.register('sw.js')
                         <!-- TOOL CARD: RECURRENT TRAINING -->
                         <div id="tool-card-recurrent" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
                             <div id="card-3d-inner-recurrent" class="card-3d-inner w-full h-full relative transform-style-3d">
-                                <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
+                                <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-md select-none">
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Recurrent Training</span>
                                         <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-recurrent')"> ↺ Reset</button>
@@ -1160,7 +1160,7 @@ navigator.serviceWorker.register('sw.js')
                                     </div>
                                 </div>
 
-                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-start">
+                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-start">
                                     <div id="output-slot-1-hero-recurrent" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
                                         <div class="flex items-center justify-between pb-1 shrink-0">
                                             <span id="output-hero-title-recurrent" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">RECURRENT EXPIRY DATE</span>
@@ -1204,7 +1204,7 @@ navigator.serviceWorker.register('sw.js')
                         <!-- TOOL CARD: LANDING RECENCY (90-DAY) -->
                         <div id="tool-card-recency" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
                             <div id="card-3d-inner-recency" class="card-3d-inner w-full h-full relative transform-style-3d">
-                                <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
+                                <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-md select-none">
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Landing Recency (90-Day)</span>
                                         <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-recency')"> ↺ Reset</button>
@@ -1213,7 +1213,7 @@ navigator.serviceWorker.register('sw.js')
                                     <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
                                         <div class="grid grid-cols-2 gap-2">
                                             <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Capacity</label>
+                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5">Capacity</label>
                                                 <button type="button" id="btn-recency-capacity-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-recency-capacity', 'PILOT CAPACITY', [{value:'PIC', label:'Captain (PIC)'}, {value:'FO', label:'First Officer (FO)'}])">
                                                     <span id="btn-recency-capacity-display">PIC (Captain)</span>
                                                     <span class="text-slate-400 text-[10px]">▼</span>
@@ -1222,7 +1222,7 @@ navigator.serviceWorker.register('sw.js')
                                             </div>
 
                                             <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Proposed Flight Date</label>
+                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5">Proposed Flight Date</label>
                                                 <button type="button" id="btn-recency-flight-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbDatePicker('input-recency-flight-date', 'PROPOSED FLIGHT DATE')">
                                                     <span id="input-recency-flight-date-display" class="font-sans">SELECT DATE</span>
                                                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1235,7 +1235,7 @@ navigator.serviceWorker.register('sw.js')
 
                                         <div class="grid grid-cols-3 gap-1.5 pt-1">
                                             <div class="flex flex-col justify-between">
-                                                <label class="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-1 h-7 flex items-end">Landing 1</label>
+                                                <label class="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-0.5 h-7 flex items-end">Landing 1</label>
                                                 <button type="button" id="btn-recency-l1-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-lg p-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-100 text-center cursor-pointer" onclick="openEfbDatePicker('input-recency-l1-date', 'LANDING #1 DATE')">
                                                     <span id="input-recency-l1-date-display">DATE 1</span>
                                                 </button>
@@ -1243,7 +1243,7 @@ navigator.serviceWorker.register('sw.js')
                                             </div>
 
                                             <div class="flex flex-col justify-between">
-                                                <label class="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-1 h-7 flex items-end">Landing 2</label>
+                                                <label class="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-0.5 h-7 flex items-end">Landing 2</label>
                                                 <button type="button" id="btn-recency-l2-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-lg p-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-100 text-center cursor-pointer" onclick="openEfbDatePicker('input-recency-l2-date', 'LANDING #2 DATE')">
                                                     <span id="input-recency-l2-date-display">DATE 2</span>
                                                 </button>
@@ -1251,7 +1251,7 @@ navigator.serviceWorker.register('sw.js')
                                             </div>
 
                                             <div class="flex flex-col justify-between">
-                                                <label class="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-1 h-7 flex items-end leading-tight">Landing 3</label>
+                                                <label class="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-0.5 h-7 flex items-end leading-tight">Landing 3</label>
                                                 <button type="button" id="btn-recency-l3-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-lg p-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-100 text-center cursor-pointer" onclick="openEfbDatePicker('input-recency-l3-date', 'LANDING #3 DATE')">
                                                     <span id="input-recency-l3-date-display">DATE 3</span>
                                                 </button>
@@ -1260,7 +1260,7 @@ navigator.serviceWorker.register('sw.js')
                                         </div>
 
                                         <div>
-                                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Operation Type</label>
+                                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-0.5 uppercase tracking-wider">Operation Type</label>
                                             <div class="grid grid-cols-2 gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                                                 <button type="button" id="btn-recency-single-fleet" class="py-1 px-2 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-700 shadow-sm transition-all cursor-pointer text-center" onclick="setRecencyMultiVariant(false)">Single Fleet</button>
                                                 <button type="button" id="btn-recency-multi-variant" class="py-1 px-2 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all cursor-pointer text-center" onclick="setRecencyMultiVariant(true)">Multi-Variant (MFF)</button>
@@ -1269,7 +1269,7 @@ navigator.serviceWorker.register('sw.js')
                                         </div>
 
                                         <div id="wrapper-recency-variant-date" class="hidden">
-                                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">2nd Variant Last Landing Date</label>
+                                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5">2nd Variant Last Landing Date</label>
                                             <button type="button" id="btn-recency-variant-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbDatePicker('input-recency-variant-date', '2ND VARIANT LAST LANDING')">
                                                 <span id="input-recency-variant-date-display" class="font-sans">SELECT DATE</span>
                                                 <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1287,7 +1287,7 @@ navigator.serviceWorker.register('sw.js')
                                     </div>
                                 </div>
 
-                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-start">
+                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-start">
                                     <div id="output-slot-1-hero-recency" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
                                         <div class="flex items-center justify-between pb-1 shrink-0">
                                             <span id="output-hero-title-recency" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">LANDING RECENCY STATUS</span>
@@ -1357,7 +1357,7 @@ navigator.serviceWorker.register('sw.js')
                                 <!-- TOOL CARD: STANDBY CALL-OUT -->
                                 <div id="tool-card-standby" class="tool-card active tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
                                     <div id="card-3d-inner-standby" class="card-3d-inner w-full h-full relative transform-style-3d">
-                                        <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
+                                        <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-md select-none">
                                             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                                 <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Standby Call-Out</span>
                                                 <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-standby')"> ↺ Reset</button>
@@ -1404,7 +1404,7 @@ navigator.serviceWorker.register('sw.js')
                                             </div>
                                         </div>
 
-                                        <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-start">
+                                        <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-start">
                                             <div id="output-slot-1-hero-standby" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
                                                 <div class="flex items-center justify-between pb-1 shrink-0">
                                                     <span id="output-hero-title-standby" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">NET PERMISSIBLE FDP</span>
@@ -1448,7 +1448,7 @@ navigator.serviceWorker.register('sw.js')
                                 <!-- TOOL CARD: MAX ALLOWABLE FDP -->
                                 <div id="tool-card-maxfdp" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
                                     <div id="card-3d-inner-max-fdp" class="card-3d-inner w-full h-full relative transform-style-3d">
-                                        <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
+                                        <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-md select-none">
                                             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                                 <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Max Allowable FDP</span>
                                                 <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-maxfdp')"> ↺ Reset</button>
@@ -1505,7 +1505,7 @@ navigator.serviceWorker.register('sw.js')
                                             </div>
                                         </div>
 
-                                        <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-start">
+                                        <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-start">
                                             <div id="output-slot-1-hero-maxfdp" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
                                                 <div class="flex items-center justify-between pb-1 shrink-0">
                                                     <span id="output-hero-title-maxfdp" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">MAX ALLOWABLE FDP</span>
@@ -1549,7 +1549,7 @@ navigator.serviceWorker.register('sw.js')
                                 <!-- TOOL CARD: PRE-FLIGHT REST -->
                                 <div id="tool-card-preflight" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
                                     <div id="card-3d-inner-pre-flight-rest" class="card-3d-inner w-full h-full relative transform-style-3d">
-                                        <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
+                                        <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-md select-none">
                                             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                                 <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Pre-Flight Rest</span>
                                                 <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-preflight')"> ↺ Reset</button>
@@ -1584,7 +1584,7 @@ navigator.serviceWorker.register('sw.js')
                                             </div>
                                         </div>
 
-                                        <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-start">
+                                        <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-start">
                                             <div id="output-slot-1-hero-preflight" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
                                                 <div class="flex items-center justify-between pb-1 shrink-0">
                                                     <span id="output-hero-title-preflight" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">PRE-FLIGHT MINIMUM REST</span>
@@ -1628,7 +1628,7 @@ navigator.serviceWorker.register('sw.js')
                                 <!-- TOOL CARD: CUMULATIVE HOURS -->
                                 <div id="tool-card-cumulative" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
                                     <div id="card-3d-inner-cumulative" class="card-3d-inner w-full h-full relative transform-style-3d">
-                                        <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
+                                        <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-md select-none">
                                             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                                                 <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Cumulative Hours</span>
                                                 <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-cumulative')"> ↺ Reset</button>
@@ -1691,7 +1691,7 @@ navigator.serviceWorker.register('sw.js')
                                             </div>
                                         </div>
 
-                                        <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl select-none flex flex-col justify-start">
+                                        <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-start">
                                             <div id="output-slot-1-hero-cumulative" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
                                                 <div class="flex items-center justify-between pb-1 shrink-0">
                                                     <span id="output-hero-title-cumulative" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">7-DAY CUMULATIVE DUTY</span>
