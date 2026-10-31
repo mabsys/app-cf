@@ -1,4 +1,4 @@
-// ./engines/ppc-validity-calculator.js (3010_R299) - PPC (OPC / LPC) Validity & Expiry Calculator Engine
+// ./engines/ppc-validity-calculator.js (3010_R302) - PPC (OPC / LPC) Validity & Expiry Calculator Engine
 
 /**
  * PPC (OPC / LPC) Validity & Expiry Calculator Engine for Flight Crew (v2)
@@ -120,6 +120,7 @@ class PPCValidityEngine {
     // Earliest OPC Date: LPC Conduct + 4 Months
     const earliestOPC = new Date(conductDate.getTime());
     earliestOPC.setUTCMonth(earliestOPC.getUTCMonth() + 4);
+    earliestOPC.setUTCDate(earliestOPC.getUTCDate() + 1);
 
     // Latest OPC Date: LPC Expiry - 4 Months (End of Month)
     let latestOPC = new Date(expiryDate.getTime());
