@@ -1,4 +1,4 @@
-// ./js/tools.js (3110_R305) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3110_R306) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1040,18 +1040,18 @@ export function normalizeOutput(toolType, rawResult) {
       const courseName = rawResult ? (rawResult.name || toolsState.recurrentCourseName) : 'Line Check (LC)';
       const completionDateStr = rawResult && rawResult.completionDate ? formatDateDDMMMYYYY(rawResult.completionDate) : '15 DEC 2025';
 
-      let categoryDisplay = 'Annual ( 12 Month )';
+      let categoryDisplay = 'Annual (12 month)';
       const rawCat = rawResult ? (rawResult.category || toolsState.recurrentCourseCat || '') : '';
       const qualId = rawResult ? rawResult.qualId : toolsState.recurrentCourseKey;
 
       if (qualId === 'LVO_AUTOLAND' || rawCat.includes('Semi-Annual') || rawCat.includes('180')) {
-        categoryDisplay = 'Semi-Annual ( 180 Day )';
+        categoryDisplay = 'Semi-Annual (180 day)';
       } else if (rawCat.includes('24-Month') || rawCat.includes('24')) {
-        categoryDisplay = 'Bi-Annual ( 24 Month )';
+        categoryDisplay = 'Bi-Annual (24 month)';
       } else if (rawCat.includes('36-Month') || rawCat.includes('36')) {
-        categoryDisplay = 'Triennial ( 36 Month )';
+        categoryDisplay = 'Triennial (36 month)';
       } else {
-        categoryDisplay = 'Annual ( 12 Month )';
+        categoryDisplay = 'Annual (12 month)';
       }
 
       let ruleDisplay = 'Reset to EOM';
