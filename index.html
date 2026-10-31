@@ -1,4 +1,4 @@
-<!-- ./index.html (3010_R303) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+<!-- ./index.html (3110_R305) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -925,7 +925,7 @@ navigator.serviceWorker.register('sw.js')
                     <!-- Tier 2 Sub-Tab Pill Strip (Category A) -->
                     <div class="relative">
                         <div id="subtab-strip-cat-a" class="tools-subtab-strip flex items-center gap-2 overflow-x-auto py-1 px-0.5 no-scrollbar scroll-smooth">
-                            <button id="pill-tool-medical" type="button" class="subtab-pill active flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-blue-500/40 bg-blue-500/20 text-blue-400 dark:text-blue-300 cursor-pointer" onclick="switchActiveTool('tool-card-medical')">Medical Class 1/2</button>
+                            <button id="pill-tool-medical" type="button" class="subtab-pill active flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-blue-500/40 bg-blue-500/20 text-blue-400 dark:text-blue-300 cursor-pointer" onclick="switchActiveTool('tool-card-medical')">Medical Expiry</button>
                             <button id="pill-tool-ppc" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-card-ppc')">LPC / OPC Currency</button>
                             <button id="pill-tool-recurrent" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-card-recurrent')">Recurrent Training</button>
                             <button id="pill-tool-recency" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-card-recency')">Landing Recency</button>
@@ -950,7 +950,7 @@ navigator.serviceWorker.register('sw.js')
                                 <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
                                 <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl select-none">
                                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
-                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Medical Class 1 / 2</span>
+                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Medical Expiry</span>
                                         <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-medical')"> ↺ Reset</button>
                                     </div>
 
@@ -1178,15 +1178,15 @@ navigator.serviceWorker.register('sw.js')
 
                                     <div id="output-slot-3-grid-recurrent" class="p-3.5 bg-white dark:bg-slate-900/50 grid grid-cols-1 gap-3">
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
-                                            <span id="grid-label-1-recurrent" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">MODULE CATEGORY</span>
+                                            <span id="grid-label-1-recurrent" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">COMPLETION DATE</span>
                                             <span id="grid-value-1-recurrent" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
                                         </div>
                                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40">
-                                            <span id="grid-label-2-recurrent" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">COMPLETION DATE</span>
+                                            <span id="grid-label-2-recurrent" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">MODULE CATEGORY</span>
                                             <span id="grid-value-2-recurrent" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
                                         </div>
                                         <div class="flex items-center justify-between text-xs py-1">
-                                            <span id="grid-label-3-recurrent" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">RENEWAL METHOD</span>
+                                            <span id="grid-label-3-recurrent" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">RENEWAL RULE</span>
                                             <span id="grid-value-3-recurrent" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">--</span>
                                         </div>
                                     </div>
