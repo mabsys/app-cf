@@ -1,46 +1,55 @@
-// ./js/animations.js (2710_R254) - CertiFly Overview Animation Engine
+// ./js/animations.js (3110_R314) - CertiFly Centralized Motion & Animation Engine
+// Developed by: Capt. Mohd Sallehuddin Zaidy
+// CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
 /**
  * Check if Anime.js library is loaded globally
  */
-function isAnimeAvailable() {
-  if (typeof anime === 'undefined' || !anime) return false;
-  return typeof anime === 'function' || typeof anime.animate === 'function';
+export function isAnimeAvailable() {
+  if (typeof anime === "undefined" || !anime) return false;
+  return typeof anime === "function" || typeof anime.animate === "function";
 }
 
 /**
  * Universal Anime.js Execution Helper (Compatible with both v3.x and v4.x)
  */
-function runAnime(params = {}) {
+export function runAnime(params = {}) {
   if (!isAnimeAvailable()) return null;
-
-  if (typeof anime === 'function') {
+  if (typeof anime === "function") {
     // Anime.js v3.x syntax: anime({...})
-    return anime(params);
-  } else if (typeof anime === 'object' && typeof anime.animate === 'function') {
+    try {
+      return anime(params);
+    } catch (err) {
+      console.warn("CertiFlyAnimations: Anime.js v3 execution skipped/error:", err);
+      return null;
+    }
+  } else if (typeof anime === "object" && typeof anime.animate === "function") {
     // Anime.js v4.x syntax: anime.animate(targets, parameters)
-    const { targets, easing, ease, update, onUpdate, ...rest } = params;
-    let v4Easing = easing || ease;
-    if (v4Easing === 'easeOutQuad') v4Easing = 'outQuad';
-    else if (v4Easing === 'easeOutCubic') v4Easing = 'outCubic';
-    else if (v4Easing === 'easeOutExpo') v4Easing = 'outExpo';
-    else if (typeof v4Easing === 'string' && v4Easing.startsWith('easeOutBack')) {
-      const match = v4Easing.match(/easeOutBack\(([^)]+)\)/);
-      v4Easing = match ? `outBack(${match[1]})` : 'outBack';
+    try {
+      const { targets, easing, ease, update, onUpdate, ...rest } = params;
+      let v4Easing = easing || ease;
+      if (v4Easing === "easeOutQuad") v4Easing = "outQuad";
+      else if (v4Easing === "easeOutCubic") v4Easing = "outCubic";
+      else if (v4Easing === "easeOutExpo") v4Easing = "outExpo";
+      else if (typeof v4Easing === "string" && v4Easing.startsWith("easeOutBack")) {
+        const match = v4Easing.match(/easeOutBack\(([^)]+)\)/);
+        v4Easing = match ? "outBack(" + match[1] + ")" : "outBack";
+      }
+      const animProps = { ...rest };
+      if (v4Easing) animProps.ease = v4Easing;
+      const updateCb = onUpdate || update;
+      if (updateCb) {
+        animProps.onUpdate = updateCb;
+        animProps.update = updateCb;
+      }
+      if (targets) {
+        return anime.animate(targets, animProps);
+      }
+      return anime.animate(animProps);
+    } catch (err) {
+      console.warn("CertiFlyAnimations: Anime.js v4 execution skipped/error:", err);
+      return null;
     }
-
-    const animProps = { ...rest };
-    if (v4Easing) animProps.ease = v4Easing;
-    const updateCb = onUpdate || update;
-    if (updateCb) {
-      animProps.onUpdate = updateCb;
-      animProps.update = updateCb;
-    }
-
-    if (targets) {
-      return anime.animate(targets, animProps);
-    }
-    return anime.animate(animProps);
   }
   return null;
 }
@@ -48,8 +57,8 @@ function runAnime(params = {}) {
 /**
  * Universal Stagger Helper (v3 & v4 compatible)
  */
-function runStagger(value, options) {
-  if (typeof anime !== 'undefined' && anime && typeof anime.stagger === 'function') {
+export function runStagger(value, options) {
+  if (typeof anime !== "undefined" && anime && typeof anime.stagger === "function") {
     return anime.stagger(value, options);
   }
   return 0;
@@ -61,25 +70,22 @@ let isHeroFlipped = false;
  * Interactive 3D Hero Card Flip Controller
  */
 export function initHeroCardFlip() {
-  const containerEl = document.getElementById('overview-hero-container');
-  const cardEl = document.getElementById('overview-hero-card');
+  const containerEl = document.getElementById("overview-hero-container");
+  const cardEl = document.getElementById("overview-hero-card");
   if (!containerEl || !cardEl) return;
-
-  if (containerEl.dataset.flipInitialized === 'true') return;
-  containerEl.dataset.flipInitialized = 'true';
-
-  containerEl.addEventListener('click', () => {
+  if (containerEl.dataset.flipInitialized === "true") return;
+  containerEl.dataset.flipInitialized = "true";
+  containerEl.addEventListener("click", () => {
     isHeroFlipped = !isHeroFlipped;
-
     if (isAnimeAvailable()) {
       runAnime({
         targets: cardEl,
         rotateY: isHeroFlipped ? 180 : 0,
         duration: 480,
-        easing: 'easeOutBack(1.1)'
+        easing: "easeOutBack(1.1)"
       });
     } else {
-      cardEl.style.transform = `rotateY(${isHeroFlipped ? 180 : 0}deg)`;
+      cardEl.style.transform = "rotateY(" + (isHeroFlipped ? 180 : 0) + "deg)";
     }
   });
 }
@@ -89,17 +95,15 @@ export function initHeroCardFlip() {
  */
 export function animateOverviewEntrance() {
   if (!isAnimeAvailable()) return;
-
-  const cards = document.querySelectorAll('#tab-overview-content > div');
+  const cards = document.querySelectorAll("#tab-overview-content > div");
   if (!cards || cards.length === 0) return;
-
   runAnime({
     targets: cards,
     opacity: [0, 1],
     translateY: [16, 0],
     delay: runStagger(80, { start: 50 }),
     duration: 650,
-    easing: 'easeOutQuad'
+    easing: "easeOutQuad"
   });
 }
 
@@ -109,49 +113,47 @@ export function animateOverviewEntrance() {
  */
 export function animateLegalityRings(opts = {}) {
   if (!isAnimeAvailable()) return;
-
-  const ringCaam = document.getElementById('ring-caam');
-  const ringCaamBack = document.getElementById('ring-caam-back');
-  const ringMab = document.getElementById('ring-mab');
-  const ringMabBack = document.getElementById('ring-mab-back');
-  const percentEl = document.getElementById('ov-ring-percent');
-  const percentElBack = document.getElementById('ov-ring-percent-back');
-
+  const ringCaam = document.getElementById("ring-caam");
+  const ringCaamBack = document.getElementById("ring-caam-back");
+  const ringMab = document.getElementById("ring-mab");
+  const ringMabBack = document.getElementById("ring-mab-back");
+  const percentEl = document.getElementById("ov-ring-percent");
+  const percentElBack = document.getElementById("ov-ring-percent-back");
   const {
     caamOffset = 0,
     mabOffset = 0,
-    caamColor = '#3B82F6',
-    mabColor = '#1D4ED8',
+    caamColor = "#3B82F6",
+    mabColor = "#1D4ED8",
     targetDays = 0
   } = opts;
 
   // Inner Ring (CAAM, circumference = 188.50)
   const caamRings = [ringCaam, ringCaamBack].filter(Boolean);
   if (caamRings.length > 0) {
-    caamRings.forEach(r => r.setAttribute('stroke', caamColor));
+    caamRings.forEach(r => r.setAttribute("stroke", caamColor));
     runAnime({
       targets: caamRings,
       strokeDashoffset: [188.50, caamOffset],
       duration: 1100,
-      easing: 'easeOutExpo'
+      easing: "easeOutExpo"
     });
   }
 
   // Outer Ring (MAB, circumference = 263.89)
   const mabRings = [ringMab, ringMabBack].filter(Boolean);
   if (mabRings.length > 0) {
-    mabRings.forEach(r => r.setAttribute('stroke', mabColor));
+    mabRings.forEach(r => r.setAttribute("stroke", mabColor));
     runAnime({
       targets: mabRings,
       strokeDashoffset: [263.89, mabOffset],
       duration: 1300,
-      easing: 'easeOutExpo'
+      easing: "easeOutExpo"
     });
   }
 
   // Live Counter for Days Remaining in Ring Center (Front & Back)
   const targetElements = [percentEl, percentElBack].filter(Boolean);
-  if (targetElements.length > 0 && typeof targetDays === 'number' && !isNaN(targetDays)) {
+  if (targetElements.length > 0 && typeof targetDays === "number" && !isNaN(targetDays)) {
     const isOverHundred = targetDays > 100;
     const finalVal = Math.max(0, targetDays);
     const counterObj = { val: 0 };
@@ -161,9 +163,9 @@ export function animateLegalityRings(opts = {}) {
       val: finalVal,
       round: 1,
       duration: 1000,
-      easing: 'easeOutCubic',
+      easing: "easeOutCubic",
       update: () => {
-        const displayVal = isOverHundred && counterObj.val >= 100 ? '100+' : String(Math.round(counterObj.val));
+        const displayVal = isOverHundred && counterObj.val >= 100 ? "100+" : String(Math.round(counterObj.val));
         targetElements.forEach(el => { el.innerText = displayVal; });
       }
     });
@@ -176,17 +178,15 @@ export function animateLegalityRings(opts = {}) {
  */
 export function animateLvoMarker(targetPct = 0) {
   if (!isAnimeAvailable()) return;
-
-  const markerEl = document.getElementById('ov-lvo-marker');
+  const markerEl = document.getElementById("ov-lvo-marker");
   if (!markerEl) return;
-
   const safePct = Math.min(100, Math.max(0, targetPct));
 
   runAnime({
     targets: markerEl,
-    left: ['0%', safePct + '%'],
+    left: ["0%", safePct + "%"],
     duration: 1100,
-    easing: 'easeOutBack(1.4)'
+    easing: "easeOutBack(1.4)"
   });
 }
 
@@ -195,25 +195,24 @@ export function animateLvoMarker(targetPct = 0) {
  */
 export function animateHistogramBars() {
   if (!isAnimeAvailable()) return;
-
-  const vBars = document.querySelectorAll('#tab-overview-content [id^="vbar-drill-"]');
+  const vBars = document.querySelectorAll("#tab-overview-content [id^=\"vbar-drill-\"]");
   if (!vBars || vBars.length === 0) return;
 
   vBars.forEach(bar => {
-    const currentHeight = bar.style.height || '100%';
-    bar.setAttribute('data-target-height', currentHeight);
+    const currentHeight = bar.style.height || "100%";
+    bar.setAttribute("data-target-height", currentHeight);
   });
 
   runAnime({
     targets: vBars,
-    height: [(el) => '0%', (el) => el.getAttribute('data-target-height') || '100%'],
+    height: [(el) => "0%", (el) => el.getAttribute("data-target-height") || "100%"],
     delay: runStagger(50, { start: 100 }),
     duration: 850,
-    easing: 'easeOutCubic'
+    easing: "easeOutCubic"
   });
 
   // Stagger legend dots pop-in
-  const dots = document.querySelectorAll('#tab-overview-content [id^="dot-legend-"]');
+  const dots = document.querySelectorAll("#tab-overview-content [id^=\"dot-legend-\"]");
   if (dots && dots.length > 0) {
     runAnime({
       targets: dots,
@@ -221,7 +220,7 @@ export function animateHistogramBars() {
       opacity: [0, 1],
       delay: runStagger(40, { start: 200 }),
       duration: 500,
-      easing: 'easeOutBack(1.5)'
+      easing: "easeOutBack(1.5)"
     });
   }
 }
@@ -231,32 +230,31 @@ export function animateHistogramBars() {
  */
 export function animatePassportAndElpBars() {
   if (!isAnimeAvailable()) return;
-
-  const passBar = document.getElementById('ov-passport-bar');
-  const elpBar = document.getElementById('ov-elp-bar');
+  const passBar = document.getElementById("ov-passport-bar");
+  const elpBar = document.getElementById("ov-elp-bar");
 
   if (passBar) {
-    const targetW = passBar.style.width || '100%';
+    const targetW = passBar.style.width || "100%";
     runAnime({
       targets: passBar,
-      width: ['0%', targetW],
+      width: ["0%", targetW],
       duration: 900,
-      easing: 'easeOutCubic'
+      easing: "easeOutCubic"
     });
   }
 
   if (elpBar) {
-    const targetW = elpBar.style.width || '100%';
+    const targetW = elpBar.style.width || "100%";
     runAnime({
       targets: elpBar,
-      width: ['0%', targetW],
+      width: ["0%", targetW],
       duration: 900,
-      easing: 'easeOutCubic'
+      easing: "easeOutCubic"
     });
   }
 
   // Scale labels stagger
-  const scaleSpans = document.querySelectorAll('#ov-elp-scale span');
+  const scaleSpans = document.querySelectorAll("#ov-elp-scale span");
   if (scaleSpans && scaleSpans.length > 0) {
     runAnime({
       targets: scaleSpans,
@@ -264,7 +262,7 @@ export function animatePassportAndElpBars() {
       translateY: [4, 0],
       delay: runStagger(40, { start: 300 }),
       duration: 500,
-      easing: 'easeOutCubic'
+      easing: "easeOutCubic"
     });
   }
 }
@@ -283,7 +281,7 @@ export function animateOverviewDashboard(animData = {}) {
   animateLegalityRings(animData);
 
   // Execute LVO marker glide
-  if (typeof animData.lvoPct === 'number') {
+  if (typeof animData.lvoPct === "number") {
     animateLvoMarker(animData.lvoPct);
   }
 
@@ -294,15 +292,87 @@ export function animateOverviewDashboard(animData = {}) {
   animatePassportAndElpBars();
 }
 
-// Global window fallback for non-module usage
-if (typeof window !== 'undefined') {
+/**
+ * Dynamic Landing Recency Tool Card Height & Child Wrapper Animation
+ * 
+ * @param {HTMLElement} cardEl - Target tool card container (#tool-card-recency)
+ * @param {HTMLElement} variantWrapper - 2nd Variant date field wrapper (#wrapper-recency-variant-date)
+ * @param {boolean} isMulti - Multi-Variant (MFF) state flag
+ */
+export function animateRecencyCardExpansion(cardEl, variantWrapper, isMulti) {
+  if (!isAnimeAvailable()) {
+    if (cardEl) cardEl.style.height = isMulti ? "400px" : "350px";
+    if (variantWrapper) {
+      if (isMulti) {
+        variantWrapper.classList.remove("hidden");
+        variantWrapper.style.opacity = "1";
+      } else {
+        variantWrapper.classList.add("hidden");
+      }
+    }
+    return;
+  }
+
+  if (isMulti) {
+    // 1. Expand Card Height to 400px with cubic bezier smooth curve
+    runAnime({
+      targets: cardEl,
+      height: "400px",
+      duration: 320,
+      easing: "cubicBezier(0.25, 1, 0.5, 1)"
+    });
+
+    // 2. Slide & Fade In 2nd Variant Date Row
+    if (variantWrapper) {
+      variantWrapper.classList.remove("hidden");
+      variantWrapper.style.opacity = "0";
+      runAnime({
+        targets: variantWrapper,
+        opacity: [0, 1],
+        translateY: [-10, 0],
+        duration: 250,
+        delay: 50,
+        easing: "easeOutQuad"
+      });
+    }
+  } else {
+    // 1. Fade Out 2nd Variant Date Row
+    if (variantWrapper) {
+      runAnime({
+        targets: variantWrapper,
+        opacity: [1, 0],
+        translateY: [0, -10],
+        duration: 150,
+        easing: "easeInQuad",
+        complete: () => {
+          variantWrapper.classList.add("hidden");
+        }
+      });
+    }
+
+    // 2. Collapse Card Height back to 350px
+    runAnime({
+      targets: cardEl,
+      height: "350px",
+      duration: 320,
+      easing: "cubicBezier(0.25, 1, 0.5, 1)"
+    });
+  }
+}
+
+// Global window fallback for non-module & module usage
+if (typeof window !== "undefined") {
   window.CertiFlyAnimations = {
+    isAnimeAvailable,
+    runAnime,
+    runStagger,
     initHeroCardFlip,
     animateOverviewEntrance,
     animateLegalityRings,
     animateLvoMarker,
     animateHistogramBars,
     animatePassportAndElpBars,
-    animateOverviewDashboard
+    animateOverviewDashboard,
+    animateRecencyCardExpansion
   };
 }
