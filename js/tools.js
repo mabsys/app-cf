@@ -1,4 +1,4 @@
-// ./js/tools.js (3010_R301) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3010_R302) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -722,6 +722,7 @@ export function runToolCalculation(toolType, inputData = {}) {
 
           const earliestOPC = new Date(conduct.getTime());
           earliestOPC.setMonth(earliestOPC.getMonth() + 4);
+          earliestOPC.setDate(earliestOPC.getDate() + 1);
 
           const latestOPC = new Date(newExp.getTime());
           latestOPC.setMonth(latestOPC.getMonth() - 4);
