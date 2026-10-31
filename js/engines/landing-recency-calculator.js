@@ -1,4 +1,4 @@
-// landing-recency-calculator - Landing Recency & Requalification Engine
+// ./engines/landing-recency-calculator.js (3110_R317) - Landing Recency & Requalification Engine
 /**
  * Landing Recency & Requalification Engine (2310_R197)
  * Grounded in CAD 6 Part 1, OM-A Section 5.3.4, and OM-D Section 8.3
@@ -16,10 +16,11 @@ class LandingRecencyEngine {
    */
   static formatDate(date) {
     if (!date || isNaN(date.getTime())) return null;
-    const yyyy = date.getUTCFullYear();
-    const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const dd = String(date.getUTCDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    const month = months[date.getUTCMonth()];
+    const year = date.getUTCFullYear();
+    return `${day} ${month} ${year}`;
   }
 
   /**
@@ -159,7 +160,7 @@ class LandingRecencyEngine {
       if (daysSinceLastLanding <= 45 && normRank === 'PIC' && isPic45Lapsed && !isCad90Lapsed) {
         requalificationFootprint = {
           lapsedCategory: 'CAPTAIN_45D',
-          summary: 'Level D FFS: 1 landing (PF) + LIFUS: 2 sectors (1 PF / 1 PM)',
+          summary: 'FFS: 1 PF landing | LIFUS: 2 sectors',
           fstdRequirement: '1 take-off and 1 landing as PF in Level D FFS',
           lifusRequirement: '2 sectors LIFUS under DFE/FI supervision (1 PF / 1 PM)',
           clauseRef: 'OM-A 5.3.4 & OM-D 8.3.1 (Captains ≤ 45 Days Lapsed)'
@@ -167,7 +168,7 @@ class LandingRecencyEngine {
       } else if (daysSinceLastLanding <= 90) {
         requalificationFootprint = {
           lapsedCategory: 'RECOVERY_LE_90D',
-          summary: 'Level D FFS: 3 landings (PF, 15kt X-wind) + LIFUS: 4 sectors (3 PF / 1 PM)',
+          summary: 'FFS: 3 PF landings (15kt X-wind) | LIFUS: 4 sectors',
           fstdRequirement: '3 take-offs and 3 landings as PF in Level D FFS (including 15kt crosswind & circuits)',
           lifusRequirement: '4 sectors LIFUS under DFE/FI supervision (3 PF / 1 PM)',
           clauseRef: 'OM-D 8.3.2 (46 to 90 Days Lapsed Footprint)'
@@ -175,7 +176,7 @@ class LandingRecencyEngine {
       } else if (daysSinceLastLanding <= 120) {
         requalificationFootprint = {
           lapsedCategory: 'RECOVERY_91_120D',
-          summary: 'Level D FFS: 3 landings (PF) + LIFUS: 4 sectors (3 PF / 1 PM)',
+          summary: 'FFS: 3 PF landings | LIFUS: 4 sectors',
           fstdRequirement: '3 take-offs and 3 landings as PF in Level D FFS',
           lifusRequirement: '4 sectors LIFUS under DFE/FI supervision (3 PF / 1 PM)',
           clauseRef: 'OM-D 8.3.3 (91 to 120 Days Lapsed Footprint)'
@@ -183,7 +184,7 @@ class LandingRecencyEngine {
       } else {
         requalificationFootprint = {
           lapsedCategory: 'RECOVERY_GT_120D',
-          summary: 'Full OPC/LPC Simulator Assessment + OM-D LIFUS Syllabus Re-qualification',
+          summary: 'Full OPC/LPC FFS Check + OM-D LIFUS Syllabus',
           fstdRequirement: 'Full OPC / LPC Simulator Check Session',
           lifusRequirement: 'Re-assessment & LIFUS per OM-D Chapter 8 syllabus',
           clauseRef: 'OM-D 8.3.4 (Exceeded > 120 Days Footprint)'
@@ -273,13 +274,15 @@ class LandingRecencyEngine {
     const targetClockLabel = rawResult.rank === 'PIC' ? 'Next Required Landing Cutoff (45d/90d)' : 'Statutory 90-Day Cutoff';
     const targetClockValue = rawResult.nextRequiredLandingCutoff || '--';
 
-    const auditNotes = [
-      'CAD 6 Part 1 & OM-A 5.3.4 Landing Recency Rules',
-      rawResult.statusMessage || (isCompliant ? '3 landings logged in preceding 90 days' : 'Re-qualification footprint required')
-    ];
-
-    if (rawResult.requalificationFootprint) {
-      auditNotes.push(`Footprint: ${rawResult.requalificationFootprint.summary}`);
+    let auditNotes = [];
+    if (isCompliant) {
+      auditNotes = ['CAD 6 & OM-A 5.3.4 Recency Cleared. 3 PF landings in 90 days.'];
+    } else {
+      const isPic45 = rawResult.pic45Status && rawResult.pic45Status.isLapsed;
+      const isVar = rawResult.variantStatus && rawResult.variantStatus.isLapsed;
+      const reason = isPic45 ? 'Captain 45d Rule' : (isVar ? 'MFF Variant Rule' : 'CAD 6 90d Rule');
+      const fp = rawResult.requalificationFootprint ? ` Req: ${rawResult.requalificationFootprint.summary}` : '';
+      auditNotes = [`CAD 6 / OM-A Lapsed (${reason}).${fp}`];
     }
 
     const actions = rawResult.requalificationFootprint ? [
@@ -301,10 +304,6 @@ class LandingRecencyEngine {
 }
 
 // Node.js module export compatibility
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = LandingRecencyEngine;
-}
-
 
 // ES Module exports
 export { LandingRecencyEngine };
@@ -315,4 +314,8 @@ export function evaluateLandingRecency(params) {
 
 export function normalizeOutput(rawResult) {
   return LandingRecencyEngine.normalizeOutput(rawResult);
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = LandingRecencyEngine;
 }
