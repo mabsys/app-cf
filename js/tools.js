@@ -1,4 +1,4 @@
-// ./js/tools.js (3110_R306) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3110_R307) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -8,6 +8,7 @@ import * as PreFlightRestEngineModule from './engines/pre-flight-rest-calculator
 import * as CumulativeEngineModule from './engines/cumulative-hours-calculator.js';
 import * as MedicalEngineModule from './engines/medical-validity-calculator.js';
 import * as RecurrentEngineModule from './engines/recurrent-training-calculator.js';
+import * as LandingRecencyEngineModule from './engines/landing-recency-calculator.js';
 
 // ==================================================================
 // TOOLS MODULE STATE
@@ -239,7 +240,8 @@ export function selectEfbDate(isoVal) {
       'input-recency-flight-date': 'input-recency-flight-date-display',
       'input-recency-l1-date': 'input-recency-l1-date-display',
       'input-recency-l2-date': 'input-recency-l2-date-display',
-      'input-recency-l3-date': 'input-recency-l3-date-display'
+      'input-recency-l3-date': 'input-recency-l3-date-display',
+      'input-recency-variant-date': 'input-recency-variant-date-display'
     };
 
     const displayId = displayIdMap[efbDatePickerState.targetInputId] || `${efbDatePickerState.targetInputId}-display`;
@@ -847,17 +849,106 @@ export function runToolCalculation(toolType, inputData = {}) {
       }
 
       case 'recency': {
+        const rank = document.getElementById('input-recency-capacity')?.value || 'PIC';
         const flightDate = document.getElementById('input-recency-flight-date')?.value || new Date().toISOString().split('T')[0];
         const l1 = document.getElementById('input-recency-l1-date')?.value;
         const l2 = document.getElementById('input-recency-l2-date')?.value;
         const l3 = document.getElementById('input-recency-l3-date')?.value;
-        const count = [l1, l2, l3].filter(Boolean).length;
-        result = {
-          dayCount: count >= 3 ? 3 : count,
-          nightCount: 1,
-          isCompliant: count >= 3,
-          anchorDate: l3 || flightDate
+        const isMultiVariant = (document.getElementById('input-recency-multivariant')?.value === 'true');
+        const lastVariantLandingDate = document.getElementById('input-recency-variant-date')?.value || null;
+
+        const last3Landings = [l1, l2, l3].filter(Boolean);
+
+        const calcParams = {
+          rank,
+          last3Landings,
+          isMultiVariant,
+          lastVariantLandingDate,
+          referenceDate: flightDate
         };
+
+        if (typeof LandingRecencyEngineModule !== 'undefined') {
+          if (typeof LandingRecencyEngineModule.evaluateLandingRecency === 'function') {
+            result = LandingRecencyEngineModule.evaluateLandingRecency(calcParams);
+          } else if (LandingRecencyEngineModule.LandingRecencyEngine && typeof LandingRecencyEngineModule.LandingRecencyEngine.evaluateLandingRecency === 'function') {
+            result = LandingRecencyEngineModule.LandingRecencyEngine.evaluateLandingRecency(calcParams);
+          } else if (LandingRecencyEngineModule.default && typeof LandingRecencyEngineModule.default.evaluateLandingRecency === 'function') {
+            result = LandingRecencyEngineModule.default.evaluateLandingRecency(calcParams);
+          }
+        }
+
+        if (!result && typeof LandingRecencyEngine !== 'undefined' && typeof LandingRecencyEngine.evaluateLandingRecency === 'function') {
+          result = LandingRecencyEngine.evaluateLandingRecency(calcParams);
+        }
+
+        // Standalone fallback calculation if module not imported
+        if (!result) {
+          const normRank = String(rank).toUpperCase().includes('FO') ? 'FO' : 'PIC';
+          const refDate = flightDate ? new Date(flightDate) : new Date();
+          const validLandings = last3Landings.map(d => new Date(d)).filter(d => !isNaN(d.getTime())).sort((a,b) => b - a);
+          const mostRecentLanding = validLandings.length > 0 ? validLandings[0] : null;
+          const daysSinceLastLanding = mostRecentLanding ? Math.floor((refDate - mostRecentLanding) / 86400000) : 999;
+          const date90Ago = new Date(refDate.getTime());
+          date90Ago.setDate(date90Ago.getDate() - 90);
+          const landingsIn90Days = validLandings.filter(l => l >= date90Ago && l <= refDate).length;
+          
+          let cad90ExpiryDate = null;
+          let daysRemaining90 = 0;
+          if (validLandings.length >= 3) {
+            const expDate = new Date(validLandings[2].getTime());
+            expDate.setDate(expDate.getDate() + 90);
+            cad90ExpiryDate = expDate.toISOString().split('T')[0];
+            daysRemaining90 = Math.ceil((expDate - refDate) / 86400000);
+          }
+          const isCad90Lapsed = landingsIn90Days < 3 || daysRemaining90 < 0;
+
+          let isPic45Lapsed = false;
+          let pic45ExpiryDate = null;
+          let daysRemaining45 = null;
+          if (normRank === 'PIC') {
+            if (mostRecentLanding) {
+              const expDate45 = new Date(mostRecentLanding.getTime());
+              expDate45.setDate(expDate45.getDate() + 45);
+              pic45ExpiryDate = expDate45.toISOString().split('T')[0];
+              daysRemaining45 = Math.ceil((expDate45 - refDate) / 86400000);
+              isPic45Lapsed = daysRemaining45 < 0;
+            } else {
+              isPic45Lapsed = true;
+              daysRemaining45 = 0;
+            }
+          }
+
+          let isVariantLapsed = false;
+          if (isMultiVariant) {
+            if (lastVariantLandingDate) {
+              const expVar = new Date(lastVariantLandingDate);
+              expVar.setDate(expVar.getDate() + 90);
+              isVariantLapsed = (Math.ceil((expVar - refDate) / 86400000) < 0);
+            } else {
+              isVariantLapsed = true;
+            }
+          }
+
+          const isCompliant = !isCad90Lapsed && !isPic45Lapsed && (!isMultiVariant || !isVariantLapsed);
+          const minDays = Math.max(0, Math.min(daysRemaining90 || 90, daysRemaining45 !== null ? daysRemaining45 : 90));
+
+          result = {
+            isCompliant,
+            rank: normRank,
+            referenceDate: flightDate,
+            mostRecentLandingDate: mostRecentLanding ? mostRecentLanding.toISOString().split('T')[0] : null,
+            daysSinceLastLanding: daysSinceLastLanding === 999 ? null : daysSinceLastLanding,
+            landingsIn90Days,
+            nextRequiredLandingCutoff: pic45ExpiryDate || cad90ExpiryDate,
+            daysRemaining: isCompliant ? minDays : 0,
+            statusMessage: isCompliant ? `${minDays} days remaining` : 'Recency Lapsed',
+            breakdownGrid: [
+              { label: '90-DAY LANDINGS', value: `${landingsIn90Days} / 3 Completed` },
+              { label: 'LAST PF LANDING', value: mostRecentLanding ? `${daysSinceLastLanding}d ago` : 'None Recorded' },
+              { label: 'VARIANT STATUS', value: isMultiVariant ? (isVariantLapsed ? 'MFF Lapsed' : 'Current') : 'Single Fleet' }
+            ]
+          };
+        }
         break;
       }
 
@@ -1079,21 +1170,41 @@ export function normalizeOutput(toolType, rawResult) {
     }
 
     case 'recency': {
-      const isCompliant = rawResult ? rawResult.isCompliant : true;
+      const isCompliant = rawResult ? !!rawResult.isCompliant : true;
+      const rank = rawResult ? (rawResult.rank || 'PIC') : 'PIC';
       statusTheme = isCompliant ? 'emerald' : 'rose';
-      const dayCount = rawResult ? rawResult.dayCount : 3;
+
+      const headlineValue = isCompliant
+        ? (rawResult && rawResult.daysRemaining !== undefined ? `${rawResult.daysRemaining} DAYS REMAINING` : '3 / 3 LANDINGS MET')
+        : 'RECENCY LAPSED';
+
+      const targetClockLabel = rank === 'PIC' ? 'Next Required Landing Cutoff (45d/90d)' : 'Statutory 90-Day Cutoff';
+      const targetClockValue = rawResult && rawResult.nextRequiredLandingCutoff ? formatDateDDMMMYYYY(rawResult.nextRequiredLandingCutoff) : '90-Day Rolling Window';
+
+      const grid = rawResult && rawResult.breakdownGrid ? rawResult.breakdownGrid : [
+        { label: '90-DAY LANDINGS', value: rawResult && rawResult.landingsIn90Days !== undefined ? `${rawResult.landingsIn90Days} / 3 Completed` : '3 / 3 Completed' },
+        { label: 'LAST PF LANDING', value: rawResult && rawResult.daysSinceLastLanding !== undefined ? `${rawResult.daysSinceLastLanding}d ago` : '--' },
+        { label: 'VARIANT STATUS', value: 'Single Fleet' }
+      ];
+
+      const auditNotes = [
+        'Grounded in CAAM CAD 6 Part 1 & OM-A 5.3.4 Landing Recency Rules.',
+        rawResult && rawResult.statusMessage ? rawResult.statusMessage : (isCompliant ? '3 landings logged in preceding 90 days.' : 'Re-qualification footprint required.')
+      ];
+
+      if (rawResult && rawResult.requalificationFootprint) {
+        auditNotes.push(`OM-D 8.3 Footprint: ${rawResult.requalificationFootprint.summary}`);
+      }
+
       return {
         statusTheme,
+        statusBadge: isCompliant ? 'RECENCY CLEARED' : 'RECENCY LAPSED',
         headlineTitle: 'LANDING RECENCY STATUS',
-        headlineValue: isCompliant ? `${dayCount} / 3 LANDINGS MET` : 'RECENCY LAPSED',
-        targetClockLabel: 'Target Window / Deadline:',
-        targetClockValue: rawResult && rawResult.expiryDate ? formatDateDDMMMYYYY(rawResult.expiryDate) : '90-Day Rolling Window',
-        breakdownGrid: [
-          { label: 'DAY LANDINGS', value: `${dayCount} Sector(s) Logged` },
-          { label: 'ANCHOR DATE', value: rawResult && rawResult.anchorDate ? formatDateDDMMMYYYY(rawResult.anchorDate) : '--' },
-          { label: 'PASSENGER CARRY', value: isCompliant ? 'Cleared (PIC / Co-Pilot)' : 'Prohibited (Re-qualification Required)' }
-        ],
-        auditNotes: ['Grounded in CAAM CAD 1 Section 2.1.5.2 & OM-A 5.1.2. Compliant.']
+        headlineValue,
+        targetClockLabel,
+        targetClockValue,
+        breakdownGrid: grid,
+        auditNotes
       };
     }
 
@@ -1426,6 +1537,29 @@ export function setSectorCount(count) {
 }
 
 // ==================================================================
+
+// ==================================================================
+// MULTI-VARIANT / SFF / MFF TOGGLE
+// ==================================================================
+export function setRecencyMultiVariant(isMulti) {
+  const inputEl = document.getElementById('input-recency-multivariant');
+  if (inputEl) inputEl.value = isMulti ? 'true' : 'false';
+
+  const singleBtn = document.getElementById('btn-recency-single-fleet');
+  const multiBtn = document.getElementById('btn-recency-multi-variant');
+  const variantWrapper = document.getElementById('wrapper-recency-variant-date');
+
+  if (isMulti) {
+    if (singleBtn) singleBtn.className = "py-1 px-2 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all cursor-pointer text-center";
+    if (multiBtn) multiBtn.className = "py-1 px-2 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-700 shadow-sm transition-all cursor-pointer text-center";
+    if (variantWrapper) variantWrapper.classList.remove('hidden');
+  } else {
+    if (singleBtn) singleBtn.className = "py-1 px-2 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-700 shadow-sm transition-all cursor-pointer text-center";
+    if (multiBtn) multiBtn.className = "py-1 px-2 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all cursor-pointer text-center";
+    if (variantWrapper) variantWrapper.classList.add('hidden');
+  }
+}
+
 // RECURRENT COURSE SELECTOR MODAL
 // ==================================================================
 export function openRecurrentCourseModal() {
@@ -1560,6 +1694,7 @@ if (typeof window !== 'undefined') {
   window.closeRecurrentCourseModal = closeRecurrentCourseModal;
   window.selectRecurrentCourse = selectRecurrentCourse;
   window.filterRecurrentCourses = filterRecurrentCourses;
+window.setRecencyMultiVariant = setRecencyMultiVariant;
 
   window.setSectorCount = setSectorCount;
   window.getSectorCount = getSectorCount;
