@@ -1,4 +1,4 @@
-// ./js/tools.js (3110_R321) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3110_R324) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -317,6 +317,8 @@ export function confirmEfbTimePicker() {
 
     const displayIdMap = {
       'input-maxfdp-report-time': 'btn-maxfdp-report-display',
+      'input-standby-start-time': 'btn-standby-start-display',
+      'input-standby-report-time': 'btn-standby-report-display',
       'input-standby-time': 'btn-stby-time-display',
       'input-cum-duty-7d': 'btn-cum-7d-display',
       'input-cum-duty-14d': 'btn-cum-14d-display',
@@ -1275,15 +1277,15 @@ export function normalizeOutput(toolType, rawResult) {
 
       const fdp = rawResult ? `${rawResult.netPermissibleFDPFormatted || '13:00'} HOURS` : '13:00 HOURS';
       
-      let cutoffStr = '1800Z / 02:00 MYT';
+      let cutoffStr = '18:00 UTC / 02:00 MYT';
       let utcS = '';
       if (rawResult && (rawResult.cutoffTimestampUTC || rawResult.cutoffTimestampUtc)) {
         const utcRaw = rawResult.cutoffTimestampUTC || rawResult.cutoffTimestampUtc;
         const uParts = utcRaw.split(' ');
         if (uParts.length >= 2) {
-          utcS = uParts[1].replace(':', '') + 'Z';
+          utcS = `${uParts[1]} UTC`;
         } else {
-          utcS = utcRaw.replace(':', '') + 'Z';
+          utcS = `${utcRaw} UTC`;
         }
       }
 
@@ -1309,16 +1311,11 @@ export function normalizeOutput(toolType, rawResult) {
         ? `${rawResult.fdpDeductionFormatted.replace(':', 'h ')}m` 
         : '00h 00m';
 
-      const caseLabelStr = rawResult && rawResult.caseLabel 
-        ? rawResult.caseLabel 
-        : (isCaseB ? 'Case B (>= 6 Hours Standby)' : 'Case A (< 6 Hours Standby)');
+      const caseRationaleStr = isCaseB 
+        ? `Case B (≥ 6h)\n${deductionStr} Excess Deducted`
+        : `Case A (< 6h)\nNo Deduction Required`;
 
-      const warningsStr = rawResult && rawResult.warnings && rawResult.warnings.length > 0 ? rawResult.warnings.join(' ') : null;
-      const auditNoteStr = warningsStr
-        ? `${warningsStr} ${rawResult.notes ? rawResult.notes.map(n => n.endsWith('.') ? n : n + '.').join(' ') : ''}`
-        : (rawResult && rawResult.notes && rawResult.notes.length > 0
-          ? rawResult.notes.map(n => n.endsWith('.') ? n : n + '.').join(' ')
-          : 'Grounded in CAAM CAD 1901 Section 2.11 Standby FDP Adjustments. Compliant.');
+      const auditNoteStr = 'Grounded in CAAM CAD 1901 Section 2.11 & OM-A 7.5.7 Standby FDP Adjustments. Compliant.';
 
       return {
         statusTheme,
@@ -1331,13 +1328,13 @@ export function normalizeOutput(toolType, rawResult) {
         breakdownGrid: [
           { label: 'STANDBY DURATION', value: standbyDurationStr },
           { label: 'FDP DEDUCTION', value: deductionStr },
-          { label: 'CASE CLASSIFICATION', value: caseLabelStr }
+          { label: 'CASE RATIONALE', value: caseRationaleStr }
         ],
         auditNotes: [auditNoteStr]
       };
     }
 
-    case 'max-fdp': {
+      case 'max-fdp': {
       const isDiscretionNeeded = rawResult ? (rawResult.isDiscretionTriggered || rawResult.exceedsMaxFdp) : false;
       statusTheme = isDiscretionNeeded ? 'amber' : 'emerald';
       const fdpVal = rawResult ? (rawResult.finalMaxPermissibleFDPFormatted || rawResult.maxFdpFormatted) : '13:00 HOURS';
@@ -1467,7 +1464,7 @@ function renderToolsOutputCardForTool(toolType, normalized) {
       if (lblEl) lblEl.innerText = items[i - 1].label || '';
       if (valEl) {
         valEl.innerText = items[i - 1].value || '';
-        valEl.className = 'text-xs font-bold text-slate-800 dark:text-slate-100 font-sans';
+        valEl.className = 'text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line';
       }
     } else {
       if (lblEl) lblEl.innerText = '';
@@ -1654,6 +1651,16 @@ export function resetToolInputs(toolId) {
     if (varDateDisplay) varDateDisplay.innerText = 'SELECT DATE';
 
     setRecencyMultiVariant(false);
+  } else if (key === 'standby') {
+    setStandbyLocation('HOME');
+    const startIn = document.getElementById('input-standby-start-time');
+    const reportIn = document.getElementById('input-standby-report-time');
+    const startDisp = document.getElementById('btn-standby-start-display');
+    const reportDisp = document.getElementById('btn-standby-report-display');
+    if (startIn) startIn.value = '08:00';
+    if (reportIn) reportIn.value = '12:00';
+    if (startDisp) startDisp.textContent = '08:00';
+    if (reportDisp) reportDisp.textContent = '12:00';
   }
 
   const container = document.getElementById(toolId);
