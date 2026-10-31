@@ -1,4 +1,4 @@
-// ./js/tools.js (3110_R313) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3110_R316) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1179,21 +1179,24 @@ export function normalizeOutput(toolType, rawResult) {
         : 'RECENCY LAPSED';
 
       const targetClockLabel = rank === 'PIC' ? 'Next Required Landing Cutoff (45d/90d)' : 'Statutory 90-Day Cutoff';
-      const targetClockValue = rawResult && rawResult.nextRequiredLandingCutoff ? formatDateDDMMMYYYY(rawResult.nextRequiredLandingCutoff) : '90-Day Rolling Window';
+      const rawCutoff = rawResult && rawResult.nextRequiredLandingCutoff ? rawResult.nextRequiredLandingCutoff : '90-Day Rolling Window';
+      const targetClockValue = formatDateDDMMMYYYY(rawCutoff);
 
       const grid = rawResult && rawResult.breakdownGrid ? rawResult.breakdownGrid : [
         { label: '90-DAY LANDINGS', value: rawResult && rawResult.landingsIn90Days !== undefined ? `${rawResult.landingsIn90Days} / 3 Completed` : '3 / 3 Completed' },
-        { label: 'LAST PF LANDING', value: rawResult && rawResult.daysSinceLastLanding !== undefined ? `${rawResult.daysSinceLastLanding}d ago` : '--' },
+        { label: 'LAST PF LANDING', value: rawResult && rawResult.daysSinceLastLanding !== undefined ? `${rawResult.daysSinceLastLanding}d ago (${formatDateDDMMMYYYY(rawResult.mostRecentLandingDate)})` : 'None Recorded' },
         { label: 'VARIANT STATUS', value: 'Single Fleet' }
       ];
 
-      const auditNotes = [
-        'Grounded in CAAM CAD 6 Part 1 & OM-A 5.3.4 Landing Recency Rules.',
-        rawResult && rawResult.statusMessage ? rawResult.statusMessage : (isCompliant ? '3 landings logged in preceding 90 days.' : 'Re-qualification footprint required.')
-      ];
-
-      if (rawResult && rawResult.requalificationFootprint) {
-        auditNotes.push(`OM-D 8.3 Footprint: ${rawResult.requalificationFootprint.summary}`);
+      let auditNotes = [];
+      if (isCompliant) {
+        auditNotes = ['CAD 6 & OM-A 5.3.4 Recency Cleared. 3 PF landings in 90 days.'];
+      } else {
+        const isPic45 = rawResult && rawResult.pic45Status && rawResult.pic45Status.isLapsed;
+        const isVar = rawResult && rawResult.variantStatus && rawResult.variantStatus.isLapsed;
+        const reason = isPic45 ? 'Captain 45d Rule' : (isVar ? 'MFF Variant Rule' : 'CAD 6 90d Rule');
+        const fp = rawResult && rawResult.requalificationFootprint ? ` Req: ${rawResult.requalificationFootprint.summary}` : '';
+        auditNotes = [`CAD 6 / OM-A Lapsed (${reason}).${fp}`];
       }
 
       return {
