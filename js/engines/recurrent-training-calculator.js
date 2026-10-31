@@ -1,3 +1,4 @@
+// ./engines/recurrent-training-calculator.js (3110_R305) - Recurrent Training Engine
 /**
  * Recurrent Training & Checking Calculator Engine for Flight Crew (v2)
  * Grounded in OM-A, OM-D, and CAAM Regulations
@@ -208,14 +209,14 @@ class RecurrentTrainingEngine {
   }
 }
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = RecurrentTrainingEngine;
+// ES Module exports
+export { RecurrentTrainingEngine };
+
+export function calculateExpiry(qualKey, completionDateStr, currentExpiryDateStr = null) {
+  return RecurrentTrainingEngine.calculateExpiry(qualKey, completionDateStr, currentExpiryDateStr);
 }
 
-export { RecurrentTrainingEngine }; 
-export function calculateRecurrentExpiry(params) { 
-  return RecurrentTrainingEngine.calculateExpiry( 
-    params.qualKey || params.courseType || 'linecheck', 
-    params.conductDate, params.currentExpiryDate 
-  ); 
+// CommonJS module export compatibility
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = RecurrentTrainingEngine;
 }
