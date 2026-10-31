@@ -1,4 +1,4 @@
-// ./js/tools.js (3110_R307) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3110_R313) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1507,10 +1507,48 @@ export function resetToolInputs(toolId) {
     toolsState.recurrentCourseKey = 'LINE_CHECK';
     toolsState.recurrentCourseName = 'Line Check (LC)';
     toolsState.recurrentCourseCat = 'Annual Check';
+  } else if (key === 'recency') {
+    const capInput = document.getElementById('input-recency-capacity');
+    if (capInput) capInput.value = 'PIC';
+
+    const flightDateInput = document.getElementById('input-recency-flight-date');
+    if (flightDateInput) flightDateInput.value = '';
+
+    const l1Input = document.getElementById('input-recency-l1-date');
+    if (l1Input) l1Input.value = '';
+
+    const l2Input = document.getElementById('input-recency-l2-date');
+    if (l2Input) l2Input.value = '';
+
+    const l3Input = document.getElementById('input-recency-l3-date');
+    if (l3Input) l3Input.value = '';
+
+    const varDateInput = document.getElementById('input-recency-variant-date');
+    if (varDateInput) varDateInput.value = '';
+
+    const capDisplay = document.getElementById('btn-recency-capacity-display');
+    if (capDisplay) capDisplay.innerText = 'PIC (Captain)';
+
+    const flightDateDisplay = document.getElementById('input-recency-flight-date-display');
+    if (flightDateDisplay) flightDateDisplay.innerText = 'SELECT DATE';
+
+    const l1Display = document.getElementById('input-recency-l1-date-display');
+    if (l1Display) l1Display.innerText = 'DATE 1';
+
+    const l2Display = document.getElementById('input-recency-l2-date-display');
+    if (l2Display) l2Display.innerText = 'DATE 2';
+
+    const l3Display = document.getElementById('input-recency-l3-date-display');
+    if (l3Display) l3Display.innerText = 'DATE 3';
+
+    const varDateDisplay = document.getElementById('input-recency-variant-date-display');
+    if (varDateDisplay) varDateDisplay.innerText = 'SELECT DATE';
+
+    setRecencyMultiVariant(false);
   }
 
   const container = document.getElementById(toolId);
-  if (container) {
+  if (container && key !== 'recency') {
     const inputs = container.querySelectorAll('input[type="hidden"]');
     inputs.forEach(input => { input.value = ''; });
   }
@@ -1542,21 +1580,42 @@ export function setSectorCount(count) {
 // MULTI-VARIANT / SFF / MFF TOGGLE
 // ==================================================================
 export function setRecencyMultiVariant(isMulti) {
+  const cardEl = document.getElementById('tool-card-recency');
+  const variantWrapper = document.getElementById('wrapper-recency-variant-date');
   const inputEl = document.getElementById('input-recency-multivariant');
-  if (inputEl) inputEl.value = isMulti ? 'true' : 'false';
-
   const singleBtn = document.getElementById('btn-recency-single-fleet');
   const multiBtn = document.getElementById('btn-recency-multi-variant');
-  const variantWrapper = document.getElementById('wrapper-recency-variant-date');
+
+  if (inputEl) inputEl.value = isMulti ? 'true' : 'false';
+
+  const activeBtnClass = "py-1 px-2 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-700 shadow-sm transition-all cursor-pointer text-center";
+  const inactiveBtnClass = "py-1 px-2 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all cursor-pointer text-center";
 
   if (isMulti) {
-    if (singleBtn) singleBtn.className = "py-1 px-2 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all cursor-pointer text-center";
-    if (multiBtn) multiBtn.className = "py-1 px-2 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-700 shadow-sm transition-all cursor-pointer text-center";
-    if (variantWrapper) variantWrapper.classList.remove('hidden');
+    if (multiBtn) multiBtn.className = activeBtnClass;
+    if (singleBtn) singleBtn.className = inactiveBtnClass;
   } else {
-    if (singleBtn) singleBtn.className = "py-1 px-2 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-700 shadow-sm transition-all cursor-pointer text-center";
-    if (multiBtn) multiBtn.className = "py-1 px-2 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all cursor-pointer text-center";
-    if (variantWrapper) variantWrapper.classList.add('hidden');
+    if (singleBtn) singleBtn.className = activeBtnClass;
+    if (multiBtn) multiBtn.className = inactiveBtnClass;
+  }
+
+  // Delegate Card Expansion & Motion to Centralized animations.js Engine
+  if (typeof window !== 'undefined' && window.CertiFlyAnimations?.animateRecencyCardExpansion) {
+    window.CertiFlyAnimations.animateRecencyCardExpansion(cardEl, variantWrapper, isMulti);
+  } else if (typeof animateRecencyCardExpansion === 'function') {
+    animateRecencyCardExpansion(cardEl, variantWrapper, isMulti);
+  } else {
+    // Pure CSS Fallback
+    if (isMulti) {
+      if (cardEl) cardEl.style.height = '400px';
+      if (variantWrapper) {
+        variantWrapper.classList.remove('hidden');
+        variantWrapper.style.opacity = '1';
+      }
+    } else {
+      if (cardEl) cardEl.style.height = '350px';
+      if (variantWrapper) variantWrapper.classList.add('hidden');
+    }
   }
 }
 
