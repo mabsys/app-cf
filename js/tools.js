@@ -1,4 +1,4 @@
-// ./js/tools.js (3010_R304) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3110_R305) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -7,6 +7,7 @@ import * as MaxFdpEngineModule from './engines/max-fdp-calculator.js';
 import * as PreFlightRestEngineModule from './engines/pre-flight-rest-calculator.js';
 import * as CumulativeEngineModule from './engines/cumulative-hours-calculator.js';
 import * as MedicalEngineModule from './engines/medical-validity-calculator.js';
+import * as RecurrentEngineModule from './engines/recurrent-training-calculator.js';
 
 // ==================================================================
 // TOOLS MODULE STATE
@@ -749,13 +750,99 @@ export function runToolCalculation(toolType, inputData = {}) {
       }
 
     case 'recurrent': {
-        const conductDate = document.getElementById('input-recurrent-conduct-date')?.value || new Date().toISOString().split('T')[0];
-        result = {
-          newExpiryDate: conductDate,
-          completionDate: conductDate,
-          name: toolsState.recurrentCourseName,
-          category: toolsState.recurrentCourseCat
-        };
+        const qualKey = inputData.courseType || toolsState.recurrentCourseKey || 'LINE_CHECK';
+        const completionDate = inputData.completionDate || document.getElementById('input-recurrent-conduct-date')?.value || new Date().toISOString().split('T')[0];
+        const currentExpiryDate = inputData.currentExpiryDate || document.getElementById('input-recurrent-expiry-date')?.value || null;
+
+        const calcParams = { qualKey, completionDate, currentExpiryDate };
+
+        if (typeof RecurrentEngineModule !== 'undefined') {
+          if (typeof RecurrentEngineModule.calculateExpiry === 'function') {
+            result = RecurrentEngineModule.calculateExpiry(qualKey, completionDate, currentExpiryDate);
+          } else if (RecurrentEngineModule.RecurrentTrainingEngine && typeof RecurrentEngineModule.RecurrentTrainingEngine.calculateExpiry === 'function') {
+            result = RecurrentEngineModule.RecurrentTrainingEngine.calculateExpiry(qualKey, completionDate, currentExpiryDate);
+          } else if (RecurrentEngineModule.default && typeof RecurrentEngineModule.default.calculateExpiry === 'function') {
+            result = RecurrentEngineModule.default.calculateExpiry(qualKey, completionDate, currentExpiryDate);
+          }
+        }
+
+        if (!result && typeof RecurrentTrainingEngine !== 'undefined' && typeof RecurrentTrainingEngine.calculateExpiry === 'function') {
+          result = RecurrentTrainingEngine.calculateExpiry(qualKey, completionDate, currentExpiryDate);
+        }
+
+        // Full standalone fallback calculation matching RecurrentTrainingEngine logic
+        if (!result) {
+          const rules = {
+            LINE_CHECK: { id: 'LINE_CHECK', name: 'Line Check (LC)', validityMonths: 12, windowMonths: 3, endOfMonthExpiry: true, category: 'Annual Check' },
+            SEP_AIRCRAFT_TYPE: { id: 'SEP_AIRCRAFT_TYPE', name: 'SEP (Aircraft Type Check)', validityMonths: 12, windowMonths: 3, endOfMonthExpiry: true, category: 'Annual SEP' },
+            DOOR_DRILL: { id: 'DOOR_DRILL', name: 'Practical Door Drill', validityMonths: 12, windowMonths: 3, endOfMonthExpiry: true, category: 'Annual SEP' },
+            CRM: { id: 'CRM', name: 'Crew Resource Management (CRM)', validityMonths: 12, windowMonths: 3, endOfMonthExpiry: true, category: 'Annual Refresher' },
+            AVSEC: { id: 'AVSEC', name: 'Aviation Security (AVSEC)', validityMonths: 12, windowMonths: 3, endOfMonthExpiry: true, category: 'Annual Refresher' },
+            ROUTE_AERODROME_COMPETENCE: { id: 'ROUTE_AERODROME_COMPETENCE', name: 'Route & Aerodrome Competence', validityMonths: 12, windowMonths: 0, endOfMonthExpiry: true, category: 'Annual Competence' },
+            DGR_FUNCTION_7: { id: 'DGR_FUNCTION_7', name: 'Dangerous Goods (DGR - Function 7)', validityMonths: 24, windowMonths: 3, endOfMonthExpiry: true, category: '24-Month Module' },
+            SMS: { id: 'SMS', name: 'Safety Management System (SMS)', validityMonths: 36, windowMonths: 3, endOfMonthExpiry: true, category: '36-Month Module' },
+            FIRE_SMOKE_DRILL: { id: 'FIRE_SMOKE_DRILL', name: 'Fire & Smoke House Practical Drill', validityMonths: 36, windowMonths: 0, endOfMonthExpiry: true, category: '36-Month Practical' },
+            WET_DITCHING_DRILL: { id: 'WET_DITCHING_DRILL', name: 'Wet / Swimming & Dinghy Drill', validityMonths: 36, windowMonths: 0, endOfMonthExpiry: true, category: '36-Month Practical' },
+            LVO_AUTOLAND: { id: 'LVO_AUTOLAND', name: 'Low Visibility Operations (LVO / Autoland)', validityDays: 180, endOfMonthExpiry: false, category: 'Semi-Annual Recency' }
+          };
+
+          const rule = rules[qualKey] || rules['LINE_CHECK'];
+          const parts = completionDate.split('-');
+          const compDate = parts.length === 3 ? new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10))) : new Date(completionDate);
+          
+          let currExp = null;
+          if (currentExpiryDate) {
+            const expParts = currentExpiryDate.split('-');
+            currExp = expParts.length === 3 ? new Date(Date.UTC(parseInt(expParts[0], 10), parseInt(expParts[1], 10) - 1, parseInt(expParts[2], 10))) : new Date(currentExpiryDate);
+          }
+
+          let newExp;
+          let anniversaryPreserved = false;
+
+          if (rule.validityDays) {
+            newExp = new Date(compDate.getTime() + rule.validityDays * 24 * 60 * 60 * 1000);
+          } else {
+            if (rule.windowMonths > 0 && currExp) {
+              const windowStart = new Date(currExp.getTime());
+              windowStart.setUTCMonth(windowStart.getUTCMonth() - rule.windowMonths);
+              if (compDate >= windowStart && compDate <= currExp) {
+                anniversaryPreserved = true;
+                newExp = new Date(currExp.getTime());
+                newExp.setUTCMonth(newExp.getUTCMonth() + rule.validityMonths);
+                if (rule.endOfMonthExpiry) {
+                  newExp = new Date(Date.UTC(newExp.getUTCFullYear(), newExp.getUTCMonth() + 1, 0));
+                }
+              }
+            }
+
+            if (!anniversaryPreserved) {
+              newExp = new Date(compDate.getTime());
+              newExp.setUTCMonth(newExp.getUTCMonth() + rule.validityMonths);
+              if (rule.endOfMonthExpiry) {
+                newExp = new Date(Date.UTC(newExp.getUTCFullYear(), newExp.getUTCMonth() + 1, 0));
+              }
+            }
+          }
+
+          const fmtDate = (d) => {
+            if (!d) return null;
+            const y = d.getUTCFullYear();
+            const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(d.getUTCDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+          };
+
+          result = {
+            qualId: rule.id,
+            name: rule.name,
+            category: rule.category,
+            completionDate: fmtDate(compDate),
+            currentExpiryDate: currExp ? fmtDate(currExp) : null,
+            newExpiryDate: fmtDate(newExp),
+            anniversaryPreserved,
+            calculationMethod: anniversaryPreserved ? `Preserved Anniversary (+${rule.validityMonths}M)` : `Reset (+${rule.validityMonths || rule.validityDays + 'D'})`
+          };
+        }
         break;
       }
 
@@ -951,6 +1038,31 @@ export function normalizeOutput(toolType, rawResult) {
       statusTheme = 'emerald';
       const expiry = rawResult ? formatDateDDMMMYYYY(rawResult.newExpiryDate) : '31 DEC 2026';
       const courseName = rawResult ? (rawResult.name || toolsState.recurrentCourseName) : 'Line Check (LC)';
+      const completionDateStr = rawResult && rawResult.completionDate ? formatDateDDMMMYYYY(rawResult.completionDate) : '15 DEC 2025';
+
+      let categoryDisplay = 'Annual ( 12 Month )';
+      const rawCat = rawResult ? (rawResult.category || toolsState.recurrentCourseCat || '') : '';
+      const qualId = rawResult ? rawResult.qualId : toolsState.recurrentCourseKey;
+
+      if (qualId === 'LVO_AUTOLAND' || rawCat.includes('Semi-Annual') || rawCat.includes('180')) {
+        categoryDisplay = 'Semi-Annual ( 180 Day )';
+      } else if (rawCat.includes('24-Month') || rawCat.includes('24')) {
+        categoryDisplay = 'Bi-Annual ( 24 Month )';
+      } else if (rawCat.includes('36-Month') || rawCat.includes('36')) {
+        categoryDisplay = 'Triennial ( 36 Month )';
+      } else {
+        categoryDisplay = 'Annual ( 12 Month )';
+      }
+
+      let ruleDisplay = 'Reset to EOM';
+      if (qualId === 'LVO_AUTOLAND' || (rawResult && rawResult.calculationMethod && rawResult.calculationMethod.includes('Days'))) {
+        ruleDisplay = '180 Days Rolling';
+      } else if (rawResult && rawResult.anniversaryPreserved) {
+        ruleDisplay = 'Preserved (3M Window)';
+      } else {
+        ruleDisplay = 'Reset to EOM';
+      }
+
       return {
         statusTheme,
         headlineTitle: 'RECURRENT EXPIRY DATE',
@@ -958,9 +1070,9 @@ export function normalizeOutput(toolType, rawResult) {
         targetClockLabel: 'Qualification Module:',
         targetClockValue: String(courseName).toUpperCase(),
         breakdownGrid: [
-          { label: 'MODULE CATEGORY', value: rawResult ? (rawResult.category || toolsState.recurrentCourseCat) : 'Annual (12 Calendar Months)' },
-          { label: 'COMPLETION DATE', value: rawResult && rawResult.completionDate ? formatDateDDMMMYYYY(rawResult.completionDate) : '15 DEC 2025' },
-          { label: 'RENEWAL METHOD', value: '3-Month Lookback Window' }
+          { label: 'COMPLETION DATE', value: completionDateStr },
+          { label: 'MODULE CATEGORY', value: categoryDisplay },
+          { label: 'RENEWAL RULE', value: ruleDisplay }
         ],
         auditNotes: ['Grounded in CAAM CAD 6.9.4 & OM-D Chapter 2 Recurrent Standards. Compliant.']
       };
@@ -1276,6 +1388,14 @@ export function resetToolInputs(toolId) {
     if (cDisplay) cDisplay.innerText = 'SELECT DATE';
     const eDisplay = document.getElementById('input-ppc-expiry-date-display');
     if (eDisplay) eDisplay.innerText = 'SELECT DATE';
+  } else if (key === 'recurrent') {
+    const cDisplay = document.getElementById('input-recurrent-conduct-date-display');
+    if (cDisplay) cDisplay.innerText = 'SELECT DATE';
+    const lbl = document.getElementById('recurrent-selected-course-label');
+    if (lbl) lbl.innerText = 'Line Check (LC)';
+    toolsState.recurrentCourseKey = 'LINE_CHECK';
+    toolsState.recurrentCourseName = 'Line Check (LC)';
+    toolsState.recurrentCourseCat = 'Annual Check';
   }
 
   const container = document.getElementById(toolId);
