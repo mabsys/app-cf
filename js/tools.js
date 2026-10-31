@@ -1,4 +1,4 @@
-// ./js/tools.js (3010_R302) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3010_R303) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -930,13 +930,11 @@ export function normalizeOutput(toolType, rawResult) {
         statusClass = 'bg-amber-600';
       }
 
-      const fileCheckSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="w-3.5 h-3.5 shrink-0 inline-block mr-1.5 align-text-bottom"><title>file-check</title><path fill="currentColor" fill-rule="evenodd" d="M4 2h9.56L20 8.44V22H4zm13.44 6L14 4.56V8zM5.5 3.5v17h13v-11h-4.75c-.69 0-1.25-.56-1.25-1.25V3.5zm3.78 10.72l1.47 1.47l3.97-3.97l1.06 1.06l-4.145 4.145a1.25 1.25 0 0 1-.885.365c-.32 0-.64-.12-.885-.365L8.22 15.28z" clip-rule="evenodd"/></svg><span>NEW PPC / LPC EXPIRY</span>`;
-
       return {
         statusTheme,
         statusBadge,
         statusClass,
-        headlineTitle: fileCheckSvg,
+        headlineTitle: 'NEW PPC / LPC EXPIRY',
         headlineValue: expiryStr,
         targetClockLabel: 'NEXT OPC WINDOW (4–8 MONTHS)',
         targetClockValue: opcWindowStr,
@@ -1112,17 +1110,7 @@ function renderToolsOutputCardForTool(toolType, normalized) {
   const subtitleEl = document.getElementById(`output-hero-subtitle-${suffix}`);
 
   if (heroEl) heroEl.className = `p-4 ${theme.heroBg} text-white transition-colors duration-300 rounded-t-2xl`;
-  if (titleEl) {
-    const svgEl = titleEl.querySelector('svg');
-    const textSpan = titleEl.querySelector('span:not(:has(svg))') || titleEl.querySelector('span');
-    if (svgEl && textSpan && textSpan !== titleEl) {
-      textSpan.innerText = normalized.headlineTitle || `${suffix.toUpperCase()} RESULTS`;
-    } else if (svgEl) {
-      titleEl.innerHTML = svgEl.outerHTML + `<span>${normalized.headlineTitle || `${suffix.toUpperCase()} RESULTS`}</span>`;
-    } else {
-      titleEl.innerText = normalized.headlineTitle || `${suffix.toUpperCase()} RESULTS`;
-    }
-  }
+  if (titleEl) titleEl.innerText = normalized.headlineTitle || `${suffix.toUpperCase()} RESULTS`;
   if (subtitleEl) subtitleEl.innerText = normalized.headlineValue || normalized.statusBadge || 'VALID / CLEARED';
 
   // Slot 2: Target Window / Clock
