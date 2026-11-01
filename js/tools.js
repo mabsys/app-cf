@@ -1,4 +1,4 @@
-// ./js/tools.js (3110_R324) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3110_R325) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -956,7 +956,7 @@ export function runToolCalculation(toolType, inputData = {}) {
       }
 
       case 'standby': {
-        const startTime = document.getElementById('input-standby-start-time')?.value || '08:00';
+        const startTime = document.getElementById('input-standby-start-time')?.value || '06:00';
         const reportTime = document.getElementById('input-standby-report-time')?.value || '12:00';
         const loc = toolsState.standbyLocation || document.getElementById('input-standby-location')?.value || 'HOME';
 
@@ -966,7 +966,7 @@ export function runToolCalculation(toolType, inputData = {}) {
         const d = now.getDate();
 
         const convertLocalTimeToUTCISO = (timeStr, isReportTime = false, startStr = null) => {
-          const [hh, mm] = (timeStr || '08:00').split(':').map(val => parseInt(val, 10) || 0);
+          const [hh, mm] = (timeStr || '06:00').split(':').map(val => parseInt(val, 10) || 0);
           let targetDay = d;
           if (isReportTime && startStr) {
             const [sH, sM] = startStr.split(':').map(val => parseInt(val, 10) || 0);
@@ -1657,9 +1657,9 @@ export function resetToolInputs(toolId) {
     const reportIn = document.getElementById('input-standby-report-time');
     const startDisp = document.getElementById('btn-standby-start-display');
     const reportDisp = document.getElementById('btn-standby-report-display');
-    if (startIn) startIn.value = '08:00';
+    if (startIn) startIn.value = '06:00';
     if (reportIn) reportIn.value = '12:00';
-    if (startDisp) startDisp.textContent = '08:00';
+    if (startDisp) startDisp.textContent = '06:00';
     if (reportDisp) reportDisp.textContent = '12:00';
   }
 
