@@ -1,4 +1,4 @@
-// ./js/tools.js (3110_R327) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3110_R328) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1107,7 +1107,9 @@ export function normalizeOutput(toolType, rawResult) {
       const isPreserved = rawResult ? !!rawResult.anniversaryPreserved : false;
 
       if (!isEligible || age >= 65) {
-        return {
+        const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? rawResult.notes : [];
+      return {
+        calculationNotes: calcNotes,
           statusTheme: 'rose',
           statusBadge: 'CEASED (AGE 65+)',
           statusClass: 'bg-rose-600',
@@ -1147,7 +1149,9 @@ export function normalizeOutput(toolType, rawResult) {
         statusClass = 'bg-amber-600';
       }
 
+      const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? rawResult.notes : [];
       return {
+        calculationNotes: calcNotes,
         statusTheme,
         statusBadge,
         statusClass,
@@ -1193,7 +1197,9 @@ export function normalizeOutput(toolType, rawResult) {
         statusClass = 'bg-amber-600';
       }
 
+      const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? rawResult.notes : [];
       return {
+        calculationNotes: calcNotes,
         statusTheme,
         statusBadge,
         statusClass,
@@ -1239,7 +1245,9 @@ export function normalizeOutput(toolType, rawResult) {
         ruleDisplay = 'Reset to EOM';
       }
 
+      const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? rawResult.notes : [];
       return {
+        calculationNotes: calcNotes,
         statusTheme,
         headlineTitle: 'RECURRENT EXPIRY DATE',
         headlineValue: expiry,
@@ -1284,7 +1292,9 @@ export function normalizeOutput(toolType, rawResult) {
         auditNotes = [`CAD 6 / OM-A Lapsed (${reason}).${fp}`];
       }
 
+      const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? rawResult.notes : [];
       return {
+        calculationNotes: calcNotes,
         statusTheme,
         statusBadge: isCompliant ? 'RECENCY CLEARED' : 'RECENCY LAPSED',
         headlineTitle: 'LANDING RECENCY STATUS',
@@ -1355,7 +1365,9 @@ export function normalizeOutput(toolType, rawResult) {
 
       const auditNoteStr = 'Grounded in CAAM CAD 1901 Section 2.11 & OM-A 7.5.7 Standby FDP Adjustments. Compliant.';
 
+      const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? rawResult.notes : [];
       return {
+        calculationNotes: calcNotes,
         statusTheme,
         statusBadge,
         statusClass,
@@ -1407,7 +1419,9 @@ export function normalizeOutput(toolType, rawResult) {
 
       const auditNoteStr = 'Grounded in CAAM CAD 1901 Table A/B & OM-A Section 7.5. Compliant.';
 
+      const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? rawResult.notes : [];
       return {
+        calculationNotes: calcNotes,
         statusTheme,
         statusBadge,
         statusClass,
@@ -1428,7 +1442,9 @@ export function normalizeOutput(toolType, rawResult) {
       const isReduced = rawResult ? rawResult.isRestReduced : false;
       statusTheme = isReduced ? 'amber' : 'emerald';
       const restVal = rawResult ? (rawResult.finalRequiredRestFormatted || rawResult.minRestFormatted) : '12:00 HOURS';
+      const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? rawResult.notes : [];
       return {
+        calculationNotes: calcNotes,
         statusTheme,
         headlineTitle: 'PRE-FLIGHT MINIMUM REST',
         headlineValue: restVal,
@@ -1447,7 +1463,9 @@ export function normalizeOutput(toolType, rawResult) {
       const isOverLimit = rawResult ? (rawResult.isExceeded || rawResult.isOverCap) : false;
       statusTheme = isOverLimit ? 'rose' : 'emerald';
       const duty7Val = (rawResult && rawResult.duty7Days) ? `${rawResult.duty7Days.currentFormatted || rawResult.duty7Days} / 55:00` : '32:15 / 55:00';
+      const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? rawResult.notes : [];
       return {
+        calculationNotes: calcNotes,
         statusTheme,
         headlineTitle: '7-DAY CUMULATIVE DUTY',
         headlineValue: duty7Val,
@@ -1552,11 +1570,12 @@ function renderToolsOutputCardForTool(toolType, normalized) {
   // Audit Notes Overlay & Inline Trigger Button
   const triggerBtn = document.getElementById(`btn-audit-notes-trigger-${suffix}`);
   const overlayContent = document.getElementById(`audit-overlay-content-${suffix}`);
+  const notes = (normalized && normalized.calculationNotes) ? normalized.calculationNotes : [];
 
-  if (rawResult && rawResult.notes && Array.isArray(rawResult.notes) && rawResult.notes.length > 0) {
+  if (notes && Array.isArray(notes) && notes.length > 0) {
     if (triggerBtn) triggerBtn.classList.remove('hidden');
     if (overlayContent) {
-      overlayContent.innerHTML = rawResult.notes.map(note => `<div class="flex items-start gap-2 py-1.5 border-b border-slate-800/50"><span class="text-blue-400 font-bold shrink-0">•</span><span class="leading-snug">${note}</span></div>`).join('');
+      overlayContent.innerHTML = notes.map(note => `<div class="flex items-start gap-2 py-1.5 border-b border-slate-800/50"><span class="text-blue-400 font-bold shrink-0">•</span><span class="leading-snug">${note}</span></div>`).join('');
     }
   } else {
     if (triggerBtn) triggerBtn.classList.add('hidden');
