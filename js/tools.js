@@ -1,4 +1,4 @@
-// ./js/tools.js (3110_R328) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3110_R329) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -2032,7 +2032,15 @@ export function openAuditOverlay(toolKey) {
   const overlay = document.getElementById(`audit-overlay-${toolKey}`);
   if (!overlay) return;
   overlay.classList.remove('hidden');
-  if (typeof anime !== 'undefined') {
+  if (typeof window !== 'undefined' && window.CertiFlyAnimations && typeof window.CertiFlyAnimations.runAnime === 'function') {
+    window.CertiFlyAnimations.runAnime({
+      targets: overlay,
+      translateY: ['100%', '0%'],
+      opacity: [0, 1],
+      duration: 250,
+      easing: 'easeOutCubic'
+    });
+  } else if (typeof anime === 'function') {
     anime({
       targets: overlay,
       translateY: ['100%', '0%'],
@@ -2040,25 +2048,49 @@ export function openAuditOverlay(toolKey) {
       duration: 250,
       easing: 'easeOutCubic'
     });
+  } else if (typeof anime === 'object' && anime && typeof anime.animate === 'function') {
+    anime.animate(overlay, {
+      translateY: ['100%', '0%'],
+      opacity: [0, 1],
+      duration: 250,
+      ease: 'outCubic'
+    });
   }
 }
 
 export function closeAuditOverlay(toolKey) {
   const overlay = document.getElementById(`audit-overlay-${toolKey}`);
   if (!overlay) return;
-  if (typeof anime !== 'undefined') {
+  const onDone = () => { overlay.classList.add('hidden'); };
+  if (typeof window !== 'undefined' && window.CertiFlyAnimations && typeof window.CertiFlyAnimations.runAnime === 'function') {
+    window.CertiFlyAnimations.runAnime({
+      targets: overlay,
+      translateY: ['0%', '100%'],
+      opacity: [1, 0],
+      duration: 200,
+      easing: 'easeInCubic',
+      onComplete: onDone,
+      complete: onDone
+    });
+  } else if (typeof anime === 'function') {
     anime({
       targets: overlay,
       translateY: ['0%', '100%'],
       opacity: [1, 0],
       duration: 200,
       easing: 'easeInCubic',
-      complete: () => {
-        overlay.classList.add('hidden');
-      }
+      complete: onDone
+    });
+  } else if (typeof anime === 'object' && anime && typeof anime.animate === 'function') {
+    anime.animate(overlay, {
+      translateY: ['0%', '100%'],
+      opacity: [1, 0],
+      duration: 200,
+      ease: 'inCubic',
+      onComplete: onDone
     });
   } else {
-    overlay.classList.add('hidden');
+    onDone();
   }
 }
 
