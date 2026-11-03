@@ -1,4 +1,4 @@
-// ./js/tools.js (3110_R329) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3110_R332) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -385,10 +385,25 @@ export function selectEfbOption(val, label) {
       'input-med-age-bracket': 'btn-med-age-display',
       'input-recency-capacity': 'btn-recency-capacity-display',
       'input-maxfdp-acclimatised': 'btn-maxfdp-acclim-display',
-      'input-preflight-location': 'btn-preflight-loc-display'
+      'input-maxfdp-relief': 'btn-maxfdp-relief-display',
+      'input-preflight-location': 'btn-preflight-loc-display',
+      'modal-maxfdp-longest-sector': 'btn-modal-maxfdp-longest-display',
+      'modal-maxfdp-split-rest': 'btn-modal-maxfdp-split-display',
+      'modal-maxfdp-inflight-rest': 'btn-modal-maxfdp-inflight-display',
+      'modal-maxfdp-crew-count': 'btn-modal-maxfdp-crew-display',
+      'modal-maxfdp-preceding-rest': 'btn-modal-maxfdp-preceding-display'
     };
 
-    const displayId = displayIdMap[efbSelectModalState.targetInputId] || `${efbSelectModalState.targetInputId}-display`;
+    const targetId = efbSelectModalState.targetInputId;
+    let displayId = displayIdMap[targetId];
+    if (!displayId) {
+      if (document.getElementById()) {
+        displayId = ;
+      } else {
+        displayId = targetId.replace('input-', 'btn-') + '-display';
+      }
+    }
+
     const displayEl = document.getElementById(displayId);
     if (displayEl) displayEl.innerText = label;
   }
@@ -1164,7 +1179,7 @@ export function normalizeOutput(toolType, rawResult) {
           { label: 'VALIDITY', value: `${validityMonths} Months` },
           { label: 'CREW LIMITATION', value: isOML ? 'Multi-Pilot Only (OML)' : 'Unrestricted' }
         ],
-        auditNotes: ['Grounded in CAAM CAD 1 PEL Section 1.2.5.2 & OM-A 5.1.4.4. Compliant.']
+        auditNotes: ['Grounded in CAAM CAD 1 PEL Section 1.2.5.2 & OM-A 5.1.4.4.']
       };
     }
 
@@ -1212,7 +1227,7 @@ export function normalizeOutput(toolType, rawResult) {
           { label: 'NEXT OPC TARGET', value: targetOpcStr },
           { label: 'OPERATING STATUS', value: lapsedWarning ? 'ATO Refresher Req.' : 'Qualified & Cleared' }
         ],
-        auditNotes: [lapsedWarning || 'Grounded in CAAM CAD 6.9.4.4, CAD 1 PEL 2.1.5.10 & OM-A 5.1.4.6. Compliant.']
+        auditNotes: [lapsedWarning || 'Grounded in CAAM CAD 6.9.4.4, CAD 1 PEL 2.1.5.10 & OM-A 5.1.4.6.']
       };
     }
 
@@ -1258,7 +1273,7 @@ export function normalizeOutput(toolType, rawResult) {
           { label: 'MODULE CATEGORY', value: categoryDisplay },
           { label: 'RENEWAL RULE', value: ruleDisplay }
         ],
-        auditNotes: ['Grounded in CAAM CAD 6.9.4 & OM-D Chapter 2 Recurrent Standards. Compliant.']
+        auditNotes: ['Grounded in CAAM CAD 6.9.4 & OM-D Chapter 2 Recurrent Standards.']
       };
     }
 
@@ -1363,7 +1378,7 @@ export function normalizeOutput(toolType, rawResult) {
         ? `Case B (≥ 6h)\n${deductionStr} Excess Deducted`
         : `Case A (< 6h)\nNo Deduction Required`;
 
-      const auditNoteStr = 'Grounded in CAAM CAD 1901 Section 2.11 & OM-A 7.5.7 Standby FDP Adjustments. Compliant.';
+      const auditNoteStr = 'Grounded in CAAM CAD 1901 Section 2.11 & OM-A 7.5.7 Standby FDP Adjustments.';
 
       const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? rawResult.notes : [];
       return {
@@ -1417,7 +1432,7 @@ export function normalizeOutput(toolType, rawResult) {
         ? `${rawResult.acclimatisedStatus || 'Acclimatised'}\nBand ${rawResult.timeBand || '0600-0759'}`
         : 'Acclimatised\nBand 0600-0759';
 
-      const auditNoteStr = 'Grounded in CAAM CAD 1901 Table A/B & OM-A Section 7.5. Compliant.';
+      const auditNoteStr = 'Grounded in CAAM CAD 1901 Table A/B & OM-A Section 7.5.';
 
       const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? rawResult.notes : [];
       return {
@@ -1455,7 +1470,7 @@ export function normalizeOutput(toolType, rawResult) {
           { label: 'DUTY LOCATION', value: 'Home Base (WMKK / KUL)' },
           { label: 'OUTSTATION ADDITION', value: '+00:00 Hours' }
         ],
-        auditNotes: ['Grounded in CAAM CAD 1901 Section 2.14 & OM-A Section 7.5.12. Compliant.']
+        auditNotes: ['Grounded in CAAM CAD 1901 Section 2.14 & OM-A Section 7.5.12.']
       };
     }
 
@@ -1476,7 +1491,7 @@ export function normalizeOutput(toolType, rawResult) {
           { label: '28-DAY DUTY (CAP 190H)', value: '120:00 / 190:00' },
           { label: '28-DAY FLIGHT (CAP 100H)', value: '78:30 / 100:00' }
         ],
-        auditNotes: ['Grounded in CAAM CAD 1901 Rolling Flight & Duty Time Caps. Compliant.']
+        auditNotes: ['Grounded in CAAM CAD 1901 Rolling Flight & Duty Time Caps.']
       };
     }
   }
@@ -1698,6 +1713,13 @@ export function resetToolInputs(toolId) {
   flipCardBackToInput(key);
 
   if (key === 'medical') {
+    const dobIn = document.getElementById('input-med-dob');
+    const examIn = document.getElementById('input-med-exam-date');
+    const expIn = document.getElementById('input-med-current-expiry');
+    if (dobIn) dobIn.value = '';
+    if (examIn) examIn.value = '';
+    if (expIn) expIn.value = '';
+
     const dobDisplay = document.getElementById('input-med-dob-display');
     if (dobDisplay) dobDisplay.innerText = 'SELECT DOB';
     const examDisplay = document.getElementById('input-med-exam-date-display');
@@ -1705,11 +1727,19 @@ export function resetToolInputs(toolId) {
     const expiryDisplay = document.getElementById('input-med-current-expiry-display');
     if (expiryDisplay) expiryDisplay.innerText = 'SELECT EXPIRY';
   } else if (key === 'ppc') {
+    const cIn = document.getElementById('input-ppc-conduct-date');
+    const eIn = document.getElementById('input-ppc-expiry-date');
+    if (cIn) cIn.value = '';
+    if (eIn) eIn.value = '';
+
     const cDisplay = document.getElementById('input-ppc-conduct-date-display');
     if (cDisplay) cDisplay.innerText = 'SELECT DATE';
     const eDisplay = document.getElementById('input-ppc-expiry-date-display');
     if (eDisplay) eDisplay.innerText = 'SELECT DATE';
   } else if (key === 'recurrent') {
+    const cIn = document.getElementById('input-recurrent-conduct-date');
+    if (cIn) cIn.value = '';
+
     const cDisplay = document.getElementById('input-recurrent-conduct-date-display');
     if (cDisplay) cDisplay.innerText = 'SELECT DATE';
     const lbl = document.getElementById('recurrent-selected-course-label');
@@ -1801,12 +1831,24 @@ export function resetToolInputs(toolId) {
     if (trigger) {
       trigger.className = 'w-full py-2 px-3 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 bg-slate-50/50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 text-xs font-semibold flex items-center justify-between cursor-pointer transition-all';
     }
-  }
-
-  const container = document.getElementById(toolId);
-  if (container && key !== 'recency') {
-    const inputs = container.querySelectorAll('input[type="hidden"]');
-    inputs.forEach(input => { input.value = ''; });
+  } else if (key === 'preflight') {
+    const dutyIn = document.getElementById('input-preflight-duty-hours');
+    const locIn = document.getElementById('input-preflight-location');
+    const dutyDisp = document.getElementById('btn-preflight-duty-display');
+    const locDisp = document.getElementById('btn-preflight-loc-display');
+    if (dutyIn) dutyIn.value = '10';
+    if (locIn) locIn.value = 'HOME';
+    if (dutyDisp) dutyDisp.textContent = '10 Hours';
+    if (locDisp) locDisp.textContent = 'Home Base (KUL)';
+  } else if (key === 'cumulative') {
+    const d7In = document.getElementById('input-cum-duty-7d');
+    const d14In = document.getElementById('input-cum-duty-14d');
+    const d28In = document.getElementById('input-cum-duty-28d');
+    const f28In = document.getElementById('input-cum-flight-28d');
+    if (d7In) d7In.value = '32:15';
+    if (d14In) d14In.value = '68:30';
+    if (d28In) d28In.value = '120:00';
+    if (f28In) f28In.value = '78:30';
   }
 }
 
@@ -2098,17 +2140,44 @@ export function openMaxFdpModifiersModal() {
   const modal = document.getElementById('efb-maxfdp-modifiers-modal');
   if (!modal) return;
   
-  const longestEl = document.getElementById('modal-maxfdp-longest-sector');
-  const splitEl = document.getElementById('modal-maxfdp-split-rest');
-  const inflightEl = document.getElementById('modal-maxfdp-inflight-rest');
-  const crewEl = document.getElementById('modal-maxfdp-crew-count');
-  const precEl = document.getElementById('modal-maxfdp-preceding-rest');
+  const longestIn = document.getElementById('modal-maxfdp-longest-sector');
+  const splitIn = document.getElementById('modal-maxfdp-split-rest');
+  const inflightIn = document.getElementById('modal-maxfdp-inflight-rest');
+  const crewIn = document.getElementById('modal-maxfdp-crew-count');
+  const precIn = document.getElementById('modal-maxfdp-preceding-rest');
 
-  if (longestEl) longestEl.value = String(toolsState.maxfdpLongestSector || 0);
-  if (splitEl) splitEl.value = String(toolsState.maxfdpSplitDutyRestHours || 0);
-  if (inflightEl) inflightEl.value = String(toolsState.maxfdpInflightRestHours || 0);
-  if (crewEl) crewEl.value = String(toolsState.maxfdpCrewCount || 2);
-  if (precEl) precEl.value = toolsState.maxfdpPrecedingRest || 'UP_TO_18_OR_OVER_30';
+  const longestVal = String(toolsState.maxfdpLongestSector || 0);
+  const splitVal = String(toolsState.maxfdpSplitDutyRestHours || 0);
+  const inflightVal = String(toolsState.maxfdpInflightRestHours || 0);
+  const crewVal = String(toolsState.maxfdpCrewCount || 2);
+  const precVal = toolsState.maxfdpPrecedingRest || 'UP_TO_18_OR_OVER_30';
+
+  if (longestIn) longestIn.value = longestVal;
+  if (splitIn) splitIn.value = splitVal;
+  if (inflightIn) inflightIn.value = inflightVal;
+  if (crewIn) crewIn.value = crewVal;
+  if (precIn) precIn.value = precVal;
+
+  const longestLabels = { '0': 'Standard Sector (< 7h)', '8': 'Long Sector (> 7h to 9h)', '10': 'Extended Sector (> 9h to 11h)', '12': 'Ultra Long Sector (> 11h)' };
+  const splitLabels = { '0': 'None (0h)', '3.5': '3.5 Hours Ground Rest', '4': '4.0 Hours Ground Rest', '5': '5.0 Hours Ground Rest', '6': '6.0+ Hours Ground Rest' };
+  const inflightLabels = { '0': '0.0 Hours', '3': '3.0 Hours Rest', '4': '4.0 Hours Rest', '5': '5.0 Hours Rest', '6': '6.0 Hours Rest' };
+  const crewLabels = { '2': '2 Pilots (Standard Crew)', '3': '3 Pilots (Augmented Crew)', '4': '4 Pilots (Double Crew)' };
+  const precLabels = { 'UP_TO_18_OR_OVER_30': 'Up to 18h OR Over 30h', 'BETWEEN_18_AND_30': 'Between 18h and 30h' };
+
+  const longestDisp = document.getElementById('btn-modal-maxfdp-longest-display');
+  if (longestDisp) longestDisp.textContent = longestLabels[longestVal] || 'Standard Sector (< 7h)';
+
+  const splitDisp = document.getElementById('btn-modal-maxfdp-split-display');
+  if (splitDisp) splitDisp.textContent = splitLabels[splitVal] || 'None (0h)';
+
+  const inflightDisp = document.getElementById('btn-modal-maxfdp-inflight-display');
+  if (inflightDisp) inflightDisp.textContent = inflightLabels[inflightVal] || '0.0 Hours';
+
+  const crewDisp = document.getElementById('btn-modal-maxfdp-crew-display');
+  if (crewDisp) crewDisp.textContent = crewLabels[crewVal] || '2 Pilots (Standard Crew)';
+
+  const precDisp = document.getElementById('btn-modal-maxfdp-preceding-display');
+  if (precDisp) precDisp.textContent = precLabels[precVal] || 'Up to 18h OR Over 30h';
 
   modal.classList.remove('hidden');
 }
@@ -2159,4 +2228,26 @@ export function confirmMaxFdpModifiers() {
   }
 
   closeMaxFdpModifiersModal();
+}
+
+// Global backdrop dismissal handler for modals
+if (typeof window !== 'undefined') {
+  document.addEventListener('click', (event) => {
+    if (event.target && event.target.id && event.target.id.endsWith('-modal')) {
+      const modalId = event.target.id;
+      if (modalId === 'efb-maxfdp-modifiers-modal') {
+        closeMaxFdpModifiersModal();
+      } else if (modalId === 'recurrent-course-modal' && typeof window.closeRecurrentCourseModal === 'function') {
+        window.closeRecurrentCourseModal();
+      } else if (modalId === 'efb-date-picker-modal' && typeof window.closeEfbDatePicker === 'function') {
+        window.closeEfbDatePicker();
+      } else if (modalId === 'efb-time-picker-modal' && typeof window.closeEfbTimePicker === 'function') {
+        window.closeEfbTimePicker();
+      } else if (modalId === 'efb-select-option-modal' && typeof window.closeEfbSelectModal === 'function') {
+        window.closeEfbSelectModal();
+      } else if (modalId === 'efb-number-picker-modal' && typeof window.closeEfbNumberPicker === 'function') {
+        window.closeEfbNumberPicker();
+      }
+    }
+  });
 }
