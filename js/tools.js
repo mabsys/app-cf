@@ -1,4 +1,4 @@
-// ./js/tools.js (0311_R342) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (0311_R343) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1410,12 +1410,12 @@ export function normalizeOutput(toolType, rawResult) {
 
       if (isProhibited) statusTheme = 'rose';
 
-      const fdp = rawResult
-        ? (rawResult.finalMaxPermissibleFDPFormatted ? `${rawResult.finalMaxPermissibleFDPFormatted} HOURS` : 'PROHIBITED')
-        : '13:00 HOURS';
+      const fdp = isProhibited
+        ? 'PROHIBITED'
+        : (rawResult && rawResult.finalMaxPermissibleFDPFormatted ? `${rawResult.finalMaxPermissibleFDPFormatted} HOURS` : '13:00 HOURS');
 
-      let cutoffStr = '18:15 UTC / 02:15 MYT';
-      if (rawResult && rawResult.cutoffTimestampUTC && rawResult.cutoffTimestampLocal) {
+      let cutoffStr = isProhibited ? 'NOT APPLICABLE' : '18:15 UTC / 02:15 MYT';
+      if (!isProhibited && rawResult && rawResult.cutoffTimestampUTC && rawResult.cutoffTimestampLocal) {
         const uParts = rawResult.cutoffTimestampUTC.split(' ');
         const lParts = rawResult.cutoffTimestampLocal.split(' ');
         const utcS = uParts.length >= 2 ? `${uParts[1]} UTC` : `${rawResult.cutoffTimestampUTC} UTC`;
@@ -1435,7 +1435,7 @@ export function normalizeOutput(toolType, rawResult) {
         ? `${rawResult.acclimatisedStatus || 'Acclimatised'}\nBand ${rawResult.timeBand || '0600-0759'}`
         : 'Acclimatised\nBand 0600-0759';
 
-      const auditNoteStr = 'Grounded in CAAM CAD 1901 Table A/B & OM-A Section 7.5.';
+      const auditNoteStr = isProhibited && rawResult && rawResult.prohibitionReason ? rawResult.prohibitionReason : 'Grounded in CAAM CAD 1901 Table A/B & OM-A Section 7.5.';
 
       const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? rawResult.notes : [];
       return {
