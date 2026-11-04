@@ -1,7 +1,7 @@
-// ./main.js (0411_R358) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0411_R360) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
-import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
+import { initToolsModule, filterRecurrentCourses, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
 import { parseAttestationText, validateAttestationContent, parseQualificationSlipText, validateQualificationSlipContent } from './js/parser.js';
@@ -2375,10 +2375,6 @@ let currentHistoryFilter = "ALL";
 export let activeSwipedCardId = null;
 let swipeAutoDismissTimer = null;
 
-
-// ----------------------------------------------------------------------------
-// PHASE 3: MANAGE MODE & VISIBLE-SCOPE BULK ACTIONS
-// ----------------------------------------------------------------------------
 let isManageModeActive = false;
 let selectedRecordIds = new Set();
 let currentlyVisibleHistoryItems = [];
@@ -4004,13 +4000,6 @@ function setupCardSwipeGestures(wrapperId, toolIdList) {
   }, { passive: true });
 }
 
-// ----------------------------------------------------------------------------
-// HELPER: SMART DATA PIPELINES & SLOT 4 CTAs
-// ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
-// HELPER: LOCAL STORAGE BASELINES
-// ----------------------------------------------------------------------------
 function restoreToolsLocalStorage() {
   try {
     const recDay = localStorage.getItem("certifly_tool_recency_day");
@@ -4025,4 +4014,56 @@ function restoreToolsLocalStorage() {
   } catch (e) {
     console.warn("LocalStorage access error in tools:", e);
   }
+}
+
+
+function setupToolsCardSwipeGestures() {
+  const catASubtabs = ['medical', 'ppc', 'recurrent', 'recency'];
+  const catBSubtabs = ['standby', 'max-fdp', 'pre-flight-rest', 'cumulative', 'caam-ftl1'];
+
+  const wrappers = [
+    { id: 'card-wrapper-cat-a', getSubtabs: () => catASubtabs },
+    { id: 'card-wrapper-cat-b', getSubtabs: () => catBSubtabs }
+  ];
+
+  wrappers.forEach(item => {
+    const el = document.getElementById(item.id);
+    if (!el) return;
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    el.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches.length > 0) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+
+    el.addEventListener('touchend', (e) => {
+      if (!e.changedTouches || e.changedTouches.length === 0) return;
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+
+      const diffX = touchEndX - touchStartX;
+      const diffY = touchEndY - touchStartY;
+
+      if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+        const state = typeof getToolsState === 'function' ? getToolsState() : {};
+        const currentSubtab = state.activeSubTab || 'medical';
+        const subtabs = item.getSubtabs();
+        const currentIndex = subtabs.indexOf(currentSubtab);
+
+        if (currentIndex !== -1) {
+          if (diffX < 0 && currentIndex < subtabs.length - 1) {
+            const nextTab = subtabs[currentIndex + 1];
+            if (typeof switchActiveTool === 'function') switchActiveTool(nextTab);
+          } else if (diffX > 0 && currentIndex > 0) {
+            const prevTab = subtabs[currentIndex - 1];
+            if (typeof switchActiveTool === 'function') switchActiveTool(prevTab);
+          }
+        }
+      }
+    }, { passive: true });
+  });
 }
