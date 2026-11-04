@@ -1,4 +1,4 @@
-// ./js/tools.js (0311_R345) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (0411_R347) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1929,12 +1929,27 @@ export function resetToolInputs(toolId) {
   } else if (key === 'preflight') {
     const dutyIn = document.getElementById('input-preflight-duty-hours');
     const locIn = document.getElementById('input-preflight-location');
+    const dutyEndIn = document.getElementById('input-preflight-duty-end-time');
+    const travelIn = document.getElementById('input-preflight-travel-time');
+    const discIn = document.getElementById('input-preflight-discretion-reduction');
+
     const dutyDisp = document.getElementById('btn-preflight-duty-display');
     const locDisp = document.getElementById('btn-preflight-loc-display');
+    const dutyEndDisp = document.getElementById('btn-preflight-duty-end-display');
+    const travelDisp = document.getElementById('btn-preflight-travel-display');
+    const discDisp = document.getElementById('btn-preflight-discretion-display');
+
     if (dutyIn) dutyIn.value = '10';
     if (locIn) locIn.value = 'HOME';
+    if (dutyEndIn) dutyEndIn.value = '18:00';
+    if (travelIn) travelIn.value = '30';
+    if (discIn) discIn.value = '0';
+
     if (dutyDisp) dutyDisp.textContent = '10 Hours';
     if (locDisp) locDisp.textContent = 'Home Base (KUL)';
+    if (dutyEndDisp) dutyEndDisp.textContent = '18:00 MYT';
+    if (travelDisp) travelDisp.textContent = '30 Mins';
+    if (discDisp) discDisp.textContent = 'None (0h)';
   } else if (key === 'cumulative') {
     const d7In = document.getElementById('input-cum-duty-7d');
     const d14In = document.getElementById('input-cum-duty-14d');
