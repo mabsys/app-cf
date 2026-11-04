@@ -1,3 +1,4 @@
+// ./js/engines/max-fdp-calculator.js (0311_R340) - Max FDP & Extensions Engine
 /**
  * Max Flying Duty Period (FDP) & Extensions Calculator Engine for Flight Crew
  * Grounded in CAD 1901 - FTL (Issue 01/Rev 01) and OM-A Chapter 7 Regulations
@@ -104,6 +105,12 @@ class MaxFDPEngine {
       inflightRestHours = 0,
       splitDutyGroundRestHours = 0
     } = params;
+
+    // Normalize in-flight relief type string (handles 'CLASS_1_BUNK', 'BUNK', 'CLASS_2_SEAT', 'SEAT', etc.)
+    let normalizedReliefType = String(inflightReliefType || 'NONE').toUpperCase();
+    if (normalizedReliefType.includes('BUNK')) normalizedReliefType = 'BUNK';
+    else if (normalizedReliefType.includes('SEAT')) normalizedReliefType = 'SEAT';
+    else normalizedReliefType = 'NONE';
 
     const reportDateUTC = this.parseDate(reportTimestampISO);
     if (!reportDateUTC) throw new Error('Invalid report timestamp ISO string provided.');
@@ -223,15 +230,15 @@ class MaxFDPEngine {
     let inflightExtension = 0;
     let inflightCap = 18.0; // Bunk Cap
 
-    if (inflightReliefType && inflightReliefType !== 'NONE') {
+    if (normalizedReliefType !== 'NONE') {
       if (inflightRestHours < 3.0) {
         notes.push('In-Flight Relief Warning: In-flight rest is less than 3 hours (minimum threshold required). No FDP extension granted.');
       } else {
-        if (inflightReliefType === 'BUNK') {
+        if (normalizedReliefType === 'BUNK') {
           inflightExtension = inflightRestHours * 0.5; // 50% credit
           inflightCap = 18.0;
           notes.push(`In-Flight Relief (Bunk): +50% credit applied (${this.formatHoursToHHMM(inflightRestHours)} rest = +${this.formatHoursToHHMM(inflightExtension)} extension).`);
-        } else if (inflightReliefType === 'SEAT') {
+        } else if (normalizedReliefType === 'SEAT') {
           inflightExtension = inflightRestHours * (1.0 / 3.0); // 33.3% credit
           inflightCap = 15.0;
           notes.push(`In-Flight Relief (Business Seat): +33.3% credit applied (${this.formatHoursToHHMM(inflightRestHours)} rest = +${this.formatHoursToHHMM(inflightExtension)} extension).`);
@@ -264,10 +271,10 @@ class MaxFDPEngine {
     let rawTotalFDP = baseFDP + inflightExtension + splitExtension;
     let finalFDP = rawTotalFDP;
 
-    if (inflightReliefType === 'SEAT' && finalFDP > 15.0) {
+    if (normalizedReliefType === 'SEAT' && finalFDP > 15.0) {
       finalFDP = 15.0;
       notes.push('Regulatory Cap Applied: In-flight seat rest FDP is capped at maximum 15:00 hours.');
-    } else if (inflightReliefType === 'BUNK' && finalFDP > 18.0) {
+    } else if (normalizedReliefType === 'BUNK' && finalFDP > 18.0) {
       finalFDP = 18.0;
       notes.push('Regulatory Cap Applied: In-flight bunk rest FDP is capped at maximum 18:00 hours.');
     }
