@@ -1,4 +1,4 @@
-<!-- ./index.html (0311_R342) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+<!-- ./index.html (0311_R344) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -1700,11 +1700,11 @@ navigator.serviceWorker.register('sw.js')
                                         <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-preflight')"> ↺ Reset</button>
                                     </div>
 
-                                    <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
+                                    <div class="flex-1 my-2 overflow-y-auto space-y-2.5 no-scrollbar">
                                         <div class="grid grid-cols-2 gap-2">
                                             <div>
                                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Preceding Duty</label>
-                                                <button type="button" id="btn-preflight-duty-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbNumberPicker('input-preflight-duty-hours', 'PRECEDING DUTY HOURS', 0, 24)">
+                                                <button type="button" id="btn-preflight-duty-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbNumberPicker('input-preflight-duty-hours', 'PRECEDING DUTY HOURS', 0, 24)">
                                                     <span id="btn-preflight-duty-display">10 Hours</span>
                                                     <span class="text-slate-400 text-[10px]">#</span>
                                                 </button>
@@ -1713,7 +1713,7 @@ navigator.serviceWorker.register('sw.js')
 
                                             <div>
                                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Duty Location</label>
-                                                <button type="button" id="btn-preflight-loc-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-preflight-location', 'DUTY LOCATION', [{value:'HOME', label:'Home Base (12h Min Rest)'}, {value:'OUTSTATION', label:'Outstation Layover'}])">
+                                                <button type="button" id="btn-preflight-loc-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-preflight-location', 'DUTY LOCATION', [{value:'HOME', label:'Home Base (12h Min Rest)'}, {value:'OUTSTATION', label:'Outstation Layover'}])">
                                                     <span id="btn-preflight-loc-display">Home Base</span>
                                                     <span class="text-slate-400 text-[10px]">▼</span>
                                                 </button>
@@ -1721,7 +1721,36 @@ navigator.serviceWorker.register('sw.js')
                                             </div>
                                         </div>
 
-                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Calculates mandatory minimum rest periods and outstation additions under CAAM CAD 1901 Section 2.14 and OM-A 7.5.12.</p>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Duty End Time</label>
+                                                <button type="button" id="btn-preflight-duty-end-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-preflight-duty-end-time', 'PRECEDING DUTY END TIME (LOCAL MYT)')">
+                                                    <span id="btn-preflight-duty-end-display">18:00 MYT</span>
+                                                    <span class="text-slate-400 text-[10px]">🕒</span>
+                                                </button>
+                                                <input type="hidden" id="input-preflight-duty-end-time" value="18:00">
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Hotel Travel Time</label>
+                                                <button type="button" id="btn-preflight-travel-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-preflight-travel-time', 'ONE-WAY HOTEL TRAVEL TIME', [{value:'30', label:'30 Mins (Standard Allowance)'}, {value:'45', label:'45 Mins (+00:30 Round-Trip Addition)'}, {value:'60', label:'60 Mins (+01:00 Round-Trip Addition)'}, {value:'90', label:'90 Mins (+02:00 Round-Trip Addition)'}])">
+                                                    <span id="btn-preflight-travel-display">30 Mins</span>
+                                                    <span class="text-slate-400 text-[10px]">▼</span>
+                                                </button>
+                                                <input type="hidden" id="input-preflight-travel-time" value="30">
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Discretion Rest Reduction</label>
+                                            <button type="button" id="btn-preflight-discretion-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-preflight-discretion-reduction', 'DISCRETION REST REDUCTION', [{value:'0', label:'None (0.0 Hours Reduction)'}, {value:'0.5', label:'0.5 Hours Reduction'}, {value:'1', label:'1.0 Hour Reduction (Maximum Floor)'}])">
+                                                <span id="btn-preflight-discretion-display">None (0h)</span>
+                                                <span class="text-slate-400 text-[10px]">▼</span>
+                                            </button>
+                                            <input type="hidden" id="input-preflight-discretion-reduction" value="0">
+                                        </div>
+
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-0.5">Calculates mandatory minimum rest periods, earliest available report timestamp, and outstation additions under CAAM CAD 1901 Section 2.14 and OM-A 7.5.12.</p>
                                     </div>
 
                                     <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -1739,10 +1768,13 @@ navigator.serviceWorker.register('sw.js')
                                     </div>
 
                                     <div id="output-slot-2-clock-preflight" class="p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                                        <div>
-                                            <span id="output-clock-label-preflight" class="block text-[10px] font-bold text-slate-500 dark:text-slate-100 uppercase tracking-wider">Earliest Available Report:</span>
-                                            <span id="output-clock-value-preflight" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-500 font-sans">20:15 UTC</span>
+                                        <div class="flex items-center gap-1.5">
+                                            <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            <span id="output-clock-label-preflight" class="text-xs font-bold text-slate-700 dark:text-slate-300">Earliest Available Report:</span>
                                         </div>
+                                        <span id="output-clock-value-preflight" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-500 font-sans">06:00 UTC / 14:00 MYT</span>
                                     </div>
 
                                     <div id="output-slot-3-grid-preflight" class="px-3.5 py-2 bg-white dark:bg-slate-900/50 grid grid-cols-1 gap-3">
@@ -1751,16 +1783,15 @@ navigator.serviceWorker.register('sw.js')
                                             <span id="grid-value-1-preflight" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
                                         </div>
                                         <div class="flex items-start justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40 gap-2">
-                                            <span id="grid-label-2-preflight" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">DUTY LOCATION</span>
+                                            <span id="grid-label-2-preflight" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">TRAVEL ADDITION</span>
                                             <span id="grid-value-2-preflight" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
                                         </div>
                                         <div class="flex items-start justify-between text-xs py-1 gap-2">
-                                            <span id="grid-label-3-preflight" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">OUTSTATION ADDITION</span>
+                                            <span id="grid-label-3-preflight" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">REST REDUCTION</span>
                                             <span id="grid-value-3-preflight" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
                                         </div>
                                     </div>
 
-                                    <!-- IN-CARD AUDIT OVERLAY CONTAINER -->
                                     <div id="audit-overlay-preflight" class="absolute inset-x-0 bottom-0 top-[110px] z-30 bg-slate-900/95 backdrop-blur-md rounded-b-2xl p-3.5 flex flex-col justify-between hidden shadow-2xl border-t border-slate-700/60">
                                         <div class="flex items-center justify-between border-b border-slate-700/60 pb-2 shrink-0">
                                             <div class="flex items-center gap-1.5">
