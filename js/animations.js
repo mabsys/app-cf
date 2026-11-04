@@ -1,4 +1,4 @@
-// ./js/animations.js (0311_R337) - CertiFly Centralized Motion & Animation Engine
+// ./js/animations.js (0311_R338) - CertiFly Centralized Motion & Animation Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -310,20 +310,26 @@ export function animateOverviewDashboard(animData = {}) {
  */
 export function animateRecencyCardExpansion(cardEl, variantWrapper, isMulti) {
   if (cardEl) cardEl.style.height = "350px";
+  const footnoteEl = document.getElementById("text-recency-footnote");
 
   if (!isAnimeAvailable()) {
     if (variantWrapper) {
       if (isMulti) {
         variantWrapper.classList.remove("hidden");
         variantWrapper.style.opacity = "1";
+        if (footnoteEl) footnoteEl.classList.add("hidden");
       } else {
         variantWrapper.classList.add("hidden");
+        if (footnoteEl) footnoteEl.classList.remove("hidden");
       }
     }
     return;
   }
 
   if (isMulti) {
+    // Hide footnote text to preserve layout space
+    if (footnoteEl) footnoteEl.classList.add("hidden");
+
     // Slide & Fade In 2nd Variant Date Row (card height remains fixed 350px)
     if (variantWrapper) {
       variantWrapper.classList.remove("hidden");
@@ -337,7 +343,7 @@ export function animateRecencyCardExpansion(cardEl, variantWrapper, isMulti) {
       });
     }
   } else {
-    // Fade Out 2nd Variant Date Row
+    // Fade Out 2nd Variant Date Row and restore footnote text
     if (variantWrapper) {
       runAnime({
         targets: variantWrapper,
@@ -347,8 +353,11 @@ export function animateRecencyCardExpansion(cardEl, variantWrapper, isMulti) {
         easing: "easeInQuad",
         complete: () => {
           variantWrapper.classList.add("hidden");
+          if (footnoteEl) footnoteEl.classList.remove("hidden");
         }
       });
+    } else if (footnoteEl) {
+      footnoteEl.classList.remove("hidden");
     }
   }
 }
