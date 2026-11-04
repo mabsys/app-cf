@@ -1,4 +1,4 @@
-// ./js/components/menu.js (0411_R355) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
+// ./js/components/menu.js (0411_R356) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
 
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
@@ -197,7 +197,7 @@ export const menuHTML = `
           <div>
             <span class="text-[9px] text-slate-400 font-semibold block mb-1">Expiry Date</span>
             <button type="button" id="btn-passport-expiry-trigger" class="efb-date-trigger w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl p-2.5 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="openEfbDatePicker('profile-passport-expiry', 'PASSPORT EXPIRY DATE')">
-              <span id="profile-passport-expiry-display" class="font-sans">SELECT EXPIRY</span>
+              <span id="profile-passport-expiry-display" class="font-sans text-slate-700 dark:text-slate-300">Select Expiry</span>
               <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
             </button>
             <input type="hidden" id="profile-passport-expiry" value="">
