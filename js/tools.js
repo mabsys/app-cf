@@ -1,4 +1,4 @@
-// ./js/tools.js (0411_R352) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (0411_R353) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1716,11 +1716,11 @@ function renderToolsOutputCardForTool(toolType, normalized) {
   if (notes && Array.isArray(notes) && notes.length > 0) {
     if (triggerBtn) triggerBtn.classList.remove('hidden');
     if (overlayContent) {
-      overlayContent.innerHTML = notes.map(note => `<div class="flex items-start gap-2 py-1.5 border-b border-slate-800/50"><span class="text-blue-400 font-bold shrink-0">•</span><span class="leading-snug">${note}</span></div>`).join('');
+      overlayContent.innerHTML = notes.map(note => `<div class="flex items-start gap-2 py-1.5 border-b border-slate-200/80 dark:border-slate-800/50"><span class="text-blue-600 dark:text-blue-400 font-bold shrink-0">•</span><span class="leading-snug text-slate-700 dark:text-slate-300">${note}</span></div>`).join('');
     }
   } else {
     if (triggerBtn) triggerBtn.classList.add('hidden');
-    if (overlayContent) overlayContent.innerHTML = '<p class="text-slate-400 italic py-2">No additional calculation notes for this entry.</p>';
+    if (overlayContent) overlayContent.innerHTML = '<p class="text-slate-400 dark:text-slate-500 italic py-2">No additional calculation notes for this entry.</p>';
   }
 }
 
