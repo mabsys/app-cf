@@ -1,4 +1,4 @@
-<!-- ./index.html (3110_R332) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+<!-- ./index.html (3110_R334) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -15,7 +15,7 @@
     <title>CertiFly™</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/icon-192.png">
     <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
     <!-- UNCOMMENT THIS BLOCK ONCE DEV IS COMPLETE
@@ -2191,6 +2191,7 @@ navigator.serviceWorker.register('sw.js')
     </script>
 
     <!-- EFB MAX FDP FLIGHT MODIFIERS MODAL -->
+    <!-- EFB MAX FDP FLIGHT MODIFIERS MODAL -->
     <div id="efb-maxfdp-modifiers-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md hidden select-none" onclick="if(event.target === this) closeMaxFdpModifiersModal()">
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-sm p-4 shadow-2xl flex flex-col justify-between max-h-[85vh] overflow-hidden">
             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
@@ -2204,49 +2205,145 @@ navigator.serviceWorker.register('sw.js')
             </div>
 
             <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar text-xs">
+                <!-- 1. LONGEST SECTOR DURATION -->
                 <div>
                     <label class="block font-medium text-slate-500 dark:text-slate-400 mb-1">Longest Sector Duration</label>
-                    <button type="button" id="btn-modal-maxfdp-longest-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('modal-maxfdp-longest-sector', 'LONGEST SECTOR DURATION', [{value:'0', label:'Standard Sector (< 7h)'}, {value:'8', label:'Long Sector (> 7h to 9h)'}, {value:'10', label:'Extended Sector (> 9h to 11h)'}, {value:'12', label:'Ultra Long Sector (> 11h)'}])">
+                    <button type="button" id="btn-modal-maxfdp-longest-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer transition-all" onclick="toggleModifierAccordion('modal-maxfdp-longest-sector')">
                         <span id="btn-modal-maxfdp-longest-display">Standard Sector (&lt; 7h)</span>
-                        <span class="text-slate-400 text-[10px]">▼</span>
+                        <span id="arrow-modal-maxfdp-longest-sector" class="text-slate-400 text-[10px] transition-transform duration-200">▼</span>
                     </button>
                     <input type="hidden" id="modal-maxfdp-longest-sector" value="0">
+
+                    <div id="accordion-modal-maxfdp-longest-sector" class="hidden mt-1.5 p-1.5 space-y-1 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 transition-all">
+                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-longest-sector" data-value="0" data-label="Standard Sector (&lt; 7h)" onclick="selectModifierInlineOption('modal-maxfdp-longest-sector', '0', 'Standard Sector (&lt; 7h)')">
+                            <span>Standard Sector (&lt; 7h)</span>
+                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
+                        </button>
+                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-longest-sector" data-value="8" data-label="Long Sector (&gt; 7h to 9h)" onclick="selectModifierInlineOption('modal-maxfdp-longest-sector', '8', 'Long Sector (&gt; 7h to 9h)')">
+                            <span>Long Sector (&gt; 7h to 9h)</span>
+                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
+                        </button>
+                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-longest-sector" data-value="10" data-label="Extended Sector (&gt; 9h to 11h)" onclick="selectModifierInlineOption('modal-maxfdp-longest-sector', '10', 'Extended Sector (&gt; 9h to 11h)')">
+                            <span>Extended Sector (&gt; 9h to 11h)</span>
+                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
+                        </button>
+                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-longest-sector" data-value="12" data-label="Ultra Long Sector (&gt; 11h)" onclick="selectModifierInlineOption('modal-maxfdp-longest-sector', '12', 'Ultra Long Sector (&gt; 11h)')">
+                            <span>Ultra Long Sector (&gt; 11h)</span>
+                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
+                        </button>
+                    </div>
                 </div>
 
+                <!-- 2. SPLIT DUTY GROUND REST -->
                 <div>
                     <label class="block font-medium text-slate-500 dark:text-slate-400 mb-1">Split Duty Ground Rest</label>
-                    <button type="button" id="btn-modal-maxfdp-split-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('modal-maxfdp-split-rest', 'SPLIT DUTY GROUND REST', [{value:'0', label:'None (0h)'}, {value:'3.5', label:'3.5 Hours Ground Rest'}, {value:'4', label:'4.0 Hours Ground Rest'}, {value:'5', label:'5.0 Hours Ground Rest'}, {value:'6', label:'6.0+ Hours Ground Rest'}])">
+                    <button type="button" id="btn-modal-maxfdp-split-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer transition-all" onclick="toggleModifierAccordion('modal-maxfdp-split-rest')">
                         <span id="btn-modal-maxfdp-split-display">None (0h)</span>
-                        <span class="text-slate-400 text-[10px]">▼</span>
+                        <span id="arrow-modal-maxfdp-split-rest" class="text-slate-400 text-[10px] transition-transform duration-200">▼</span>
                     </button>
                     <input type="hidden" id="modal-maxfdp-split-rest" value="0">
+
+                    <div id="accordion-modal-maxfdp-split-rest" class="hidden mt-1.5 p-1.5 space-y-1 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 transition-all">
+                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-split-rest" data-value="0" data-label="None (0h)" onclick="selectModifierInlineOption('modal-maxfdp-split-rest', '0', 'None (0h)')">
+                            <span>None (0h)</span>
+                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
+                        </button>
+                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-split-rest" data-value="3.5" data-label="3.5 Hours Ground Rest" onclick="selectModifierInlineOption('modal-maxfdp-split-rest', '3.5', '3.5 Hours Ground Rest')">
+                            <span>3.5 Hours Ground Rest</span>
+                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
+                        </button>
+                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-split-rest" data-value="4" data-label="4.0 Hours Ground Rest" onclick="selectModifierInlineOption('modal-maxfdp-split-rest', '4', '4.0 Hours Ground Rest')">
+                            <span>4.0 Hours Ground Rest</span>
+                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
+                        </button>
+                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-split-rest" data-value="5" data-label="5.0 Hours Ground Rest" onclick="selectModifierInlineOption('modal-maxfdp-split-rest', '5', '5.0 Hours Ground Rest')">
+                            <span>5.0 Hours Ground Rest</span>
+                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
+                        </button>
+                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-split-rest" data-value="6" data-label="6.0+ Hours Ground Rest" onclick="selectModifierInlineOption('modal-maxfdp-split-rest', '6', '6.0+ Hours Ground Rest')">
+                            <span>6.0+ Hours Ground Rest</span>
+                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
+                        </button>
+                    </div>
                 </div>
 
+                <!-- 3. IN-FLIGHT REST TAKEN -->
                 <div>
                     <label class="block font-medium text-slate-500 dark:text-slate-400 mb-1">In-Flight Rest Taken (Hours)</label>
-                    <button type="button" id="btn-modal-maxfdp-inflight-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('modal-maxfdp-inflight-rest', 'IN-FLIGHT REST TAKEN', [{value:'0', label:'0.0 Hours'}, {value:'3', label:'3.0 Hours Rest'}, {value:'4', label:'4.0 Hours Rest'}, {value:'5', label:'5.0 Hours Rest'}, {value:'6', label:'6.0 Hours Rest'}])">
+                    <button type="button" id="btn-modal-maxfdp-inflight-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer transition-all" onclick="toggleModifierAccordion('modal-maxfdp-inflight-rest')">
                         <span id="btn-modal-maxfdp-inflight-display">0.0 Hours</span>
-                        <span class="text-slate-400 text-[10px]">▼</span>
+                        <span id="arrow-modal-maxfdp-inflight-rest" class="text-slate-400 text-[10px] transition-transform duration-200">▼</span>
                     </button>
                     <input type="hidden" id="modal-maxfdp-inflight-rest" value="0">
+
+                    <div id="accordion-modal-maxfdp-inflight-rest" class="hidden mt-1.5 p-1.5 space-y-1 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 transition-all">
+                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-inflight-rest" data-value="0" data-label="0.0 Hours" onclick="selectModifierInlineOption('modal-maxfdp-inflight-rest', '0', '0.0 Hours')">
+                            <span>0.0 Hours</span>
+                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
+                        </button>
+                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-inflight-rest" data-value="3" data-label="3.0 Hours Rest" onclick="selectModifierInlineOption('modal-maxfdp-inflight-rest', '3', '3.0 Hours Rest')">
+                            <span>3.0 Hours Rest</span>
+                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
+                        </button>
+                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-inflight-rest" data-value="4" data-label="4.0 Hours Rest" onclick="selectModifierInlineOption('modal-maxfdp-inflight-rest', '4', '4.0 Hours Rest')">
+                            <span>4.0 Hours Rest</span>
+                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
+                        </button>
+                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-inflight-rest" data-value="5" data-label="5.0 Hours Rest" onclick="selectModifierInlineOption('modal-maxfdp-inflight-rest', '5', '5.0 Hours Rest')">
+                            <span>5.0 Hours Rest</span>
+                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
+                        </button>
+                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-inflight-rest" data-value="6" data-label="6.0 Hours Rest" onclick="selectModifierInlineOption('modal-maxfdp-inflight-rest', '6', '6.0 Hours Rest')">
+                            <span>6.0 Hours Rest</span>
+                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
+                        </button>
+                    </div>
                 </div>
 
+                <!-- 4. FLIGHT CREW COMPLEMENT -->
                 <div>
                     <label class="block font-medium text-slate-500 dark:text-slate-400 mb-1">Flight Crew Complement</label>
-                    <button type="button" id="btn-modal-maxfdp-crew-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('modal-maxfdp-crew-count', 'FLIGHT CREW COMPLEMENT', [{value:'2', label:'2 Pilots (Standard Crew)'}, {value:'3', label:'3 Pilots (Augmented Crew)'}, {value:'4', label:'4 Pilots (Double Crew)'}])">
+                    <button type="button" id="btn-modal-maxfdp-crew-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer transition-all" onclick="toggleModifierAccordion('modal-maxfdp-crew-count')">
                         <span id="btn-modal-maxfdp-crew-display">2 Pilots (Standard Crew)</span>
-                        <span class="text-slate-400 text-[10px]">▼</span>
+                        <span id="arrow-modal-maxfdp-crew-count" class="text-slate-400 text-[10px] transition-transform duration-200">▼</span>
                     </button>
                     <input type="hidden" id="modal-maxfdp-crew-count" value="2">
+
+                    <div id="accordion-modal-maxfdp-crew-count" class="hidden mt-1.5 p-1.5 space-y-1 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 transition-all">
+                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-crew-count" data-value="2" data-label="2 Pilots (Standard Crew)" onclick="selectModifierInlineOption('modal-maxfdp-crew-count', '2', '2 Pilots (Standard Crew)')">
+                            <span>2 Pilots (Standard Crew)</span>
+                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
+                        </button>
+                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-crew-count" data-value="3" data-label="3 Pilots (Augmented Crew)" onclick="selectModifierInlineOption('modal-maxfdp-crew-count', '3', '3 Pilots (Augmented Crew)')">
+                            <span>3 Pilots (Augmented Crew)</span>
+                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
+                        </button>
+                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-crew-count" data-value="4" data-label="4 Pilots (Double Crew)" onclick="selectModifierInlineOption('modal-maxfdp-crew-count', '4', '4 Pilots (Double Crew)')">
+                            <span>4 Pilots (Double Crew)</span>
+                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
+                        </button>
+                    </div>
                 </div>
 
+                <!-- 5. PRECEDING REST -->
                 <div>
                     <label class="block font-medium text-slate-500 dark:text-slate-400 mb-1">Preceding Rest (Unacclimatised Only)</label>
-                    <button type="button" id="btn-modal-maxfdp-preceding-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('modal-maxfdp-preceding-rest', 'PRECEDING REST CATEGORY', [{value:'UP_TO_18_OR_OVER_30', label:'Up to 18h OR Over 30h'}, {value:'BETWEEN_18_AND_30', label:'Between 18h and 30h'}])">
+                    <button type="button" id="btn-modal-maxfdp-preceding-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer transition-all" onclick="toggleModifierAccordion('modal-maxfdp-preceding-rest')">
                         <span id="btn-modal-maxfdp-preceding-display">Up to 18h OR Over 30h</span>
-                        <span class="text-slate-400 text-[10px]">▼</span>
+                        <span id="arrow-modal-maxfdp-preceding-rest" class="text-slate-400 text-[10px] transition-transform duration-200">▼</span>
                     </button>
                     <input type="hidden" id="modal-maxfdp-preceding-rest" value="UP_TO_18_OR_OVER_30">
+
+                    <div id="accordion-modal-maxfdp-preceding-rest" class="hidden mt-1.5 p-1.5 space-y-1 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 transition-all">
+                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-preceding-rest" data-value="UP_TO_18_OR_OVER_30" data-label="Up to 18h OR Over 30h" onclick="selectModifierInlineOption('modal-maxfdp-preceding-rest', 'UP_TO_18_OR_OVER_30', 'Up to 18h OR Over 30h')">
+                            <span>Up to 18h OR Over 30h</span>
+                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
+                        </button>
+                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-preceding-rest" data-value="BETWEEN_18_AND_30" data-label="Between 18h and 30h" onclick="selectModifierInlineOption('modal-maxfdp-preceding-rest', 'BETWEEN_18_AND_30', 'Between 18h and 30h')">
+                            <span>Between 18h and 30h</span>
+                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
