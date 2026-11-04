@@ -1,4 +1,4 @@
-// ./main.js (0411_R366) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0411_R367) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
 import { initToolsModule, filterRecurrentCourses, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
@@ -2302,7 +2302,7 @@ async function setupDocumentViewers() {
       qsBadgePill.innerText = "Verified";
       qsBadgePill.className = "text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md uppercase";
       if (qsBadgeBox) {
-        qsBadgeBox.classList.remove("cursor-pointer", "hover:border", "hover:border-blue-500", "active:scale-[0.99]");
+        qsBadgeBox.classList.remove("cursor-pointer", "hover:bg-slate-200", "dark:hover:bg-slate-700", "hover:text-slate-800", "dark:hover:text-slate-200", "hover:border", "hover:border-blue-500", "active:scale-[0.99]");
         qsBadgeBox.title = "";
         qsBadgeBox.onclick = null;
       }
@@ -2311,7 +2311,8 @@ async function setupDocumentViewers() {
       qsBadgePill.innerText = "Not Set";
       qsBadgePill.className = "text-[10px] font-extrabold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md uppercase";
       if (qsBadgeBox) {
-        qsBadgeBox.classList.add("cursor-pointer", "hover:border", "hover:border-blue-500", "transition-all", "active:scale-[0.99]");
+        qsBadgeBox.classList.remove("hover:border", "hover:border-blue-500");
+        qsBadgeBox.classList.add("cursor-pointer", "hover:bg-slate-200", "dark:hover:bg-slate-700", "hover:text-slate-800", "dark:hover:text-slate-200", "transition-all", "active:scale-[0.99]");
         qsBadgeBox.title = "Click to configure Qualification Slip in My Credentials";
         qsBadgeBox.onclick = () => {
           if (typeof openProfileMenu === "function") openProfileMenu();
