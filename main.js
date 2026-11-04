@@ -1,4 +1,4 @@
-// ./main.js (2810_R274) - CertiFly Application Shell & Orchestrator
+// ./main.js (0411_R358) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
 import { initToolsModule, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
@@ -8,7 +8,6 @@ import { parseAttestationText, validateAttestationContent, parseQualificationSli
 import { saveToHistory, renderHistoryList, getScanHistory, getProfileData, saveProfileData, clearProfileData, clearHistory, getThresholdDays, setThresholdDays, getHistoryLimit, setHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData, getAttestationPdf, setAttestationPdf, removeAttestationPdf, getAttestationData, setAttestationData, clearAttestationData, getQualificationSlipPdf, setQualificationSlipPdf, removeQualificationSlipPdf, getQualificationSlipData, setQualificationSlipData, clearQualificationSlipData, getThemeMode, setThemeMode, getTextSize, setTextSize, clearAllAppData } from './js/storage.js';
 import { startScanner, stopScanner, switchScanHubTab, renderRecentPilotsList, cycleCameraLens, toggleTorch, handleClipboardPaste } from './js/scanner.js';
 import { updateNetworkStatus, showScannerView, showLoading, showError, showView, initNavigationBars, closeMenu, applyThemeMode, applyTextSize, updateThresholdPills, updateHistoryLimitPills, updateFreshnessLimitPills, switchResultTab, openProfileMenu, openMenu, initToolsViewUI, dispatchActiveToolCalculation } from './js/ui.js';
-
 
 function isSupervisoryQual(name) {
   if (!name) return false;
@@ -46,20 +45,24 @@ async function extractTextFromPdfFile(file) {
           window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
         }
       }
+
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
       let fullText = "";
+
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
         const pageText = textContent.items.map(item => item.str).join(" ");
         fullText += pageText + "\n";
       }
+
       if (fullText.trim().length > 20) return fullText;
     } catch (e) {
       console.warn("pdfjsLib extraction failed, falling back to text stream scanner:", e);
     }
   }
+
   try {
     const arrayBuffer = await file.arrayBuffer();
     const rawText = new TextDecoder("latin1").decode(arrayBuffer);
@@ -92,8 +95,10 @@ document.addEventListener("DOMContentLoaded", () => {
 // ----------------------------------------------------------------------------
 // 3-TAB PILOT SCAN HUB EVENT BINDINGS
 // ----------------------------------------------------------------------------
+
 function initScanHubUI() {
   setupTab3ManualLayout();
+
   const tabCameraBtn = document.getElementById("tab-camera-btn");
   const tabQrPassBtn = document.getElementById("tab-qrpass-btn");
   const tabManualBtn = document.getElementById("tab-manual-btn");
@@ -122,16 +127,19 @@ function initScanHubUI() {
 
   const uploadQrBtn = document.getElementById("upload-qr-btn");
   const qrFileInput = document.getElementById("qr-file-input");
+
   if (uploadQrBtn && qrFileInput) {
     uploadQrBtn.addEventListener("click", () => qrFileInput.click());
     qrFileInput.addEventListener("change", async (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
+
       if (window.QrScanner) {
         try {
           showLoading("Processing QR code image...");
           const result = await window.QrScanner.scanImage(file, { returnDetailedScanResult: true });
           const decodedText = (typeof result === 'object' ? result.data : result) || "";
+
           if (decodedText.trim()) {
             processLicenseUrl(decodedText.trim());
           } else {
@@ -200,14 +208,11 @@ function isValidCaamUrl(urlStr) {
   }
 }
 
-
 function applyUrlInputValidationStyle(inputEl, urlStr) {
   if (!inputEl) return;
-
   const cleanUrl = urlStr ? urlStr.trim() : "";
   const isFocused = (document.activeElement === inputEl);
 
-  // Manage "X" clear button
   const clearBtn = document.getElementById(inputEl.id === "profile-url-input" ? "profile-url-clear-btn" : "manual-url-clear-btn");
   if (clearBtn) {
     if (cleanUrl.length > 0) {
@@ -217,7 +222,6 @@ function applyUrlInputValidationStyle(inputEl, urlStr) {
     }
   }
 
-  // Strip all dynamic border, ring, background, and text color state classes
   inputEl.classList.remove(
     "bg-emerald-50", "dark:bg-emerald-950/60", "border-emerald-500", "text-emerald-950", "dark:text-emerald-100", "ring-emerald-500/40",
     "bg-rose-50", "dark:bg-rose-950/60", "border-rose-500", "text-rose-950", "dark:text-rose-100", "ring-rose-500/40",
@@ -227,7 +231,6 @@ function applyUrlInputValidationStyle(inputEl, urlStr) {
   );
 
   if (!cleanUrl) {
-    // Empty -> Neutral Slate State
     inputEl.classList.add(
       "bg-white", "dark:bg-slate-900",
       "border", "border-slate-200", "dark:border-slate-700",
@@ -237,7 +240,6 @@ function applyUrlInputValidationStyle(inputEl, urlStr) {
       inputEl.classList.add("border-blue-500", "ring-2", "ring-blue-500/40");
     }
   } else if (isValidCaamUrl(cleanUrl)) {
-    // Valid eCLIPSE URL -> Opaque Emerald
     inputEl.classList.add(
       "bg-emerald-50", "dark:bg-emerald-950/60",
       "border", "border-emerald-500", "text-emerald-950", "dark:text-emerald-100"
@@ -246,7 +248,6 @@ function applyUrlInputValidationStyle(inputEl, urlStr) {
       inputEl.classList.add("ring-2", "ring-emerald-500/40");
     }
   } else {
-    // Invalid Format -> Opaque Rose
     inputEl.classList.add(
       "bg-rose-50", "dark:bg-rose-950/60",
       "border", "border-rose-500", "text-rose-950", "dark:text-rose-100"
@@ -261,7 +262,6 @@ function updateManualUrlBadge(urlStr) {
   const urlInput = document.getElementById("manual-url-input");
   const urlBadge = document.getElementById("manual-url-badge");
   if (urlBadge) urlBadge.classList.add("hidden");
-
   const cleanUrl = urlStr ? urlStr.trim() : "";
   applyUrlInputValidationStyle(urlInput, cleanUrl);
 }
@@ -270,7 +270,6 @@ function updateProfileUrlBadge(urlStr) {
   const urlInput = document.getElementById("profile-url-input");
   const urlBadge = document.getElementById("profile-url-status-badge") || document.getElementById("profile-url-badge");
   if (urlBadge) urlBadge.classList.add("hidden");
-
   const cleanUrl = urlStr ? urlStr.trim() : "";
   applyUrlInputValidationStyle(urlInput, cleanUrl);
 }
@@ -312,6 +311,7 @@ function initProfileUI() {
 
   const passNoInput = document.getElementById("profile-passport-no");
   const passExpInput = document.getElementById("profile-passport-expiry");
+  const passExpDisplay = document.getElementById("profile-passport-expiry-display");
 
   if (passNoInput) {
     passNoInput.value = profile.passportNo || "";
@@ -322,6 +322,13 @@ function initProfileUI() {
 
   if (passExpInput) {
     passExpInput.value = profile.passportExpiry || "";
+    if (passExpDisplay) {
+      if (profile.passportExpiry) {
+        passExpDisplay.innerText = formatDateDDMMMYYYY(profile.passportExpiry);
+      } else {
+        passExpDisplay.innerText = "Select Expiry";
+      }
+    }
   }
 
   if (qsPdfLabel) {
@@ -357,8 +364,8 @@ function initProfileUI() {
 
   stopScanner();
   profileQrScannerActive = false;
-  if (qrBox) qrBox.classList.add("hidden");
 
+  if (qrBox) qrBox.classList.add("hidden");
   if (profile.url && urlBox && modeUrlBtn && modeQrBtn) {
     urlBox.classList.remove("hidden");
     modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
@@ -379,11 +386,13 @@ function initProfileUI() {
     profileQrFileInput.onchange = async (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
+
       if (window.QrScanner) {
         try {
           showLoading("Processing QR code image...");
           const result = await window.QrScanner.scanImage(file, { returnDetailedScanResult: true });
           const decodedText = (typeof result === 'object' ? result.data : result) || "";
+
           if (decodedText.trim()) {
             handleProfileQrScanned(decodedText.trim());
           } else {
@@ -404,14 +413,17 @@ function initProfileUI() {
 
       qrBox.classList.remove("hidden");
       urlBox.classList.add("hidden");
+
       if (scannerControlsBox) {
         scannerControlsBox.classList.remove("hidden");
         scannerControlsBox.classList.add("flex");
       }
+
       if (stopScanBtnProfile) stopScanBtnProfile.classList.remove("hidden");
 
       modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
       modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
+
       profileQrScannerActive = true;
       setTimeout(() => {
         startScanner(handleProfileQrScanned, showError, "profile-qr-video");
@@ -423,13 +435,17 @@ function initProfileUI() {
     if (qrBox && urlBox && modeQrBtn && modeUrlBtn) {
       stopScanner();
       profileQrScannerActive = false;
+
       urlBox.classList.remove("hidden");
       qrBox.classList.add("hidden");
+
       if (scannerControlsBox) {
         scannerControlsBox.classList.add("hidden");
         scannerControlsBox.classList.remove("flex");
       }
+
       if (stopScanBtnProfile) stopScanBtnProfile.classList.add("hidden");
+
       modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
       modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
     }
@@ -468,6 +484,7 @@ function initProfileUI() {
     pdfFileInput.onchange = async (e) => {
       selectedAttestationFile = null;
       selectedAttestationText = "";
+
       const file = e.target.files && e.target.files[0];
       const currentProfile = getProfileData();
 
@@ -510,6 +527,7 @@ function initProfileUI() {
       try {
         const extractedText = await extractTextFromPdfFile(file);
         const validation = validateAttestationContent(extractedText);
+
         if (!validation.isValid) {
           alert(`Validation Failed: ${validation.reason}`);
           resetToStoredOrEmpty();
@@ -518,6 +536,7 @@ function initProfileUI() {
 
         selectedAttestationFile = file;
         selectedAttestationText = extractedText;
+
         if (pdfLabel) pdfLabel.innerText = file.name;
         if (pdfStatusBadge && pdfStatusText) {
           pdfStatusBadge.classList.remove("hidden");
@@ -536,6 +555,7 @@ function initProfileUI() {
       selectedQsFile = null;
       selectedQsText = "";
       selectedQsParsed = null;
+
       const file = e.target.files && e.target.files[0];
       const currentQsData = getQualificationSlipData();
 
@@ -576,6 +596,7 @@ function initProfileUI() {
       try {
         const extractedText = await extractTextFromPdfFile(file);
         const isValid = validateQualificationSlipContent(extractedText);
+
         if (!isValid) {
           alert("Validation Failed: Selected PDF is not a valid MAB Qualification Slip document.");
           resetQsToStoredOrEmpty();
@@ -611,6 +632,7 @@ function initProfileUI() {
     saveBtn.onclick = async () => {
       stopScanner();
       profileQrScannerActive = false;
+
       const urlVal = urlInput ? urlInput.value.trim() : "";
       const currentProfile = getProfileData();
       const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (currentProfile.attestationFileName || "");
@@ -632,14 +654,37 @@ function initProfileUI() {
         await setQualificationSlipPdf(selectedQsFile);
         setQualificationSlipData(selectedQsParsed);
       }
+
       const passNoVal = passNoInput ? passNoInput.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '') : "";
       const passExpVal = passExpInput ? passExpInput.value.trim() : "";
+
+      if (passNoVal && !passExpVal) {
+        alert("Please select your passport expiry date.");
+        return;
+      }
+
+      if (passExpVal && !passNoVal) {
+        alert("Please enter your passport number.");
+        return;
+      }
+
+      if (passExpVal) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const expD = new Date(passExpVal);
+        if (expD < today) {
+          alert("Passport expiry date cannot be in the past.");
+          return;
+        }
+      }
+
       saveProfileData({
         url: urlVal,
         attestationFileName: attestationName,
         passportNo: passNoVal,
         passportExpiry: passExpVal
       });
+
       updateProfileUrlBadge(urlVal);
       if (pdfStatusBadge && pdfStatusText) {
         pdfStatusBadge.classList.remove("hidden");
@@ -670,27 +715,35 @@ function initProfileUI() {
     clearBtn.onclick = async () => {
       stopScanner();
       profileQrScannerActive = false;
+
       if (confirm("Clear saved crew profile data from this device?")) {
         clearProfileData();
         clearQualificationSlipData();
         await removeQualificationSlipPdf();
         await removeAttestationPdf();
+
         selectedAttestationFile = null;
         selectedAttestationText = "";
         selectedQsFile = null;
         selectedQsText = "";
         selectedQsParsed = null;
+
         if (qsPdfLabel) qsPdfLabel.innerText = "Select PDF qualification slip file...";
         if (qsPdfStatusBadge) qsPdfStatusBadge.classList.add("hidden");
+
         if (urlInput) {
           urlInput.value = "";
           updateProfileUrlBadge("");
         }
+
         if (passNoInput) passNoInput.value = "";
         if (passExpInput) passExpInput.value = "";
+        if (passExpDisplay) passExpDisplay.innerText = "Select Expiry";
+
         if (pdfLabel) pdfLabel.innerText = "Select PDF attestation file...";
         if (urlStatusBadge) urlStatusBadge.classList.add("hidden");
         if (pdfStatusBadge) pdfStatusBadge.classList.add("hidden");
+
         showProfileToast("Credentials cleared successfully.");
         renderDashboardView();
       }
@@ -714,7 +767,6 @@ function handleProfileQrScanned(scannedUrl) {
   }
   scannedUrl = cleanUrl;
 
-  // 1. Immediately switch UI view back to URL mode so input field & status badge are visible
   const qrBox = document.getElementById("profile-qr-box");
   const urlBox = document.getElementById("profile-url-box");
   const modeQrBtn = document.getElementById("profile-mode-qr-btn");
@@ -728,18 +780,18 @@ function handleProfileQrScanned(scannedUrl) {
   if (modeUrlBtn) {
     modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
   }
+
   if (modeQrBtn) {
     modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
   }
 
-  // 2. Populate URL input field and update green status badge
   const urlInput = document.getElementById("profile-url-input");
   if (urlInput) urlInput.value = scannedUrl;
   updateProfileUrlBadge(scannedUrl);
 
-  // 3. Save profile URL
   const profile = getProfileData();
   const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (profile.attestationFileName || "");
+
   saveProfileData({ url: scannedUrl, attestationFileName: attestationName });
   showProfileToast("Licence QR scanned & captured!");
 }
@@ -800,14 +852,12 @@ function initStorageUI() {
 }
 
 function initApp() {
-  // Expose key orchestrator functions on window for cross-module reliability
   window.processLicenseUrl = processLicenseUrl;
   window.showError = showError;
   window.startScanner = startScanner;
   window.showScannerView = showScannerView;
   window.renderMyQrPass = renderMyQrPass;
 
-  // Snapshot clean dashboard HTML templates early before any view logic or DOM mutation
   saveDashboardTemplates();
 
   const startScanBtn = document.getElementById("start-scan-btn");
@@ -829,7 +879,6 @@ function initApp() {
   document.addEventListener("click", (event) => {
     const historyDetails = document.getElementById("history-details");
     const historyWrapper = document.getElementById("history-card-wrapper");
-
     if (historyDetails && historyDetails.hasAttribute("open")) {
       if (historyWrapper && !historyWrapper.contains(event.target)) {
         historyDetails.removeAttribute("open");
@@ -838,7 +887,6 @@ function initApp() {
   });
 
   renderHistoryList();
-
   initHistorySearchAndFilters();
   customRenderHistoryList();
 
@@ -849,7 +897,6 @@ function initApp() {
       showView("tools-view");
     });
   }
-
 }
 
 function handleManualUrl() {
@@ -891,8 +938,8 @@ async function processAndCacheProfileData(url, pdfFile) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlText, "text/html");
         const profileMab = (existingProfile && existingProfile.cachedMabResults) ? existingProfile.cachedMabResults : null;
-      const activeFleetCtx = (profileMab && profileMab.lineCheck) ? profileMab.lineCheck.fleet : null;
-      caamResults = parseLicenseDOM(doc, threshold, activeFleetCtx);
+        const activeFleetCtx = (profileMab && profileMab.lineCheck) ? profileMab.lineCheck.fleet : null;
+        caamResults = parseLicenseDOM(doc, threshold, activeFleetCtx);
         caamResults.scanTime = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).replace(',', ', ');
       }
     } catch (e) {
@@ -905,6 +952,7 @@ async function processAndCacheProfileData(url, pdfFile) {
   if (!mabTextToParse && selectedAttestationFile) {
     mabTextToParse = await extractTextFromPdfFile(selectedAttestationFile);
   }
+
   if (!mabTextToParse) {
     try {
       const storedPdf = await getAttestationPdf();
@@ -925,7 +973,6 @@ async function processAndCacheProfileData(url, pdfFile) {
     mabResults = null;
   }
 
-  // Preserve existing cached CAAM results if live fetch failed
   let fallbackCaam = (existingProfile ? existingProfile.cachedCaamResults : null);
   if (!caamResults && !fallbackCaam && url && isValidCaamUrl(url)) {
     const scanTimeStr = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).replace(',', ', ');
@@ -946,8 +993,8 @@ async function processAndCacheProfileData(url, pdfFile) {
       ]
     };
   }
-  const finalCaamResults = caamResults || fallbackCaam;
 
+  const finalCaamResults = caamResults || fallbackCaam;
   saveProfileData({
     cachedCaamResults: finalCaamResults,
     cachedMabResults: mabResults,
@@ -1013,7 +1060,6 @@ async function processLicenseUrl(url) {
     fetchFailed = true;
   }
 
-  // Fallback to offline verified results if live fetch failed and URL is valid CAAM eCLIPSE
   if (fetchFailed || !caamResults) {
     if (isProfileUrlMatch && profile.cachedCaamResults) {
       caamResults = profile.cachedCaamResults;
@@ -1050,7 +1096,6 @@ async function processLicenseUrl(url) {
     }
   }
 
-  // Process MAB E-Attestation ONLY for saved device owner profile, NOT for external crew scans
   let mabResults = null;
   if (isProfileUrlMatch) {
     let mabTextToParse = selectedAttestationText;
@@ -1087,6 +1132,7 @@ function getDashEl(id) {
   }
   return document.getElementById(id);
 }
+
 let initialOverviewTemplateHTML = "";
 let initialCaamTemplateHTML = "";
 let initialMabTemplateHTML = "";
@@ -1119,55 +1165,55 @@ async function renderBlankDashboard() {
   const overviewPane = dashboardView.querySelector("#tab-overview-content") || document.getElementById("tab-overview-content");
   if (overviewPane) {
     overviewPane.innerHTML = `
-      <div class="p-6 text-center space-y-4 my-8">
-        <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-        </div>
-        <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No Duty Credentials Saved</h3>
-        <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
-          Please set up your digital licence URL and company attestation PDF in My Credentials to activate your flight duty compliance dashboard.
-        </p>
-        <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
-          Set Up Credentials
-        </button>
-      </div>
-    `;
+<div class="p-6 text-center space-y-4 my-8">
+  <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+  </div>
+  <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No Duty Credentials Saved</h3>
+  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+    Please set up your digital licence URL and company attestation PDF in My Credentials to activate your flight duty compliance dashboard.
+  </p>
+  <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+    Set Up Credentials
+  </button>
+</div>
+`;
   }
 
   const caamPane = dashboardView.querySelector("#tab-caam-content") || document.getElementById("tab-caam-content");
   if (caamPane) {
     caamPane.innerHTML = `
-      <div class="p-6 text-center space-y-4 my-8">
-        <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h2a2 2 0 012 2v1m-4 0h4"></path></svg>
-        </div>
-        <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No CAAM Digital Licence</h3>
-        <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
-          Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to view licence validities.
-        </p>
-        <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
-          Configure Licence Source
-        </button>
-      </div>
-    `;
+<div class="p-6 text-center space-y-4 my-8">
+  <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h2a2 2 0 012 2v1m-4 0h4"></path></svg>
+  </div>
+  <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No CAAM Digital Licence</h3>
+  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+    Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to view licence validities.
+  </p>
+  <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+    Configure Licence Source
+  </button>
+</div>
+`;
   }
 
   const mabPane = dashboardView.querySelector("#tab-mab-content") || document.getElementById("tab-mab-content");
   if (mabPane) {
     mabPane.innerHTML = `
-      <div class="p-6 text-center space-y-4 my-8">
-        <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-        </div>
-        <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No MAB Attestation PDF</h3>
-        <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
-          Please upload your MAB E-Attestation PDF document in My Credentials to view company qualifications.
-        </p>
-        <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
-          Upload Attestation PDF
-        </button>
-      </div>
-    `;
+<div class="p-6 text-center space-y-4 my-8">
+  <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+  </div>
+  <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No MAB Attestation PDF</h3>
+  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+    Please upload your MAB E-Attestation PDF document in My Credentials to view company qualifications.
+  </p>
+  <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+    Upload Attestation PDF
+  </button>
+</div>
+`;
   }
 
   await setupDocumentViewers();
@@ -1175,9 +1221,7 @@ async function renderBlankDashboard() {
 }
 
 async function renderDashboardView() {
-  // Ensure dashboard view container is visible immediately on load
   showView("dashboard-view");
-
   const profile = getProfileData();
 
   if (profile.cachedCaamResults || profile.cachedMabResults) {
@@ -1207,79 +1251,11 @@ function sortCaamQualifications(quals) {
 
   function getTier(q) {
     const nameUpper = (q.name || '').toUpperCase();
-
-    // Tier 3: Radiotelephony Operator Licence
-    if (
-      nameUpper.includes('RADIO TELEPHONY') || 
-      nameUpper.includes('RADIOTELEPHONY') || 
-      nameUpper.includes('RTOL') || 
-      nameUpper.includes('TELEPHONY') || 
-      nameUpper.includes('R/T')
-    ) {
-      return 3;
-    }
-
-    // Tier 4: English Language Proficiency
-    if (
-      nameUpper.includes('ENGLISH') || 
-      nameUpper.includes('LANGUAGE') || 
-      nameUpper.includes('ELP')
-    ) {
-      return 4;
-    }
-
-    // Tier 2: Medical Class Certificate
-    if (
-      nameUpper.includes('MEDICAL') || 
-      nameUpper.includes('CLASS 1') || 
-      nameUpper.includes('CLASS 2') ||
-      nameUpper.includes('CLASS1') ||
-      nameUpper.includes('CLASS2')
-    ) {
-      return 2;
-    }
-
-    // Tier 1: Licence Type & Expiry
-    if (
-      nameUpper.includes('VALIDITY') || 
-      nameUpper.includes('LICENCE') || 
-      nameUpper.includes('ATPL') || 
-      nameUpper.includes('CPL') || 
-      nameUpper.includes('PPL') || 
-      nameUpper.includes('MPL') ||
-      nameUpper.includes('AIRLINE TRANSPORT') ||
-      nameUpper.includes('COMMERCIAL PILOT') ||
-      nameUpper.includes('PRIVATE PILOT')
-    ) {
-      return 1;
-    }
-
-    // Tier 5: Active Aircraft Ratings & Endorsements
-    if (
-      nameUpper.includes('A3') || 
-      nameUpper.includes('B7') || 
-      nameUpper.includes('ATR') || 
-      nameUpper.includes('DHC') || 
-      nameUpper.includes('B412') ||
-      nameUpper.includes('IR') || 
-      nameUpper.includes('INSTRUMENT') || 
-      nameUpper.includes('TYPE') || 
-      nameUpper.includes('RATING') || 
-      nameUpper.includes('PBN') || 
-      nameUpper.includes('PERFORMANCE') || 
-      nameUpper.includes('NIGHT') || 
-      nameUpper.includes('ENDORSEMENT') || 
-      nameUpper.includes('INSTRUCTOR') || 
-      nameUpper.includes('EXAMINER') || 
-      nameUpper.includes('CHECK PILOT') || 
-      nameUpper.includes('TRI') || 
-      nameUpper.includes('TRE') || 
-      nameUpper.includes('FI')
-    ) {
-      return 5;
-    }
-
-    // Tier 6: Other qualifications (if available)
+    if (nameUpper.includes('RADIO TELEPHONY') || nameUpper.includes('RADIOTELEPHONY') || nameUpper.includes('RTOL') || nameUpper.includes('TELEPHONY') || nameUpper.includes('R/T')) return 3;
+    if (nameUpper.includes('ENGLISH') || nameUpper.includes('LANGUAGE') || nameUpper.includes('ELP')) return 4;
+    if (nameUpper.includes('MEDICAL') || nameUpper.includes('CLASS 1') || nameUpper.includes('CLASS 2') || nameUpper.includes('CLASS1') || nameUpper.includes('CLASS2')) return 2;
+    if (nameUpper.includes('VALIDITY') || nameUpper.includes('LICENCE') || nameUpper.includes('ATPL') || nameUpper.includes('CPL') || nameUpper.includes('PPL') || nameUpper.includes('MPL') || nameUpper.includes('AIRLINE TRANSPORT') || nameUpper.includes('COMMERCIAL PILOT') || nameUpper.includes('PRIVATE PILOT')) return 1;
+    if (nameUpper.includes('A3') || nameUpper.includes('B7') || nameUpper.includes('ATR') || nameUpper.includes('DHC') || nameUpper.includes('B412') || nameUpper.includes('IR') || nameUpper.includes('INSTRUMENT') || nameUpper.includes('TYPE') || nameUpper.includes('RATING') || nameUpper.includes('PBN') || nameUpper.includes('PERFORMANCE') || nameUpper.includes('NIGHT') || nameUpper.includes('ENDORSEMENT') || nameUpper.includes('INSTRUCTOR') || nameUpper.includes('EXAMINER') || nameUpper.includes('CHECK PILOT') || nameUpper.includes('TRI') || nameUpper.includes('TRE') || nameUpper.includes('FI')) return 5;
     return 6;
   }
 
@@ -1320,13 +1296,10 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     mabPane.innerHTML = initialMabTemplateHTML;
   }
 
-
-
   const displayName = (caamResults && caamResults.pilotDetails && caamResults.pilotDetails.name && caamResults.pilotDetails.name !== "-")
     ? caamResults.pilotDetails.name
     : ((mabResults && mabResults.pilotName && mabResults.pilotName !== "-") ? mabResults.pilotName : "Crew Member");
 
-    // 1. APPLE-STYLE BENTO OVERVIEW TAB HANDLER
   const greetingEl = getDashEl("overview-greeting");
   if (greetingEl) {
     const hour = new Date().getHours();
@@ -1344,7 +1317,6 @@ async function renderDashboardResults(caamResults, mabResults = null) {
       else if (u.includes("CAPTAIN") || u.includes("CAPT")) title = "Captain";
       else if (u.includes("FE") || u.includes("ENGINEER")) title = "FE";
     }
-
     greetingEl.innerText = `${greeting}, ${title}`;
   }
 
@@ -1353,7 +1325,6 @@ async function renderDashboardResults(caamResults, mabResults = null) {
 
   if (heroPilot) heroPilot.innerText = displayName;
   if (heroTime) heroTime.innerText = (caamResults && caamResults.scanTime) ? `${caamResults.scanTime} LT` : "18 Oct 2026 LT";
-
 
   function parseAnyDate(dateStr) {
     if (!dateStr || typeof dateStr !== 'string') return null;
@@ -1381,19 +1352,19 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     return null;
   }
 
-  // Date difference helper function
   function getDaysUntil(dateStr) {
     if (!dateStr) return null;
     let d = (dateStr instanceof Date) ? dateStr : parseAnyDate(dateStr);
     if (!d || isNaN(d.getTime())) return null;
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const target = new Date(d);
     target.setHours(0, 0, 0, 0);
+
     return Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   }
 
-  // Helper to format badge, pill status & sparkline progress bar
   function applyStatusTheme(days, badgeEl, textEl, ledEl, pillEl, validLabel = "Valid", barEl = null) {
     const threshold = (typeof getThresholdDays === 'function') ? getThresholdDays() : 30;
 
@@ -1440,17 +1411,16 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     }
   }
 
-  // Candidate items list for bottleneck detection
   const allCandidates = [];
   let markerPct = 0;
 
-  // A. CAAM Digital Licence Overall
+  // A. CAAM Digital Licence
   let caamDays = null;
   if (caamResults) {
     const licExpiryQual = (caamResults.qualifications || []).find(q => q.name && (q.name.includes("ATPL") || q.name.includes("CPL") || q.name.includes("LICENCE")));
     const caamExpDate = caamResults.licenceExpiry || (licExpiryQual ? licExpiryQual.dateText : null);
     caamDays = getDaysUntil(caamExpDate);
-    
+
     const caamExpEl = getDashEl("ov-caam-expiry");
     const caamDaysEl = getDashEl("ov-caam-days");
     const caamBadgeEl = getDashEl("ov-caam-badge");
@@ -1576,7 +1546,6 @@ async function renderDashboardResults(caamResults, mabResults = null) {
 
     markerPct = Math.min(100, Math.max(0, Math.round((daysElapsed / 180) * 100)));
     if (lvoMarkerEl) lvoMarkerEl.style.left = `${markerPct}%`;
-
     allCandidates.push({ name: "LVO Recency", days: lvoDaysRemaining, tab: "mab" });
   } else {
     if (lvoCheckDateEl) lvoCheckDateEl.innerText = "N/A";
@@ -1616,7 +1585,6 @@ async function renderDashboardResults(caamResults, mabResults = null) {
         const hasValidDate = expStr && !['NIL', 'N/A', 'NA', '-'].includes(expStr.trim().toUpperCase()) && getDaysUntil(expStr) !== null;
 
         if (item.key === "actype") {
-          // Future & False-Positive Proof: Search all table rows and match ONLY Aircraft Type entries with a valid expiry date
           return item.name.some(keyword => dName.includes(keyword)) && hasValidDate;
         }
         if (item.key === "supervisory") {
@@ -1660,13 +1628,11 @@ async function renderDashboardResults(caamResults, mabResults = null) {
       if (legendEl) legendEl.style.display = "flex";
 
       let dDays = matched ? getDaysUntil(matched.nextDue || matched.expiryDate) : null;
-
       if (dDays !== null) {
         collectedDrillDays.push(dDays);
         allCandidates.push({ name: item.label, days: dDays, tab: "mab" });
 
         const pct = Math.min(100, Math.max(4, Math.round((dDays / 365.25) * 100)));
-
         if (vBarEl) {
           vBarEl.style.height = pct + "%";
           if (dDays < 0) {
@@ -1704,7 +1670,6 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     avgDrillDays = collectedDrillDays.reduce((a, b) => a + b, 0) / collectedDrillDays.length;
   }
 
-  // Helper to format ISO or raw dates into "31 OCT 2028" format
   function formatPassportDisplayDate(dateStr) {
     if (!dateStr) return "NOT CONFIGURED";
     const str = String(dateStr).trim();
@@ -1718,21 +1683,23 @@ async function renderDashboardResults(caamResults, mabResults = null) {
         return `${day} ${months[monthIdx]} ${year}`;
       }
     }
+
     let d = (dateStr instanceof Date) ? dateStr : parseAnyDate(dateStr);
     if (!d || isNaN(d.getTime())) {
       const ts = Date.parse(str);
       if (!isNaN(ts)) d = new Date(ts);
     }
+
     if (d && !isNaN(d.getTime())) {
       const day = String(d.getDate()).padStart(2, '0');
       const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
       return `${day} ${months[d.getMonth()]} ${d.getFullYear()}`;
     }
+
     return str.toUpperCase();
   }
 
   // F. Passport & ELP Footer Bento
-  // F1. Passport Clearance
   const passExpEl = getDashEl("ov-passport-expiry");
   const passNoEl = getDashEl("ov-passport-no");
   const passDaysEl = getDashEl("ov-passport-days");
@@ -1748,6 +1715,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
 
     if (passExpEl) passExpEl.innerText = formattedDate;
     if (passNoEl) passNoEl.innerText = passportNo ? `No: ${passportNo}` : "No: Not Configured";
+
     if (passDaysEl) {
       if (passDays !== null && passDays !== undefined) {
         if (passDays < 0) {
@@ -1779,7 +1747,6 @@ async function renderDashboardResults(caamResults, mabResults = null) {
       }
     }
   } else {
-    // Fallback when Passport Details are unconfigured / not set
     if (passExpEl) passExpEl.innerText = "NOT CONFIGURED";
     if (passNoEl) passNoEl.innerText = "Tap to set up in My Credentials";
     if (passDaysEl) passDaysEl.innerText = "Click tile to configure";
@@ -1814,7 +1781,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
 
   if (elpQual) {
     const qName = (elpQual.name || "").toUpperCase();
-    let level = 5; // default
+    let level = 5;
     if (qName.includes("LEVEL 6") || qName.includes("LVL 6") || qName.includes("LEVEL-6") || qName.includes("L6")) {
       level = 6;
     } else if (qName.includes("LEVEL 4") || qName.includes("LVL 4") || qName.includes("LEVEL-4") || qName.includes("L4")) {
@@ -1827,7 +1794,6 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     const isLevel6 = level === 6 || rawExpStr.toUpperCase().includes("PERMANENT") || rawExpStr.toUpperCase().includes("NO EXPIRY") || rawExpStr.toUpperCase().includes("NIL") || !rawExpStr;
 
     if (isLevel6 || level === 6) {
-      // RULE 2: Level 6 (No Expiry)
       if (elpExpEl) elpExpEl.innerText = "NO EXPIRY";
       if (elpLevelEl) elpLevelEl.innerText = "Level 6";
       if (elpYearsEl) {
@@ -1842,7 +1808,6 @@ async function renderDashboardResults(caamResults, mabResults = null) {
         elpScaleEl.innerHTML = `<span>0Y</span><span class="absolute left-1/2 -translate-x-1/2">3Y</span><span>6Y</span>`;
       }
     } else {
-      // Levels 4 & 5
       const elpDays = getDaysUntil(rawExpStr);
       const formattedElpDate = formatPassportDisplayDate(rawExpStr);
 
@@ -1854,7 +1819,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
 
         const yearsExact = (elpDays / 365.25);
         const yearsRounded = Math.max(0, Math.round(yearsExact * 10) / 10);
-        
+
         if (elpYearsEl) {
           elpYearsEl.style.display = "block";
           if (elpDays < 0) {
@@ -1873,22 +1838,19 @@ async function renderDashboardResults(caamResults, mabResults = null) {
 
         if (elpBarEl) {
           elpBarEl.style.width = `${pct}%`;
-          if (elpDays <= 365.25) { // <= 1 year left
+          if (elpDays <= 365.25) {
             elpBarEl.className = "h-full bg-rose-500 rounded-full transition-all duration-500 relative z-10";
-          } else if (elpDays <= 730.5) { // <= 2 years left
+          } else if (elpDays <= 730.5) {
             elpBarEl.className = "h-full bg-amber-400 animate-pulse rounded-full transition-all duration-500 relative z-10";
           } else {
             elpBarEl.className = "h-full bg-purple-500 rounded-full transition-all duration-500 relative z-10";
           }
         }
 
-        // Scale Labels based on level
         if (elpScaleEl) {
           if (level === 4) {
-            // Level 4: 0y (far left), 1y (between zone 2 & 3 / 33.3%), 2y (between zone 4 & 5 / 66.7%), 3y (far right)
             elpScaleEl.innerHTML = `<span>0Y</span><span class="absolute left-[33.3%] -translate-x-1/2">1Y</span><span class="absolute left-[66.7%] -translate-x-1/2">2Y</span><span>3Y</span>`;
           } else {
-            // Level 5: 6 zones (0Y, 1Y, 2Y, 3Y, 4Y, 5Y, 6Y)
             elpScaleEl.innerHTML = `<span>0Y</span><span>1Y</span><span>2Y</span><span>3Y</span><span>4Y</span><span>5Y</span><span>6Y</span>`;
           }
         }
@@ -1898,7 +1860,6 @@ async function renderDashboardResults(caamResults, mabResults = null) {
       }
     }
   } else {
-    // Fallback when no ELP qualification is found
     if (elpExpEl) elpExpEl.innerText = "NOT FOUND";
     if (elpLevelEl) elpLevelEl.innerText = "Level --";
     if (elpYearsEl) elpYearsEl.innerText = "Tap to view CAAM Licence";
@@ -1911,7 +1872,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     }
   }
 
-  // G. Legality Rings Arc Computation & Bottleneck Detection
+  // G. Legality Rings Arc Computation
   allCandidates.sort((a, b) => a.days - b.days);
 
   const ringPercentEl = getDashEl("ov-ring-percent");
@@ -1921,20 +1882,17 @@ async function renderDashboardResults(caamResults, mabResults = null) {
 
   const ringCaam = getDashEl("ring-caam");
   const ringMab = getDashEl("ring-mab");
-
   const userThreshold = (typeof getThresholdDays === 'function') ? getThresholdDays() : 30;
 
-  // 1. CAAM Ring (Nearest expiring CAAM item: Licence, Medical, Type Rating)
   const caamItems = [caamDays, medDays, typeDays].filter(d => d !== null && d !== undefined);
   const caamMinDays = caamItems.length > 0 ? Math.min(...caamItems) : 365;
 
-  // 100 days = 100% full circle ring (Inner Ring r=30, C=188.50)
   const caamPct = Math.min(100, Math.max(0, caamMinDays));
   const caamOffset = Math.round(188.50 * (1 - caamPct / 100));
 
   const isCaamLapsed = caamMinDays <= 0;
   const isCaamWarning = caamMinDays <= userThreshold && caamMinDays > 0;
-  const caamColor = isCaamLapsed ? "#EF4444" : (isCaamWarning ? "#F59E0B" : "#3B82F6"); // Royal Blue #3B82F6
+  const caamColor = isCaamLapsed ? "#EF4444" : (isCaamWarning ? "#F59E0B" : "#3B82F6");
 
   const ringCaamBack = getDashEl("ring-caam-back");
   const ringMabBack = getDashEl("ring-mab-back");
@@ -1946,22 +1904,21 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     const dotCaam = getDashEl("legend-dot-caam");
     if (dotCaam) dotCaam.style.backgroundColor = caamColor;
   }
+
   if (ringCaamBack) {
     ringCaamBack.setAttribute("stroke", caamColor);
     ringCaamBack.setAttribute("stroke-dashoffset", String(caamOffset));
   }
 
-  // 2. MAB Ring (Nearest expiring MAB item: Line Check, Drills)
   const mabItems = [lcDays, minDrillDays].filter(d => d !== null && d !== undefined);
   const mabMinDays = mabItems.length > 0 ? Math.min(...mabItems) : 365;
 
-  // 100 days = 100% full circle ring (Outer Ring r=42, C=263.89)
   const mabPct = Math.min(100, Math.max(0, mabMinDays));
   const mabOffset = Math.round(263.89 * (1 - mabPct / 100));
 
   const isMabLapsed = mabMinDays <= 0;
   const isMabWarning = mabMinDays <= userThreshold && mabMinDays > 0;
-  const mabColor = isMabLapsed ? "#EF4444" : (isMabWarning ? "#F59E0B" : "#1D4ED8"); // blue-700 #1D4ED8
+  const mabColor = isMabLapsed ? "#EF4444" : (isMabWarning ? "#F59E0B" : "#1D4ED8");
 
   if (ringMab) {
     ringMab.setAttribute("stroke", mabColor);
@@ -1969,15 +1926,15 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     const dotMab = getDashEl("legend-dot-mab");
     if (dotMab) dotMab.style.backgroundColor = mabColor;
   }
+
   if (ringMabBack) {
     ringMabBack.setAttribute("stroke", mabColor);
     ringMabBack.setAttribute("stroke-dashoffset", String(mabOffset));
   }
 
-  // Center Percent/Days Display (Pick least days between CAAM & MAB)
   const leastDays = Math.min(caamMinDays, mabMinDays);
-
   const leastDaysText = leastDays > 100 ? "100+" : (leastDays <= 0 ? "0" : String(leastDays));
+
   if (ringPercentEl) ringPercentEl.innerText = leastDaysText;
   if (ringPercentElBack) ringPercentElBack.innerText = leastDaysText;
 
@@ -2002,44 +1959,42 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     const b = allCandidates[0];
     if (bottleneckTextEl) bottleneckTextEl.innerText = `Next Expiry: ${b.name} (${b.days < 0 ? 'Lapsed' : b.days + 'd'})`;
     if (bottleneckLedEl) {
-      bottleneckLedEl.className = b.days < 0 
+      bottleneckLedEl.className = b.days < 0
         ? "w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(239,68,68,0.8)] shrink-0 mt-0.5"
         : "w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)] shrink-0 animate-pulse mt-0.5";
     }
   } else {
     if (bottleneckTextEl) bottleneckTextEl.innerText = "All Credentials Active";
 
-  // Initialize 3D Hero Card Flip Listener
-  try {
-    if (typeof initHeroCardFlip === 'function') {
-      initHeroCardFlip();
-    } else if (window.CertiFlyAnimations && window.CertiFlyAnimations.initHeroCardFlip) {
-      window.CertiFlyAnimations.initHeroCardFlip();
+    try {
+      if (typeof initHeroCardFlip === 'function') {
+        initHeroCardFlip();
+      } else if (window.CertiFlyAnimations && window.CertiFlyAnimations.initHeroCardFlip) {
+        window.CertiFlyAnimations.initHeroCardFlip();
+      }
+    } catch (flipErr) {
+      console.warn("Hero flip init skipped/error:", flipErr);
     }
-  } catch (flipErr) {
-    console.warn("Hero flip init skipped/error:", flipErr);
-  }
 
-  // Trigger Anime.js Animation Engine for Overview Tab
-  try {
-    if (typeof animateOverviewDashboard === 'function') {
-      animateOverviewDashboard({
-        caamOffset,
-        mabOffset,
-        caamColor,
-        mabColor,
-        targetDays: leastDays,
-        lvoPct: markerPct
-      });
+    try {
+      if (typeof animateOverviewDashboard === 'function') {
+        animateOverviewDashboard({
+          caamOffset,
+          mabOffset,
+          caamColor,
+          mabColor,
+          targetDays: leastDays,
+          lvoPct: markerPct
+        });
+      }
+    } catch (animErr) {
+      console.warn("Anime.js animation trigger skipped/error:", animErr);
     }
-  } catch (animErr) {
-    console.warn("Anime.js animation trigger skipped/error:", animErr);
-  }
+
     if (bottleneckLedEl) bottleneckLedEl.className = "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] shrink-0 mt-0.5";
   }
 
-
-  // 2. CAAM TAB
+  // CAAM TAB
   if (caamResults && caamResults.pilotDetails) {
     if (caamPane && initialCaamTemplateHTML && !caamPane.querySelector("#pilot-name")) {
       caamPane.innerHTML = initialCaamTemplateHTML;
@@ -2062,6 +2017,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     if (caamListContainer) {
       caamListContainer.innerHTML = "";
       const sortedCaamQuals = sortCaamQualifications(caamResults.qualifications);
+
       if (!sortedCaamQuals || sortedCaamQuals.length === 0) {
         caamListContainer.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">No CAAM qualifications found on digital licence.</div>`;
       } else {
@@ -2071,8 +2027,10 @@ async function renderDashboardResults(caamResults, mabResults = null) {
         activeQuals.forEach(q => {
           const row = document.createElement("div");
           row.className = "py-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 last:border-b-0";
+
           let badgeHtml = "";
           const isSupervisory = Boolean(q.isSupervisory) || isSupervisoryQual(q.name);
+
           if (isSupervisory) {
             if (q.status === "EXPIRED" || q.status === "ROLE_EXPIRED") {
               const label = isDfeQual(q.name) ? "Examiner Lapsed" : (isFiQual(q.name) ? "Instructor Lapsed" : "Role Lapsed");
@@ -2092,13 +2050,14 @@ async function renderDashboardResults(caamResults, mabResults = null) {
               badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300">Valid</span>`;
             }
           }
+
           row.innerHTML = `
-            <div>
-              <div class="text-xs font-bold text-slate-800 dark:text-slate-200">${q.name}</div>
-              <div class="text-[10px] text-slate-400">Expiry: ${q.dateText || "No Expiry"}</div>
-            </div>
-            ${badgeHtml}
-          `;
+<div>
+  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">${q.name}</div>
+  <div class="text-[10px] text-slate-400">Expiry: ${q.dateText || "No Expiry"}</div>
+</div>
+${badgeHtml}
+`;
           caamListContainer.appendChild(row);
         });
 
@@ -2106,20 +2065,20 @@ async function renderDashboardResults(caamResults, mabResults = null) {
           const legacyHeader = document.createElement("div");
           legacyHeader.className = "mt-4 pt-1 flex items-center justify-between";
           legacyHeader.innerHTML = `
-            <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Previous / Legacy Endorsements</span>
-          `;
+<span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Previous / Legacy Endorsements</span>
+`;
           caamListContainer.appendChild(legacyHeader);
 
           legacyQuals.forEach(q => {
             const row = document.createElement("div");
             row.className = "py-2.5 px-3 rounded-xl bg-slate-50/60 dark:bg-slate-900/40 my-1 flex items-center justify-between border border-slate-100 dark:border-slate-800/60";
             row.innerHTML = `
-              <div>
-                <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">${q.name}</div>
-                <div class="text-[10px] text-slate-400">Lapsed: ${q.dateText || "Expired"}</div>
-              </div>
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Legacy / Lapsed</span>
-            `;
+<div>
+  <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">${q.name}</div>
+  <div class="text-[10px] text-slate-400">Lapsed: ${q.dateText || "Expired"}</div>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Legacy / Lapsed</span>
+`;
             caamListContainer.appendChild(row);
           });
         }
@@ -2128,23 +2087,23 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   } else {
     if (caamPane) {
       caamPane.innerHTML = `
-        <div class="p-6 text-center space-y-4 my-8">
-          <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h2a2 2 0 012 2v1m-4 0h4"></path></svg>
-          </div>
-          <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No CAAM Digital Licence</h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
-            Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to view licence validities.
-          </p>
-          <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
-            Configure Licence Source
-          </button>
-        </div>
-      `;
+<div class="p-6 text-center space-y-4 my-8">
+  <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h2a2 2 0 012 2v1m-4 0h4"></path></svg>
+  </div>
+  <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No CAAM Digital Licence</h3>
+  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+    Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to view licence validities.
+  </p>
+  <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+    Configure Licence Source
+  </button>
+</div>
+`;
     }
   }
 
-  // 3. MAB TAB
+  // MAB TAB
   if (mabResults) {
     if (mabPane && initialMabTemplateHTML && !mabPane.querySelector("#mab-pilot-name")) {
       mabPane.innerHTML = initialMabTemplateHTML;
@@ -2171,11 +2130,13 @@ async function renderDashboardResults(caamResults, mabResults = null) {
 
     if (mabPilot) mabPilot.innerText = mabResults.pilotName;
     if (mabStaff) mabStaff.innerText = mabResults.staffNo;
+
     if (mabDesig) {
       const rawDesig = mabResults.designation || "";
       const cleanDesig = rawDesig.replace(/\.OPS.*$/i, "").trim();
       mabDesig.innerText = cleanDesig || "-";
     }
+
     if (mabPub) mabPub.innerText = mabResults.publishedDateStr;
     if (mabDocRef) mabDocRef.innerHTML = "";
 
@@ -2217,7 +2178,6 @@ async function renderDashboardResults(caamResults, mabResults = null) {
       }
     }
 
-    // Line Check Card
     const lcTitle = getDashEl("mab-linecheck-title");
     const lcLicence = getDashEl("mab-linecheck-licence");
     const lcRoute = getDashEl("mab-linecheck-route");
@@ -2230,7 +2190,6 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     if (lcDate && mabResults.lineCheck) lcDate.innerText = mabResults.lineCheck.checkDate;
     if (lcExp && mabResults.lineCheck) lcExp.innerText = mabResults.lineCheck.expiryDate;
 
-    // LVO Autoland Card
     const lvoAirport = getDashEl("mab-lvo-airport");
     const lvoRunway = getDashEl("mab-lvo-runway");
     const lvoDate = getDashEl("mab-lvo-date");
@@ -2247,13 +2206,13 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     if (lvoDfe && mabResults.lvo) lvoDfe.innerText = mabResults.lvo.dfeNo || "DFE 11635";
     if (lvoBadge && mabResults.lvo) lvoBadge.innerText = mabResults.lvo.type || "ACTUAL";
 
-    // Safety Drills & Recurrent Training List (Items 1-11)
     const drillsContainer = getDashEl("mab-drills-list");
     if (drillsContainer && mabResults.drills) {
       drillsContainer.innerHTML = "";
       mabResults.drills.forEach(d => {
         const row = document.createElement("div");
         row.className = "py-2.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 last:border-b-0";
+
         let badgeHtml = "";
         if (d.status === "EXPIRED") {
           badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-100 text-rose-700">Lapsed</span>`;
@@ -2264,32 +2223,33 @@ async function renderDashboardResults(caamResults, mabResults = null) {
         } else {
           badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700">Valid</span>`;
         }
+
         row.innerHTML = `
-          <div>
-            <div class="text-xs font-bold text-slate-800 dark:text-slate-200">${d.name}</div>
-            <div class="text-[10px] text-slate-400">Attended : ${d.doneDate} | Expires : ${d.expiryDate}</div>
-          </div>
-          ${badgeHtml}
-        `;
+<div>
+  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">${d.name}</div>
+  <div class="text-[10px] text-slate-400">Attended : ${d.doneDate} | Expires : ${d.expiryDate}</div>
+</div>
+${badgeHtml}
+`;
         drillsContainer.appendChild(row);
       });
     }
   } else {
     if (mabPane) {
       mabPane.innerHTML = `
-        <div class="p-6 text-center space-y-4 my-8">
-          <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-          </div>
-          <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No MAB Attestation PDF</h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
-            Please upload your MAB E-Attestation PDF document in My Credentials to view company qualifications.
-          </p>
-          <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
-            Upload Attestation PDF
-          </button>
-        </div>
-      `;
+<div class="p-6 text-center space-y-4 my-8">
+  <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+  </div>
+  <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No MAB Attestation PDF</h3>
+  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+    Please upload your MAB E-Attestation PDF document in My Credentials to view company qualifications.
+  </p>
+  <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+    Upload Attestation PDF
+  </button>
+</div>
+`;
     }
   }
 
@@ -2304,6 +2264,7 @@ async function setupDocumentViewers() {
   const qsBadgePill = getDashEl("mab-qs-cert-no");
 
   const qsData = getQualificationSlipData() || selectedQsParsed;
+
   if (qsBadgeText && qsBadgePill) {
     if (qsData) {
       qsBadgeText.innerText = "Qualification Slip: Stored & Valid";
@@ -2361,7 +2322,6 @@ async function setupDocumentViewers() {
   }
 }
 
-
 function updateHistoryCounts(allHistory) {
   const cntAll = document.getElementById("count-all");
   const cntValid = document.getElementById("count-valid");
@@ -2397,6 +2357,7 @@ function updateHistoryPillUI(targetFilter) {
     EXPIRING_SOON: "py-1.5 px-1 rounded-lg bg-amber-500 text-white shadow-xs transition-all cursor-pointer font-extrabold",
     EXPIRED: "py-1.5 px-1 rounded-lg bg-rose-600 text-white shadow-xs transition-all cursor-pointer font-extrabold"
   };
+
   const inactiveStyle = "py-1.5 px-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold transition-all cursor-pointer";
 
   filterPills.forEach(({ el, value }) => {
@@ -2411,9 +2372,7 @@ function updateHistoryPillUI(targetFilter) {
 
 let currentHistoryFilter = "ALL";
 
-export 
-let activeSwipedCardId = null;
-
+export let activeSwipedCardId = null;
 let swipeAutoDismissTimer = null;
 
 
@@ -2428,13 +2387,16 @@ window.exitHistoryManageMode = function() {
   if (!isManageModeActive) return;
   isManageModeActive = false;
   selectedRecordIds.clear();
+
   const manageBtn = document.getElementById("btn-history-manage");
   if (manageBtn) {
     manageBtn.innerText = "Manage";
     manageBtn.className = "py-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer";
   }
+
   const bulkBar = document.getElementById("history-bulk-action-bar");
   if (bulkBar) bulkBar.classList.add("hidden");
+
   if (typeof customRenderHistoryList === "function") {
     customRenderHistoryList();
   }
@@ -2443,7 +2405,7 @@ window.exitHistoryManageMode = function() {
 function updateBulkActionBarUI() {
   const countBadge = document.getElementById("bulk-selected-count");
   const selectAllBtnText = document.getElementById("btn-bulk-select-all-text");
-  
+
   if (countBadge) {
     countBadge.innerText = `${selectedRecordIds.size} selected`;
   }
@@ -2599,6 +2561,7 @@ function setupHistorySwipeListeners() {
         }
       }
     };
+
     document.addEventListener("click", (e) => {
       if (activeSwipedCardId) {
         const activeCard = document.getElementById("card-inner-" + activeSwipedCardId);
@@ -2651,22 +2614,22 @@ function setupHistorySwipeListeners() {
       if (!targetCard) return;
       const clientX = getClientX(e);
       const clientY = getClientY(e);
+
       const diffX = clientX - startX;
       const diffY = clientY - startY;
 
       if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 8) {
         isSwiping = true;
         currentDiffX = diffX;
-
         targetCard.style.transition = "none";
 
         const currentTransformStr = targetCard.style.transform || "";
         let baseOffset = 0;
+
         if (currentTransformStr.includes("translateX(80px)")) baseOffset = 80;
         else if (currentTransformStr.includes("translateX(-80px)")) baseOffset = -80;
 
         let translateVal = baseOffset + diffX;
-
         if (translateVal > 90) translateVal = 90;
         if (translateVal < -90) translateVal = -90;
 
@@ -2676,12 +2639,12 @@ function setupHistorySwipeListeners() {
 
     const handleEnd = () => {
       if (!targetCard) return;
-
       targetCard.style.transition = "transform 0.2s ease-out";
 
       if (isSwiping) {
         const currentTransformStr = targetCard.style.transform || "";
         let baseOffset = 0;
+
         if (currentTransformStr.includes("translateX(80px)")) baseOffset = 80;
         else if (currentTransformStr.includes("translateX(-80px)")) baseOffset = -80;
 
@@ -2725,6 +2688,7 @@ function setupHistorySwipeListeners() {
           }
         }
       }
+
       targetCard = null;
       isSwiping = false;
     };
@@ -2733,7 +2697,6 @@ function setupHistorySwipeListeners() {
     container.addEventListener("touchmove", handleMove, { passive: true });
     container.addEventListener("touchend", handleEnd);
     container.addEventListener("touchcancel", handleEnd);
-
     container.addEventListener("mousedown", handleStart);
     container.addEventListener("mousemove", (e) => { if (targetCard) handleMove(e); });
     container.addEventListener("mouseup", () => { if (targetCard) handleEnd(); });
@@ -2758,6 +2721,7 @@ window.handleCardClick = function(event, safeId) {
     activeSwipedCardId = null;
     return;
   }
+
   loadHistoricalRecord(safeId);
 };
 
@@ -2773,17 +2737,21 @@ window.toggleSingleBookmark = function(recordId) {
 window.deleteSingleRecord = function(recordId) {
   if (!recordId) return;
   activeSwipedCardId = null;
+
   if (selectedRecordIds && selectedRecordIds.has(String(recordId))) {
     selectedRecordIds.delete(String(recordId));
   }
+
   if (typeof window.deleteHistoryRecords === "function") {
     window.deleteHistoryRecords([recordId]);
   } else if (typeof deleteHistoryRecords === "function") {
     deleteHistoryRecords([recordId]);
   }
+
   if (typeof showProfileToast === "function") {
     showProfileToast("Record removed");
   }
+
   const remaining = getScanHistory() || [];
   if (remaining.length === 0 && isManageModeActive) {
     if (typeof window.exitHistoryManageMode === "function") {
@@ -2802,8 +2770,8 @@ function customRenderHistoryList() {
 
   const countBadge = document.getElementById("history-count-badge");
   const retentionTag = document.getElementById("history-retention-tag");
-
   const limit = (typeof getHistoryLimit === "function") ? getHistoryLimit() : 10;
+
   if (retentionTag) {
     retentionTag.innerText = `${limit} scans`;
     retentionTag.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 text-xs font-bold transition-all cursor-pointer shadow-2xs active:scale-95";
@@ -2813,13 +2781,15 @@ function customRenderHistoryList() {
       toggleHistoryLimitQuickPicker(retentionTag);
     };
   }
+
   const clockIcon = document.getElementById("history-clock-icon");
   const searchInput = document.getElementById("history-search-input");
 
   if (targets.length === 0) return;
-  setupHistorySwipeListeners();
 
+  setupHistorySwipeListeners();
   let allHistory = getScanHistory() || [];
+
   updateHistoryCounts(allHistory);
 
   const validIdsSet = new Set(allHistory.map(item => String(item.id)));
@@ -2836,7 +2806,6 @@ function customRenderHistoryList() {
 
   const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : "";
 
-  // Requirement 3: Resetting/clearing search input automatically switches filter back to "ALL"
   if (prevSearchQueryState !== "" && searchQuery === "") {
     currentHistoryFilter = "ALL";
   }
@@ -2849,9 +2818,7 @@ function customRenderHistoryList() {
   }
 
   let scanHistory = [];
-
   if (searchQuery) {
-    // 1. Requirement 2: Search globally across ALL history records regardless of active pill
     const matchingItems = allHistory.filter(item => {
       if (!item) return false;
       const name = (item.name || "").toLowerCase();
@@ -2861,9 +2828,9 @@ function customRenderHistoryList() {
     });
 
     if (matchingItems.length > 0) {
-      // 2. Requirement 2: Option 3 Smart Auto-Switching based on match statuses
       const uniqueStatuses = new Set(matchingItems.map(m => m ? m.overallStatus : null));
       uniqueStatuses.delete(null);
+
       if (uniqueStatuses.size === 1) {
         const singleStatus = Array.from(uniqueStatuses)[0];
         if (singleStatus === "VALID") currentHistoryFilter = "VALID";
@@ -2874,13 +2841,10 @@ function customRenderHistoryList() {
         currentHistoryFilter = "ALL";
       }
     }
-    
     updateHistoryPillUI(currentHistoryFilter);
     scanHistory = matchingItems;
   } else {
-    // 3. When search query is empty, filter by active status pill
     updateHistoryPillUI(currentHistoryFilter);
-
     if (currentHistoryFilter && currentHistoryFilter !== "ALL") {
       scanHistory = allHistory.filter(item => {
         if (!item) return false;
@@ -2894,7 +2858,6 @@ function customRenderHistoryList() {
     }
   }
 
-  // Sort Pinned Items to Very Top
   scanHistory = [...scanHistory].sort((a, b) => {
     const aPinned = Boolean(a.isPinned || a.pinned);
     const bPinned = Boolean(b.isPinned || b.pinned);
@@ -2924,13 +2887,12 @@ function customRenderHistoryList() {
     return;
   }
 
-  // Requirement 1: Exact 3-row card layout match
   const cardsHtml = scanHistory.map(item => {
     if (!item) return '';
     const isPinned = Boolean(item.isPinned || item.pinned);
     const safeId = String(item.id || '').replace(/'/g, "\'");
     const pinBadge = isPinned ? `<svg class="w-3.5 h-3.5 text-orange-400 dark:text-orange-400 shrink-0 inline-block align-middle ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>` : '';
-    
+
     let badgeStyle = "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60";
     let statusLabel = "Valid";
 
@@ -2946,58 +2908,56 @@ function customRenderHistoryList() {
     const licType = item.licenseType || 'ATPL(A)';
     const licNo = item.id || '-';
     const timestampStr = item.timestamp || '';
-
     const isSelected = selectedRecordIds.has(safeId);
+
     const checkboxHtml = isManageModeActive ? `
-      <div class="shrink-0 pl-1 pr-2 flex items-center justify-center">
-        <div class="w-4 h-4 rounded-md border ${isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800'} flex items-center justify-center transition-all">
-          ${isSelected ? '<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>' : ''}
-        </div>
-      </div>
-    ` : '';
+<div class="shrink-0 pl-1 pr-2 flex items-center justify-center">
+  <div class="w-4 h-4 rounded-md border ${isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800'} flex items-center justify-center transition-all">
+    ${isSelected ? '<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>' : ''}
+  </div>
+</div>
+` : '';
 
     const cardBgStyle = (isManageModeActive && isSelected) ? "bg-blue-50 dark:bg-slate-800" : "bg-white dark:bg-slate-900";
 
     return `
-      <div class="relative overflow-hidden border-b border-slate-100 dark:border-slate-800/80 last:border-b-0">
-        <!-- Left Underlay (Revealed on Swipe Right) -> Bookmark -->
-        <div class="absolute inset-y-0 left-0 flex items-center justify-start pl-4 bg-orange-200 dark:bg-orange-950/60 w-1/2 z-0">
-          <button onclick="event.stopPropagation(); toggleSingleBookmark('${safeId}')" class="p-1.5 rounded-lg text-orange-600 dark:text-orange-400 hover:bg-orange-300/50 transition-all" title="Bookmark">
-            <svg class="w-5 h-5 text-orange-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
-          </button>
-        </div>
-        <!-- Right Underlay (Revealed on Swipe Left) -> Delete -->
-        <div class="absolute inset-y-0 right-0 flex items-center justify-end pr-4 bg-red-200 dark:bg-red-950/60 w-1/2 z-0">
-          <button onclick="event.stopPropagation(); deleteSingleRecord('${safeId}')" class="p-1.5 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-300/50 transition-all" title="Delete">
-            <svg class="w-5 h-5 text-red-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-          </button>
-        </div>
-        <div id="card-inner-${safeId}" data-card-id="${safeId}" onclick="handleCardClick(event, '${safeId}')" class="relative z-10 ${cardBgStyle} py-2.5 px-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
-          <div class="flex items-center justify-between w-full active:scale-[0.985] transition-transform duration-100 ease-out">
-            <div class="flex items-center gap-2 overflow-hidden flex-1 pr-2">
-              ${checkboxHtml}
-              <div class="flex flex-col text-left overflow-hidden flex-1">
-                <div class="flex items-center gap-1">
-                  <span class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">${nameUpper}</span>
-                  ${pinBadge}
-                </div>
-                <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5 tracking-tight truncate">
-                  ${licType} - ${licNo}
-                </span>
-                <span class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
-                  Checked: ${timestampStr}
-                </span>
-              </div>
-            </div>
-            <div class="shrink-0">
-              <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${badgeStyle}">
-                ${statusLabel}
-              </span>
-            </div>
+<div class="relative overflow-hidden border-b border-slate-100 dark:border-slate-800/80 last:border-b-0">
+  <div class="absolute inset-y-0 left-0 flex items-center justify-start pl-4 bg-orange-200 dark:bg-orange-950/60 w-1/2 z-0">
+    <button onclick="event.stopPropagation(); toggleSingleBookmark('${safeId}')" class="p-1.5 rounded-lg text-orange-600 dark:text-orange-400 hover:bg-orange-300/50 transition-all" title="Bookmark">
+      <svg class="w-5 h-5 text-orange-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+    </button>
+  </div>
+  <div class="absolute inset-y-0 right-0 flex items-center justify-end pr-4 bg-red-200 dark:bg-red-950/60 w-1/2 z-0">
+    <button onclick="event.stopPropagation(); deleteSingleRecord('${safeId}')" class="p-1.5 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-300/50 transition-all" title="Delete">
+      <svg class="w-5 h-5 text-red-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+    </button>
+  </div>
+  <div id="card-inner-${safeId}" data-card-id="${safeId}" onclick="handleCardClick(event, '${safeId}')" class="relative z-10 ${cardBgStyle} py-2.5 px-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+    <div class="flex items-center justify-between w-full active:scale-[0.985] transition-transform duration-100 ease-out">
+      <div class="flex items-center gap-2 overflow-hidden flex-1 pr-2">
+        ${checkboxHtml}
+        <div class="flex flex-col text-left overflow-hidden flex-1">
+          <div class="flex items-center gap-1">
+            <span class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">${nameUpper}</span>
+            ${pinBadge}
           </div>
+          <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5 tracking-tight truncate">
+            ${licType} - ${licNo}
+          </span>
+          <span class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
+            Checked: ${timestampStr}
+          </span>
         </div>
       </div>
-    `;
+      <div class="shrink-0">
+        <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${badgeStyle}">
+          ${statusLabel}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+`;
   }).join('');
 
   targets.forEach(t => { if (t) t.innerHTML = cardsHtml; });
@@ -3028,6 +2988,7 @@ function setupReverifyOnlineButton() {
     }
 
     await processLicenseUrl(lastScannedUrl);
+
     if (typeof showProfileToast === "function") {
       showProfileToast("Licence re-verified & updated!");
     }
@@ -3042,8 +3003,8 @@ function setupPinCardButton(caamResults) {
   const licNo = (caamResults.pilotDetails && caamResults.pilotDetails.licenseNo) || "";
   let scanHistory = getScanHistory() || [];
   const matchIndex = scanHistory.findIndex(item => item && (String(item.id) === String(licNo) || item.url === lastScannedUrl));
-
   let isPinned = false;
+
   if (matchIndex !== -1) {
     isPinned = Boolean(scanHistory[matchIndex].isPinned || scanHistory[matchIndex].pinned);
   }
@@ -3052,19 +3013,19 @@ function setupPinCardButton(caamResults) {
     if (isPinned) {
       pinBtn.className = "py-2 px-3 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 bg-orange-100 dark:bg-orange-950/80 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800/60 shadow-xs cursor-pointer";
       pinBtn.innerHTML = `
-        <svg class="w-4 h-4 text-orange-500 shrink-0" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
-        </svg>
-        <span>Unbookmark</span>
-      `;
+<svg class="w-4 h-4 text-orange-500 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+  <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+</svg>
+<span>Unbookmark</span>
+`;
     } else {
       pinBtn.className = "py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer";
       pinBtn.innerHTML = `
-        <svg class="w-4 h-4 text-orange-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
-        </svg>
-        <span>Bookmark</span>
-      `;
+<svg class="w-4 h-4 text-orange-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+</svg>
+<span>Bookmark</span>
+`;
     }
   };
 
@@ -3073,8 +3034,8 @@ function setupPinCardButton(caamResults) {
   pinBtn.onclick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-
     isPinned = !isPinned;
+
     if (matchIndex !== -1) {
       scanHistory[matchIndex].isPinned = isPinned;
       scanHistory[matchIndex].pinned = isPinned;
@@ -3108,8 +3069,10 @@ let prevSearchQueryState = "";
 
 function initHistorySearchAndFilters() {
   const searchInput = document.getElementById("history-search-input");
+
   if (searchInput) {
     const parent = searchInput.parentNode;
+
     if (parent && !document.getElementById("history-search-clear-btn")) {
       const pos = window.getComputedStyle ? window.getComputedStyle(parent).position : parent.style.position;
       if (!pos || pos === 'static') {
@@ -3122,14 +3085,12 @@ function initHistorySearchAndFilters() {
       clearBtn.className = "absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors hidden cursor-pointer z-10";
       clearBtn.setAttribute("aria-label", "Clear search");
       clearBtn.innerHTML = `
-        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
-      `;
-
+<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+</svg>
+`;
       searchInput.classList.add("pr-9");
 
-      // Requirement 3: Resetting clear button sets filter to "ALL"
       clearBtn.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -3180,7 +3141,7 @@ function initHistorySearchAndFilters() {
   filterPills.forEach(({ el, value }) => {
     if (!el) return;
     el.addEventListener("click", () => {
-      if (searchInput) searchInput.value = ""; // Clear search when user explicitly taps a pill
+      if (searchInput) searchInput.value = "";
       prevSearchQueryState = "";
       currentHistoryFilter = value;
       updateHistoryPillUI(currentHistoryFilter);
@@ -3236,7 +3197,6 @@ function renderResults(caamResults, mabResults = null) {
       overallBadge.innerText = "VALID";
     }
 
-    // Role Privilege Advisory Box in result view
     let resAdvisoryBox = getResEl("res-advisory-box");
     if (caamResults && caamResults.advisoryNotice) {
       if (!resAdvisoryBox) {
@@ -3248,16 +3208,16 @@ function renderResults(caamResults, mabResults = null) {
       }
       resAdvisoryBox.className = "mt-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-left";
       resAdvisoryBox.innerHTML = `
-        <div class="flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-300">
-          <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
-          </svg>
-          <span>SPECIALIZED ROLE ADVISORY</span>
-        </div>
-        <p class="mt-1 text-[11px] font-medium text-amber-700 dark:text-amber-400 leading-tight">
-          ${caamResults.advisoryNotice.message}
-        </p>
-      `;
+<div class="flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-300">
+  <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+  </svg>
+  <span>SPECIALIZED ROLE ADVISORY</span>
+</div>
+<p class="mt-1 text-[11px] font-medium text-amber-700 dark:text-amber-400 leading-tight">
+  ${caamResults.advisoryNotice.message}
+</p>
+`;
     } else if (resAdvisoryBox) {
       resAdvisoryBox.remove();
     }
@@ -3267,6 +3227,7 @@ function renderResults(caamResults, mabResults = null) {
   if (caamListContainer && caamResults) {
     caamListContainer.innerHTML = "";
     const sortedResQuals = sortCaamQualifications(caamResults.qualifications);
+
     if (!sortedResQuals || sortedResQuals.length === 0) {
       caamListContainer.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">No CAAM qualifications found on digital licence.</div>`;
     } else {
@@ -3276,8 +3237,10 @@ function renderResults(caamResults, mabResults = null) {
       activeResQuals.forEach(q => {
         const row = document.createElement("div");
         row.className = "py-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 last:border-b-0";
+
         let badgeHtml = "";
         const isSupervisory = Boolean(q.isSupervisory) || isSupervisoryQual(q.name);
+
         if (isSupervisory) {
           if (q.status === "EXPIRED" || q.status === "ROLE_EXPIRED") {
             const label = isDfeQual(q.name) ? "Examiner Lapsed" : (isFiQual(q.name) ? "Instructor Lapsed" : "Role Lapsed");
@@ -3297,13 +3260,14 @@ function renderResults(caamResults, mabResults = null) {
             badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300">Valid</span>`;
           }
         }
+
         row.innerHTML = `
-          <div>
-            <div class="text-xs font-bold text-slate-800 dark:text-slate-200">${q.name}</div>
-            <div class="text-[10px] text-slate-400">Expiry: ${q.dateText || "No Expiry"}</div>
-          </div>
-          ${badgeHtml}
-        `;
+<div>
+  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">${q.name}</div>
+  <div class="text-[10px] text-slate-400">Expiry: ${q.dateText || "No Expiry"}</div>
+</div>
+${badgeHtml}
+`;
         caamListContainer.appendChild(row);
       });
 
@@ -3311,32 +3275,32 @@ function renderResults(caamResults, mabResults = null) {
         const legacyHeader = document.createElement("div");
         legacyHeader.className = "mt-4 pt-1 flex items-center justify-between";
         legacyHeader.innerHTML = `
-          <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Previous / Legacy Endorsements</span>
-        `;
+<span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Previous / Legacy Endorsements</span>
+`;
         caamListContainer.appendChild(legacyHeader);
 
         legacyResQuals.forEach(q => {
           const row = document.createElement("div");
           row.className = "py-2.5 px-3 rounded-xl bg-slate-50/60 dark:bg-slate-900/40 my-1 flex items-center justify-between border border-slate-100 dark:border-slate-800/60";
           row.innerHTML = `
-            <div>
-              <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">${q.name}</div>
-              <div class="text-[10px] text-slate-400">Lapsed: ${q.dateText || "Expired"}</div>
-            </div>
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Legacy / Lapsed</span>
-          `;
+<div>
+  <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">${q.name}</div>
+  <div class="text-[10px] text-slate-400">Lapsed: ${q.dateText || "Expired"}</div>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Legacy / Lapsed</span>
+`;
           caamListContainer.appendChild(row);
         });
       }
     }
   }
 
-  // Phase 1: Hide/Remove top navigation header inside #result-view
   const resHeaderNav = resView ? (resView.querySelector("header") || resView.querySelector(".topbar") || resView.querySelector("#result-view-header")) : null;
   if (resHeaderNav) {
     resHeaderNav.style.display = "none";
     resHeaderNav.classList.add("hidden");
   }
+
   const backBtn = document.getElementById("btn-result-back");
   if (backBtn) {
     backBtn.style.display = "none";
@@ -3347,7 +3311,6 @@ function renderResults(caamResults, mabResults = null) {
     }
   }
 
-  // Phase 1: Attach button event handlers & format View Licence Page button (border removed, renamed label)
   const resOpenBtn = getResEl("res-open-original-btn") || getResEl("open-original-btn");
   if (resOpenBtn) {
     resOpenBtn.classList.remove("border-t", "border-slate-100", "dark:border-slate-800", "border-slate-200", "dark:border-slate-700");
@@ -3365,6 +3328,7 @@ function renderResults(caamResults, mabResults = null) {
         resOpenBtn.innerText = "View Licence Page";
       }
     }
+
     resOpenBtn.onclick = () => {
       if (lastScannedUrl) {
         window.open(lastScannedUrl, "_blank");
@@ -3402,7 +3366,6 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
   canvasElem.width = size;
   canvasElem.height = size;
 
-  // Clear and fill solid white background
   ctx.fillStyle = "#FFFFFF";
   ctx.fillRect(0, 0, size, size);
 
@@ -3419,7 +3382,6 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
     return;
   }
 
-  // Helper: Cache rendered canvas as Base64 Data URL in localStorage
   const cacheCanvasDataUrl = () => {
     try {
       const dataUrl = canvasElem.toDataURL("image/png");
@@ -3434,7 +3396,6 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
     }
   };
 
-  // Engine 1: Check for npm qrcode library API (window.QRCode.toCanvas)
   if (window.QRCode && typeof window.QRCode.toCanvas === 'function') {
     try {
       window.QRCode.toCanvas(canvasElem, qrUrlText, {
@@ -3449,7 +3410,6 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
     }
   }
 
-  // Engine 2: Check for David Shim qrcode.js API (new window.QRCode constructor - qrcode.min.js)
   if (window.QRCode && typeof window.QRCode === 'function') {
     try {
       const tempDiv = document.createElement("div");
@@ -3504,7 +3464,6 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
     }
   }
 
-  // Engine 3 (100% Airplane Mode): Check for cached Base64 Data URL stored in localStorage from previous session
   const profile = (typeof getProfileData === "function") ? getProfileData() : {};
   if (profile && profile.cachedQrDataUrl) {
     const cachedImg = new Image();
@@ -3517,7 +3476,6 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
     return;
   }
 
-  // Engine 4: Online API Fallback (if network is available)
   let imgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrUrlText)}`;
   const img = new Image();
   img.onload = () => {
@@ -3544,8 +3502,6 @@ function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
   img.src = imgSrc;
 }
 
-let initialMyQrPassTemplateHTML = "";
-
 function renderMyQrPass() {
   const tabQrPassBtn = document.getElementById("tab-qrpass-btn");
   if (tabQrPassBtn) {
@@ -3558,7 +3514,6 @@ function renderMyQrPass() {
   const hasUrl = profile && profile.url && profile.url.trim() !== "";
   const tabContainer = document.getElementById("my-qr-pass-tab");
 
-  // Tab 2 Unconfigured Empty-State Card
   if (tabContainer) {
     if (!initialMyQrPassTemplateHTML && tabContainer.querySelector("#pass-qr-canvas")) {
       initialMyQrPassTemplateHTML = tabContainer.innerHTML;
@@ -3566,19 +3521,19 @@ function renderMyQrPass() {
 
     if (!hasUrl && !profile.cachedQrDataUrl && !profile.cachedCaamResults) {
       tabContainer.innerHTML = `
-        <div class="py-12 px-4 text-center flex flex-col items-center justify-center bg-slate-800/80 rounded-2xl border border-slate-700/80 shadow-lg my-4">
-          <div class="w-16 h-16 bg-slate-700/60 rounded-full flex items-center justify-center text-slate-400 mb-4 shadow-inner">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 3l18 18"></path></svg>
-          </div>
-          <h3 class="text-base font-bold text-white mb-1">No Digital QR Pass Configured</h3>
-          <p class="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed mb-4">
-            Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to generate your personal digital flight pass.
-          </p>
-          <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
-            Configure Licence Source
-          </button>
-        </div>
-      `;
+<div class="py-12 px-4 text-center flex flex-col items-center justify-center bg-slate-800/80 rounded-2xl border border-slate-700/80 shadow-lg my-4">
+  <div class="w-16 h-16 bg-slate-700/60 rounded-full flex items-center justify-center text-slate-400 mb-4 shadow-inner">
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 3l18 18"></path></svg>
+  </div>
+  <h3 class="text-base font-bold text-white mb-1">No Digital QR Pass Configured</h3>
+  <p class="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed mb-4">
+    Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to generate your personal digital flight pass.
+  </p>
+  <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+    Configure Licence Source
+  </button>
+</div>
+`;
       return;
     } else if (initialMyQrPassTemplateHTML) {
       tabContainer.innerHTML = initialMyQrPassTemplateHTML;
@@ -3592,12 +3547,10 @@ function renderMyQrPass() {
   const freshnessElem = document.getElementById("pass-freshness-tag") || document.getElementById("pass-timestamp");
   const verifyBtn = document.getElementById("verify-my-licence-btn");
 
-  // Redundant Self-Verify Button Hiding
   if (verifyBtn) {
     verifyBtn.classList.add("hidden");
   }
 
-  // Remove flight eligibility badge under QR image as requested
   if (badgeElem) {
     badgeElem.classList.add("hidden");
     badgeElem.style.display = "none";
@@ -3607,7 +3560,6 @@ function renderMyQrPass() {
   const caam = profile.cachedCaamResults || null;
   const mab = profile.cachedMabResults || null;
 
-  // Determine pilot name from cached CAAM or MAB or stored profile
   let displayName = "Unconfigured Profile";
   if (caam && caam.pilotDetails && caam.pilotDetails.name && caam.pilotDetails.name !== "-") {
     displayName = caam.pilotDetails.name;
@@ -3615,22 +3567,17 @@ function renderMyQrPass() {
     displayName = mab.pilotName;
   }
 
-  // Determine licence type & number
   let licenceType = (caam && caam.pilotDetails && caam.pilotDetails.licenseType) ? caam.pilotDetails.licenseType : "ATPL(A)";
-  let licenceNo = (caam && caam.pilotDetails && caam.pilotDetails.licenseNo && caam.pilotDetails.licenseNo !== "-") 
-    ? caam.pilotDetails.licenseNo 
+  let licenceNo = (caam && caam.pilotDetails && caam.pilotDetails.licenseNo && caam.pilotDetails.licenseNo !== "-")
+    ? caam.pilotDetails.licenseNo
     : ((mab && mab.lineCheck && mab.lineCheck.licenseNo) ? mab.lineCheck.licenseNo : "-");
 
-  // Determine scan timestamp
   let scanTimeStr = (caam && caam.scanTime) ? caam.scanTime : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
   if (nameElem) nameElem.innerText = displayName;
   if (licenceElem) licenceElem.innerText = `${licenceType} - ${licenceNo}`;
   if (freshnessElem) freshnessElem.innerText = scanTimeStr;
 
-
-
-  // Draw QR Code onto Canvas
   if (canvas) {
     drawQrToCanvas(canvas, url, profile.qrImageUrl || (caam ? caam.qrImageUrl : ""));
   }
@@ -3640,13 +3587,12 @@ function setupTab3ManualLayout() {
   try {
     const manualTab = document.getElementById("tab-manual-content") || document.getElementById("manual-entry-tab");
 
-    // 1. Hide/Remove redundant "Recently Verified Crew" card at the bottom of Tab 3
     const recentCard = document.getElementById("recent-verified-crew-card");
     if (recentCard) {
       recentCard.style.display = "none";
       recentCard.classList.add("hidden");
     }
-    
+
     if (manualTab) {
       const headings = manualTab.querySelectorAll("h3, h4, div");
       headings.forEach(el => {
@@ -3667,14 +3613,12 @@ function setupTab3ManualLayout() {
     let submitBtn = document.getElementById("submit-url-btn");
     const pasteBtn = document.getElementById("paste-url-btn");
 
-    // Remove paste button completely from DOM
     if (pasteBtn && pasteBtn.parentNode) {
       pasteBtn.parentNode.removeChild(pasteBtn);
     }
 
     if (!urlInput) return;
 
-    
     if (urlInput) {
       urlInput.oninput = () => updateManualUrlBadge(urlInput.value);
       urlInput.onchange = () => updateManualUrlBadge(urlInput.value);
@@ -3685,27 +3629,24 @@ function setupTab3ManualLayout() {
       updateManualUrlBadge(urlInput.value);
     }
 
-    // 2. Format urlInput as clean full-width input
     urlInput.className = "w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none transition-all shadow-xs";
 
-    // 3. Create or update Action Button Row (Reset on Left, Verify on Right)
     let btnRow = document.getElementById("manual-action-btn-row");
     if (!btnRow) {
       btnRow = document.createElement("div");
       btnRow.id = "manual-action-btn-row";
       btnRow.className = "grid grid-cols-2 gap-2.5 my-3 w-full";
 
-      // Reset Button (Left) - Equal height & SVG icon
       const resetBtn = document.createElement("button");
       resetBtn.id = "reset-url-btn";
       resetBtn.type = "button";
       resetBtn.className = "h-11 px-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-95 cursor-pointer whitespace-nowrap overflow-hidden";
       resetBtn.innerHTML = `
-        <svg class="w-4 h-4 text-slate-600 dark:text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-        </svg>
-        <span>Reset</span>
-      `;
+<svg class="w-4 h-4 text-slate-600 dark:text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+</svg>
+<span>Reset</span>
+`;
       resetBtn.onclick = (e) => {
         e.preventDefault();
         urlInput.value = "";
@@ -3713,7 +3654,6 @@ function setupTab3ManualLayout() {
         updateManualUrlBadge("");
       };
 
-      // Verify Button (Right) - re-uses or creates submitBtn
       if (!submitBtn) {
         submitBtn = document.createElement("button");
         submitBtn.id = "submit-url-btn";
@@ -3722,16 +3662,16 @@ function setupTab3ManualLayout() {
           if (typeof handleManualUrl === 'function') handleManualUrl();
         };
       }
+
       submitBtn.className = "h-11 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer whitespace-nowrap overflow-hidden";
       submitBtn.innerHTML = `
-        <svg class="w-4 h-4 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span>Verify</span>
-      `;
+<svg class="w-4 h-4 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+</svg>
+<span>Verify</span>
+`;
 
       btnRow.appendChild(resetBtn);
-
       if (submitBtn.parentNode && submitBtn.parentNode !== btnRow) {
         submitBtn.parentNode.insertBefore(btnRow, submitBtn);
       } else if (urlInput.parentNode) {
@@ -3742,18 +3682,17 @@ function setupTab3ManualLayout() {
       if (submitBtn) {
         submitBtn.className = "h-11 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer whitespace-nowrap overflow-hidden";
         submitBtn.innerHTML = `
-          <svg class="w-4 h-4 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span>Verify</span>
-        `;
+<svg class="w-4 h-4 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+</svg>
+<span>Verify</span>
+`;
       }
     }
   } catch (e) {
     console.warn("setupTab3ManualLayout error:", e);
   }
 }
-
 
 function toggleHistoryLimitQuickPicker(anchorEl) {
   if (!anchorEl) return;
@@ -3775,8 +3714,8 @@ function toggleHistoryLimitQuickPicker(anchorEl) {
     btn.type = "button";
     const isActive = (opt === currentLimit);
     btn.className = `px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
-      isActive 
-        ? "bg-blue-600 text-white shadow-xs" 
+      isActive
+        ? "bg-blue-600 text-white shadow-xs"
         : "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600"
     }`;
     btn.innerText = `${opt} Scans`;
@@ -3805,11 +3744,11 @@ function toggleHistoryLimitQuickPicker(anchorEl) {
       document.removeEventListener("click", closeOnOutsideClick);
     }
   };
+
   setTimeout(() => {
     document.addEventListener("click", closeOnOutsideClick);
   }, 10);
 }
-
 
 window.initToolsModule = function() {
   if (typeof initToolsModule === 'function') {
@@ -3817,54 +3756,55 @@ window.initToolsModule = function() {
   }
 };
 
-
-
 function initToolsUI() {
   initToolsModule();
   if (typeof initToolsViewUI === 'function') {
     initToolsViewUI();
   }
 
-  // PPC Calculate Button
   document.getElementById("btn-calc-ppc")?.addEventListener("click", () => {
     const conduct = document.getElementById("ppc-conduct-date")?.value;
     const expiry = document.getElementById("ppc-expiry-date")?.value;
     const res = calculatePpcWindows(conduct, expiry);
     const resBox = document.getElementById("ppc-results-box");
+
     if (!res) {
       alert("Please select a valid LPC Expiry Date.");
       return;
     }
+
     document.getElementById("ppc-res-expiry").innerText = res.newLpcExpiry;
     document.getElementById("ppc-res-opc-start").innerText = res.opcEarliest;
     document.getElementById("ppc-res-opc-end").innerText = res.opcLatest;
     if (resBox) resBox.classList.remove("hidden");
   });
 
-  // Recurrent Calculate Button
   document.getElementById("btn-calc-recurrent")?.addEventListener("click", () => {
     const type = document.getElementById("recurrent-drill-type")?.value || "linecheck";
     const conduct = document.getElementById("recurrent-conduct-date")?.value;
     const res = calculateCourseExpiry(type, conduct);
     const resBox = document.getElementById("recurrent-results-box");
+
     if (!res) {
       alert("Please select a valid Conducted Date.");
       return;
     }
+
     document.getElementById("recurrent-res-expiry").innerText = res.expiryDate;
     if (resBox) resBox.classList.remove("hidden");
   });
 
-  // Medical Calculate Button
   document.getElementById("btn-calc-medical")?.addEventListener("click", () => {
     const last = document.getElementById("medical-last-date")?.value;
     const age = document.getElementById("medical-pilot-age")?.value;
     const res = calculateMedicalWindow(last, age);
     const resBox = document.getElementById("medical-results-box");
+
     if (!res) {
       alert("Please select a valid Medical Expiry Date.");
       return;
     }
+
     document.getElementById("medical-res-expiry").innerText = res.expiryDate;
     document.getElementById("medical-res-dame").innerText = res.dameEarliest;
     const ageText = document.getElementById("medical-res-age-text");
@@ -3872,21 +3812,21 @@ function initToolsUI() {
     if (resBox) resBox.classList.remove("hidden");
   });
 
-  // Preflight FDP Calculate Button
   document.getElementById("btn-calc-preflight")?.addEventListener("click", () => {
     const report = document.getElementById("fdp-report-time")?.value;
     const count = getSectorCount();
     const maxHours = getMaxAllowableFdp(report, count);
     const resBox = document.getElementById("preflight-results-box");
+
     if (!report) {
       alert("Please enter a Report Time (e.g. 08:00).");
       return;
     }
+
     const h = Math.floor(maxHours);
     const m = Math.round((maxHours % 1) * 60);
     document.getElementById("fdp-res-max").innerText = `${h} Hours ${m > 0 ? m + ' Mins' : ''}`;
-    
-    // Compute LOBT
+
     const [rH, rM] = report.replace(/[^\d:]/g, "").split(":").map(n => parseInt(n, 10));
     if (!isNaN(rH)) {
       let lobtH = rH + h;
@@ -3895,10 +3835,10 @@ function initToolsUI() {
       if (lobtH >= 24) lobtH %= 24;
       document.getElementById("fdp-res-lobt").innerText = `${lobtH.toString().padStart(2, '0')}:${lobtM.toString().padStart(2, '0')} UTC`;
     }
+
     if (resBox) resBox.classList.remove("hidden");
   });
 
-  // FDP Sector Count Incrementation / Decrementation
   document.getElementById("btn-fdp-dec")?.addEventListener("click", () => {
     const count = getSectorCount();
     setSectorCount(count - 1);
@@ -3912,29 +3852,28 @@ function initToolsUI() {
     const badge = document.getElementById("fdp-sector-count");
     if (badge) badge.innerText = getSectorCount();
   });
-
 }
 
-
-// ============================================================================
+// ----------------------------------------------------------------------------
 // STEP 3: 2-TIER TOOLS CONTROLLER, SWIPE GESTURES & SMART PIPELINING
-// ============================================================================
+// ----------------------------------------------------------------------------
+
 export function initToolsUIController() {
   initToolsModule();
 
-  // 1. Tier 1 Category Navigation Buttons
   const catQualsBtn = document.getElementById("cat-tab-qualifications");
   const catDutyBtn = document.getElementById("cat-tab-dutyrest");
+
   if (catQualsBtn) catQualsBtn.addEventListener("click", () => switchToolCategory("qualifications"));
   if (catDutyBtn) catDutyBtn.addEventListener("click", () => switchToolCategory("dutyrest"));
 
-  // 2. Tier 2 Sub-Tab Pill Buttons (Category A)
   const catAPillsMap = [
     { pill: "pill-tool-medical", card: "tool-card-medical" },
     { pill: "pill-tool-ppc", card: "tool-card-ppc" },
     { pill: "pill-tool-recurrent", card: "tool-card-recurrent" },
     { pill: "pill-tool-recency", card: "tool-card-recency" }
   ];
+
   catAPillsMap.forEach(item => {
     const pill = document.getElementById(item.pill);
     if (pill) {
@@ -3944,13 +3883,13 @@ export function initToolsUIController() {
     }
   });
 
-  // 3. Tier 2 Sub-Tab Pill Buttons (Category B)
   const catBPillsMap = [
     { pill: "pill-tool-standby", card: "tool-card-standby" },
     { pill: "pill-tool-maxfdp", card: "tool-card-maxfdp" },
     { pill: "pill-tool-preflight", card: "tool-card-preflight" },
     { pill: "pill-tool-cumulative", card: "tool-card-cumulative" }
   ];
+
   catBPillsMap.forEach(item => {
     const pill = document.getElementById(item.pill);
     if (pill) {
@@ -3960,24 +3899,25 @@ export function initToolsUIController() {
     }
   });
 
-  // 4. Master Timezone & Standby Location Toggles
   const tzUtcBtn = document.getElementById("tz-btn-utc");
   const tzLocalBtn = document.getElementById("tz-btn-local");
+
   if (tzUtcBtn) tzUtcBtn.addEventListener("click", () => setStandbyLocation("UTC"));
   if (tzLocalBtn) tzLocalBtn.addEventListener("click", () => setStandbyLocation("LOCAL"));
 
   const stbyHomeBtn = document.getElementById("btn-stby-loc-home");
   const stbyAirportBtn = document.getElementById("btn-stby-loc-airport");
+
   if (stbyHomeBtn) stbyHomeBtn.addEventListener("click", () => setStandbyLocation("HOME"));
   if (stbyAirportBtn) stbyAirportBtn.addEventListener("click", () => setStandbyLocation("AIRPORT"));
 
-  // 5. Tool #3 Recurrent Course Modal Bindings
   const courseTrigger = document.getElementById("btn-recurrent-course-trigger");
   const courseModalClose = document.getElementById("btn-close-recurrent-modal");
   const courseSearchInput = document.getElementById("recurrent-search-input");
 
   if (courseTrigger) courseTrigger.addEventListener("click", openRecurrentCourseModal);
   if (courseModalClose) courseModalClose.addEventListener("click", closeRecurrentCourseModal);
+
   if (courseSearchInput) {
     courseSearchInput.addEventListener("input", (e) => filterRecurrentCourses(e.target.value));
   }
@@ -3994,73 +3934,8 @@ export function initToolsUIController() {
     });
   });
 
-
-  // Touch Swipe Gesture Listener for Card Wrapper (Category A & B)
   setupToolsCardSwipeGestures();
-}
 
-function setupToolsCardSwipeGestures() {
-  const catASubtabs = ['tool-card-medical', 'tool-card-ppc', 'tool-card-recurrent', 'tool-card-recency'];
-  const catBSubtabs = ['tool-card-standby', 'tool-card-maxfdp', 'tool-card-preflight', 'tool-card-cumulative'];
-
-  const wrappers = [
-    { id: 'card-wrapper-cat-a', getSubtabs: () => catASubtabs },
-    { id: 'card-wrapper-cat-b', getSubtabs: () => catBSubtabs },
-    { 
-      id: 'tools-output-card', 
-      getSubtabs: () => {
-        const state = getToolsState ? getToolsState() : {};
-        const cur = state.activeSubTab || 'medical';
-        return catASubtabs.includes(cur) ? catASubtabs : catBSubtabs;
-      }
-    }
-  ];
-
-  wrappers.forEach(item => {
-    const el = document.getElementById(item.id);
-    if (!el) return;
-
-    let touchStartX = 0;
-    let touchStartY = 0;
-
-    el.addEventListener('touchstart', (e) => {
-      if (e.touches && e.touches.length > 0) {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-      }
-    }, { passive: true });
-
-    el.addEventListener('touchend', (e) => {
-      if (!e.changedTouches || e.changedTouches.length === 0) return;
-      const touchEndX = e.changedTouches[0].clientX;
-      const touchEndY = e.changedTouches[0].clientY;
-
-      const diffX = touchEndX - touchStartX;
-      const diffY = touchEndY - touchStartY;
-
-      // Ensure horizontal swipe is dominant and at least 40px
-      if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
-        const state = getToolsState ? getToolsState() : {};
-        const currentSubtab = state.activeSubTab || 'medical';
-        const subtabs = item.getSubtabs();
-        const currentIndex = subtabs.indexOf(currentSubtab);
-
-        if (currentIndex !== -1) {
-          if (diffX < 0 && currentIndex < subtabs.length - 1) {
-            // Swipe Left -> Next subtab
-            const nextTab = subtabs[currentIndex + 1];
-            switchActiveTool(nextTab);
-          } else if (diffX > 0 && currentIndex > 0) {
-            // Swipe Right -> Prev subtab
-            const prevTab = subtabs[currentIndex - 1];
-            switchActiveTool(prevTab);
-          }
-        }
-      }
-    }, { passive: true });
-  });
-
-  // 6. Reset Links across Tool Cards
   document.querySelectorAll("[onclick^=\"resetToolInputs\"]").forEach(btn => {
     btn.removeAttribute("onclick");
     btn.addEventListener("click", (e) => {
@@ -4073,7 +3948,6 @@ function setupToolsCardSwipeGestures() {
     });
   });
 
-  // 7. Real-Time Calculation Dispatchers on Input Changes
   ["card-wrapper-cat-a", "card-wrapper-cat-b"].forEach(wrapperId => {
     const wrapper = document.getElementById(wrapperId);
     if (wrapper) {
@@ -4082,22 +3956,12 @@ function setupToolsCardSwipeGestures() {
     }
   });
 
-
-
-
-
-  // 10. Restore LocalStorage Baselines
   restoreToolsLocalStorage();
-
-  // Initial Calculation Run
   dispatchActiveToolCalculation();
 }
 
 window.initToolsUIController = initToolsUIController;
 
-// ----------------------------------------------------------------------------
-// HELPER: CARD SWIPE GESTURES
-// ----------------------------------------------------------------------------
 function setupCardSwipeGestures(wrapperId, toolIdList) {
   const wrapper = document.getElementById(wrapperId);
   if (!wrapper) return;
