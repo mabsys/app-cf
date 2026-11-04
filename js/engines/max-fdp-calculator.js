@@ -1,4 +1,4 @@
-// ./js/engines/max-fdp-calculator.js (0311_R340) - Max FDP & Extensions Engine
+// ./js/engines/max-fdp-calculator.js (0311_R341) - Max FDP & Extensions Engine
 /**
  * Max Flying Duty Period (FDP) & Extensions Calculator Engine for Flight Crew
  * Grounded in CAD 1901 - FTL (Issue 01/Rev 01) and OM-A Chapter 7 Regulations
@@ -314,8 +314,7 @@ class MaxFDPEngine {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = MaxFDPEngine;
 }
-
-export { MaxFDPEngine }; 
-export function calculateMaxFdp(params) { 
-  return MaxFDPEngine.calculateMaxFDP(params); 
+export { MaxFDPEngine };
+export function calculateMaxFdp(params) {
+  return MaxFDPEngine.calculateMaxFDP(params);
 }
