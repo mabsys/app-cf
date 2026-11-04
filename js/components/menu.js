@@ -1,11 +1,11 @@
-// menu.js (1810_R173) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
+// ./js/components/menu.js (0411_R355) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
 
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
 <div id="bottom-sheet-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden opacity-0 transition-opacity duration-300"></div>
 
 <!-- FLOATING MENU CONTAINER -->
-<div id="bottom-sheet-menu" class="fixed bottom-3 left-2.5 right-2.5 z-50 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl transform translate-y-[120%] transition-transform duration-300 ease-out max-w-md mx-auto border border-slate-100 dark:border-slate-800 flex flex-col hidden h-[82vh] max-h-[85vh] touch-none overflow-hidden">
+<div id="bottom-sheet-menu" class="fixed bottom-3 left-2.5 right-2.5 z-50 bg-white dark:bg-slate-900 rounded-3xl shadow-md transform translate-y-[120%] transition-transform duration-300 ease-out max-w-md mx-auto border border-slate-100 dark:border-slate-800 flex flex-col hidden h-[82vh] max-h-[85vh] touch-none overflow-hidden">
   
   <!-- Interactive Drag Handle / Grabber -->
   <div id="sheet-drag-handle" class="w-full py-3 cursor-grab active:cursor-grabbing flex items-center justify-center shrink-0 select-none">
@@ -14,11 +14,10 @@ export const menuHTML = `
 
   <!-- CONTAINER CONTENT AREA -->
   <div id="sheet-content" class="relative w-full flex-1 overflow-y-auto overflow-x-hidden pb-6 px-3">
-    
+
     <!-- PANE 1: MAIN CATEGORIES -->
     <div id="pane-main" class="w-full transition-opacity duration-300 ease-in-out">
       <div class="flex flex-col gap-2.5 px-1">
-        
         <!-- Category 0: My Profile -->
         <button class="nav-item-btn w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 active:scale-[0.98] transition-all" data-target="pane-profile">
           <div class="flex items-center gap-3.5">
@@ -74,7 +73,6 @@ export const menuHTML = `
           </div>
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
         </button>
-
       </div>
     </div>
 
@@ -86,131 +84,138 @@ export const menuHTML = `
 
       <h3 class="text-xs font-black text-slate-800 dark:text-slate-100 mb-3.5 px-1 uppercase tracking-wider">Crew Credentials Setup</h3>
 
-      
+      <!-- Digital Licence Source -->
+      <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs mb-2">
+        <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2.5">Digital Licence Source</label>
 
-        <!-- Digital Licence Source -->
-        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs mb-2">
-          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2.5">Digital Licence Source</label>
-          
-          <div class="grid grid-cols-2 gap-2 mb-3">
-            <button id="profile-mode-qr-btn" type="button" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z" /></svg>
-              Scan Licence QR
-            </button>
-            <button id="profile-mode-url-btn" type="button" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/></svg>
-              Paste URL
-            </button>
-          </div>
-
-          <div id="profile-source-container" class="w-full">
-            <div id="profile-qr-box" class="hidden flex flex-col gap-2">
-              <div id="profile-qr-reader-container" class="w-full overflow-hidden rounded-2xl bg-slate-900 aspect-square flex items-center justify-center relative shadow-inner">
-                <video id="profile-qr-video" class="w-full h-full object-cover" playsinline webkit-playsinline muted></video>
-                <div class="absolute bottom-3 left-0 right-0 text-center pointer-events-none z-10">
-                  <span class="text-white text-[9px] font-bold uppercase tracking-wider drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.85)]">Point camera at CAAM QR card</span>
-                </div>
-              </div>
-              <div id="profile-scanner-controls" class="hidden flex flex-col gap-2 mt-1">
-                <button id="profile-stop-qr-btn" type="button" class="w-full bg-slate-900 hover:bg-slate-950 text-white font-bold py-2.5 px-3 rounded-xl transition-all text-xs flex items-center justify-center gap-1.5">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z"/></svg>
-                  Stop Scanner
-                </button>
-                <div class="grid grid-cols-2 gap-2">
-                  <button id="profile-cycle-btn" type="button" class="py-2 px-3 bg-slate-200/80 dark:bg-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-bold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
-                    Switch Lens
-                  </button>
-                  <button id="profile-upload-qr-btn" type="button" class="py-2 px-3 bg-slate-200/80 dark:bg-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-bold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
-                    Scan Photo
-                  </button>
-                </div>
-                <button id="profile-torch-btn" type="button" class="w-full py-2 px-3 bg-slate-200/80 dark:bg-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-bold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
-                  Flashlight
-                </button>
-                <input type="file" id="profile-qr-file-input" accept="image/*" class="hidden">
-              </div>
-            </div>
-
-            <div id="profile-url-box" class="flex flex-col gap-2">
-              <div class="relative w-full">
-                <input type="url" id="profile-url-input" placeholder="https://eclipse.caam.gov.my/ELICENSING/..." class="w-full p-2.5 pr-8 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none transition-all">
-                <button id="profile-url-clear-btn" type="button" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer" title="Clear URL">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </div>
-              <p class="text-[9px] text-slate-400">Paste your official eCLIPSE URL directly if QR camera scanning is unavailable.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Attestation PDF Upload -->
-        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs mb-2">
-          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-1">Company Attestation Document (PDF)</label>
-          <div class="flex items-center gap-2 mt-1">
-            <label for="profile-pdf-file" class="flex-1 cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-blue-500 transition-colors">
-              <span id="profile-pdf-label" class="truncate">Select PDF attestation file...</span>
-              <svg class="w-4 h-4 text-blue-600 shrink-0 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
-            </label>
-            <input type="file" id="profile-pdf-file" accept=".pdf" class="hidden">
-          </div>
-          <div id="profile-pdf-badge" class="hidden text-[10px] text-emerald-600 font-extrabold flex items-center gap-1 mt-1">
-            <span id="profile-pdf-status-text">✓ Valid Attestation PDF file</span>
-          </div>
-          <p class="text-[9px] text-slate-400 mt-1">Upload MAB company attestations PDF for compliance checks on Dashboard.</p>
-        </div>
-
-                <!-- Qualification Slip PDF Upload -->
-        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs mb-2">
-          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-1">Qualification Slip Document (PDF)</label>
-          <div class="flex items-center gap-2 mt-1">
-            <label for="profile-qs-pdf-file" class="flex-1 cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-blue-500 transition-colors">
-              <span id="profile-qs-pdf-label" class="truncate">Select PDF qualification slip file...</span>
-              <svg class="w-4 h-4 text-blue-600 shrink-0 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
-            </label>
-            <input type="file" id="profile-qs-pdf-file" accept=".pdf" class="hidden">
-          </div>
-          <div id="profile-qs-pdf-badge" class="hidden text-[10px] text-emerald-600 font-extrabold flex items-center gap-1 mt-1">
-            <span id="profile-qs-pdf-status-text">✓ Valid Qualification Slip (QS) file</span>
-          </div>
-          <p class="text-[9px] text-slate-400 mt-1">Upload MAB Qualification Slip for PBN & operational ratings checks.</p>
-        </div>
-
-        <!-- Passport Clearance Details -->
-        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs mb-2 flex flex-col gap-2.5">
-          <label class="text-[10px] font-extrabold text-slate-400 uppercase block">Passport Details</label>
-
-          <!-- Side-by-side Grid for Number and Expiry Date -->
-          <div class="grid grid-cols-2 gap-2.5">
-            <!-- Passport Number Input -->
-            <div>
-              <span class="text-[9px] text-slate-400 font-semibold block mb-1">Passport Number</span>
-              <input type="text" id="profile-passport-no" maxlength="12" placeholder="e.g. A12345678" 
-                     class="w-full p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-100 focus:outline-none uppercase tracking-wider transition-all">
-            </div>
-
-            <!-- Passport Expiry Date Field (Manual Entry or Stylised Datepicker) -->
-            <div>
-              <span class="text-[9px] text-slate-400 font-semibold block mb-1">Expiry Date</span>
-              <input type="date" id="profile-passport-expiry" 
-                     class="w-full p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-100 focus:outline-none transition-all cursor-pointer">
-            </div>
-          </div>
-          <p class="text-[9px] text-slate-400">Enter passport details to track its expiry.</p>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="px-1 flex flex-col gap-2 pt-1 py-3">
-          <button id="profile-save-btn" type="button" class="w-full p-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5">
-            Save Credentials
+        <div class="grid grid-cols-2 gap-2 mb-3">
+          <button id="profile-mode-qr-btn" type="button" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z" /></svg>
+            Scan Licence QR
           </button>
-          <button id="profile-clear-btn" type="button" class="w-full p-3 text-xs font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-100 dark:border-rose-900/50 hover:bg-rose-100 transition-all">
-            Clear Credentials
+
+          <button id="profile-mode-url-btn" type="button" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-xs">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/></svg>
+            Paste URL
           </button>
         </div>
 
+        <div id="profile-source-container" class="w-full">
+          <div id="profile-qr-box" class="hidden flex flex-col gap-2">
+            <div id="profile-qr-reader-container" class="w-full overflow-hidden rounded-2xl bg-slate-900 aspect-square flex items-center justify-center relative shadow-inner">
+              <video id="profile-qr-video" class="w-full h-full object-cover" playsinline webkit-playsinline muted></video>
+              <div class="absolute bottom-3 left-0 right-0 text-center pointer-events-none z-10">
+                <span class="text-white text-[9px] font-bold uppercase tracking-wider drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.85)]">Point camera at CAAM QR card</span>
+              </div>
+            </div>
+
+            <div id="profile-scanner-controls" class="hidden flex flex-col gap-2 mt-1">
+              <button id="profile-stop-qr-btn" type="button" class="w-full bg-slate-900 hover:bg-slate-950 text-white font-bold py-2.5 px-3 rounded-xl transition-all text-xs flex items-center justify-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z"/></svg>
+                Stop Scanner
+              </button>
+
+              <div class="grid grid-cols-2 gap-2">
+                <button id="profile-cycle-btn" type="button" class="py-2 px-3 bg-slate-200/80 dark:bg-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-bold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                  Switch Lens
+                </button>
+
+                <button id="profile-upload-qr-btn" type="button" class="py-2 px-3 bg-slate-200/80 dark:bg-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-bold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                  Scan Photo
+                </button>
+              </div>
+
+              <button id="profile-torch-btn" type="button" class="w-full py-2 px-3 bg-slate-200/80 dark:bg-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-bold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+                Flashlight
+              </button>
+
+              <input type="file" id="profile-qr-file-input" accept="image/*" class="hidden">
+            </div>
+          </div>
+
+          <div id="profile-url-box" class="flex flex-col gap-2">
+            <div class="relative w-full">
+              <input type="url" id="profile-url-input" placeholder="https://eclipse.caam.gov.my/ELICENSING/..." class="w-full p-2.5 pr-8 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none transition-all">
+              <button id="profile-url-clear-btn" type="button" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer" title="Clear URL">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <p class="text-[9px] text-slate-400">Paste your official eCLIPSE URL directly if QR camera scanning is unavailable.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attestation PDF Upload -->
+      <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs mb-2">
+        <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-1">Company Attestation Document (PDF)</label>
+        <div class="flex items-center gap-2 mt-1">
+          <label for="profile-pdf-file" class="flex-1 cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-blue-500 transition-colors">
+            <span id="profile-pdf-label" class="truncate">Select PDF attestation file...</span>
+            <svg class="w-4 h-4 text-blue-600 shrink-0 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
+          </label>
+          <input type="file" id="profile-pdf-file" accept=".pdf" class="hidden">
+        </div>
+        <div id="profile-pdf-badge" class="hidden text-[10px] text-emerald-600 font-extrabold flex items-center gap-1 mt-1">
+          <span id="profile-pdf-status-text">✓ Valid Attestation PDF file</span>
+        </div>
+        <p class="text-[9px] text-slate-400 mt-1">Upload MAB company attestations PDF for compliance checks on Dashboard.</p>
+      </div>
+
+      <!-- Qualification Slip PDF Upload -->
+      <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs mb-2">
+        <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-1">Qualification Slip Document (PDF)</label>
+        <div class="flex items-center gap-2 mt-1">
+          <label for="profile-qs-pdf-file" class="flex-1 cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-blue-500 transition-colors">
+            <span id="profile-qs-pdf-label" class="truncate">Select PDF qualification slip file...</span>
+            <svg class="w-4 h-4 text-blue-600 shrink-0 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
+          </label>
+          <input type="file" id="profile-qs-pdf-file" accept=".pdf" class="hidden">
+        </div>
+        <div id="profile-qs-pdf-badge" class="hidden text-[10px] text-emerald-600 font-extrabold flex items-center gap-1 mt-1">
+          <span id="profile-qs-pdf-status-text">✓ Valid Qualification Slip (QS) file</span>
+        </div>
+        <p class="text-[9px] text-slate-400 mt-1">Upload MAB Qualification Slip for PBN & operational ratings checks.</p>
+      </div>
+
+      <!-- Passport Clearance Details -->
+      <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs mb-2 flex flex-col gap-2.5">
+        <label class="text-[10px] font-extrabold text-slate-400 uppercase block">Passport Details</label>
+        
+        <!-- Side-by-side Grid for Number and Expiry Date -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <!-- Passport Number Input -->
+          <div>
+            <span class="text-[9px] text-slate-400 font-semibold block mb-1">Passport Number</span>
+            <input type="text" id="profile-passport-no" maxlength="12" placeholder="e.g. A12345678"
+              class="w-full p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-100 focus:outline-none uppercase tracking-wider transition-all">
+          </div>
+
+          <!-- Passport Expiry Date Field (Modal Datepicker Trigger) -->
+          <div>
+            <span class="text-[9px] text-slate-400 font-semibold block mb-1">Expiry Date</span>
+            <button type="button" id="btn-passport-expiry-trigger" class="efb-date-trigger w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl p-2.5 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="openEfbDatePicker('profile-passport-expiry', 'PASSPORT EXPIRY DATE')">
+              <span id="profile-passport-expiry-display" class="font-sans">SELECT EXPIRY</span>
+              <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            </button>
+            <input type="hidden" id="profile-passport-expiry" value="">
+          </div>
+        </div>
+        
+        <p class="text-[9px] text-slate-400">Enter passport details to track its expiry.</p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="px-1 flex flex-col gap-2 pt-1 py-3">
+        <button id="profile-save-btn" type="button" class="w-full p-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5">
+          Save Credentials
+        </button>
+
+        <button id="profile-clear-btn" type="button" class="w-full p-3 text-xs font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-100 dark:border-rose-900/50 hover:bg-rose-100 transition-all">
+          Clear Credentials
+        </button>
       </div>
     </div>
 
@@ -305,6 +310,7 @@ export const menuHTML = `
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.967 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18c-2.305 0-4.408.867-6 2.292m0-14.25v14.25"/></svg>
             <span>User Guide & Manual</span>
           </a>
+
           <a href="mailto:mabsys.dev@gmail.com?subject=CertiFly%20Feedback" class="w-full p-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-slate-200 transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
             <span>Send App Feedback</span>
