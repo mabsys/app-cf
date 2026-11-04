@@ -1,4 +1,4 @@
-// ./js/tools.js (3110_R333) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3110_R321) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1822,6 +1822,34 @@ export function resetToolInputs(toolId) {
     if (relIn) relIn.value = 'NONE';
     if (relDisp) relDisp.textContent = 'None';
 
+    const mLongestIn = document.getElementById('modal-maxfdp-longest-sector');
+    const mSplitIn = document.getElementById('modal-maxfdp-split-rest');
+    const mInflightIn = document.getElementById('modal-maxfdp-inflight-rest');
+    const mCrewIn = document.getElementById('modal-maxfdp-crew-count');
+    const mPrecIn = document.getElementById('modal-maxfdp-preceding-rest');
+    if (mLongestIn) mLongestIn.value = '0';
+    if (mSplitIn) mSplitIn.value = '0';
+    if (mInflightIn) mInflightIn.value = '0';
+    if (mCrewIn) mCrewIn.value = '2';
+    if (mPrecIn) mPrecIn.value = 'UP_TO_18_OR_OVER_30';
+
+    const mLongestDisp = document.getElementById('btn-modal-maxfdp-longest-display');
+    const mSplitDisp = document.getElementById('btn-modal-maxfdp-split-display');
+    const mInflightDisp = document.getElementById('btn-modal-maxfdp-inflight-display');
+    const mCrewDisp = document.getElementById('btn-modal-maxfdp-crew-display');
+    const mPrecDisp = document.getElementById('btn-modal-maxfdp-preceding-display');
+    if (mLongestDisp) mLongestDisp.textContent = 'Standard Sector (< 7h)';
+    if (mSplitDisp) mSplitDisp.textContent = 'None (0h)';
+    if (mInflightDisp) mInflightDisp.textContent = '0.0 Hours';
+    if (mCrewDisp) mCrewDisp.textContent = '2 Pilots (Standard Crew)';
+    if (mPrecDisp) mPrecDisp.textContent = 'Up to 18h OR Over 30h';
+
+    updateModifierInlineSelectionUI('modal-maxfdp-longest-sector', '0');
+    updateModifierInlineSelectionUI('modal-maxfdp-split-rest', '0');
+    updateModifierInlineSelectionUI('modal-maxfdp-inflight-rest', '0');
+    updateModifierInlineSelectionUI('modal-maxfdp-crew-count', '2');
+    updateModifierInlineSelectionUI('modal-maxfdp-preceding-rest', 'UP_TO_18_OR_OVER_30');
+
     const badge = document.getElementById('badge-maxfdp-advanced-status');
     const trigger = document.getElementById('btn-maxfdp-advanced-trigger');
     if (badge) {
@@ -2031,6 +2059,9 @@ if (typeof window !== 'undefined') {
   window.openMaxFdpModifiersModal = openMaxFdpModifiersModal;
   window.closeMaxFdpModifiersModal = closeMaxFdpModifiersModal;
   window.confirmMaxFdpModifiers = confirmMaxFdpModifiers;
+  window.toggleModifierAccordion = toggleModifierAccordion;
+  window.updateModifierInlineSelectionUI = updateModifierInlineSelectionUI;
+  window.selectModifierInlineOption = selectModifierInlineOption;
 
   window.openEfbSelectModal = openEfbSelectModal;
   window.closeEfbSelectModal = closeEfbSelectModal;
@@ -2136,21 +2167,98 @@ export function closeAuditOverlay(toolKey) {
   }
 }
 
+// ==================================================================
+// FLIGHT MODIFIERS INLINE ACCORDION HANDLERS
+// ==================================================================
+
+export function toggleModifierAccordion(paramId) {
+  const accordion = document.getElementById();
+  const arrow = document.getElementById();
+  if (!accordion) return;
+
+  const isClosed = accordion.classList.contains('hidden');
+
+  // Collapse all accordions in the modal first
+  const allAccordions = document.querySelectorAll('[id^=accordion-modal-maxfdp-]');
+  allAccordions.forEach(acc => acc.classList.add('hidden'));
+
+  const allArrows = document.querySelectorAll('[id^=arrow-modal-maxfdp-]');
+  allArrows.forEach(arr => {
+    arr.textContent = '▼';
+    arr.classList.remove('rotate-180');
+  });
+
+  if (isClosed) {
+    accordion.classList.remove('hidden');
+    if (arrow) {
+      arrow.textContent = '▲';
+      arrow.classList.add('rotate-180');
+    }
+  }
+}
+
+export function updateModifierInlineSelectionUI(paramId, val) {
+  const accordion = document.getElementById();
+  if (!accordion) return;
+
+  const btns = accordion.querySelectorAll('.modifier-opt-btn');
+  btns.forEach(btn => {
+    const isMatch = btn.dataset.value === String(val);
+    const badge = btn.querySelector('.badge-selected');
+
+    if (isMatch) {
+      btn.className = 'modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-blue-500/10 border border-blue-500/50 text-blue-600 dark:text-blue-400';
+      if (badge) badge.classList.remove('hidden');
+    } else {
+      btn.className = 'modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600';
+      if (badge) badge.classList.add('hidden');
+    }
+  });
+}
+
+export function selectModifierInlineOption(paramId, val, label) {
+  const inputEl = document.getElementById(paramId);
+  if (inputEl) inputEl.value = String(val);
+
+  const displayIdMap = {
+    'modal-maxfdp-longest-sector': 'btn-modal-maxfdp-longest-display',
+    'modal-maxfdp-split-rest': 'btn-modal-maxfdp-split-display',
+    'modal-maxfdp-inflight-rest': 'btn-modal-maxfdp-inflight-display',
+    'modal-maxfdp-crew-count': 'btn-modal-maxfdp-crew-display',
+    'modal-maxfdp-preceding-rest': 'btn-modal-maxfdp-preceding-display'
+  };
+
+  const displayEl = document.getElementById(displayIdMap[paramId]);
+  if (displayEl) displayEl.textContent = label;
+
+  updateModifierInlineSelectionUI(paramId, val);
+
+  // Collapse accordion
+  const accordion = document.getElementById();
+  if (accordion) accordion.classList.add('hidden');
+
+  const arrow = document.getElementById();
+  if (arrow) {
+    arrow.textContent = '▼';
+    arrow.classList.remove('rotate-180');
+  }
+}
+
 export function openMaxFdpModifiersModal() {
   const modal = document.getElementById('efb-maxfdp-modifiers-modal');
   if (!modal) return;
-  
-  const longestIn = document.getElementById('modal-maxfdp-longest-sector');
-  const splitIn = document.getElementById('modal-maxfdp-split-rest');
-  const inflightIn = document.getElementById('modal-maxfdp-inflight-rest');
-  const crewIn = document.getElementById('modal-maxfdp-crew-count');
-  const precIn = document.getElementById('modal-maxfdp-preceding-rest');
 
   const longestVal = String(toolsState.maxfdpLongestSector || 0);
   const splitVal = String(toolsState.maxfdpSplitDutyRestHours || 0);
   const inflightVal = String(toolsState.maxfdpInflightRestHours || 0);
   const crewVal = String(toolsState.maxfdpCrewCount || 2);
   const precVal = toolsState.maxfdpPrecedingRest || 'UP_TO_18_OR_OVER_30';
+
+  const longestIn = document.getElementById('modal-maxfdp-longest-sector');
+  const splitIn = document.getElementById('modal-maxfdp-split-rest');
+  const inflightIn = document.getElementById('modal-maxfdp-inflight-rest');
+  const crewIn = document.getElementById('modal-maxfdp-crew-count');
+  const precIn = document.getElementById('modal-maxfdp-preceding-rest');
 
   if (longestIn) longestIn.value = longestVal;
   if (splitIn) splitIn.value = splitVal;
@@ -2178,6 +2286,25 @@ export function openMaxFdpModifiersModal() {
 
   const precDisp = document.getElementById('btn-modal-maxfdp-preceding-display');
   if (precDisp) precDisp.textContent = precLabels[precVal] || 'Up to 18h OR Over 30h';
+
+  // Collapse all inline accordions upon modal open
+  const allAccordions = document.querySelectorAll('[id^=accordion-modal-maxfdp-]');
+  allAccordions.forEach(acc => acc.classList.add('hidden'));
+
+  const allArrows = document.getElementById('efb-maxfdp-modifiers-modal')?.querySelectorAll('[id^=arrow-modal-maxfdp-]');
+  if (allArrows) {
+    allArrows.forEach(arr => {
+      arr.textContent = '▼';
+      arr.classList.remove('rotate-180');
+    });
+  }
+
+  // Update selection UI for each parameter
+  updateModifierInlineSelectionUI('modal-maxfdp-longest-sector', longestVal);
+  updateModifierInlineSelectionUI('modal-maxfdp-split-rest', splitVal);
+  updateModifierInlineSelectionUI('modal-maxfdp-inflight-rest', inflightVal);
+  updateModifierInlineSelectionUI('modal-maxfdp-crew-count', crewVal);
+  updateModifierInlineSelectionUI('modal-maxfdp-preceding-rest', precVal);
 
   modal.classList.remove('hidden');
 }
@@ -2213,10 +2340,10 @@ export function confirmMaxFdpModifiers() {
   if (badge) {
     if (hasModifiers) {
       const parts = [];
-      if (toolsState.maxfdpLongestSector > 0) parts.push(`Longest ${toolsState.maxfdpLongestSector}h`);
-      if (toolsState.maxfdpSplitDutyRestHours > 0) parts.push(`Split ${toolsState.maxfdpSplitDutyRestHours}h`);
-      if (toolsState.maxfdpInflightRestHours > 0) parts.push(`Rest ${toolsState.maxfdpInflightRestHours}h`);
-      if (toolsState.maxfdpCrewCount > 2) parts.push(`${toolsState.maxfdpCrewCount} Pilots`);
+      if (toolsState.maxfdpLongestSector > 0) parts.push();
+      if (toolsState.maxfdpSplitDutyRestHours > 0) parts.push();
+      if (toolsState.maxfdpInflightRestHours > 0) parts.push();
+      if (toolsState.maxfdpCrewCount > 2) parts.push();
       badge.textContent = parts.join(' • ');
       badge.className = 'text-[10px] font-extrabold bg-blue-600 text-white px-2 py-0.5 rounded-full';
       if (trigger) trigger.className = 'w-full py-2 px-3 rounded-xl border border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold flex items-center justify-between cursor-pointer transition-all';
