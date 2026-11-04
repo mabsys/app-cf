@@ -1,4 +1,4 @@
-// ./main.js (0411_R367) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0411_R368) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
 import { initToolsModule, filterRecurrentCourses, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
@@ -875,7 +875,7 @@ function initApp() {
   if (stopScanBtn) stopScanBtn.addEventListener("click", stopScanner);
   if (submitUrlBtn) submitUrlBtn.addEventListener("click", handleManualUrl);
   if (scanNewBtn) scanNewBtn.addEventListener("click", showScannerView);
-  if (openOriginalBtn) openOriginalBtn.addEventListener("click", openOriginalLicense);
+  if (openOriginalBtn) openOriginalBtn.onclick = openOriginalLicense;
 
   window.addEventListener("online", updateNetworkStatus);
   window.addEventListener("offline", updateNetworkStatus);
