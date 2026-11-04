@@ -1,4 +1,4 @@
-<!-- ./index.html (0411_R349) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+<!-- ./index.html (0411_R351) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -1835,23 +1835,23 @@ navigator.serviceWorker.register('sw.js')
                                             <div>
                                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">7-Day Duty</label>
                                                 <button type="button" id="btn-cum-7d-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-cum-duty-7d', '7-DAY DUTY HOURS')">
-                                                    <span id="btn-cum-7d-display">32:15</span>
+                                                    <span id="btn-cum-7d-display">55:00</span>
                                                     <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                     </svg>
                                                 </button>
-                                                <input type="hidden" id="input-cum-duty-7d" value="32:15">
+                                                <input type="hidden" id="input-cum-duty-7d" value="55:00">
                                             </div>
 
                                             <div>
                                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">14-Day Duty</label>
                                                 <button type="button" id="btn-cum-14d-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-cum-duty-14d', '14-DAY DUTY HOURS')">
-                                                    <span id="btn-cum-14d-display">68:30</span>
+                                                    <span id="btn-cum-14d-display">95:00</span>
                                                     <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                     </svg>
                                                 </button>
-                                                <input type="hidden" id="input-cum-duty-14d" value="68:30">
+                                                <input type="hidden" id="input-cum-duty-14d" value="95:00">
                                             </div>
                                         </div>
 
@@ -1859,23 +1859,23 @@ navigator.serviceWorker.register('sw.js')
                                             <div>
                                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">28-Day Duty</label>
                                                 <button type="button" id="btn-cum-28d-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-cum-duty-28d', '28-DAY DUTY HOURS')">
-                                                    <span id="btn-cum-28d-display">120:00</span>
+                                                    <span id="btn-cum-28d-display">190:00</span>
                                                     <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                     </svg>
                                                 </button>
-                                                <input type="hidden" id="input-cum-duty-28d" value="120:00">
+                                                <input type="hidden" id="input-cum-duty-28d" value="190:00">
                                             </div>
 
                                             <div>
                                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">28-Day Flight</label>
                                                 <button type="button" id="btn-cum-flt28d-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-cum-flight-28d', '28-DAY FLIGHT HOURS')">
-                                                    <span id="btn-cum-flt28d-display">78:30</span>
+                                                    <span id="btn-cum-flt28d-display">100:00</span>
                                                     <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                     </svg>
                                                 </button>
-                                                <input type="hidden" id="input-cum-flight-28d" value="78:30">
+                                                <input type="hidden" id="input-cum-flight-28d" value="100:00">
                                             </div>
                                         </div>
 
@@ -2148,7 +2148,7 @@ navigator.serviceWorker.register('sw.js')
                     </div>
                 </div>
 
-                <div class="grid grid-cols-4 gap-1.5 pt-1">
+                <div id="efb-time-presets-grid" class="grid grid-cols-4 gap-1.5 pt-1">
                     <button type="button" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer" onclick="setEfbTimePreset('03:00')">03:00</button>
                     <button type="button" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer" onclick="setEfbTimePreset('06:00')">06:00</button>
                     <button type="button" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer" onclick="setEfbTimePreset('12:00')">12:00</button>
