@@ -1,4 +1,4 @@
-// ./main.js (0411_R361) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0411_R364) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
 import { initToolsModule, filterRecurrentCourses, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
@@ -917,8 +917,18 @@ function handleManualUrl() {
 }
 
 function openOriginalLicense() {
-  if (lastScannedUrl) {
-    window.open(lastScannedUrl, "_blank");
+  const profile = typeof getProfileData === 'function' ? getProfileData() : {};
+  const targetUrl = lastScannedUrl || (profile && profile.url ? profile.url : "");
+  if (targetUrl) {
+    let cleanUrl = targetUrl.trim();
+    if (!cleanUrl.startsWith("http://") && !cleanUrl.startsWith("https://")) {
+      cleanUrl = "https://" + cleanUrl;
+    }
+    window.open(cleanUrl, "_blank");
+  } else {
+    if (typeof alert === 'function') {
+      alert("No stored licence URL. Please configure credentials in My Credentials.");
+    }
   }
 }
 
@@ -2269,15 +2279,28 @@ async function setupDocumentViewers() {
 
   const qsData = getQualificationSlipData() || selectedQsParsed;
 
+  const qsBadgeBox = getDashEl("mab-qs-badge");
   if (qsBadgeText && qsBadgePill) {
     if (qsData) {
       qsBadgeText.innerText = "Qualification Slip: Stored & Valid";
       qsBadgePill.innerText = "Verified";
       qsBadgePill.className = "text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md uppercase";
+      if (qsBadgeBox) {
+        qsBadgeBox.classList.remove("cursor-pointer", "hover:border", "hover:border-blue-500", "active:scale-[0.99]");
+        qsBadgeBox.title = "";
+        qsBadgeBox.onclick = null;
+      }
     } else {
       qsBadgeText.innerText = "Qualification Slip: Not Configured";
       qsBadgePill.innerText = "Not Set";
       qsBadgePill.className = "text-[10px] font-extrabold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md uppercase";
+      if (qsBadgeBox) {
+        qsBadgeBox.classList.add("cursor-pointer", "hover:border", "hover:border-blue-500", "transition-all", "active:scale-[0.99]");
+        qsBadgeBox.title = "Click to configure Qualification Slip in My Credentials";
+        qsBadgeBox.onclick = () => {
+          if (typeof openProfileMenu === "function") openProfileMenu();
+        };
+      }
     }
   }
 
@@ -3311,24 +3334,12 @@ ${badgeHtml}
     }
   }
 
-  const resOpenBtn = getResEl("res-open-original-btn") || getResEl("open-original-btn");
+  const resOpenBtn = getResEl("res-open-original-btn");
   if (resOpenBtn) {
     resOpenBtn.classList.remove("border-t", "border-slate-100", "dark:border-slate-800", "border-slate-200", "dark:border-slate-700");
     if (resOpenBtn.parentNode) {
       resOpenBtn.parentNode.classList.remove("border-t", "border-slate-100", "dark:border-slate-800", "border-slate-200", "dark:border-slate-700");
     }
-    const span = resOpenBtn.querySelector("span");
-    if (span) {
-      span.innerText = "View Licence Page";
-    } else {
-      const svg = resOpenBtn.querySelector("svg");
-      if (svg) {
-        resOpenBtn.innerHTML = `${svg.outerHTML} <span>View Licence Page</span>`;
-      } else {
-        resOpenBtn.innerText = "View Licence Page";
-      }
-    }
-
     resOpenBtn.onclick = () => {
       if (lastScannedUrl) {
         window.open(lastScannedUrl, "_blank");
