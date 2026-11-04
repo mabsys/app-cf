@@ -1,4 +1,4 @@
-// storage.js (1810_R172) - CertiFly Storage Engine (LocalStorage & IndexedDB)
+// js/storage.js (0411_R362) - CertiFly Storage Engine (LocalStorage & IndexedDB)
 
 const DB_NAME = 'CertiFlyDB';
 const DB_VERSION = 1;
@@ -31,7 +31,16 @@ export async function getIndexedDBBlob(key) {
       const tx = db.transaction(STORE_NAME, 'readonly');
       const store = tx.objectStore(STORE_NAME);
       const req = store.get(key);
-      req.onsuccess = () => resolve(req.result || null);
+      req.onsuccess = () => {
+        const val = req.result;
+        if (!val) {
+          resolve(null);
+        } else if (val instanceof ArrayBuffer) {
+          resolve(new Blob([val], { type: 'application/pdf' }));
+        } else {
+          resolve(val);
+        }
+      };
       req.onerror = () => reject(req.error);
     });
   } catch (e) {
@@ -42,11 +51,19 @@ export async function getIndexedDBBlob(key) {
 
 export async function setIndexedDBBlob(key, blob) {
   try {
+    let dataToStore = blob;
+    if (blob && typeof blob.arrayBuffer === 'function') {
+      try {
+        dataToStore = await blob.arrayBuffer();
+      } catch (err) {
+        console.warn('Failed to convert blob to ArrayBuffer, storing as-is:', err);
+      }
+    }
     const db = await openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, 'readwrite');
       const store = tx.objectStore(STORE_NAME);
-      const req = store.put(blob, key);
+      const req = store.put(dataToStore, key);
       req.onsuccess = () => resolve(true);
       req.onerror = () => reject(req.error);
     });
