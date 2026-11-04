@@ -1,4 +1,4 @@
-// ./js/tools.js (0311_R336) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (0311_R337) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1773,13 +1773,13 @@ export function resetToolInputs(toolId) {
     if (flightDateDisplay) flightDateDisplay.innerText = 'SELECT DATE';
 
     const l1Display = document.getElementById('input-recency-l1-date-display');
-    if (l1Display) l1Display.innerText = 'DATE 1';
+    if (l1Display) l1Display.innerText = 'Landing 1';
 
     const l2Display = document.getElementById('input-recency-l2-date-display');
-    if (l2Display) l2Display.innerText = 'DATE 2';
+    if (l2Display) l2Display.innerText = 'Landing 2';
 
     const l3Display = document.getElementById('input-recency-l3-date-display');
-    if (l3Display) l3Display.innerText = 'DATE 3';
+    if (l3Display) l3Display.innerText = 'Landing 3';
 
     const varDateDisplay = document.getElementById('input-recency-variant-date-display');
     if (varDateDisplay) varDateDisplay.innerText = 'SELECT DATE';
