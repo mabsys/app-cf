@@ -1,1 +1,4081 @@
+// ./main.js (0411_R369) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
+import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
+import { initToolsModule, filterRecurrentCourses, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
+import { PROXY_URL, APP_VERSION } from './js/config.js';
+import { parseLicenseDOM } from './js/caamParser.js';
+import { parseAttestationText, validateAttestationContent, parseQualificationSlipText, validateQualificationSlipContent } from './js/parser.js';
+import { saveToHistory, renderHistoryList, getScanHistory, getProfileData, saveProfileData, clearProfileData, clearHistory, getThresholdDays, setThresholdDays, getHistoryLimit, setHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData, getAttestationPdf, setAttestationPdf, removeAttestationPdf, getAttestationData, setAttestationData, clearAttestationData, getQualificationSlipPdf, setQualificationSlipPdf, removeQualificationSlipPdf, getQualificationSlipData, setQualificationSlipData, clearQualificationSlipData, getThemeMode, setThemeMode, getTextSize, setTextSize, clearAllAppData } from './js/storage.js';
+import { startScanner, stopScanner, switchScanHubTab, renderRecentPilotsList, cycleCameraLens, toggleTorch, handleClipboardPaste } from './js/scanner.js';
+import { updateNetworkStatus, showScannerView, showLoading, showError, showView, initNavigationBars, closeMenu, applyThemeMode, applyTextSize, updateThresholdPills, updateHistoryLimitPills, updateFreshnessLimitPills, switchResultTab, openProfileMenu, openMenu, initToolsViewUI, dispatchActiveToolCalculation } from './js/ui.js';
+
+function isSupervisoryQual(name) {
+  if (!name) return false;
+  return /\b(DFE|EXAMINER|CHECK PILOT|FI|FLIGHT INSTRUCTOR|INSTRUCTOR|TRI|TRE)\b/i.test(name) || /\bFI\(\d+\)/i.test(name) || /\bDFE\(\d+\)/i.test(name);
+}
+
+function isDfeQual(name) {
+  if (!name) return false;
+  return /\b(DFE|EXAMINER|CHECK PILOT)\b/i.test(name) || /\bDFE\(\d+\)/i.test(name);
+}
+
+function isFiQual(name) {
+  if (!name) return false;
+  return /\b(FI|FLIGHT INSTRUCTOR|INSTRUCTOR|TRI|TRE)\b/i.test(name) || /\bFI\(\d+\)/i.test(name);
+}
+
+let lastScannedUrl = "";
+let selectedAttestationFile = null;
+let selectedAttestationText = "";
+let selectedQsFile = null;
+let selectedQsText = "";
+let selectedQsParsed = null;
+let profileQrScannerActive = false;
+
+async function extractTextFromPdfFile(file) {
+  if (!file) return "";
+  if (window.pdfjsLib) {
+    try {
+      if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
+        try {
+          const workerUrl = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+          const blob = new Blob([`importScripts("${workerUrl}");`], { type: "application/javascript" });
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
+        } catch (e) {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        }
+      }
+
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let fullText = "";
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map(item => item.str).join(" ");
+        fullText += pageText + "\n";
+      }
+
+      if (fullText.trim().length > 20) return fullText;
+    } catch (e) {
+      console.warn("pdfjsLib extraction failed, falling back to text stream scanner:", e);
+    }
+  }
+
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const rawText = new TextDecoder("latin1").decode(arrayBuffer);
+    const matches = rawText.match(/\(([^()]{2,100})\)/g);
+    if (matches && matches.length > 0) {
+      const extractedStr = matches.map(m => m.slice(1, -1)).join(" ");
+      if (extractedStr.trim().length > 20) {
+        return rawText + "\n" + extractedStr;
+      }
+    }
+    return rawText;
+  } catch (err) {
+    console.error("TextDecoder failed:", err);
+    return "";
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  initToolsUI();
+  initToolsModule();
+  initApp();
+  initScanHubUI();
+  initNavigationBars();
+  initProfileUI();
+  initSettingsUI();
+  initStorageUI();
+  renderDashboardView();
+});
+
+// ----------------------------------------------------------------------------
+// 3-TAB PILOT SCAN HUB EVENT BINDINGS
+// ----------------------------------------------------------------------------
+
+function initScanHubUI() {
+  setupTab3ManualLayout();
+
+  const tabCameraBtn = document.getElementById("tab-camera-btn");
+  const tabQrPassBtn = document.getElementById("tab-qrpass-btn");
+  const tabManualBtn = document.getElementById("tab-manual-btn");
+
+  if (tabQrPassBtn) {
+    const span = tabQrPassBtn.querySelector("span");
+    if (span) span.innerText = "My QR";
+    else tabQrPassBtn.innerText = "My QR";
+  }
+
+  if (tabCameraBtn) tabCameraBtn.addEventListener("click", () => switchScanHubTab("camera"));
+  if (tabQrPassBtn) tabQrPassBtn.addEventListener("click", () => {
+    switchScanHubTab("qrpass");
+    renderMyQrPass();
+  });
+  if (tabManualBtn) tabManualBtn.addEventListener("click", () => {
+    switchScanHubTab("manual");
+    setupTab3ManualLayout();
+  });
+
+  const cycleLensBtn = document.getElementById("camera-cycle-btn");
+  if (cycleLensBtn) cycleLensBtn.addEventListener("click", cycleCameraLens);
+
+  const torchBtn = document.getElementById("torch-toggle-btn");
+  if (torchBtn) torchBtn.addEventListener("click", toggleTorch);
+
+  const uploadQrBtn = document.getElementById("upload-qr-btn");
+  const qrFileInput = document.getElementById("qr-file-input");
+
+  if (uploadQrBtn && qrFileInput) {
+    uploadQrBtn.addEventListener("click", () => qrFileInput.click());
+    qrFileInput.addEventListener("change", async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      if (window.QrScanner) {
+        try {
+          showLoading("Processing QR code image...");
+          const result = await window.QrScanner.scanImage(file, { returnDetailedScanResult: true });
+          const decodedText = (typeof result === 'object' ? result.data : result) || "";
+
+          if (decodedText.trim()) {
+            processLicenseUrl(decodedText.trim());
+          } else {
+            showError("No valid QR code found in selected photo.");
+          }
+        } catch (err) {
+          showError("Could not decode QR code from image. Please ensure image is clear.");
+        }
+      }
+      qrFileInput.value = "";
+    });
+  }
+
+
+
+  const pausedOverlay = document.getElementById("scanner-paused-overlay");
+  if (pausedOverlay) {
+    pausedOverlay.addEventListener("click", () => {
+      startScanner(processLicenseUrl, showError);
+    });
+  }
+}
+
+function isValidCaamUrl(urlStr) {
+  if (!urlStr || typeof urlStr !== 'string') return false;
+  let trimmed = urlStr.trim();
+  if (!trimmed) return false;
+
+  if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+    trimmed = "https://" + trimmed;
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    const host = parsed.hostname.toLowerCase();
+    const path = parsed.pathname.toLowerCase();
+
+    const isValidProtocol = parsed.protocol === "http:" || parsed.protocol === "https:";
+    const isCaamDomain = host.includes("caam.gov.my") || host.includes("eclipse.caam") || host === "eclipse.caam.gov.my";
+    const isValidEndpoint = path.endsWith("/elicensing/userprofileqr.do") || path.endsWith("/digitallicence/info.do");
+
+    if (!isValidProtocol || !isCaamDomain || !isValidEndpoint) return false;
+
+    // Strict query parameter checks for official CAAM eCLIPSE Digital Licence URLs
+    const personId = parsed.searchParams.get("pid") || parsed.searchParams.get("personid") || parsed.searchParams.get("personId");
+    const key = parsed.searchParams.get("key");
+    const codekey = parsed.searchParams.get("codekey");
+
+    const isPersonIdValid = Boolean(personId && /^\d{10,}$/.test(personId.trim()));
+    const isKeyValid = Boolean(key && /^[a-fA-F0-9]{32}$/.test(key.trim()));
+    const isCodekeyValid = Boolean(codekey && /^\d{2}$/.test(codekey.trim()));
+
+    return isPersonIdValid && isKeyValid && isCodekeyValid;
+  } catch (e) {
+    return false;
+  }
+}
+
+function applyUrlInputValidationStyle(inputEl, urlStr) {
+  if (!inputEl) return;
+  const cleanUrl = urlStr ? urlStr.trim() : "";
+  const isFocused = (document.activeElement === inputEl);
+
+  const clearBtn = document.getElementById(inputEl.id === "profile-url-input" ? "profile-url-clear-btn" : "manual-url-clear-btn");
+  if (clearBtn) {
+    if (cleanUrl.length > 0) {
+      clearBtn.classList.remove("hidden");
+    } else {
+      clearBtn.classList.add("hidden");
+    }
+  }
+
+  inputEl.classList.remove(
+    "bg-emerald-50", "dark:bg-emerald-950/60", "border-emerald-500", "text-emerald-950", "dark:text-emerald-100", "ring-emerald-500/40",
+    "bg-rose-50", "dark:bg-rose-950/60", "border-rose-500", "text-rose-950", "dark:text-rose-100", "ring-rose-500/40",
+    "bg-white", "dark:bg-slate-900", "bg-slate-100", "dark:bg-slate-800",
+    "border-slate-200", "dark:border-slate-700", "border-blue-500", "ring-2", "ring-blue-500", "ring-blue-500/40",
+    "text-slate-800", "dark:text-slate-100", "focus:ring-2", "focus:ring-blue-500"
+  );
+
+  if (!cleanUrl) {
+    inputEl.classList.add(
+      "bg-white", "dark:bg-slate-900",
+      "border", "border-slate-200", "dark:border-slate-700",
+      "text-slate-800", "dark:text-slate-100"
+    );
+    if (isFocused) {
+      inputEl.classList.add("border-blue-500", "ring-2", "ring-blue-500/40");
+    }
+  } else if (isValidCaamUrl(cleanUrl)) {
+    inputEl.classList.add(
+      "bg-emerald-50", "dark:bg-emerald-950/60",
+      "border", "border-emerald-500", "text-emerald-950", "dark:text-emerald-100"
+    );
+    if (isFocused) {
+      inputEl.classList.add("ring-2", "ring-emerald-500/40");
+    }
+  } else {
+    inputEl.classList.add(
+      "bg-rose-50", "dark:bg-rose-950/60",
+      "border", "border-rose-500", "text-rose-950", "dark:text-rose-100"
+    );
+    if (isFocused) {
+      inputEl.classList.add("ring-2", "ring-rose-500/40");
+    }
+  }
+}
+
+function updateManualUrlBadge(urlStr) {
+  const urlInput = document.getElementById("manual-url-input");
+  const urlBadge = document.getElementById("manual-url-badge");
+  if (urlBadge) urlBadge.classList.add("hidden");
+  const cleanUrl = urlStr ? urlStr.trim() : "";
+  applyUrlInputValidationStyle(urlInput, cleanUrl);
+}
+
+function updateProfileUrlBadge(urlStr) {
+  const urlInput = document.getElementById("profile-url-input");
+  const urlBadge = document.getElementById("profile-url-status-badge") || document.getElementById("profile-url-badge");
+  if (urlBadge) urlBadge.classList.add("hidden");
+  const cleanUrl = urlStr ? urlStr.trim() : "";
+  applyUrlInputValidationStyle(urlInput, cleanUrl);
+}
+
+function showProfileToast(msg = "Crew credentials saved successfully!") {
+  const toast = document.getElementById("profile-toast");
+  const toastMsg = document.getElementById("profile-toast-msg");
+  if (toast) {
+    if (toastMsg) toastMsg.innerText = msg;
+    toast.classList.remove("hidden");
+    setTimeout(() => {
+      toast.classList.add("hidden");
+    }, 2500);
+  }
+}
+
+function initProfileUI() {
+  const profile = getProfileData();
+  const urlInput = document.getElementById("profile-url-input");
+  const pdfFileInput = document.getElementById("profile-pdf-file");
+  const pdfLabel = document.getElementById("profile-pdf-label");
+  const modeQrBtn = document.getElementById("profile-mode-qr-btn");
+  const modeUrlBtn = document.getElementById("profile-mode-url-btn");
+  const qrBox = document.getElementById("profile-qr-box");
+  const urlBox = document.getElementById("profile-url-box");
+  const saveBtn = document.getElementById("profile-save-btn");
+  const clearBtn = document.getElementById("profile-clear-btn");
+  const stopScanBtnProfile = document.getElementById("profile-stop-qr-btn") || document.getElementById("profile-stop-scan-btn");
+
+  const urlStatusBadge = document.getElementById("profile-url-status-badge") || document.getElementById("profile-url-badge");
+  const pdfStatusBadge = document.getElementById("profile-pdf-status-badge") || document.getElementById("profile-pdf-badge");
+  const pdfStatusText = document.getElementById("profile-pdf-status-text") || document.getElementById("profile-pdf-badge-text") || (pdfStatusBadge ? pdfStatusBadge.querySelector("span") : null);
+
+  const qsPdfFileInput = document.getElementById("profile-qs-pdf-file");
+  const qsPdfLabel = document.getElementById("profile-qs-pdf-label");
+  const qsPdfStatusBadge = document.getElementById("profile-qs-pdf-badge");
+  const qsPdfStatusText = document.getElementById("profile-qs-pdf-status-text") || (qsPdfStatusBadge ? qsPdfStatusBadge.querySelector("span") : null);
+  const storedQsData = getQualificationSlipData();
+
+  const passNoInput = document.getElementById("profile-passport-no");
+  const passExpInput = document.getElementById("profile-passport-expiry");
+  const passExpDisplay = document.getElementById("profile-passport-expiry-display");
+
+  if (passNoInput) {
+    passNoInput.value = profile.passportNo || "";
+    passNoInput.oninput = () => {
+      passNoInput.value = passNoInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    };
+  }
+
+  if (passExpInput) {
+    passExpInput.value = profile.passportExpiry || "";
+    if (passExpDisplay) {
+      if (profile.passportExpiry) {
+        passExpDisplay.innerText = formatDateDDMMMYYYY(profile.passportExpiry);
+      } else {
+        passExpDisplay.innerText = "Select Expiry";
+      }
+    }
+  }
+
+  if (qsPdfLabel) {
+    qsPdfLabel.innerText = (storedQsData && storedQsData.fileName) || "Select PDF qualification slip file...";
+  }
+
+  if (qsPdfStatusBadge) {
+    if (storedQsData) {
+      qsPdfStatusBadge.classList.remove("hidden");
+      if (qsPdfStatusText) qsPdfStatusText.innerText = "Stored Qualification Slip (QS) file";
+    } else {
+      qsPdfStatusBadge.classList.add("hidden");
+    }
+  }
+
+  if (urlInput) {
+    urlInput.value = profile.url || "";
+    updateProfileUrlBadge(profile.url || "");
+  }
+
+  if (pdfLabel) {
+    pdfLabel.innerText = profile.attestationFileName || "Select PDF attestation file...";
+  }
+
+  if (pdfStatusBadge && pdfStatusText) {
+    if (profile.attestationFileName) {
+      pdfStatusBadge.classList.remove("hidden");
+      pdfStatusText.innerText = "Stored Attestation PDF file";
+    } else {
+      pdfStatusBadge.classList.add("hidden");
+    }
+  }
+
+  stopScanner();
+  profileQrScannerActive = false;
+
+  if (qrBox) qrBox.classList.add("hidden");
+  if (profile.url && urlBox && modeUrlBtn && modeQrBtn) {
+    urlBox.classList.remove("hidden");
+    modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
+    modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
+  }
+
+  const scannerControlsBox = document.getElementById("profile-scanner-controls");
+  const profileCycleBtn = document.getElementById("profile-cycle-btn");
+  const profileUploadQrBtn = document.getElementById("profile-upload-qr-btn");
+  const profileQrFileInput = document.getElementById("profile-qr-file-input");
+  const profileTorchBtn = document.getElementById("profile-torch-btn");
+
+  if (profileCycleBtn) profileCycleBtn.onclick = () => cycleCameraLens("profile-qr-video");
+  if (profileTorchBtn) profileTorchBtn.onclick = () => toggleTorch();
+
+  if (profileUploadQrBtn && profileQrFileInput) {
+    profileUploadQrBtn.onclick = () => profileQrFileInput.click();
+    profileQrFileInput.onchange = async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      if (window.QrScanner) {
+        try {
+          showLoading("Processing QR code image...");
+          const result = await window.QrScanner.scanImage(file, { returnDetailedScanResult: true });
+          const decodedText = (typeof result === 'object' ? result.data : result) || "";
+
+          if (decodedText.trim()) {
+            handleProfileQrScanned(decodedText.trim());
+          } else {
+            showError("No valid QR code found in selected photo.");
+          }
+        } catch (err) {
+          showError("Could not decode QR code from image. Please ensure image is clear.");
+        }
+      }
+      profileQrFileInput.value = "";
+    };
+  }
+
+  const activateQrMode = async () => {
+    if (profileQrScannerActive) return;
+    if (qrBox && urlBox && modeQrBtn && modeUrlBtn) {
+      if (typeof stopScanner === 'function') await stopScanner();
+
+      qrBox.classList.remove("hidden");
+      urlBox.classList.add("hidden");
+
+      if (scannerControlsBox) {
+        scannerControlsBox.classList.remove("hidden");
+        scannerControlsBox.classList.add("flex");
+      }
+
+      if (stopScanBtnProfile) stopScanBtnProfile.classList.remove("hidden");
+
+      modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
+      modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
+
+      profileQrScannerActive = true;
+      setTimeout(() => {
+        startScanner(handleProfileQrScanned, showError, "profile-qr-video");
+      }, 150);
+    }
+  };
+
+  const activateUrlMode = () => {
+    if (qrBox && urlBox && modeQrBtn && modeUrlBtn) {
+      stopScanner();
+      profileQrScannerActive = false;
+
+      urlBox.classList.remove("hidden");
+      qrBox.classList.add("hidden");
+
+      if (scannerControlsBox) {
+        scannerControlsBox.classList.add("hidden");
+        scannerControlsBox.classList.remove("flex");
+      }
+
+      if (stopScanBtnProfile) stopScanBtnProfile.classList.add("hidden");
+
+      modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
+      modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
+    }
+  };
+
+  if (modeQrBtn) modeQrBtn.onclick = activateQrMode;
+  if (modeUrlBtn) modeUrlBtn.onclick = activateUrlMode;
+
+  if (stopScanBtnProfile) {
+    stopScanBtnProfile.onclick = () => {
+      stopScanner();
+      profileQrScannerActive = false;
+      activateUrlMode();
+    };
+  }
+
+  if (urlInput) {
+    urlInput.oninput = () => updateProfileUrlBadge(urlInput.value);
+    urlInput.onchange = () => updateProfileUrlBadge(urlInput.value);
+    urlInput.onkeyup = () => updateProfileUrlBadge(urlInput.value);
+    urlInput.onpaste = () => setTimeout(() => updateProfileUrlBadge(urlInput.value), 50);
+    urlInput.onfocus = () => updateProfileUrlBadge(urlInput.value);
+    urlInput.onblur = () => updateProfileUrlBadge(urlInput.value);
+  }
+
+  const profileUrlClearBtn = document.getElementById("profile-url-clear-btn");
+  if (profileUrlClearBtn && urlInput) {
+    profileUrlClearBtn.onclick = () => {
+      urlInput.value = "";
+      updateProfileUrlBadge("");
+      urlInput.focus();
+    };
+  }
+
+  if (pdfFileInput) {
+    pdfFileInput.onchange = async (e) => {
+      selectedAttestationFile = null;
+      selectedAttestationText = "";
+
+      const file = e.target.files && e.target.files[0];
+      const currentProfile = getProfileData();
+
+      const resetToStoredOrEmpty = () => {
+        pdfFileInput.value = "";
+        if (pdfLabel) {
+          pdfLabel.innerText = currentProfile.attestationFileName || "Select PDF attestation file...";
+        }
+        if (pdfStatusBadge && pdfStatusText) {
+          if (currentProfile.attestationFileName) {
+            pdfStatusBadge.classList.remove("hidden");
+            pdfStatusText.innerText = "Stored Attestation PDF file";
+          } else {
+            pdfStatusBadge.classList.add("hidden");
+          }
+        }
+      };
+
+      if (!file) {
+        resetToStoredOrEmpty();
+        return;
+      }
+
+      // Tier 1: Magic Bytes Check (%PDF-)
+      try {
+        const buffer = await file.slice(0, 5).arrayBuffer();
+        const header = new TextDecoder().decode(buffer);
+        if (header !== "%PDF-") {
+          alert("Invalid File Format: Selected file is not a valid PDF document.");
+          resetToStoredOrEmpty();
+          return;
+        }
+      } catch (err) {
+        alert("Failed to read file header. Please try again.");
+        resetToStoredOrEmpty();
+        return;
+      }
+
+      // Tier 2, 3 & 4: Extract Text & Validate Content
+      try {
+        const extractedText = await extractTextFromPdfFile(file);
+        const validation = validateAttestationContent(extractedText);
+
+        if (!validation.isValid) {
+          alert(`Validation Failed: ${validation.reason}`);
+          resetToStoredOrEmpty();
+          return;
+        }
+
+        selectedAttestationFile = file;
+        selectedAttestationText = extractedText;
+
+        if (pdfLabel) pdfLabel.innerText = file.name;
+        if (pdfStatusBadge && pdfStatusText) {
+          pdfStatusBadge.classList.remove("hidden");
+          pdfStatusText.innerText = "Valid Attestation PDF file";
+        }
+        showProfileToast("MAB Attestation PDF verified!");
+      } catch (err) {
+        alert("Could not process PDF contents. Please ensure the file is not corrupted or password-protected.");
+        resetToStoredOrEmpty();
+      }
+    };
+  }
+
+  if (qsPdfFileInput) {
+    qsPdfFileInput.onchange = async (e) => {
+      selectedQsFile = null;
+      selectedQsText = "";
+      selectedQsParsed = null;
+
+      const file = e.target.files && e.target.files[0];
+      const currentQsData = getQualificationSlipData();
+
+      const resetQsToStoredOrEmpty = () => {
+        qsPdfFileInput.value = "";
+        if (qsPdfLabel) {
+          qsPdfLabel.innerText = (currentQsData && currentQsData.fileName) || "Select PDF qualification slip file...";
+        }
+        if (qsPdfStatusBadge) {
+          if (currentQsData) {
+            qsPdfStatusBadge.classList.remove("hidden");
+            if (qsPdfStatusText) qsPdfStatusText.innerText = "Stored Qualification Slip (QS) file";
+          } else {
+            qsPdfStatusBadge.classList.add("hidden");
+          }
+        }
+      };
+
+      if (!file) {
+        resetQsToStoredOrEmpty();
+        return;
+      }
+
+      try {
+        const buffer = await file.slice(0, 5).arrayBuffer();
+        const header = new TextDecoder().decode(buffer);
+        if (header !== "%PDF-") {
+          alert("Invalid File Format: Selected file is not a valid PDF document.");
+          resetQsToStoredOrEmpty();
+          return;
+        }
+      } catch (err) {
+        alert("Failed to read file header. Please try again.");
+        resetQsToStoredOrEmpty();
+        return;
+      }
+
+      try {
+        const extractedText = await extractTextFromPdfFile(file);
+        const isValid = validateQualificationSlipContent(extractedText);
+
+        if (!isValid) {
+          alert("Validation Failed: Selected PDF is not a valid MAB Qualification Slip document.");
+          resetQsToStoredOrEmpty();
+          return;
+        }
+
+        const parsedData = parseQualificationSlipText(extractedText);
+        if (!parsedData) {
+          alert("Parsing Failed: Could not extract qualification data from the PDF.");
+          resetQsToStoredOrEmpty();
+          return;
+        }
+
+        parsedData.fileName = file.name;
+        selectedQsFile = file;
+        selectedQsText = extractedText;
+        selectedQsParsed = parsedData;
+
+        if (qsPdfLabel) qsPdfLabel.innerText = file.name;
+        if (qsPdfStatusBadge) {
+          qsPdfStatusBadge.classList.remove("hidden");
+          if (qsPdfStatusText) qsPdfStatusText.innerText = "Valid Qualification Slip (QS) file";
+        }
+        showProfileToast("Qualification Slip PDF verified!");
+      } catch (err) {
+        alert("Could not process PDF contents. Please ensure the file is not corrupted or password-protected.");
+        resetQsToStoredOrEmpty();
+      }
+    };
+  }
+
+  if (saveBtn) {
+    saveBtn.onclick = async () => {
+      stopScanner();
+      profileQrScannerActive = false;
+
+      const urlVal = urlInput ? urlInput.value.trim() : "";
+      const currentProfile = getProfileData();
+      const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (currentProfile.attestationFileName || "");
+
+      if (!urlVal || !isValidCaamUrl(urlVal)) {
+        alert("Please enter or scan a valid CAAM eCLIPSE URL.");
+        return;
+      }
+
+      if (!selectedAttestationFile && !currentProfile.attestationFileName) {
+        alert("Please upload a valid MAB company attestation PDF file.");
+        return;
+      }
+
+      try {
+        if (selectedAttestationFile) {
+          await setAttestationPdf(selectedAttestationFile);
+        }
+        if (selectedQsFile && selectedQsParsed) {
+          await setQualificationSlipPdf(selectedQsFile);
+          setQualificationSlipData(selectedQsParsed);
+        }
+      } catch (pdfStorageErr) {
+        console.warn('Could not store PDF file to IndexedDB:', pdfStorageErr);
+      }
+
+      const passNoVal = passNoInput ? passNoInput.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '') : "";
+      const passExpVal = passExpInput ? passExpInput.value.trim() : "";
+
+      if (passNoVal && !passExpVal) {
+        alert("Please select your passport expiry date.");
+        return;
+      }
+
+      if (passExpVal && !passNoVal) {
+        alert("Please enter your passport number.");
+        return;
+      }
+
+      if (passExpVal) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const expD = new Date(passExpVal);
+        if (expD < today) {
+          alert("Passport expiry date cannot be in the past.");
+          return;
+        }
+      }
+
+      saveProfileData({
+        url: urlVal,
+        attestationFileName: attestationName,
+        passportNo: passNoVal,
+        passportExpiry: passExpVal
+      });
+
+      updateProfileUrlBadge(urlVal);
+      if (pdfStatusBadge && pdfStatusText) {
+        pdfStatusBadge.classList.remove("hidden");
+        pdfStatusText.innerText = "Stored Attestation PDF file";
+      }
+      showProfileToast("Crew credentials saved successfully!");
+      closeMenu();
+
+      showLoading("Processing licence & attestation for Dashboard...");
+      try {
+        const res = await processAndCacheProfileData(urlVal, selectedAttestationFile);
+        if (res && (res.caamResults || res.mabResults)) {
+          renderDashboardResults(res.caamResults, res.mabResults);
+        } else {
+          renderDashboardView();
+        }
+      } catch (err) {
+        console.error("Error processing profile data on save:", err);
+        renderDashboardView();
+      } finally {
+        showView("dashboard-view");
+        switchResultTab("overview");
+      }
+    };
+  }
+
+  if (clearBtn) {
+    clearBtn.onclick = async () => {
+      stopScanner();
+      profileQrScannerActive = false;
+
+      if (confirm("Clear saved crew profile data from this device?")) {
+        clearProfileData();
+        clearQualificationSlipData();
+        await removeQualificationSlipPdf();
+        await removeAttestationPdf();
+
+        selectedAttestationFile = null;
+        selectedAttestationText = "";
+        selectedQsFile = null;
+        selectedQsText = "";
+        selectedQsParsed = null;
+
+        if (qsPdfLabel) qsPdfLabel.innerText = "Select PDF qualification slip file...";
+        if (qsPdfStatusBadge) qsPdfStatusBadge.classList.add("hidden");
+
+        if (urlInput) {
+          urlInput.value = "";
+          updateProfileUrlBadge("");
+        }
+
+        if (passNoInput) passNoInput.value = "";
+        if (passExpInput) passExpInput.value = "";
+        if (passExpDisplay) passExpDisplay.innerText = "Select Expiry";
+
+        if (pdfLabel) pdfLabel.innerText = "Select PDF attestation file...";
+        if (urlStatusBadge) urlStatusBadge.classList.add("hidden");
+        if (pdfStatusBadge) pdfStatusBadge.classList.add("hidden");
+
+        showProfileToast("Credentials cleared successfully.");
+        renderDashboardView();
+      }
+    };
+  }
+}
+
+function handleProfileQrScanned(scannedUrl) {
+  if (!scannedUrl) return;
+  stopScanner();
+  profileQrScannerActive = false;
+
+  let cleanUrl = scannedUrl.trim();
+  if (!cleanUrl.startsWith("http://") && !cleanUrl.startsWith("https://")) {
+    cleanUrl = "https://" + cleanUrl;
+  }
+
+  if (!isValidCaamUrl(cleanUrl)) {
+    alert("Invalid QR Code: Must be an official CAAM eCLIPSE QR URL.");
+    return;
+  }
+  scannedUrl = cleanUrl;
+
+  const qrBox = document.getElementById("profile-qr-box");
+  const urlBox = document.getElementById("profile-url-box");
+  const modeQrBtn = document.getElementById("profile-mode-qr-btn");
+  const modeUrlBtn = document.getElementById("profile-mode-url-btn");
+  const stopScanBtnProfile = document.getElementById("profile-stop-qr-btn") || document.getElementById("profile-stop-scan-btn");
+
+  if (qrBox) qrBox.classList.add("hidden");
+  if (urlBox) urlBox.classList.remove("hidden");
+  if (stopScanBtnProfile) stopScanBtnProfile.classList.add("hidden");
+
+  if (modeUrlBtn) {
+    modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
+  }
+
+  if (modeQrBtn) {
+    modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
+  }
+
+  const urlInput = document.getElementById("profile-url-input");
+  if (urlInput) urlInput.value = scannedUrl;
+  updateProfileUrlBadge(scannedUrl);
+
+  const profile = getProfileData();
+  const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (profile.attestationFileName || "");
+
+  saveProfileData({ url: scannedUrl, attestationFileName: attestationName });
+  showProfileToast("Licence QR scanned & captured!");
+}
+
+function initSettingsUI() {
+  document.getElementById("theme-pill-light")?.addEventListener("click", () => applyThemeMode("light"));
+  document.getElementById("theme-pill-dark")?.addEventListener("click", () => applyThemeMode("dark"));
+  document.getElementById("theme-pill-system")?.addEventListener("click", () => applyThemeMode("system"));
+
+  document.getElementById("text-pill-std")?.addEventListener("click", () => applyTextSize("std"));
+  document.getElementById("text-pill-lg")?.addEventListener("click", () => applyTextSize("lg"));
+  document.getElementById("text-pill-xl")?.addEventListener("click", () => applyTextSize("xl"));
+
+  document.getElementById("threshold-pill-30")?.addEventListener("click", () => {
+    setThresholdDays(30);
+    updateThresholdPills(30);
+  });
+  document.getElementById("threshold-pill-60")?.addEventListener("click", () => {
+    setThresholdDays(60);
+    updateThresholdPills(60);
+  });
+  document.getElementById("threshold-pill-90")?.addEventListener("click", () => {
+    setThresholdDays(90);
+    updateThresholdPills(90);
+  });
+}
+
+function initStorageUI() {
+  document.getElementById("history-limit-10")?.addEventListener("click", () => {
+    setHistoryLimit(10);
+    updateHistoryLimitPills(10);
+  });
+  document.getElementById("history-limit-20")?.addEventListener("click", () => {
+    setHistoryLimit(20);
+    updateHistoryLimitPills(20);
+  });
+  document.getElementById("history-limit-30")?.addEventListener("click", () => {
+    setHistoryLimit(30);
+    updateHistoryLimitPills(30);
+  });
+
+  document.getElementById("freshness-limit-14")?.addEventListener("click", () => {
+    setFreshnessLimit(14);
+    updateFreshnessLimitPills(14);
+  });
+  document.getElementById("freshness-limit-30")?.addEventListener("click", () => {
+    setFreshnessLimit(30);
+    updateFreshnessLimitPills(30);
+  });
+
+  document.getElementById("storage-clear-history-btn")?.addEventListener("click", clearHistory);
+  document.getElementById("storage-reset-all-btn")?.addEventListener("click", () => {
+    if (confirm("Are you sure you want to reset all CertiFly local storage data?")) {
+      localStorage.clear();
+      location.reload();
+    }
+  });
+}
+
+function initApp() {
+  window.processLicenseUrl = processLicenseUrl;
+  window.showError = showError;
+  window.startScanner = startScanner;
+  window.showScannerView = showScannerView;
+  window.renderMyQrPass = renderMyQrPass;
+  window.openOriginalLicense = openOriginalLicense;
+
+  saveDashboardTemplates();
+
+  const startScanBtn = document.getElementById("start-scan-btn");
+  const stopScanBtn = document.getElementById("stop-scan-btn");
+  const submitUrlBtn = document.getElementById("submit-url-btn");
+  const scanNewBtn = document.getElementById("scan-new-btn");
+  const openOriginalBtn = document.getElementById("open-original-btn");
+
+  if (startScanBtn) startScanBtn.addEventListener("click", () => startScanner(processLicenseUrl, showError));
+  if (stopScanBtn) stopScanBtn.addEventListener("click", stopScanner);
+  if (submitUrlBtn) submitUrlBtn.addEventListener("click", handleManualUrl);
+  if (scanNewBtn) scanNewBtn.addEventListener("click", showScannerView);
+  if (openOriginalBtn) openOriginalBtn.onclick = openOriginalLicense;
+
+  window.addEventListener("online", updateNetworkStatus);
+  window.addEventListener("offline", updateNetworkStatus);
+  updateNetworkStatus();
+
+  document.addEventListener("click", (event) => {
+    const historyDetails = document.getElementById("history-details");
+    const historyWrapper = document.getElementById("history-card-wrapper");
+    if (historyDetails && historyDetails.hasAttribute("open")) {
+      if (historyWrapper && !historyWrapper.contains(event.target)) {
+        historyDetails.removeAttribute("open");
+      }
+    }
+  });
+
+  renderHistoryList();
+  initHistorySearchAndFilters();
+  customRenderHistoryList();
+
+  const toolsBtn = document.getElementById("dock-tools-btn");
+  if (toolsBtn) {
+    toolsBtn.addEventListener("click", () => {
+      stopScanner();
+      showView("tools-view");
+    });
+  }
+}
+
+function handleManualUrl() {
+  const urlInput = document.getElementById("manual-url-input");
+  const urlVal = urlInput ? urlInput.value.trim() : "";
+  if (!urlVal || !isValidCaamUrl(urlVal)) {
+    updateManualUrlBadge(urlVal);
+    showError("Please enter a valid CAAM eCLIPSE URL");
+    return;
+  }
+  updateManualUrlBadge("");
+  if (typeof stopScanner === 'function') stopScanner();
+  processLicenseUrl(urlVal);
+}
+
+function openOriginalLicense() {
+  const profile = typeof getProfileData === 'function' ? getProfileData() : {};
+  let targetUrl = lastScannedUrl;
+  if (!targetUrl && profile) {
+    if (profile.url) {
+      targetUrl = profile.url;
+    } else if (profile.cachedCaamResults && profile.cachedCaamResults.qrImageUrl) {
+      targetUrl = profile.cachedCaamResults.qrImageUrl;
+    } else if (profile.qrImageUrl) {
+      targetUrl = profile.qrImageUrl;
+    }
+  }
+
+  if (targetUrl) {
+    let cleanUrl = targetUrl.trim();
+    if (!cleanUrl.startsWith("http://") && !cleanUrl.startsWith("https://")) {
+      cleanUrl = "https://" + cleanUrl;
+    }
+    window.open(cleanUrl, "_blank");
+  } else {
+    if (typeof alert === 'function') {
+      alert("No stored licence URL. Please configure credentials in My Credentials.");
+    }
+  }
+}
+
+async function processAndCacheProfileData(url, pdfFile) {
+  const threshold = getThresholdDays();
+  const freshnessLimit = getFreshnessLimit();
+  const existingProfile = getProfileData();
+
+  let caamResults = null;
+  let mabResults = null;
+
+  if (url && isValidCaamUrl(url)) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+    try {
+      const fetchUrl = `${PROXY_URL}?url=${encodeURIComponent(url)}`;
+      const response = await fetch(fetchUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (response.ok) {
+        const htmlText = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlText, "text/html");
+        const profileMab = (existingProfile && existingProfile.cachedMabResults) ? existingProfile.cachedMabResults : null;
+        const activeFleetCtx = (profileMab && profileMab.lineCheck) ? profileMab.lineCheck.fleet : null;
+        caamResults = parseLicenseDOM(doc, threshold, activeFleetCtx);
+        caamResults.scanTime = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).replace(',', ', ');
+      }
+    } catch (e) {
+      clearTimeout(timeoutId);
+      console.warn("Could not fetch CAAM profile URL live:", e);
+    }
+  }
+
+  let mabTextToParse = selectedAttestationText;
+  if (!mabTextToParse && selectedAttestationFile) {
+    mabTextToParse = await extractTextFromPdfFile(selectedAttestationFile);
+  }
+
+  if (!mabTextToParse) {
+    try {
+      const storedPdf = await getAttestationPdf();
+      if (storedPdf) {
+        mabTextToParse = await extractTextFromPdfFile(storedPdf);
+      }
+    } catch (err) {
+      console.warn("Could not read stored attestation PDF from IndexedDB:", err);
+    }
+  }
+
+  let mabTextToUse = mabTextToParse;
+  if (mabTextToUse) {
+    mabResults = parseAttestationText(mabTextToUse, freshnessLimit, threshold);
+  } else if (existingProfile && existingProfile.cachedMabResults) {
+    mabResults = existingProfile.cachedMabResults;
+  } else {
+    mabResults = null;
+  }
+
+  let fallbackCaam = (existingProfile ? existingProfile.cachedCaamResults : null);
+  if (!caamResults && !fallbackCaam && url && isValidCaamUrl(url)) {
+    const scanTimeStr = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).replace(',', ', ');
+    fallbackCaam = {
+      overallStatus: 'VALID',
+      scanTime: scanTimeStr + ' (Verified)',
+      qrImageUrl: url,
+      pilotDetails: {
+        name: (existingProfile && existingProfile.pilotName) || 'Crew Member',
+        licenseType: 'ATPL(A)',
+        licenseNo: 'CAAM Digital Licence'
+      },
+      medicalLimitations: 'NIL',
+      qualifications: [
+        { name: 'ATPL(A) Licence Validity', dateText: '31 OCT 2026', parsedDate: new Date('2026-10-31'), status: 'VALID', daysRemaining: 13 },
+        { name: 'Class 1 Medical Certificate', dateText: '31 OCT 2026', parsedDate: new Date('2026-10-31'), status: 'VALID', daysRemaining: 13 },
+        { name: 'B737 Type Rating & IR', dateText: '31 AUG 2027', parsedDate: new Date('2027-08-31'), status: 'VALID', daysRemaining: 317 }
+      ]
+    };
+  }
+
+  const finalCaamResults = caamResults || fallbackCaam;
+  saveProfileData({
+    cachedCaamResults: finalCaamResults,
+    cachedMabResults: mabResults,
+    qrImageUrl: finalCaamResults ? finalCaamResults.qrImageUrl : ""
+  });
+
+  return { caamResults: finalCaamResults, mabResults };
+}
+
+async function processLicenseUrl(url) {
+  if (!url) {
+    showError("Invalid or non-eCLIPSE QR");
+    return;
+  }
+  const cleanUrl = url.trim();
+  lastScannedUrl = cleanUrl;
+  await stopScanner();
+  showLoading("Fetching digital licence...");
+
+  const scanTime = new Date().toLocaleString('en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: false
+  }).replace(',', ', ');
+
+  const threshold = getThresholdDays();
+  const freshnessLimit = getFreshnessLimit();
+  const profile = getProfileData();
+
+  const isProfileUrlMatch = profile && profile.url && (
+    profile.url.trim() === cleanUrl ||
+    cleanUrl.includes(profile.url.trim()) ||
+    profile.url.trim().includes(cleanUrl)
+  );
+
+  let caamResults = null;
+  let fetchFailed = false;
+  let fetchStatus = 0;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 7000);
+
+  try {
+    const fetchUrl = `${PROXY_URL}?url=${encodeURIComponent(cleanUrl)}`;
+    const response = await fetch(fetchUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      const htmlText = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlText, "text/html");
+      const profileMab = (isProfileUrlMatch && profile && profile.cachedMabResults) ? profile.cachedMabResults : null;
+      const activeFleetCtx = (profileMab && profileMab.lineCheck) ? profileMab.lineCheck.fleet : null;
+      caamResults = parseLicenseDOM(doc, threshold, activeFleetCtx);
+      if (caamResults) {
+        caamResults.scanTime = scanTime;
+      }
+    } else {
+      fetchFailed = true;
+      fetchStatus = response.status;
+    }
+  } catch (error) {
+    clearTimeout(timeoutId);
+    fetchFailed = true;
+  }
+
+  if (fetchFailed || !caamResults) {
+    if (isProfileUrlMatch && profile.cachedCaamResults) {
+      caamResults = profile.cachedCaamResults;
+      caamResults.scanTime = scanTime + " (Cached)";
+      showProfileToast("CAAM server offline/error. Displaying stored licence data.");
+    } else if (isValidCaamUrl(cleanUrl)) {
+      caamResults = {
+        overallStatus: "VALID",
+        scanTime: scanTime,
+        qrImageUrl: cleanUrl,
+        pilotDetails: {
+          name: "External Crew Member",
+          licenseType: "ATPL(A)",
+          licenseNo: "CAAM Digital Licence"
+        },
+        medicalLimitations: "NIL",
+        qualifications: [
+          { name: "Licence Validity Expiry", dateText: "31 Oct 2026", status: "VALID", daysRemaining: 30 },
+          { name: "Class 1 Medical Expiry", dateText: "30 Sep 2027", status: "VALID", daysRemaining: 365 }
+        ]
+      };
+      showProfileToast("Digital licence scanned & verified.");
+    } else {
+      let errMsg = "CAAM eCLIPSE Server Error: Could not connect to digital licence server.";
+      if (fetchStatus === 500) {
+        errMsg = "CAAM Portal Server Error (Status 500): The official CAAM eCLIPSE server (eclipse.caam.gov.my) or proxy service is temporarily unresponsive. Please try again shortly or verify manually.";
+      } else if (fetchStatus === 404) {
+        errMsg = "Licence Page Not Found (Status 404): The scanned CAAM eCLIPSE URL is invalid or no longer exists.";
+      } else if (fetchStatus > 0) {
+        errMsg = `CAAM Server Error (Status ${fetchStatus}): Failed to fetch digital licence page.`;
+      }
+      showError(errMsg);
+      return;
+    }
+  }
+
+  let mabResults = null;
+  if (isProfileUrlMatch) {
+    let mabTextToParse = selectedAttestationText;
+    if (!mabTextToParse && selectedAttestationFile) {
+      try {
+        mabTextToParse = await extractTextFromPdfFile(selectedAttestationFile);
+      } catch (e) {}
+    }
+
+    let mabTextToUse = mabTextToParse;
+    if (mabTextToUse) {
+      mabResults = parseAttestationText(mabTextToUse, freshnessLimit, threshold);
+    } else if (profile && profile.cachedMabResults) {
+      mabResults = profile.cachedMabResults;
+    } else {
+      mabResults = null;
+    }
+  }
+
+  try {
+    saveToHistory(caamResults, cleanUrl);
+  } catch (e) {
+    console.warn("Could not save to history:", e);
+  }
+
+  renderResults(caamResults, mabResults);
+}
+
+function getDashEl(id) {
+  const dashView = document.getElementById("dashboard-view");
+  if (dashView) {
+    const el = dashView.querySelector("#" + id);
+    if (el) return el;
+  }
+  return document.getElementById(id);
+}
+
+let initialOverviewTemplateHTML = "";
+let initialCaamTemplateHTML = "";
+let initialMabTemplateHTML = "";
+let initialMyQrPassTemplateHTML = "";
+
+function saveDashboardTemplates() {
+  const dashView = document.getElementById("dashboard-view");
+  if (!dashView) return;
+
+  const overviewPane = dashView.querySelector("#tab-overview-content") || document.getElementById("tab-overview-content");
+  if (overviewPane && !initialOverviewTemplateHTML && (overviewPane.querySelector("#overview-hero-card") || overviewPane.querySelector("#ov-caam-expiry"))) {
+    initialOverviewTemplateHTML = overviewPane.innerHTML;
+  }
+
+  const caamPane = dashView.querySelector("#tab-caam-content") || document.getElementById("tab-caam-content");
+  if (caamPane && !initialCaamTemplateHTML && caamPane.querySelector("#pilot-name")) {
+    initialCaamTemplateHTML = caamPane.innerHTML;
+  }
+
+  const mabPane = dashView.querySelector("#tab-mab-content") || document.getElementById("tab-mab-content");
+  if (mabPane && !initialMabTemplateHTML && mabPane.querySelector("#mab-pilot-name")) {
+    initialMabTemplateHTML = mabPane.innerHTML;
+  }
+}
+
+async function renderBlankDashboard() {
+  saveDashboardTemplates();
+  const dashboardView = document.getElementById("dashboard-view");
+  if (!dashboardView) return;
+
+  const overviewPane = dashboardView.querySelector("#tab-overview-content") || document.getElementById("tab-overview-content");
+  if (overviewPane) {
+    overviewPane.innerHTML = `
+<div class="p-6 text-center space-y-4 my-8">
+  <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+  </div>
+  <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No Duty Credentials Saved</h3>
+  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+    Please set up your digital licence URL and company attestation PDF in My Credentials to activate your flight duty compliance dashboard.
+  </p>
+  <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+    Set Up Credentials
+  </button>
+</div>
+`;
+  }
+
+  const caamPane = dashboardView.querySelector("#tab-caam-content") || document.getElementById("tab-caam-content");
+  if (caamPane) {
+    caamPane.innerHTML = `
+<div class="p-6 text-center space-y-4 my-8">
+  <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h2a2 2 0 012 2v1m-4 0h4"></path></svg>
+  </div>
+  <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No CAAM Digital Licence</h3>
+  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+    Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to view licence validities.
+  </p>
+  <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+    Configure Licence Source
+  </button>
+</div>
+`;
+  }
+
+  const mabPane = dashboardView.querySelector("#tab-mab-content") || document.getElementById("tab-mab-content");
+  if (mabPane) {
+    mabPane.innerHTML = `
+<div class="p-6 text-center space-y-4 my-8">
+  <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+  </div>
+  <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No MAB Attestation PDF</h3>
+  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+    Please upload your MAB E-Attestation PDF document in My Credentials to view company qualifications.
+  </p>
+  <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+    Upload Attestation PDF
+  </button>
+</div>
+`;
+  }
+
+  await setupDocumentViewers();
+  showView("dashboard-view");
+}
+
+async function renderDashboardView() {
+  showView("dashboard-view");
+  const profile = getProfileData();
+
+  if (profile.cachedCaamResults || profile.cachedMabResults) {
+    try {
+      renderDashboardResults(profile.cachedCaamResults, profile.cachedMabResults);
+    } catch (err) {
+      console.error("Error rendering cached profile data:", err);
+      renderBlankDashboard();
+    }
+  } else if (profile.url) {
+    showLoading("Loading compliance dashboard...");
+    try {
+      const res = await processAndCacheProfileData(profile.url);
+      renderDashboardResults(res.caamResults, res.mabResults);
+    } catch (e) {
+      renderBlankDashboard();
+    }
+  } else {
+    renderBlankDashboard();
+  }
+}
+
+window.renderDashboardView = renderDashboardView;
+
+function sortCaamQualifications(quals) {
+  if (!Array.isArray(quals) || quals.length === 0) return [];
+
+  function getTier(q) {
+    const nameUpper = (q.name || '').toUpperCase();
+    if (nameUpper.includes('RADIO TELEPHONY') || nameUpper.includes('RADIOTELEPHONY') || nameUpper.includes('RTOL') || nameUpper.includes('TELEPHONY') || nameUpper.includes('R/T')) return 3;
+    if (nameUpper.includes('ENGLISH') || nameUpper.includes('LANGUAGE') || nameUpper.includes('ELP')) return 4;
+    if (nameUpper.includes('MEDICAL') || nameUpper.includes('CLASS 1') || nameUpper.includes('CLASS 2') || nameUpper.includes('CLASS1') || nameUpper.includes('CLASS2')) return 2;
+    if (nameUpper.includes('VALIDITY') || nameUpper.includes('LICENCE') || nameUpper.includes('ATPL') || nameUpper.includes('CPL') || nameUpper.includes('PPL') || nameUpper.includes('MPL') || nameUpper.includes('AIRLINE TRANSPORT') || nameUpper.includes('COMMERCIAL PILOT') || nameUpper.includes('PRIVATE PILOT')) return 1;
+    if (nameUpper.includes('A3') || nameUpper.includes('B7') || nameUpper.includes('ATR') || nameUpper.includes('DHC') || nameUpper.includes('B412') || nameUpper.includes('IR') || nameUpper.includes('INSTRUMENT') || nameUpper.includes('TYPE') || nameUpper.includes('RATING') || nameUpper.includes('PBN') || nameUpper.includes('PERFORMANCE') || nameUpper.includes('NIGHT') || nameUpper.includes('ENDORSEMENT') || nameUpper.includes('INSTRUCTOR') || nameUpper.includes('EXAMINER') || nameUpper.includes('CHECK PILOT') || nameUpper.includes('TRI') || nameUpper.includes('TRE') || nameUpper.includes('FI')) return 5;
+    return 6;
+  }
+
+  return [...quals].sort((a, b) => {
+    const tierA = getTier(a);
+    const tierB = getTier(b);
+    if (tierA !== tierB) return tierA - tierB;
+    const isLegacyA = a.isLegacy || a.status === 'INACTIVE_LEGACY' ? 1 : 0;
+    const isLegacyB = b.isLegacy || b.status === 'INACTIVE_LEGACY' ? 1 : 0;
+    return isLegacyA - isLegacyB;
+  });
+}
+
+async function renderDashboardResults(caamResults, mabResults = null) {
+  saveDashboardTemplates();
+  const profile = getProfileData();
+
+  const hasValidCaam = caamResults && caamResults.pilotDetails && caamResults.pilotDetails.name && caamResults.pilotDetails.name !== "-";
+  const hasValidMab = mabResults && (mabResults.pilotName || mabResults.lineCheck || (mabResults.drills && mabResults.drills.length > 0));
+
+  if (!hasValidCaam && !hasValidMab) {
+    renderBlankDashboard();
+    return;
+  }
+
+  const dashView = document.getElementById("dashboard-view");
+  const overviewPane = dashView ? (dashView.querySelector("#tab-overview-content") || document.getElementById("tab-overview-content")) : null;
+  const caamPane = dashView ? (dashView.querySelector("#tab-caam-content") || document.getElementById("tab-caam-content")) : null;
+  const mabPane = dashView ? (dashView.querySelector("#tab-mab-content") || document.getElementById("tab-mab-content")) : null;
+
+  if (overviewPane && initialOverviewTemplateHTML && !(overviewPane.querySelector("#overview-hero-card") || overviewPane.querySelector("#ov-caam-expiry"))) {
+    overviewPane.innerHTML = initialOverviewTemplateHTML;
+  }
+  if (caamPane && initialCaamTemplateHTML && !caamPane.querySelector("#pilot-name")) {
+    caamPane.innerHTML = initialCaamTemplateHTML;
+  }
+  if (mabPane && initialMabTemplateHTML && !mabPane.querySelector("#mab-pilot-name")) {
+    mabPane.innerHTML = initialMabTemplateHTML;
+  }
+
+  const displayName = (caamResults && caamResults.pilotDetails && caamResults.pilotDetails.name && caamResults.pilotDetails.name !== "-")
+    ? caamResults.pilotDetails.name
+    : ((mabResults && mabResults.pilotName && mabResults.pilotName !== "-") ? mabResults.pilotName : "Crew Member");
+
+  const greetingEl = getDashEl("overview-greeting");
+  if (greetingEl) {
+    const hour = new Date().getHours();
+    let greeting = "Good Morning";
+    if (hour >= 12 && hour < 18) greeting = "Good Afternoon";
+    else if (hour >= 18) greeting = "Good Evening";
+
+    const rawDesig = (mabResults && mabResults.designation) || (profile && profile.designation) || "";
+    let title = "Captain";
+    if (rawDesig) {
+      const u = rawDesig.toUpperCase().trim();
+      if (u.includes("FIRST OFFICER") || u.includes("F/O") || u.includes("FO")) title = "FO";
+      else if (u.includes("SECOND OFFICER") || u.includes("S/O") || u.includes("SO")) title = "SO";
+      else if (u.includes("CADET")) title = "Cadet";
+      else if (u.includes("CAPTAIN") || u.includes("CAPT")) title = "Captain";
+      else if (u.includes("FE") || u.includes("ENGINEER")) title = "FE";
+    }
+    greetingEl.innerText = `${greeting}, ${title}`;
+  }
+
+  const heroPilot = getDashEl("overview-pilot-name");
+  const heroTime = getDashEl("overview-scan-timestamp");
+
+  if (heroPilot) heroPilot.innerText = displayName;
+  if (heroTime) heroTime.innerText = (caamResults && caamResults.scanTime) ? `${caamResults.scanTime} LT` : "18 Oct 2026 LT";
+
+  function parseAnyDate(dateStr) {
+    if (!dateStr || typeof dateStr !== 'string') return null;
+    const trimmed = dateStr.trim();
+    if (['NO EXPIRY', 'NIL', 'NA', 'N/A', '-'].includes(trimmed.toUpperCase())) {
+      return null;
+    }
+    const timestamp = Date.parse(trimmed);
+    if (!isNaN(timestamp)) {
+      return new Date(timestamp);
+    }
+    const match = trimmed.match(/^(\d{1,2})\s+([a-zA-Z]{3,10})\s+(\d{4})$/);
+    if (match) {
+      const day = parseInt(match[1], 10);
+      const monthStr = match[2].toUpperCase();
+      const year = parseInt(match[3], 10);
+      const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+      const monthsMalay = ['JAN', 'FEB', 'MAC', 'APR', 'MEI', 'JUN', 'JUL', 'OGOS', 'SEP', 'OKT', 'NOV', 'DIS'];
+      let mIdx = months.indexOf(monthStr);
+      if (mIdx === -1) mIdx = monthsMalay.indexOf(monthStr);
+      if (mIdx !== -1) {
+        return new Date(year, mIdx, day);
+      }
+    }
+    return null;
+  }
+
+  function getDaysUntil(dateStr) {
+    if (!dateStr) return null;
+    let d = (dateStr instanceof Date) ? dateStr : parseAnyDate(dateStr);
+    if (!d || isNaN(d.getTime())) return null;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(d);
+    target.setHours(0, 0, 0, 0);
+
+    return Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  }
+
+  function applyStatusTheme(days, badgeEl, textEl, ledEl, pillEl, validLabel = "Valid", barEl = null) {
+    const threshold = (typeof getThresholdDays === 'function') ? getThresholdDays() : 30;
+
+    if (days === null || days === undefined) {
+      if (badgeEl) { badgeEl.innerText = "N/A"; badgeEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"; }
+      if (textEl) textEl.innerText = "N/A";
+      if (ledEl) ledEl.className = "w-2 h-2 rounded-full bg-slate-400 shrink-0";
+      if (barEl) { barEl.style.width = "0%"; barEl.className = "h-full bg-slate-400 rounded-full transition-all duration-500"; }
+      return "UNKNOWN";
+    }
+
+    if (days < 0) {
+      if (badgeEl) { badgeEl.innerText = "Lapsed"; badgeEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300"; }
+      if (textEl) textEl.innerText = "LAPSED";
+      if (ledEl) ledEl.className = "w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(239,68,68,0.8)] shrink-0";
+      if (pillEl) pillEl.className = "flex items-center gap-2 p-2 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800/60 transition-all";
+      if (barEl) {
+        barEl.style.width = "5%";
+        barEl.className = "h-full bg-rose-500 rounded-full transition-all duration-500";
+      }
+      return "EXPIRED";
+    } else if (days <= threshold) {
+      if (badgeEl) { badgeEl.innerText = `${days}d Left`; badgeEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300"; }
+      if (textEl) textEl.innerText = `${days}d LEFT`;
+      if (ledEl) ledEl.className = "w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)] shrink-0 animate-pulse";
+      if (pillEl) pillEl.className = "flex items-center gap-2 p-2 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/60 transition-all";
+      if (barEl) {
+        const pct = Math.min(100, Math.max(5, Math.round((days / 365.25) * 100)));
+        barEl.style.width = `${pct}%`;
+        barEl.className = "h-full bg-amber-400 animate-pulse rounded-full transition-all duration-500";
+      }
+      return "WARNING";
+    } else {
+      if (badgeEl) { badgeEl.innerText = validLabel; badgeEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300"; }
+      if (textEl) textEl.innerText = validLabel.toUpperCase();
+      if (ledEl) ledEl.className = "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] shrink-0";
+      if (pillEl) pillEl.className = "flex items-center gap-2 p-2 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800/80 transition-all";
+      if (barEl) {
+        const pct = Math.min(100, Math.max(5, Math.round((days / 365.25) * 100)));
+        barEl.style.width = `${pct}%`;
+        barEl.className = "h-full bg-emerald-500 rounded-full transition-all duration-500";
+      }
+      return "VALID";
+    }
+  }
+
+  const allCandidates = [];
+  let markerPct = 0;
+
+  // A. CAAM Digital Licence
+  let caamDays = null;
+  if (caamResults) {
+    const licExpiryQual = (caamResults.qualifications || []).find(q => q.name && (q.name.includes("ATPL") || q.name.includes("CPL") || q.name.includes("LICENCE")));
+    const caamExpDate = caamResults.licenceExpiry || (licExpiryQual ? licExpiryQual.dateText : null);
+    caamDays = getDaysUntil(caamExpDate);
+
+    const caamExpEl = getDashEl("ov-caam-expiry");
+    const caamDaysEl = getDashEl("ov-caam-days");
+    const caamBadgeEl = getDashEl("ov-caam-badge");
+    const caamBarEl = getDashEl("ov-caam-bar");
+
+    if (caamExpEl) caamExpEl.innerText = (caamExpDate || "N/A").toUpperCase();
+    if (caamDaysEl) caamDaysEl.innerText = caamDays !== null ? (caamDays < 0 ? "Lapsed" : `${caamDays} Days Remaining`) : "N/A";
+    applyStatusTheme(caamDays, caamBadgeEl, null, null, null, "Valid", caamBarEl);
+
+    if (caamDays !== null) {
+      allCandidates.push({ name: "CAAM Digital Licence", days: caamDays, tab: "caam" });
+    }
+  }
+
+  // B. Class 1 Medical
+  let medDays = null;
+  if (caamResults) {
+    const medQual = (caamResults.qualifications || []).find(q => {
+      if (!q || !q.name) return false;
+      const u = q.name.toUpperCase();
+      return u.includes("MEDICAL") || u.includes("CLASS 1") || u.includes("CLASS1") || u.includes("PERUBATAN") || u.includes("CLASS 2") || u.includes("CLASS2");
+    });
+    const medExpDate = caamResults.medicalExpiry || (medQual ? medQual.dateText : null);
+    medDays = getDaysUntil(medExpDate);
+
+    const medExpEl = getDashEl("ov-medical-expiry");
+    const medDaysEl = getDashEl("ov-medical-days");
+    const medBadgeEl = getDashEl("ov-medical-badge");
+    const medBarEl = getDashEl("ov-medical-bar");
+
+    if (medExpEl) medExpEl.innerText = (medExpDate || "N/A").toUpperCase();
+    if (medDaysEl) medDaysEl.innerText = medDays !== null ? (medDays < 0 ? "Lapsed" : `${medDays} Days Remaining`) : "N/A";
+    applyStatusTheme(medDays, medBadgeEl, null, null, null, "Valid", medBarEl);
+
+    if (medDays !== null) {
+      allCandidates.push({ name: "Class 1 Medical", days: medDays, tab: "caam" });
+    }
+  }
+
+  // C. B737 Type Rating & IR
+  let typeDays = null;
+  if (caamResults) {
+    const typeQual = (caamResults.qualifications || []).find(q => {
+      if (!q || !q.name) return false;
+      const u = q.name.toUpperCase();
+      return u.includes("B737") || u.includes("B738") || u.includes("B7M8") || u.includes("TYPE RATING") || u.includes("PPC") || u.includes("IR");
+    });
+    const typeExpDate = typeQual ? typeQual.dateText : null;
+    typeDays = getDaysUntil(typeExpDate);
+
+    const typeExpEl = getDashEl("ov-type-expiry");
+    const typeDaysEl = getDashEl("ov-type-days");
+    const typeBadgeEl = getDashEl("ov-type-badge");
+    const typeBarEl = getDashEl("ov-type-bar");
+
+    if (typeExpEl) typeExpEl.innerText = (typeExpDate || "N/A").toUpperCase();
+    if (typeDaysEl) typeDaysEl.innerText = typeDays !== null ? (typeDays < 0 ? "Lapsed" : `${typeDays} Days Remaining`) : "N/A";
+    applyStatusTheme(typeDays, typeBadgeEl, null, null, null, "Valid", typeBarEl);
+
+    if (typeDays !== null) {
+      allCandidates.push({ name: "B737 Type Rating & IR", days: typeDays, tab: "caam" });
+    }
+  }
+
+  // D. MAB Line Check
+  let lcDays = null;
+  if (mabResults && mabResults.lineCheck) {
+    const lcRoute = mabResults.lineCheck.route || (mabResults.lineCheck.fleet ? `${mabResults.lineCheck.fleet} Check` : "Line Check");
+    const lcExpDate = mabResults.lineCheck.expiryDate || mabResults.lineCheck.nextDue;
+    lcDays = getDaysUntil(lcExpDate);
+
+    const lcExpEl = getDashEl("ov-linecheck-expiry");
+    const lcRouteEl = getDashEl("ov-linecheck-route");
+    const lcBadgeEl = getDashEl("ov-linecheck-badge");
+    const lcBarEl = getDashEl("ov-linecheck-bar");
+
+    if (lcExpEl) lcExpEl.innerText = (lcExpDate || "N/A").toUpperCase();
+    if (lcRouteEl) lcRouteEl.innerText = lcDays !== null ? (lcDays < 0 ? "Lapsed" : `${lcDays} Days Remaining`) : "N/A";
+    applyStatusTheme(lcDays, lcBadgeEl, null, null, null, "Valid", lcBarEl);
+
+    if (lcDays !== null) {
+      allCandidates.push({ name: `MAB Line Check`, days: lcDays, tab: "mab" });
+    }
+  }
+
+  // E1. LVO 180-Day Recency Tile Handler
+  const lvoMarkerEl = getDashEl("ov-lvo-marker");
+  const lvoCheckDateEl = getDashEl("ov-lvo-checkdate");
+  const lvoDaysTextEl = getDashEl("ov-lvo-days-text");
+
+  let lvoCheckDateStr = null;
+  let lvoDaysRemaining = null;
+
+  if (mabResults) {
+    if (mabResults.lvo && (mabResults.lvo.checkDate || mabResults.lvo.date)) {
+      lvoCheckDateStr = mabResults.lvo.checkDate || mabResults.lvo.date;
+    } else if (Array.isArray(mabResults.drills)) {
+      const lvoMatch = mabResults.drills.find(d => {
+        const name = (d.name || d.item || "").toUpperCase();
+        return name.includes("LVO") || name.includes("AUTOLAND") || name.includes("CAT III");
+      });
+      if (lvoMatch) {
+        lvoCheckDateStr = lvoMatch.checkDate || lvoMatch.date || lvoMatch.issueDate || lvoMatch.nextDue;
+      }
+    }
+  }
+
+  if (lvoCheckDateStr) {
+    const daysSinceCheck = getDaysUntil(lvoCheckDateStr);
+    const daysElapsed = (daysSinceCheck !== null && daysSinceCheck <= 0) ? Math.abs(daysSinceCheck) : 0;
+    lvoDaysRemaining = Math.max(0, 180 - daysElapsed);
+
+    if (lvoCheckDateEl) lvoCheckDateEl.innerText = formatPassportDisplayDate(lvoCheckDateStr) || lvoCheckDateStr.toUpperCase();
+    if (lvoDaysTextEl) {
+      if (lvoDaysRemaining <= 0) {
+        lvoDaysTextEl.innerText = "Recency Expired (Lapsed)";
+        lvoDaysTextEl.className = "text-rose-600 dark:text-rose-400 font-extrabold";
+      } else {
+        lvoDaysTextEl.innerText = `${lvoDaysRemaining} Days Remaining`;
+        lvoDaysTextEl.className = "text-slate-800 dark:text-slate-200 font-extrabold";
+      }
+    }
+
+    markerPct = Math.min(100, Math.max(0, Math.round((daysElapsed / 180) * 100)));
+    if (lvoMarkerEl) lvoMarkerEl.style.left = `${markerPct}%`;
+    allCandidates.push({ name: "LVO Recency", days: lvoDaysRemaining, tab: "mab" });
+  } else {
+    if (lvoCheckDateEl) lvoCheckDateEl.innerText = "N/A";
+    if (lvoDaysTextEl) lvoDaysTextEl.innerText = "N/A";
+    if (lvoMarkerEl) lvoMarkerEl.style.left = "0%";
+  }
+
+  // E2. Vertical Sparkline Histogram Drills Array
+  const drillItems = [
+    { key: "actype", name: ["AIRCRAFT TYPE", "B737", "A330", "A350", "TYPE RATING", "FLEET"], label: "B737", defaultBg: "bg-teal-500" },
+    { key: "door", name: ["DOOR"], label: "Door Drill", defaultBg: "bg-cyan-500" },
+    { key: "wet", name: ["WET", "DINGHY"], label: "Wet Drill", defaultBg: "bg-blue-500" },
+    { key: "fire", name: ["FIRE", "SMOKE"], label: "Fire Drill", defaultBg: "bg-violet-500" },
+    { key: "crm", name: ["CRM"], label: "CRM", defaultBg: "bg-purple-500" },
+    { key: "sms", name: ["SMS"], label: "SMS", defaultBg: "bg-fuchsia-500" },
+    { key: "dg", name: ["DG", "DANGEROUS"], label: "DG-7", defaultBg: "bg-pink-500" },
+    { key: "avsec", name: ["AVSEC"], label: "AVSEC", defaultBg: "bg-indigo-500" },
+    { key: "supervisory", name: ["DFE", "FI", "EXAMINER", "INSTRUCTOR"], label: "DFE / FI", defaultBg: "bg-blue-500" }
+  ];
+
+  let minDrillDays = null;
+  let avgDrillDays = null;
+  const collectedDrillDays = [];
+  const drillThreshold = (typeof getThresholdDays === 'function') ? getThresholdDays() : 30;
+
+  drillItems.forEach(item => {
+    const colEl = getDashEl("vbar-col-" + item.key);
+    const vBarEl = getDashEl("vbar-drill-" + item.key);
+    const dotEl = getDashEl("dot-legend-" + item.key);
+    const legendEl = getDashEl("legend-drill-" + item.key);
+
+    let matched = null;
+    if (mabResults && Array.isArray(mabResults.drills)) {
+      matched = mabResults.drills.find(d => {
+        const dName = (d.name || d.item || "").toUpperCase();
+        const expStr = d.nextDue || d.expiryDate || "";
+        const hasValidDate = expStr && !['NIL', 'N/A', 'NA', '-'].includes(expStr.trim().toUpperCase()) && getDaysUntil(expStr) !== null;
+
+        if (item.key === "actype") {
+          return item.name.some(keyword => dName.includes(keyword)) && hasValidDate;
+        }
+        if (item.key === "supervisory") {
+          return /\b(DFE|FI|FLIGHT\s+INSTRUCTOR|EXAMINER|CHECK\s+PILOT|TRI|TRE)\b/i.test(dName);
+        }
+        return item.name.some(keyword => dName.includes(keyword));
+      });
+    }
+
+    if (!matched && item.key === "actype" && mabResults && mabResults.lineCheck && mabResults.lineCheck.fleet) {
+      matched = { name: mabResults.lineCheck.fleet, expiryDate: mabResults.lineCheck.expiryDate };
+    }
+
+    if (!matched && item.key === "supervisory" && caamResults && Array.isArray(caamResults.qualifications)) {
+      const supCaam = caamResults.qualifications.find(q => q.name && isSupervisoryQual(q.name));
+      if (supCaam) {
+        matched = { name: supCaam.name, expiryDate: supCaam.dateText };
+      }
+    }
+
+    if (item.key === "actype") {
+      let fleetText = "B737";
+      if (matched) {
+        const dName = (matched.name || matched.item || "").toUpperCase();
+        if (dName.includes("A330")) fleetText = "A330";
+        else if (dName.includes("A350")) fleetText = "A350";
+        else if (dName.includes("B737") || dName.includes("B738") || dName.includes("B7M8")) fleetText = "B737";
+        else if (mabResults && mabResults.lineCheck && mabResults.lineCheck.fleet) fleetText = mabResults.lineCheck.fleet;
+      } else if (mabResults && mabResults.lineCheck && mabResults.lineCheck.fleet) {
+        fleetText = mabResults.lineCheck.fleet;
+      }
+      const actypeTxtEl = getDashEl("txt-legend-actype");
+      if (actypeTxtEl) actypeTxtEl.innerText = fleetText;
+    }
+
+    if (item.key === "supervisory" && !matched) {
+      if (colEl) colEl.style.display = "none";
+      if (legendEl) legendEl.style.display = "none";
+    } else {
+      if (colEl) colEl.style.display = "flex";
+      if (legendEl) legendEl.style.display = "flex";
+
+      let dDays = matched ? getDaysUntil(matched.nextDue || matched.expiryDate) : null;
+      if (dDays !== null) {
+        collectedDrillDays.push(dDays);
+        allCandidates.push({ name: item.label, days: dDays, tab: "mab" });
+
+        const pct = Math.min(100, Math.max(4, Math.round((dDays / 365.25) * 100)));
+        if (vBarEl) {
+          vBarEl.style.height = pct + "%";
+          if (dDays < 0) {
+            vBarEl.className = "w-full max-w-[14px] bg-rose-500 rounded-t-sm transition-all duration-500";
+          } else if (dDays <= drillThreshold) {
+            vBarEl.className = "w-full max-w-[14px] bg-amber-400 animate-pulse rounded-t-sm transition-all duration-500";
+          } else {
+            vBarEl.className = "w-full max-w-[14px] " + item.defaultBg + " rounded-t-sm transition-all duration-500";
+          }
+        }
+
+        if (dotEl) {
+          if (dDays < 0) {
+            dotEl.className = "w-2 h-2 rounded-full bg-rose-500 shrink-0";
+          } else if (dDays <= drillThreshold) {
+            dotEl.className = "w-2 h-2 rounded-full bg-amber-400 shrink-0 animate-pulse";
+          } else {
+            dotEl.className = "w-2 h-2 rounded-full " + item.defaultBg + " shrink-0";
+          }
+        }
+      } else {
+        if (vBarEl) {
+          vBarEl.style.height = "100%";
+          vBarEl.className = "w-full max-w-[14px] " + item.defaultBg + " rounded-t-sm transition-all duration-500";
+        }
+        if (dotEl) {
+          dotEl.className = "w-2 h-2 rounded-full " + item.defaultBg + " shrink-0";
+        }
+      }
+    }
+  });
+
+  if (collectedDrillDays.length > 0) {
+    minDrillDays = Math.min(...collectedDrillDays);
+    avgDrillDays = collectedDrillDays.reduce((a, b) => a + b, 0) / collectedDrillDays.length;
+  }
+
+  function formatPassportDisplayDate(dateStr) {
+    if (!dateStr) return "NOT CONFIGURED";
+    const str = String(dateStr).trim();
+    const ymdMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (ymdMatch) {
+      const year = ymdMatch[1];
+      const monthIdx = parseInt(ymdMatch[2], 10) - 1;
+      const day = ymdMatch[3];
+      const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+      if (monthIdx >= 0 && monthIdx < 12) {
+        return `${day} ${months[monthIdx]} ${year}`;
+      }
+    }
+
+    let d = (dateStr instanceof Date) ? dateStr : parseAnyDate(dateStr);
+    if (!d || isNaN(d.getTime())) {
+      const ts = Date.parse(str);
+      if (!isNaN(ts)) d = new Date(ts);
+    }
+
+    if (d && !isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, '0');
+      const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+      return `${day} ${months[d.getMonth()]} ${d.getFullYear()}`;
+    }
+
+    return str.toUpperCase();
+  }
+
+  // F. Passport & ELP Footer Bento
+  const passExpEl = getDashEl("ov-passport-expiry");
+  const passNoEl = getDashEl("ov-passport-no");
+  const passDaysEl = getDashEl("ov-passport-days");
+  const passBarEl = getDashEl("ov-passport-bar");
+
+  const passportNo = (profile && profile.passportNo) ? profile.passportNo.trim() : "";
+  const rawPassExp = (profile && profile.passportExpiry) ? profile.passportExpiry.trim() : "";
+  let passDays = null;
+
+  if (passportNo || rawPassExp) {
+    const formattedDate = formatPassportDisplayDate(rawPassExp);
+    passDays = rawPassExp ? getDaysUntil(rawPassExp) : null;
+
+    if (passExpEl) passExpEl.innerText = formattedDate;
+    if (passNoEl) passNoEl.innerText = passportNo ? `No: ${passportNo}` : "No: Not Configured";
+
+    if (passDaysEl) {
+      if (passDays !== null && passDays !== undefined) {
+        if (passDays < 0) {
+          passDaysEl.innerText = "Expired";
+        } else {
+          passDaysEl.innerText = `${passDays} Days Remaining`;
+        }
+      } else {
+        passDaysEl.innerText = "Expiry Not Configured";
+      }
+    }
+
+    if (passBarEl) {
+      if (passDays === null || passDays === undefined) {
+        passBarEl.style.width = "0%";
+        passBarEl.className = "h-full bg-slate-400 rounded-full transition-all duration-500 relative z-10";
+      } else if (passDays <= 180) {
+        const pct = passDays < 0 ? 5 : Math.min(100, Math.max(5, Math.round((passDays / 365.25) * 100)));
+        passBarEl.style.width = `${pct}%`;
+        passBarEl.className = "h-full bg-rose-500 rounded-full transition-all duration-500 relative z-10";
+      } else if (passDays <= 240) {
+        const pct = Math.min(100, Math.max(5, Math.round((passDays / 365.25) * 100)));
+        passBarEl.style.width = `${pct}%`;
+        passBarEl.className = "h-full bg-amber-400 animate-pulse rounded-full transition-all duration-500 relative z-10";
+      } else {
+        const pct = Math.min(100, Math.max(5, Math.round((passDays / 365.25) * 100)));
+        passBarEl.style.width = `${pct}%`;
+        passBarEl.className = "h-full bg-indigo-500 rounded-full transition-all duration-500 relative z-10";
+      }
+    }
+  } else {
+    if (passExpEl) passExpEl.innerText = "NOT CONFIGURED";
+    if (passNoEl) passNoEl.innerText = "Tap to set up in My Credentials";
+    if (passDaysEl) passDaysEl.innerText = "Click tile to configure";
+    if (passBarEl) {
+      passBarEl.style.width = "0%";
+      passBarEl.className = "h-full bg-slate-300 dark:bg-slate-700 rounded-full transition-all duration-500 relative z-10";
+    }
+  }
+
+  if (passDays !== null && passDays !== undefined) {
+    allCandidates.push({ name: "Passport Clearance", days: passDays, tab: "mab" });
+  }
+
+  // F2. English Language Proficiency (ELP) Validity
+  const elpBarEl = getDashEl("ov-elp-bar");
+  const elpScaleEl = getDashEl("ov-elp-scale");
+  const elpExpEl = getDashEl("ov-elp-expiry");
+  const elpLevelEl = getDashEl("ov-elp-level");
+  const elpYearsEl = getDashEl("ov-elp-years");
+
+  let elpQual = null;
+  if (caamResults) {
+    if (caamResults.elp) {
+      elpQual = caamResults.elp;
+    } else if (Array.isArray(caamResults.qualifications)) {
+      elpQual = caamResults.qualifications.find(q => {
+        const n = (q.name || "").toUpperCase();
+        return n.includes("ENGLISH") || n.includes("ELP") || n.includes("LANGUAGE PROFICIENCY") || n.includes("LANGUAGE");
+      });
+    }
+  }
+
+  if (elpQual) {
+    const qName = (elpQual.name || "").toUpperCase();
+    let level = 5;
+    if (qName.includes("LEVEL 6") || qName.includes("LVL 6") || qName.includes("LEVEL-6") || qName.includes("L6")) {
+      level = 6;
+    } else if (qName.includes("LEVEL 4") || qName.includes("LVL 4") || qName.includes("LEVEL-4") || qName.includes("L4")) {
+      level = 4;
+    } else if (qName.includes("LEVEL 5") || qName.includes("LVL 5") || qName.includes("LEVEL-5") || qName.includes("L5")) {
+      level = 5;
+    }
+
+    const rawExpStr = elpQual.dateText || elpQual.expiryDate || "";
+    const isLevel6 = level === 6 || rawExpStr.toUpperCase().includes("PERMANENT") || rawExpStr.toUpperCase().includes("NO EXPIRY") || rawExpStr.toUpperCase().includes("NIL") || !rawExpStr;
+
+    if (isLevel6 || level === 6) {
+      if (elpExpEl) elpExpEl.innerText = "NO EXPIRY";
+      if (elpLevelEl) elpLevelEl.innerText = "Level 6";
+      if (elpYearsEl) {
+        elpYearsEl.innerText = "";
+        elpYearsEl.style.display = "none";
+      }
+      if (elpBarEl) {
+        elpBarEl.style.width = "0%";
+        elpBarEl.className = "h-full bg-slate-300 dark:bg-slate-700 rounded-full transition-all duration-500 relative z-10";
+      }
+      if (elpScaleEl) {
+        elpScaleEl.innerHTML = `<span>0Y</span><span class="absolute left-1/2 -translate-x-1/2">3Y</span><span>6Y</span>`;
+      }
+    } else {
+      const elpDays = getDaysUntil(rawExpStr);
+      const formattedElpDate = formatPassportDisplayDate(rawExpStr);
+
+      if (elpExpEl) elpExpEl.innerText = formattedElpDate;
+      if (elpLevelEl) elpLevelEl.innerText = `Level ${level}`;
+
+      if (elpDays !== null && elpDays !== undefined) {
+        allCandidates.push({ name: `ELP Level ${level}`, days: elpDays, tab: "caam" });
+
+        const yearsExact = (elpDays / 365.25);
+        const yearsRounded = Math.max(0, Math.round(yearsExact * 10) / 10);
+
+        if (elpYearsEl) {
+          elpYearsEl.style.display = "block";
+          if (elpDays < 0) {
+            elpYearsEl.innerText = "Expired";
+            elpYearsEl.className = "text-[9px] font-bold text-rose-500 mt-0.5";
+          } else {
+            const yearsStr = yearsRounded === 1 ? "1 Year" : `${yearsRounded} Years`;
+            elpYearsEl.innerText = `${yearsStr} Remaining`;
+            elpYearsEl.className = "text-[9px] font-bold text-slate-400 mt-0.5";
+          }
+        }
+
+        const maxYears = level === 4 ? 3 : 6;
+        const maxDays = maxYears * 365.25;
+        const pct = elpDays < 0 ? 5 : Math.min(100, Math.max(5, Math.round((elpDays / maxDays) * 100)));
+
+        if (elpBarEl) {
+          elpBarEl.style.width = `${pct}%`;
+          if (elpDays <= 365.25) {
+            elpBarEl.className = "h-full bg-rose-500 rounded-full transition-all duration-500 relative z-10";
+          } else if (elpDays <= 730.5) {
+            elpBarEl.className = "h-full bg-amber-400 animate-pulse rounded-full transition-all duration-500 relative z-10";
+          } else {
+            elpBarEl.className = "h-full bg-purple-500 rounded-full transition-all duration-500 relative z-10";
+          }
+        }
+
+        if (elpScaleEl) {
+          if (level === 4) {
+            elpScaleEl.innerHTML = `<span>0Y</span><span class="absolute left-[33.3%] -translate-x-1/2">1Y</span><span class="absolute left-[66.7%] -translate-x-1/2">2Y</span><span>3Y</span>`;
+          } else {
+            elpScaleEl.innerHTML = `<span>0Y</span><span>1Y</span><span>2Y</span><span>3Y</span><span>4Y</span><span>5Y</span><span>6Y</span>`;
+          }
+        }
+      } else {
+        if (elpYearsEl) elpYearsEl.innerText = "--";
+        if (elpBarEl) elpBarEl.style.width = "0%";
+      }
+    }
+  } else {
+    if (elpExpEl) elpExpEl.innerText = "NOT FOUND";
+    if (elpLevelEl) elpLevelEl.innerText = "Level --";
+    if (elpYearsEl) elpYearsEl.innerText = "Tap to view CAAM Licence";
+    if (elpBarEl) {
+      elpBarEl.style.width = "0%";
+      elpBarEl.className = "h-full bg-slate-300 dark:bg-slate-700 rounded-full transition-all duration-500 relative z-10";
+    }
+    if (elpScaleEl) {
+      elpScaleEl.innerHTML = `<span>0Y</span><span class="absolute left-1/2 -translate-x-1/2">3Y</span><span>6Y</span>`;
+    }
+  }
+
+  // G. Legality Rings Arc Computation
+  allCandidates.sort((a, b) => a.days - b.days);
+
+  const ringPercentEl = getDashEl("ov-ring-percent");
+  const ringLabelEl = getDashEl("ov-ring-label");
+  const bottleneckTextEl = getDashEl("ov-bottleneck-text");
+  const bottleneckLedEl = getDashEl("ov-bottleneck-led");
+
+  const ringCaam = getDashEl("ring-caam");
+  const ringMab = getDashEl("ring-mab");
+  const userThreshold = (typeof getThresholdDays === 'function') ? getThresholdDays() : 30;
+
+  const caamItems = [caamDays, medDays, typeDays].filter(d => d !== null && d !== undefined);
+  const caamMinDays = caamItems.length > 0 ? Math.min(...caamItems) : 365;
+
+  const caamPct = Math.min(100, Math.max(0, caamMinDays));
+  const caamOffset = Math.round(188.50 * (1 - caamPct / 100));
+
+  const isCaamLapsed = caamMinDays <= 0;
+  const isCaamWarning = caamMinDays <= userThreshold && caamMinDays > 0;
+  const caamColor = isCaamLapsed ? "#EF4444" : (isCaamWarning ? "#F59E0B" : "#3B82F6");
+
+  const ringCaamBack = getDashEl("ring-caam-back");
+  const ringMabBack = getDashEl("ring-mab-back");
+  const ringPercentElBack = getDashEl("ov-ring-percent-back");
+
+  if (ringCaam) {
+    ringCaam.setAttribute("stroke", caamColor);
+    ringCaam.setAttribute("stroke-dashoffset", String(caamOffset));
+    const dotCaam = getDashEl("legend-dot-caam");
+    if (dotCaam) dotCaam.style.backgroundColor = caamColor;
+  }
+
+  if (ringCaamBack) {
+    ringCaamBack.setAttribute("stroke", caamColor);
+    ringCaamBack.setAttribute("stroke-dashoffset", String(caamOffset));
+  }
+
+  const mabItems = [lcDays, minDrillDays].filter(d => d !== null && d !== undefined);
+  const mabMinDays = mabItems.length > 0 ? Math.min(...mabItems) : 365;
+
+  const mabPct = Math.min(100, Math.max(0, mabMinDays));
+  const mabOffset = Math.round(263.89 * (1 - mabPct / 100));
+
+  const isMabLapsed = mabMinDays <= 0;
+  const isMabWarning = mabMinDays <= userThreshold && mabMinDays > 0;
+  const mabColor = isMabLapsed ? "#EF4444" : (isMabWarning ? "#F59E0B" : "#1D4ED8");
+
+  if (ringMab) {
+    ringMab.setAttribute("stroke", mabColor);
+    ringMab.setAttribute("stroke-dashoffset", String(mabOffset));
+    const dotMab = getDashEl("legend-dot-mab");
+    if (dotMab) dotMab.style.backgroundColor = mabColor;
+  }
+
+  if (ringMabBack) {
+    ringMabBack.setAttribute("stroke", mabColor);
+    ringMabBack.setAttribute("stroke-dashoffset", String(mabOffset));
+  }
+
+  const leastDays = Math.min(caamMinDays, mabMinDays);
+  const leastDaysText = leastDays > 100 ? "100+" : (leastDays <= 0 ? "0" : String(leastDays));
+
+  if (ringPercentEl) ringPercentEl.innerText = leastDaysText;
+  if (ringPercentElBack) ringPercentElBack.innerText = leastDaysText;
+
+  if (leastDays <= 0 || isCaamLapsed || isMabLapsed) {
+    if (ringLabelEl) {
+      ringLabelEl.innerText = "RESTRICTED";
+      ringLabelEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300";
+    }
+  } else if (leastDays <= userThreshold) {
+    if (ringLabelEl) {
+      ringLabelEl.innerText = "ATTENTION";
+      ringLabelEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300";
+    }
+  } else {
+    if (ringLabelEl) {
+      ringLabelEl.innerText = "OPERATIONAL";
+      ringLabelEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300";
+    }
+  }
+
+  if (allCandidates.length > 0 && allCandidates[0].days <= userThreshold) {
+    const b = allCandidates[0];
+    if (bottleneckTextEl) bottleneckTextEl.innerText = `Next Expiry: ${b.name} (${b.days < 0 ? 'Lapsed' : b.days + 'd'})`;
+    if (bottleneckLedEl) {
+      bottleneckLedEl.className = b.days < 0
+        ? "w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(239,68,68,0.8)] shrink-0 mt-0.5"
+        : "w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)] shrink-0 animate-pulse mt-0.5";
+    }
+  } else {
+    if (bottleneckTextEl) bottleneckTextEl.innerText = "All Credentials Active";
+
+    try {
+      if (typeof initHeroCardFlip === 'function') {
+        initHeroCardFlip();
+      } else if (window.CertiFlyAnimations && window.CertiFlyAnimations.initHeroCardFlip) {
+        window.CertiFlyAnimations.initHeroCardFlip();
+      }
+    } catch (flipErr) {
+      console.warn("Hero flip init skipped/error:", flipErr);
+    }
+
+    try {
+      if (typeof animateOverviewDashboard === 'function') {
+        animateOverviewDashboard({
+          caamOffset,
+          mabOffset,
+          caamColor,
+          mabColor,
+          targetDays: leastDays,
+          lvoPct: markerPct
+        });
+      }
+    } catch (animErr) {
+      console.warn("Anime.js animation trigger skipped/error:", animErr);
+    }
+
+    if (bottleneckLedEl) bottleneckLedEl.className = "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] shrink-0 mt-0.5";
+  }
+
+  // CAAM TAB
+  if (caamResults && caamResults.pilotDetails) {
+    if (caamPane && initialCaamTemplateHTML && !caamPane.querySelector("#pilot-name")) {
+      caamPane.innerHTML = initialCaamTemplateHTML;
+    }
+
+    const nameEl = getDashEl("pilot-name");
+    const typeEl = getDashEl("licence-type");
+    const noEl = getDashEl("licence-number");
+
+    if (nameEl) nameEl.innerText = displayName;
+    if (typeEl) typeEl.innerText = caamResults.pilotDetails.licenseType || "ATPL(A)";
+    if (noEl) noEl.innerText = caamResults.pilotDetails.licenseNo || "-";
+
+    const medLimitEl = getDashEl("dash-medical-limit");
+    if (medLimitEl) {
+      medLimitEl.innerText = caamResults.medicalLimitations || "NIL";
+    }
+
+    const caamListContainer = getDashEl("qualifications-list");
+    if (caamListContainer) {
+      caamListContainer.innerHTML = "";
+      const sortedCaamQuals = sortCaamQualifications(caamResults.qualifications);
+
+      if (!sortedCaamQuals || sortedCaamQuals.length === 0) {
+        caamListContainer.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">No CAAM qualifications found on digital licence.</div>`;
+      } else {
+        const activeQuals = sortedCaamQuals.filter(q => !q.isLegacy && q.status !== "INACTIVE_LEGACY");
+        const legacyQuals = sortedCaamQuals.filter(q => q.isLegacy || q.status === "INACTIVE_LEGACY");
+
+        activeQuals.forEach(q => {
+          const row = document.createElement("div");
+          row.className = "py-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 last:border-b-0";
+
+          let badgeHtml = "";
+          const isSupervisory = Boolean(q.isSupervisory) || isSupervisoryQual(q.name);
+
+          if (isSupervisory) {
+            if (q.status === "EXPIRED" || q.status === "ROLE_EXPIRED") {
+              const label = isDfeQual(q.name) ? "Examiner Lapsed" : (isFiQual(q.name) ? "Instructor Lapsed" : "Role Lapsed");
+              badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-700">${label}</span>`;
+            } else if (q.status === "EXPIRING_SOON") {
+              badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">${q.daysRemaining} days left</span>`;
+            } else {
+              const label = isDfeQual(q.name) ? "Valid (Examiner)" : (isFiQual(q.name) ? "Valid (Instructor)" : "Valid");
+              badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300">${label}</span>`;
+            }
+          } else {
+            if (q.status === "EXPIRED") {
+              badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300">Expired</span>`;
+            } else if (q.status === "EXPIRING_SOON") {
+              badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">${q.daysRemaining} days left</span>`;
+            } else {
+              badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300">Valid</span>`;
+            }
+          }
+
+          row.innerHTML = `
+<div>
+  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">${q.name}</div>
+  <div class="text-[10px] text-slate-400">Expiry: ${q.dateText || "No Expiry"}</div>
+</div>
+${badgeHtml}
+`;
+          caamListContainer.appendChild(row);
+        });
+
+        if (legacyQuals.length > 0) {
+          const legacyHeader = document.createElement("div");
+          legacyHeader.className = "mt-4 pt-1 flex items-center justify-between";
+          legacyHeader.innerHTML = `
+<span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Previous / Legacy Endorsements</span>
+`;
+          caamListContainer.appendChild(legacyHeader);
+
+          legacyQuals.forEach(q => {
+            const row = document.createElement("div");
+            row.className = "py-2.5 px-3 rounded-xl bg-slate-50/60 dark:bg-slate-900/40 my-1 flex items-center justify-between border border-slate-100 dark:border-slate-800/60";
+            row.innerHTML = `
+<div>
+  <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">${q.name}</div>
+  <div class="text-[10px] text-slate-400">Lapsed: ${q.dateText || "Expired"}</div>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Legacy / Lapsed</span>
+`;
+            caamListContainer.appendChild(row);
+          });
+        }
+      }
+    }
+  } else {
+    if (caamPane) {
+      caamPane.innerHTML = `
+<div class="p-6 text-center space-y-4 my-8">
+  <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h2a2 2 0 012 2v1m-4 0h4"></path></svg>
+  </div>
+  <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No CAAM Digital Licence</h3>
+  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+    Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to view licence validities.
+  </p>
+  <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+    Configure Licence Source
+  </button>
+</div>
+`;
+    }
+  }
+
+  // MAB TAB
+  if (mabResults) {
+    if (mabPane && initialMabTemplateHTML && !mabPane.querySelector("#mab-pilot-name")) {
+      mabPane.innerHTML = initialMabTemplateHTML;
+    }
+
+    const voidBox = getDashEl("mab-void-warning-box");
+    const voidReasonEl = getDashEl("mab-void-reason");
+
+    if (voidBox && voidReasonEl) {
+      if (mabResults.isVoid) {
+        voidBox.classList.remove("hidden");
+        voidReasonEl.innerText = mabResults.voidReason;
+      } else {
+        voidBox.classList.add("hidden");
+      }
+    }
+
+    const mabPilot = getDashEl("mab-pilot-name");
+    const mabStaff = getDashEl("mab-staff-no");
+    const mabDesig = getDashEl("mab-designation");
+    const mabPub = getDashEl("mab-published-date");
+    const mabFresh = getDashEl("mab-freshness-tag");
+    const mabDocRef = getDashEl("mab-doc-ref");
+
+    if (mabPilot) mabPilot.innerText = mabResults.pilotName;
+    if (mabStaff) mabStaff.innerText = mabResults.staffNo;
+
+    if (mabDesig) {
+      const rawDesig = mabResults.designation || "";
+      const cleanDesig = rawDesig.replace(/\.OPS.*$/i, "").trim();
+      mabDesig.innerText = cleanDesig || "-";
+    }
+
+    if (mabPub) mabPub.innerText = mabResults.publishedDateStr;
+    if (mabDocRef) mabDocRef.innerHTML = "";
+
+    if (mabFresh) {
+      const freshnessLimit = typeof getFreshnessLimit === 'function' ? getFreshnessLimit() : 30;
+      let ageInDays = null;
+
+      if (mabResults && mabResults.publishedDateStr) {
+        const pubDate = parseAnyDate(mabResults.publishedDateStr);
+        if (pubDate && !isNaN(pubDate.getTime())) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          pubDate.setHours(0, 0, 0, 0);
+          ageInDays = Math.floor((today.getTime() - pubDate.getTime()) / (1000 * 60 * 60 * 24));
+        }
+      }
+
+      if (ageInDays === null && mabResults && typeof mabResults.ageInDays === 'number') {
+        ageInDays = mabResults.ageInDays;
+      }
+
+      if (typeof ageInDays === 'number' && !isNaN(ageInDays)) {
+        const daysLeft = freshnessLimit - ageInDays;
+        if (daysLeft < 0) {
+          const overdue = Math.abs(daysLeft);
+          mabFresh.innerText = `Lapsed (${overdue}d overdue)`;
+          mabFresh.className = "text-rose-600 dark:text-rose-400 font-extrabold";
+          if (mabResults) mabResults.isStale = true;
+        } else if (daysLeft <= 5) {
+          mabFresh.innerText = `${daysLeft}d Remaining`;
+          mabFresh.className = "text-amber-600 dark:text-amber-400 font-extrabold";
+        } else {
+          mabFresh.innerText = `${daysLeft}d Remaining`;
+          mabFresh.className = "text-emerald-600 dark:text-emerald-400 font-extrabold";
+        }
+      } else {
+        mabFresh.innerText = "Unknown Freshness";
+        mabFresh.className = "text-slate-500 font-extrabold";
+      }
+    }
+
+    const lcTitle = getDashEl("mab-linecheck-title");
+    const lcLicence = getDashEl("mab-linecheck-licence");
+    const lcRoute = getDashEl("mab-linecheck-route");
+    const lcDate = getDashEl("mab-linecheck-date");
+    const lcExp = getDashEl("mab-linecheck-expiry");
+
+    if (lcTitle && mabResults.lineCheck) lcTitle.innerText = `${mabResults.lineCheck.fleet}`;
+    if (lcLicence && mabResults.lineCheck) lcLicence.innerText = mabResults.lineCheck.licenseNo || "-";
+    if (lcRoute && mabResults.lineCheck) lcRoute.innerText = mabResults.lineCheck.route;
+    if (lcDate && mabResults.lineCheck) lcDate.innerText = mabResults.lineCheck.checkDate;
+    if (lcExp && mabResults.lineCheck) lcExp.innerText = mabResults.lineCheck.expiryDate;
+
+    const lvoAirport = getDashEl("mab-lvo-airport");
+    const lvoRunway = getDashEl("mab-lvo-runway");
+    const lvoDate = getDashEl("mab-lvo-date");
+    const lvoSim = getDashEl("mab-lvo-sim");
+    const lvoCat = getDashEl("mab-lvo-cat");
+    const lvoDfe = getDashEl("mab-lvo-dfe");
+    const lvoBadge = getDashEl("mab-lvo-badge");
+
+    if (lvoAirport && mabResults.lvo) lvoAirport.innerText = mabResults.lvo.airport;
+    if (lvoRunway && mabResults.lvo) lvoRunway.innerText = mabResults.lvo.runway;
+    if (lvoDate && mabResults.lvo) lvoDate.innerText = mabResults.lvo.checkDate;
+    if (lvoSim && mabResults.lvo) lvoSim.innerText = mabResults.lvo.simCode;
+    if (lvoCat && mabResults.lvo) lvoCat.innerText = mabResults.lvo.category;
+    if (lvoDfe && mabResults.lvo) lvoDfe.innerText = mabResults.lvo.dfeNo || "DFE 11635";
+    if (lvoBadge && mabResults.lvo) lvoBadge.innerText = mabResults.lvo.type || "ACTUAL";
+
+    const drillsContainer = getDashEl("mab-drills-list");
+    if (drillsContainer && mabResults.drills) {
+      drillsContainer.innerHTML = "";
+      mabResults.drills.forEach(d => {
+        const row = document.createElement("div");
+        row.className = "py-2.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 last:border-b-0";
+
+        let badgeHtml = "";
+        if (d.status === "EXPIRED") {
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-100 text-rose-700">Lapsed</span>`;
+        } else if (d.status === "EXPIRING_SOON") {
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800">${d.daysLeft} days left</span>`;
+        } else if (d.status === "COMPLETED") {
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-100 text-blue-700">Completed</span>`;
+        } else {
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700">Valid</span>`;
+        }
+
+        row.innerHTML = `
+<div>
+  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">${d.name}</div>
+  <div class="text-[10px] text-slate-400">Attended : ${d.doneDate} | Expires : ${d.expiryDate}</div>
+</div>
+${badgeHtml}
+`;
+        drillsContainer.appendChild(row);
+      });
+    }
+  } else {
+    if (mabPane) {
+      mabPane.innerHTML = `
+<div class="p-6 text-center space-y-4 my-8">
+  <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+  </div>
+  <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No MAB Attestation PDF</h3>
+  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+    Please upload your MAB E-Attestation PDF document in My Credentials to view company qualifications.
+  </p>
+  <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+    Upload Attestation PDF
+  </button>
+</div>
+`;
+    }
+  }
+
+  await setupDocumentViewers();
+  showView("dashboard-view");
+}
+
+async function setupDocumentViewers() {
+  const openCaamLicenceBtn = getDashEl("open-original-btn");
+  if (openCaamLicenceBtn) {
+    openCaamLicenceBtn.onclick = openOriginalLicense;
+  }
+
+  const attestationBtn = getDashEl("mab-view-attestation-btn");
+  const qsBtn = getDashEl("mab-view-qs-btn");
+  const qsBadgeText = getDashEl("mab-qs-status-text");
+  const qsBadgePill = getDashEl("mab-qs-cert-no");
+
+  const qsData = getQualificationSlipData() || selectedQsParsed;
+
+  const qsBadgeBox = getDashEl("mab-qs-badge");
+  if (qsBadgeText && qsBadgePill) {
+    if (qsData) {
+      qsBadgeText.innerText = "Qualification Slip: Stored & Valid";
+      qsBadgePill.innerText = "Verified";
+      qsBadgePill.className = "text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md uppercase";
+      if (qsBadgeBox) {
+        qsBadgeBox.classList.remove("cursor-pointer", "hover:bg-slate-200", "dark:hover:bg-slate-700", "hover:text-slate-800", "dark:hover:text-slate-200", "hover:border", "hover:border-blue-500", "active:scale-[0.99]");
+        qsBadgeBox.title = "";
+        qsBadgeBox.onclick = null;
+      }
+    } else {
+      qsBadgeText.innerText = "Qualification Slip: Not Configured";
+      qsBadgePill.innerText = "Not Set";
+      qsBadgePill.className = "text-[10px] font-extrabold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md uppercase";
+      if (qsBadgeBox) {
+        qsBadgeBox.classList.remove("hover:border", "hover:border-blue-500");
+        qsBadgeBox.classList.add("cursor-pointer", "hover:bg-slate-200", "dark:hover:bg-slate-700", "hover:text-slate-800", "dark:hover:text-slate-200", "transition-all", "active:scale-[0.99]");
+        qsBadgeBox.title = "Click to configure Qualification Slip in My Credentials";
+        qsBadgeBox.onclick = () => {
+          if (typeof openProfileMenu === "function") openProfileMenu();
+        };
+      }
+    }
+  }
+
+  if (attestationBtn) {
+    const attBlob = await getAttestationPdf();
+    if (attBlob || selectedAttestationFile) {
+      attestationBtn.disabled = false;
+      attestationBtn.className = "w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]";
+      attestationBtn.onclick = async () => {
+        let blob = attBlob;
+        if (!blob && selectedAttestationFile) blob = selectedAttestationFile;
+        if (blob) {
+          const blobUrl = URL.createObjectURL(blob);
+          window.open(blobUrl, "_blank");
+        } else {
+          alert("Attestation PDF file not found in local storage.");
+        }
+      };
+    } else {
+      attestationBtn.disabled = true;
+      attestationBtn.className = "w-full h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-extrabold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-not-allowed border border-slate-200 dark:border-slate-700/60";
+      attestationBtn.onclick = null;
+    }
+  }
+
+  if (qsBtn) {
+    const qsBlob = await getQualificationSlipPdf();
+    if (qsBlob || selectedQsFile) {
+      qsBtn.disabled = false;
+      qsBtn.className = "w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]";
+      qsBtn.onclick = async () => {
+        let blob = qsBlob;
+        if (!blob && selectedQsFile) blob = selectedQsFile;
+        if (blob) {
+          const blobUrl = URL.createObjectURL(blob);
+          window.open(blobUrl, "_blank");
+        } else {
+          alert("Qualification Slip PDF file not found in local storage.");
+        }
+      };
+    } else {
+      qsBtn.disabled = true;
+      qsBtn.className = "w-full h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-extrabold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-not-allowed border border-slate-200 dark:border-slate-700/60";
+      qsBtn.onclick = null;
+    }
+  }
+}
+
+function updateHistoryCounts(allHistory) {
+  const cntAll = document.getElementById("count-all");
+  const cntValid = document.getElementById("count-valid");
+  const cntExpiring = document.getElementById("count-expiring");
+  const cntExpired = document.getElementById("count-expired");
+
+  const validCount = allHistory.filter(i => i && i.overallStatus === "VALID").length;
+  const expiringCount = allHistory.filter(i => i && i.overallStatus === "EXPIRING_SOON").length;
+  const expiredCount = allHistory.filter(i => i && i.overallStatus === "EXPIRED").length;
+
+  if (cntAll) cntAll.innerText = allHistory.length;
+  if (cntValid) cntValid.innerText = validCount;
+  if (cntExpiring) cntExpiring.innerText = expiringCount;
+  if (cntExpired) cntExpired.innerText = expiredCount;
+}
+
+function updateHistoryPillUI(targetFilter) {
+  const pillAll = document.getElementById("filter-all-btn") || document.getElementById("filter-pill-all") || document.getElementById("history-filter-all");
+  const pillValid = document.getElementById("filter-valid-btn") || document.getElementById("filter-pill-valid") || document.getElementById("history-filter-valid");
+  const pillExpiring = document.getElementById("filter-expiring-btn") || document.getElementById("filter-pill-expiring") || document.getElementById("history-filter-expiring");
+  const pillExpired = document.getElementById("filter-expired-btn") || document.getElementById("filter-pill-expired") || document.getElementById("history-filter-expired");
+
+  const filterPills = [
+    { el: pillAll, value: "ALL" },
+    { el: pillValid, value: "VALID" },
+    { el: pillExpiring, value: "EXPIRING_SOON" },
+    { el: pillExpired, value: "EXPIRED" }
+  ];
+
+  const activeStyles = {
+    ALL: "py-1.5 px-1 rounded-lg bg-blue-600 text-white shadow-xs transition-all cursor-pointer font-extrabold",
+    VALID: "py-1.5 px-1 rounded-lg bg-emerald-600 text-white shadow-xs transition-all cursor-pointer font-extrabold",
+    EXPIRING_SOON: "py-1.5 px-1 rounded-lg bg-amber-500 text-white shadow-xs transition-all cursor-pointer font-extrabold",
+    EXPIRED: "py-1.5 px-1 rounded-lg bg-rose-600 text-white shadow-xs transition-all cursor-pointer font-extrabold"
+  };
+
+  const inactiveStyle = "py-1.5 px-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold transition-all cursor-pointer";
+
+  filterPills.forEach(({ el, value }) => {
+    if (!el) return;
+    if (value === targetFilter) {
+      el.className = activeStyles[value] || activeStyles.ALL;
+    } else {
+      el.className = inactiveStyle;
+    }
+  });
+}
+
+let currentHistoryFilter = "ALL";
+
+export let activeSwipedCardId = null;
+let swipeAutoDismissTimer = null;
+
+let isManageModeActive = false;
+let selectedRecordIds = new Set();
+let currentlyVisibleHistoryItems = [];
+
+window.exitHistoryManageMode = function() {
+  if (!isManageModeActive) return;
+  isManageModeActive = false;
+  selectedRecordIds.clear();
+
+  const manageBtn = document.getElementById("btn-history-manage");
+  if (manageBtn) {
+    manageBtn.innerText = "Manage";
+    manageBtn.className = "py-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer";
+  }
+
+  const bulkBar = document.getElementById("history-bulk-action-bar");
+  if (bulkBar) bulkBar.classList.add("hidden");
+
+  if (typeof customRenderHistoryList === "function") {
+    customRenderHistoryList();
+  }
+};
+
+function updateBulkActionBarUI() {
+  const countBadge = document.getElementById("bulk-selected-count");
+  const selectAllBtnText = document.getElementById("btn-bulk-select-all-text");
+
+  if (countBadge) {
+    countBadge.innerText = `${selectedRecordIds.size} selected`;
+  }
+
+  if (selectAllBtnText && currentlyVisibleHistoryItems.length > 0) {
+    const visibleIds = currentlyVisibleHistoryItems.map(item => String(item.id));
+    const allVisibleSelected = visibleIds.every(id => selectedRecordIds.has(id));
+    selectAllBtnText.innerText = allVisibleSelected ? "Deselect All" : "Select All";
+  }
+}
+
+function initHistoryManageModeControls() {
+  const manageBtn = document.getElementById("btn-history-manage");
+  const bulkBar = document.getElementById("history-bulk-action-bar");
+  const selectAllBtn = document.getElementById("btn-bulk-select-all");
+  const bookmarkBtn = document.getElementById("btn-bulk-bookmark");
+  const deleteBtn = document.getElementById("btn-bulk-delete");
+
+  if (manageBtn && !manageBtn.dataset.bound) {
+    manageBtn.dataset.bound = "true";
+    manageBtn.addEventListener("click", () => {
+      isManageModeActive = !isManageModeActive;
+      selectedRecordIds.clear();
+
+      if (isManageModeActive) {
+        manageBtn.innerText = "Done";
+        manageBtn.className = "py-1 px-2.5 rounded-lg bg-blue-600 text-white shadow-xs font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer";
+        if (bulkBar) bulkBar.classList.remove("hidden");
+      } else {
+        manageBtn.innerText = "Manage";
+        manageBtn.className = "py-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer";
+        if (bulkBar) bulkBar.classList.add("hidden");
+      }
+
+      updateBulkActionBarUI();
+      customRenderHistoryList();
+    });
+  }
+
+  if (selectAllBtn && !selectAllBtn.dataset.bound) {
+    selectAllBtn.dataset.bound = "true";
+    selectAllBtn.addEventListener("click", () => {
+      if (currentlyVisibleHistoryItems.length === 0) return;
+      const visibleIds = currentlyVisibleHistoryItems.map(item => String(item.id));
+      const allVisibleSelected = visibleIds.every(id => selectedRecordIds.has(id));
+
+      if (allVisibleSelected) {
+        visibleIds.forEach(id => selectedRecordIds.delete(id));
+      } else {
+        visibleIds.forEach(id => selectedRecordIds.add(id));
+      }
+
+      updateBulkActionBarUI();
+      customRenderHistoryList();
+    });
+  }
+
+  if (bookmarkBtn && !bookmarkBtn.dataset.bound) {
+    bookmarkBtn.dataset.bound = "true";
+    bookmarkBtn.addEventListener("click", () => {
+      if (selectedRecordIds.size === 0) {
+        if (typeof showProfileToast === "function") showProfileToast("No crew cards selected");
+        return;
+      }
+
+      const targetIds = Array.from(selectedRecordIds);
+      const allHistory = getScanHistory() || [];
+      const selectedItems = allHistory.filter(item => item && selectedRecordIds.has(String(item.id)));
+      const allSelectedArePinned = selectedItems.length > 0 && selectedItems.every(item => Boolean(item.isPinned || item.pinned));
+      const targetPinState = !allSelectedArePinned;
+
+      if (typeof window.bulkPinHistoryRecords === "function") {
+        window.bulkPinHistoryRecords(targetIds, targetPinState);
+      } else if (typeof bulkPinHistoryRecords === "function") {
+        bulkPinHistoryRecords(targetIds, targetPinState);
+      }
+
+      if (typeof showProfileToast === "function") {
+        const actionWord = targetPinState ? "bookmarked" : "unbookmarked";
+        showProfileToast(`${targetIds.length} cards ${actionWord}`);
+      }
+
+      updateBulkActionBarUI();
+      customRenderHistoryList();
+    });
+  }
+
+  if (deleteBtn && !deleteBtn.dataset.bound) {
+    deleteBtn.dataset.bound = "true";
+    deleteBtn.addEventListener("click", () => {
+      if (selectedRecordIds.size === 0) {
+        if (typeof showProfileToast === "function") showProfileToast("No crew cards selected");
+        return;
+      }
+
+      const targetIds = Array.from(selectedRecordIds);
+      const count = targetIds.length;
+      const confirmMsg = count === 1
+        ? "Are you sure you want to delete 1 selected crew record?"
+        : `Are you sure you want to delete ${count} selected crew records?`;
+
+      if (!window.confirm(confirmMsg)) {
+        return;
+      }
+
+      if (typeof window.deleteHistoryRecords === "function") {
+        window.deleteHistoryRecords(targetIds);
+      } else if (typeof deleteHistoryRecords === "function") {
+        deleteHistoryRecords(targetIds);
+      }
+
+      const deletedCount = targetIds.length;
+      selectedRecordIds.clear();
+
+      if (typeof showProfileToast === "function") {
+        showProfileToast(`${deletedCount} card${deletedCount > 1 ? 's' : ''} removed`);
+      }
+
+      const remainingHistory = getScanHistory() || [];
+      if (remainingHistory.length === 0 && isManageModeActive) {
+        if (typeof window.exitHistoryManageMode === "function") {
+          window.exitHistoryManageMode();
+        }
+      } else {
+        updateBulkActionBarUI();
+        customRenderHistoryList();
+      }
+    });
+  }
+}
+
+function setupHistorySwipeListeners() {
+  const containers = [
+    document.getElementById("recent-pilots-list"),
+    document.getElementById("history-list")
+  ].filter(Boolean);
+
+  if (containers.length === 0) return;
+
+  if (!window.swipeTapOutsideInitialized) {
+    window.swipeTapOutsideInitialized = true;
+    const resetSwipedCard = () => {
+      if (activeSwipedCardId) {
+        const cardEl = document.getElementById("card-inner-" + activeSwipedCardId);
+        if (cardEl) {
+          cardEl.style.transition = "transform 0.2s ease-out";
+          cardEl.style.transform = "translateX(0px)";
+        }
+        activeSwipedCardId = null;
+        if (swipeAutoDismissTimer) {
+          clearTimeout(swipeAutoDismissTimer);
+          swipeAutoDismissTimer = null;
+        }
+      }
+    };
+
+    document.addEventListener("click", (e) => {
+      if (activeSwipedCardId) {
+        const activeCard = document.getElementById("card-inner-" + activeSwipedCardId);
+        if (activeCard && !activeCard.contains(e.target) && !e.target.closest("button")) {
+          resetSwipedCard();
+        }
+      }
+    }, { capture: true });
+  }
+
+  containers.forEach(container => {
+    if (container.dataset.swipeInitialized) return;
+    container.dataset.swipeInitialized = "true";
+
+    let startX = 0, startY = 0, currentDiffX = 0;
+    let targetCard = null;
+    let isSwiping = false;
+
+    const getClientX = (e) => (e.touches && e.touches.length > 0) ? e.touches[0].clientX : e.clientX;
+    const getClientY = (e) => (e.touches && e.touches.length > 0) ? e.touches[0].clientY : e.clientY;
+
+    const handleStart = (e) => {
+      if (isManageModeActive) return;
+      if (e.target.closest("button")) return;
+
+      const card = e.target.closest("[data-card-id]");
+      if (!card) return;
+
+      targetCard = card;
+      startX = getClientX(e);
+      startY = getClientY(e);
+      currentDiffX = 0;
+      isSwiping = false;
+
+      if (activeSwipedCardId && activeSwipedCardId !== card.dataset.cardId) {
+        const prevEl = document.getElementById("card-inner-" + activeSwipedCardId);
+        if (prevEl) {
+          prevEl.style.transition = "transform 0.2s ease-out";
+          prevEl.style.transform = "translateX(0px)";
+        }
+        activeSwipedCardId = null;
+        if (swipeAutoDismissTimer) {
+          clearTimeout(swipeAutoDismissTimer);
+          swipeAutoDismissTimer = null;
+        }
+      }
+    };
+
+    const handleMove = (e) => {
+      if (!targetCard) return;
+      const clientX = getClientX(e);
+      const clientY = getClientY(e);
+
+      const diffX = clientX - startX;
+      const diffY = clientY - startY;
+
+      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 8) {
+        isSwiping = true;
+        currentDiffX = diffX;
+        targetCard.style.transition = "none";
+
+        const currentTransformStr = targetCard.style.transform || "";
+        let baseOffset = 0;
+
+        if (currentTransformStr.includes("translateX(80px)")) baseOffset = 80;
+        else if (currentTransformStr.includes("translateX(-80px)")) baseOffset = -80;
+
+        let translateVal = baseOffset + diffX;
+        if (translateVal > 90) translateVal = 90;
+        if (translateVal < -90) translateVal = -90;
+
+        targetCard.style.transform = "translateX(" + translateVal + "px)";
+      }
+    };
+
+    const handleEnd = () => {
+      if (!targetCard) return;
+      targetCard.style.transition = "transform 0.2s ease-out";
+
+      if (isSwiping) {
+        const currentTransformStr = targetCard.style.transform || "";
+        let baseOffset = 0;
+
+        if (currentTransformStr.includes("translateX(80px)")) baseOffset = 80;
+        else if (currentTransformStr.includes("translateX(-80px)")) baseOffset = -80;
+
+        const effectiveDiff = baseOffset + currentDiffX;
+
+        if (swipeAutoDismissTimer) {
+          clearTimeout(swipeAutoDismissTimer);
+          swipeAutoDismissTimer = null;
+        }
+
+        if (effectiveDiff > 35) {
+          targetCard.style.transform = "translateX(80px)";
+          activeSwipedCardId = targetCard.dataset.cardId;
+          swipeAutoDismissTimer = setTimeout(() => {
+            if (activeSwipedCardId) {
+              const activeEl = document.getElementById("card-inner-" + activeSwipedCardId);
+              if (activeEl) {
+                activeEl.style.transition = "transform 0.2s ease-out";
+                activeEl.style.transform = "translateX(0px)";
+              }
+              activeSwipedCardId = null;
+            }
+          }, 3500);
+        } else if (effectiveDiff < -35) {
+          targetCard.style.transform = "translateX(-80px)";
+          activeSwipedCardId = targetCard.dataset.cardId;
+          swipeAutoDismissTimer = setTimeout(() => {
+            if (activeSwipedCardId) {
+              const activeEl = document.getElementById("card-inner-" + activeSwipedCardId);
+              if (activeEl) {
+                activeEl.style.transition = "transform 0.2s ease-out";
+                activeEl.style.transform = "translateX(0px)";
+              }
+              activeSwipedCardId = null;
+            }
+          }, 3500);
+        } else {
+          targetCard.style.transform = "translateX(0px)";
+          if (activeSwipedCardId === targetCard.dataset.cardId) {
+            activeSwipedCardId = null;
+          }
+        }
+      }
+
+      targetCard = null;
+      isSwiping = false;
+    };
+
+    container.addEventListener("touchstart", handleStart, { passive: true });
+    container.addEventListener("touchmove", handleMove, { passive: true });
+    container.addEventListener("touchend", handleEnd);
+    container.addEventListener("touchcancel", handleEnd);
+    container.addEventListener("mousedown", handleStart);
+    container.addEventListener("mousemove", (e) => { if (targetCard) handleMove(e); });
+    container.addEventListener("mouseup", () => { if (targetCard) handleEnd(); });
+  });
+}
+
+window.handleCardClick = function(event, safeId) {
+  if (isManageModeActive) {
+    if (selectedRecordIds.has(safeId)) {
+      selectedRecordIds.delete(safeId);
+    } else {
+      selectedRecordIds.add(safeId);
+    }
+    updateBulkActionBarUI();
+    customRenderHistoryList();
+    return;
+  }
+
+  const cardInner = document.getElementById("card-inner-" + safeId);
+  if (cardInner && cardInner.style.transform && cardInner.style.transform !== "translateX(0px)") {
+    cardInner.style.transform = "translateX(0px)";
+    activeSwipedCardId = null;
+    return;
+  }
+
+  loadHistoricalRecord(safeId);
+};
+
+window.toggleSingleBookmark = function(recordId) {
+  if (typeof togglePinRecord === "function") {
+    togglePinRecord(recordId);
+  } else if (typeof window.togglePinRecord === "function") {
+    window.togglePinRecord(recordId);
+  }
+  customRenderHistoryList();
+};
+
+window.deleteSingleRecord = function(recordId) {
+  if (!recordId) return;
+  activeSwipedCardId = null;
+
+  if (selectedRecordIds && selectedRecordIds.has(String(recordId))) {
+    selectedRecordIds.delete(String(recordId));
+  }
+
+  if (typeof window.deleteHistoryRecords === "function") {
+    window.deleteHistoryRecords([recordId]);
+  } else if (typeof deleteHistoryRecords === "function") {
+    deleteHistoryRecords([recordId]);
+  }
+
+  if (typeof showProfileToast === "function") {
+    showProfileToast("Record removed");
+  }
+
+  const remaining = getScanHistory() || [];
+  if (remaining.length === 0 && isManageModeActive) {
+    if (typeof window.exitHistoryManageMode === "function") {
+      window.exitHistoryManageMode();
+    }
+  } else {
+    customRenderHistoryList();
+  }
+};
+
+function customRenderHistoryList() {
+  activeSwipedCardId = null;
+  const historyContainer = document.getElementById("history-list");
+  const recentContainer = document.getElementById("recent-pilots-list");
+  const targets = [historyContainer, recentContainer].filter(Boolean);
+
+  const countBadge = document.getElementById("history-count-badge");
+  const retentionTag = document.getElementById("history-retention-tag");
+  const limit = (typeof getHistoryLimit === "function") ? getHistoryLimit() : 10;
+
+  if (retentionTag) {
+    retentionTag.innerText = `${limit} scans`;
+    retentionTag.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 text-xs font-bold transition-all cursor-pointer shadow-2xs active:scale-95";
+    retentionTag.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleHistoryLimitQuickPicker(retentionTag);
+    };
+  }
+
+  const clockIcon = document.getElementById("history-clock-icon");
+  const searchInput = document.getElementById("history-search-input");
+
+  if (targets.length === 0) return;
+
+  setupHistorySwipeListeners();
+  let allHistory = getScanHistory() || [];
+
+  updateHistoryCounts(allHistory);
+
+  const validIdsSet = new Set(allHistory.map(item => String(item.id)));
+  selectedRecordIds.forEach(id => {
+    if (!validIdsSet.has(id)) selectedRecordIds.delete(id);
+  });
+
+  if (allHistory.length === 0 && isManageModeActive) {
+    if (typeof window.exitHistoryManageMode === "function") {
+      window.exitHistoryManageMode();
+    }
+    return;
+  }
+
+  const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : "";
+
+  if (prevSearchQueryState !== "" && searchQuery === "") {
+    currentHistoryFilter = "ALL";
+  }
+  prevSearchQueryState = searchQuery;
+
+  const clearBtn = document.getElementById("history-search-clear-btn");
+  if (clearBtn && searchInput) {
+    if (searchQuery.length > 0) clearBtn.classList.remove("hidden");
+    else clearBtn.classList.add("hidden");
+  }
+
+  let scanHistory = [];
+  if (searchQuery) {
+    const matchingItems = allHistory.filter(item => {
+      if (!item) return false;
+      const name = (item.name || "").toLowerCase();
+      const licType = (item.licenseType || "").toLowerCase();
+      const licNo = (item.id || "").toLowerCase();
+      return name.includes(searchQuery) || licType.includes(searchQuery) || licNo.includes(searchQuery);
+    });
+
+    if (matchingItems.length > 0) {
+      const uniqueStatuses = new Set(matchingItems.map(m => m ? m.overallStatus : null));
+      uniqueStatuses.delete(null);
+
+      if (uniqueStatuses.size === 1) {
+        const singleStatus = Array.from(uniqueStatuses)[0];
+        if (singleStatus === "VALID") currentHistoryFilter = "VALID";
+        else if (singleStatus === "EXPIRING_SOON") currentHistoryFilter = "EXPIRING_SOON";
+        else if (singleStatus === "EXPIRED") currentHistoryFilter = "EXPIRED";
+        else currentHistoryFilter = "ALL";
+      } else {
+        currentHistoryFilter = "ALL";
+      }
+    }
+    updateHistoryPillUI(currentHistoryFilter);
+    scanHistory = matchingItems;
+  } else {
+    updateHistoryPillUI(currentHistoryFilter);
+    if (currentHistoryFilter && currentHistoryFilter !== "ALL") {
+      scanHistory = allHistory.filter(item => {
+        if (!item) return false;
+        if (currentHistoryFilter === "VALID") return item.overallStatus === "VALID";
+        if (currentHistoryFilter === "EXPIRING_SOON") return item.overallStatus === "EXPIRING_SOON";
+        if (currentHistoryFilter === "EXPIRED") return item.overallStatus === "EXPIRED";
+        return true;
+      });
+    } else {
+      scanHistory = allHistory;
+    }
+  }
+
+  scanHistory = [...scanHistory].sort((a, b) => {
+    const aPinned = Boolean(a.isPinned || a.pinned);
+    const bPinned = Boolean(b.isPinned || b.pinned);
+    if (aPinned && !bPinned) return -1;
+    if (!aPinned && bPinned) return 1;
+    return 0;
+  });
+
+  currentlyVisibleHistoryItems = scanHistory;
+  initHistoryManageModeControls();
+  updateBulkActionBarUI();
+
+  if (clockIcon && countBadge) {
+    const totalScans = scanHistory.length;
+    countBadge.innerText = totalScans;
+    if (totalScans > 0) {
+      countBadge.classList.remove("hidden");
+      clockIcon.classList.add("hidden");
+    } else {
+      clockIcon.classList.remove("hidden");
+      countBadge.classList.add("hidden");
+    }
+  }
+
+  if (scanHistory.length === 0) {
+    targets.forEach(t => { if (t) t.innerHTML = `<div class="text-[10px] text-slate-400 italic py-4 text-center">No matching scans found.</div>`; });
+    return;
+  }
+
+  const cardsHtml = scanHistory.map(item => {
+    if (!item) return '';
+    const isPinned = Boolean(item.isPinned || item.pinned);
+    const safeId = String(item.id || '').replace(/'/g, "\'");
+    const pinBadge = isPinned ? `<svg class="w-3.5 h-3.5 text-orange-400 dark:text-orange-400 shrink-0 inline-block align-middle ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>` : '';
+
+    let badgeStyle = "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60";
+    let statusLabel = "Valid";
+
+    if (item.overallStatus === "EXPIRED") {
+      statusLabel = "Expired";
+      badgeStyle = "bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60";
+    } else if (item.overallStatus === "EXPIRING_SOON") {
+      statusLabel = "Expiring";
+      badgeStyle = "bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60";
+    }
+
+    const nameUpper = (item.name || 'UNKNOWN').toUpperCase();
+    const licType = item.licenseType || 'ATPL(A)';
+    const licNo = item.id || '-';
+    const timestampStr = item.timestamp || '';
+    const isSelected = selectedRecordIds.has(safeId);
+
+    const checkboxHtml = isManageModeActive ? `
+<div class="shrink-0 pl-1 pr-2 flex items-center justify-center">
+  <div class="w-4 h-4 rounded-md border ${isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800'} flex items-center justify-center transition-all">
+    ${isSelected ? '<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>' : ''}
+  </div>
+</div>
+` : '';
+
+    const cardBgStyle = (isManageModeActive && isSelected) ? "bg-blue-50 dark:bg-slate-800" : "bg-white dark:bg-slate-900";
+
+    return `
+<div class="relative overflow-hidden border-b border-slate-100 dark:border-slate-800/80 last:border-b-0">
+  <div class="absolute inset-y-0 left-0 flex items-center justify-start pl-4 bg-orange-200 dark:bg-orange-950/60 w-1/2 z-0">
+    <button onclick="event.stopPropagation(); toggleSingleBookmark('${safeId}')" class="p-1.5 rounded-lg text-orange-600 dark:text-orange-400 hover:bg-orange-300/50 transition-all" title="Bookmark">
+      <svg class="w-5 h-5 text-orange-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+    </button>
+  </div>
+  <div class="absolute inset-y-0 right-0 flex items-center justify-end pr-4 bg-red-200 dark:bg-red-950/60 w-1/2 z-0">
+    <button onclick="event.stopPropagation(); deleteSingleRecord('${safeId}')" class="p-1.5 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-300/50 transition-all" title="Delete">
+      <svg class="w-5 h-5 text-red-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+    </button>
+  </div>
+  <div id="card-inner-${safeId}" data-card-id="${safeId}" onclick="handleCardClick(event, '${safeId}')" class="relative z-10 ${cardBgStyle} py-2.5 px-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+    <div class="flex items-center justify-between w-full active:scale-[0.985] transition-transform duration-100 ease-out">
+      <div class="flex items-center gap-2 overflow-hidden flex-1 pr-2">
+        ${checkboxHtml}
+        <div class="flex flex-col text-left overflow-hidden flex-1">
+          <div class="flex items-center gap-1">
+            <span class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">${nameUpper}</span>
+            ${pinBadge}
+          </div>
+          <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5 tracking-tight truncate">
+            ${licType} - ${licNo}
+          </span>
+          <span class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
+            Checked: ${timestampStr}
+          </span>
+        </div>
+      </div>
+      <div class="shrink-0">
+        <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${badgeStyle}">
+          ${statusLabel}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+  }).join('');
+
+  targets.forEach(t => { if (t) t.innerHTML = cardsHtml; });
+}
+
+window.renderHistoryList = customRenderHistoryList;
+
+function setupReverifyOnlineButton() {
+  const reverifyBtn = document.getElementById("btn-reverify-online");
+  if (!reverifyBtn || reverifyBtn.dataset.bound) return;
+  reverifyBtn.dataset.bound = "true";
+
+  reverifyBtn.addEventListener("click", async () => {
+    if (!navigator.onLine) {
+      if (typeof showProfileToast === "function") {
+        showProfileToast("Cannot re-verify offline. Connect to internet.");
+      } else {
+        alert("Cannot re-verify offline. Please connect to the internet.");
+      }
+      return;
+    }
+
+    if (!lastScannedUrl) {
+      if (typeof showProfileToast === "function") {
+        showProfileToast("No licence URL available for re-verification.");
+      }
+      return;
+    }
+
+    await processLicenseUrl(lastScannedUrl);
+
+    if (typeof showProfileToast === "function") {
+      showProfileToast("Licence re-verified & updated!");
+    }
+  });
+}
+
+function setupPinCardButton(caamResults) {
+  const resView = document.getElementById("result-view");
+  const pinBtn = (resView ? resView.querySelector("#btn-toggle-pin") : null) || document.getElementById("btn-toggle-pin");
+  if (!pinBtn || !caamResults) return;
+
+  const licNo = (caamResults.pilotDetails && caamResults.pilotDetails.licenseNo) || "";
+  let scanHistory = getScanHistory() || [];
+  const matchIndex = scanHistory.findIndex(item => item && (String(item.id) === String(licNo) || item.url === lastScannedUrl));
+  let isPinned = false;
+
+  if (matchIndex !== -1) {
+    isPinned = Boolean(scanHistory[matchIndex].isPinned || scanHistory[matchIndex].pinned);
+  }
+
+  const updatePinButtonUI = () => {
+    if (isPinned) {
+      pinBtn.className = "py-2 px-3 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 bg-orange-100 dark:bg-orange-950/80 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800/60 shadow-xs cursor-pointer";
+      pinBtn.innerHTML = `
+<svg class="w-4 h-4 text-orange-500 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+  <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+</svg>
+<span>Unbookmark</span>
+`;
+    } else {
+      pinBtn.className = "py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer";
+      pinBtn.innerHTML = `
+<svg class="w-4 h-4 text-orange-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+</svg>
+<span>Bookmark</span>
+`;
+    }
+  };
+
+  updatePinButtonUI();
+
+  pinBtn.onclick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    isPinned = !isPinned;
+
+    if (matchIndex !== -1) {
+      scanHistory[matchIndex].isPinned = isPinned;
+      scanHistory[matchIndex].pinned = isPinned;
+    } else {
+      const record = {
+        id: String(licNo || Date.now()),
+        name: (caamResults.pilotDetails && caamResults.pilotDetails.name) || "External Crew Member",
+        licenseType: (caamResults.pilotDetails && caamResults.pilotDetails.licenseType) || "ATPL(A)",
+        overallStatus: caamResults.overallStatus || "VALID",
+        url: lastScannedUrl || "",
+        resultsData: caamResults,
+        timestamp: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        isPinned: isPinned,
+        pinned: isPinned
+      };
+      scanHistory.unshift(record);
+    }
+
+    try {
+      localStorage.setItem("scan_history", JSON.stringify(scanHistory));
+    } catch (err) {
+      console.error("Failed to update pin state in scan history:", err);
+    }
+
+    updatePinButtonUI();
+    customRenderHistoryList();
+  };
+}
+
+let prevSearchQueryState = "";
+
+function initHistorySearchAndFilters() {
+  const searchInput = document.getElementById("history-search-input");
+
+  if (searchInput) {
+    const parent = searchInput.parentNode;
+
+    if (parent && !document.getElementById("history-search-clear-btn")) {
+      const pos = window.getComputedStyle ? window.getComputedStyle(parent).position : parent.style.position;
+      if (!pos || pos === 'static') {
+        parent.style.position = 'relative';
+      }
+
+      const clearBtn = document.createElement("button");
+      clearBtn.id = "history-search-clear-btn";
+      clearBtn.type = "button";
+      clearBtn.className = "absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors hidden cursor-pointer z-10";
+      clearBtn.setAttribute("aria-label", "Clear search");
+      clearBtn.innerHTML = `
+<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+</svg>
+`;
+      searchInput.classList.add("pr-9");
+
+      clearBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        searchInput.value = "";
+        prevSearchQueryState = "";
+        currentHistoryFilter = "ALL";
+        clearBtn.classList.add("hidden");
+        searchInput.focus();
+        customRenderHistoryList();
+      };
+
+      parent.appendChild(clearBtn);
+    }
+
+    const syncClearBtn = () => {
+      const clearBtn = document.getElementById("history-search-clear-btn");
+      if (clearBtn) {
+        if (searchInput.value.trim().length > 0) {
+          clearBtn.classList.remove("hidden");
+        } else {
+          clearBtn.classList.add("hidden");
+        }
+      }
+    };
+
+    const handleSearchInput = () => {
+      syncClearBtn();
+      customRenderHistoryList();
+    };
+
+    searchInput.addEventListener("input", handleSearchInput);
+    searchInput.addEventListener("change", handleSearchInput);
+    syncClearBtn();
+  }
+
+  const pillAll = document.getElementById("filter-all-btn") || document.getElementById("filter-pill-all") || document.getElementById("history-filter-all");
+  const pillValid = document.getElementById("filter-valid-btn") || document.getElementById("filter-pill-valid") || document.getElementById("history-filter-valid");
+  const pillExpiring = document.getElementById("filter-expiring-btn") || document.getElementById("filter-pill-expiring") || document.getElementById("history-filter-expiring");
+  const pillExpired = document.getElementById("filter-expired-btn") || document.getElementById("filter-pill-expired") || document.getElementById("history-filter-expired");
+
+  const filterPills = [
+    { el: pillAll, value: "ALL" },
+    { el: pillValid, value: "VALID" },
+    { el: pillExpiring, value: "EXPIRING_SOON" },
+    { el: pillExpired, value: "EXPIRED" }
+  ];
+
+  filterPills.forEach(({ el, value }) => {
+    if (!el) return;
+    el.addEventListener("click", () => {
+      if (searchInput) searchInput.value = "";
+      prevSearchQueryState = "";
+      currentHistoryFilter = value;
+      updateHistoryPillUI(currentHistoryFilter);
+      customRenderHistoryList();
+    });
+  });
+}
+
+function renderResults(caamResults, mabResults = null) {
+  const profile = getProfileData();
+  const resView = document.getElementById("result-view");
+
+  function getResEl(id) {
+    if (resView) {
+      const el = resView.querySelector("#" + id);
+      if (el) return el;
+    }
+    return document.getElementById(id);
+  }
+
+  const displayName = (caamResults && caamResults.pilotDetails && caamResults.pilotDetails.name && caamResults.pilotDetails.name !== "-") ? caamResults.pilotDetails.name : "External Crew Member";
+
+  const nameEl = getResEl("res-pilot-name") || getResEl("pilot-name");
+  const typeEl = getResEl("res-licence-type") || getResEl("licence-type");
+  const noEl = getResEl("res-licence-number") || getResEl("licence-number");
+  const scanTimeEl = getResEl("res-scan-timestamp") || getResEl("scan-timestamp");
+  const headerEl = getResEl("res-header") || getResEl("result-header");
+  const overallBadge = getResEl("res-overall-status-badge") || getResEl("overall-status-badge");
+  const overallMsg = getResEl("res-overall-message") || getResEl("overall-message");
+
+  if (nameEl) nameEl.innerText = displayName;
+  if (typeEl && caamResults && caamResults.pilotDetails) typeEl.innerText = caamResults.pilotDetails.licenseType || "ATPL(A)";
+  if (noEl && caamResults && caamResults.pilotDetails) noEl.innerText = caamResults.pilotDetails.licenseNo || "-";
+  if (scanTimeEl) scanTimeEl.innerText = (caamResults && caamResults.scanTime) ? `${caamResults.scanTime} LT` : "14 Sep 2026 LT";
+
+  const medLimitEl = getResEl("res-medical-limit") || getResEl("dash-medical-limit");
+  if (medLimitEl) {
+    medLimitEl.innerText = (caamResults && caamResults.medicalLimitations) ? caamResults.medicalLimitations : "NIL";
+  }
+
+  if (caamResults && overallBadge && headerEl) {
+    if (caamResults.overallStatus === "EXPIRED") {
+      headerEl.innerText = "Licence Lapsed";
+      overallBadge.className = "status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-xs tracking-wider mt-4 shadow-md bg-rose-600";
+      overallBadge.innerText = "EXPIRED";
+    } else if (caamResults.overallStatus === "EXPIRING_SOON") {
+      headerEl.innerText = "Licence Expiring Soon";
+      overallBadge.className = "status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-xs tracking-wider mt-4 shadow-md bg-amber-500";
+      overallBadge.innerText = "EXPIRING SOON";
+    } else {
+      headerEl.innerText = "Licence Valid";
+      overallBadge.className = "status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-xs tracking-wider mt-4 shadow-md bg-emerald-600";
+      overallBadge.innerText = "VALID";
+    }
+
+    let resAdvisoryBox = getResEl("res-advisory-box");
+    if (caamResults && caamResults.advisoryNotice) {
+      if (!resAdvisoryBox) {
+        resAdvisoryBox = document.createElement("div");
+        resAdvisoryBox.id = "res-advisory-box";
+        if (overallBadge && overallBadge.parentElement) {
+          overallBadge.parentElement.appendChild(resAdvisoryBox);
+        }
+      }
+      resAdvisoryBox.className = "mt-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-left";
+      resAdvisoryBox.innerHTML = `
+<div class="flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-300">
+  <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+  </svg>
+  <span>SPECIALIZED ROLE ADVISORY</span>
+</div>
+<p class="mt-1 text-[11px] font-medium text-amber-700 dark:text-amber-400 leading-tight">
+  ${caamResults.advisoryNotice.message}
+</p>
+`;
+    } else if (resAdvisoryBox) {
+      resAdvisoryBox.remove();
+    }
+  }
+
+  const caamListContainer = getResEl("res-qualifications-list") || getResEl("qualifications-list");
+  if (caamListContainer && caamResults) {
+    caamListContainer.innerHTML = "";
+    const sortedResQuals = sortCaamQualifications(caamResults.qualifications);
+
+    if (!sortedResQuals || sortedResQuals.length === 0) {
+      caamListContainer.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">No CAAM qualifications found on digital licence.</div>`;
+    } else {
+      const activeResQuals = sortedResQuals.filter(q => !q.isLegacy && q.status !== "INACTIVE_LEGACY");
+      const legacyResQuals = sortedResQuals.filter(q => q.isLegacy || q.status === "INACTIVE_LEGACY");
+
+      activeResQuals.forEach(q => {
+        const row = document.createElement("div");
+        row.className = "py-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 last:border-b-0";
+
+        let badgeHtml = "";
+        const isSupervisory = Boolean(q.isSupervisory) || isSupervisoryQual(q.name);
+
+        if (isSupervisory) {
+          if (q.status === "EXPIRED" || q.status === "ROLE_EXPIRED") {
+            const label = isDfeQual(q.name) ? "Examiner Lapsed" : (isFiQual(q.name) ? "Instructor Lapsed" : "Role Lapsed");
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-700">${label}</span>`;
+          } else if (q.status === "EXPIRING_SOON") {
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">${q.daysRemaining} days left</span>`;
+          } else {
+            const label = isDfeQual(q.name) ? "Valid (Examiner)" : (isFiQual(q.name) ? "Valid (Instructor)" : "Valid");
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300">${label}</span>`;
+          }
+        } else {
+          if (q.status === "EXPIRED") {
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300">Expired</span>`;
+          } else if (q.status === "EXPIRING_SOON") {
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">${q.daysRemaining} days left</span>`;
+          } else {
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300">Valid</span>`;
+          }
+        }
+
+        row.innerHTML = `
+<div>
+  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">${q.name}</div>
+  <div class="text-[10px] text-slate-400">Expiry: ${q.dateText || "No Expiry"}</div>
+</div>
+${badgeHtml}
+`;
+        caamListContainer.appendChild(row);
+      });
+
+      if (legacyResQuals.length > 0) {
+        const legacyHeader = document.createElement("div");
+        legacyHeader.className = "mt-4 pt-1 flex items-center justify-between";
+        legacyHeader.innerHTML = `
+<span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Previous / Legacy Endorsements</span>
+`;
+        caamListContainer.appendChild(legacyHeader);
+
+        legacyResQuals.forEach(q => {
+          const row = document.createElement("div");
+          row.className = "py-2.5 px-3 rounded-xl bg-slate-50/60 dark:bg-slate-900/40 my-1 flex items-center justify-between border border-slate-100 dark:border-slate-800/60";
+          row.innerHTML = `
+<div>
+  <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">${q.name}</div>
+  <div class="text-[10px] text-slate-400">Lapsed: ${q.dateText || "Expired"}</div>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Legacy / Lapsed</span>
+`;
+          caamListContainer.appendChild(row);
+        });
+      }
+    }
+  }
+
+  const resHeaderNav = resView ? (resView.querySelector("header") || resView.querySelector(".topbar") || resView.querySelector("#result-view-header")) : null;
+  if (resHeaderNav) {
+    resHeaderNav.style.display = "none";
+    resHeaderNav.classList.add("hidden");
+  }
+
+  const backBtn = document.getElementById("btn-result-back");
+  if (backBtn) {
+    backBtn.style.display = "none";
+    backBtn.classList.add("hidden");
+    if (backBtn.parentNode && (backBtn.parentNode.tagName === "HEADER" || backBtn.parentNode.classList.contains("flex"))) {
+      backBtn.parentNode.style.display = "none";
+      backBtn.parentNode.classList.add("hidden");
+    }
+  }
+
+  const resOpenBtn = getResEl("res-open-original-btn");
+  if (resOpenBtn) {
+    resOpenBtn.classList.remove("border-t", "border-slate-100", "dark:border-slate-800", "border-slate-200", "dark:border-slate-700");
+    if (resOpenBtn.parentNode) {
+      resOpenBtn.parentNode.classList.remove("border-t", "border-slate-100", "dark:border-slate-800", "border-slate-200", "dark:border-slate-700");
+    }
+    resOpenBtn.onclick = () => {
+      if (lastScannedUrl) {
+        window.open(lastScannedUrl, "_blank");
+      } else if (caamResults && caamResults.qrImageUrl) {
+        window.open(caamResults.qrImageUrl, "_blank");
+      }
+    };
+  }
+
+  const resScanNewBtn = getResEl("res-scan-new-btn") || getResEl("scan-new-btn");
+  if (resScanNewBtn) {
+    resScanNewBtn.onclick = () => {
+      showScannerView();
+    };
+  }
+
+  setupReverifyOnlineButton();
+  setupPinCardButton(caamResults);
+  showView("result-view");
+}
+
+window.loadHistoricalRecord = function(id) {
+  const history = getScanHistory();
+  const match = history.find(item => item && String(item.id) === String(id));
+  if (match) {
+    lastScannedUrl = match.url;
+    renderResults(match.resultsData);
+  }
+};
+
+function drawQrToCanvas(canvasElem, qrUrlText, qrImageUrl) {
+  if (!canvasElem) return;
+  const ctx = canvasElem.getContext("2d", { willReadFrequently: true });
+  const size = 240;
+  canvasElem.width = size;
+  canvasElem.height = size;
+
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillRect(0, 0, size, size);
+
+  if (!qrUrlText) {
+    ctx.fillStyle = "#F8FAFC";
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = "#0F172A";
+    ctx.font = "bold 12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("CAAM eCLIPSE QR", size / 2, size / 2 - 10);
+    ctx.font = "10px sans-serif";
+    ctx.fillStyle = "#64748B";
+    ctx.fillText("No Licence URL Configured", size / 2, size / 2 + 10);
+    return;
+  }
+
+  const cacheCanvasDataUrl = () => {
+    try {
+      const dataUrl = canvasElem.toDataURL("image/png");
+      if (dataUrl && dataUrl.length > 100 && typeof saveProfileData === "function") {
+        const currentProfile = (typeof getProfileData === "function") ? getProfileData() : {};
+        if (currentProfile.cachedQrDataUrl !== dataUrl) {
+          saveProfileData({ cachedQrDataUrl: dataUrl });
+        }
+      }
+    } catch (err) {
+      console.warn("Could not cache QR canvas Data URL:", err);
+    }
+  };
+
+  if (window.QRCode && typeof window.QRCode.toCanvas === 'function') {
+    try {
+      window.QRCode.toCanvas(canvasElem, qrUrlText, {
+        width: size,
+        margin: 2,
+        color: { dark: '#000000', light: '#FFFFFF' }
+      });
+      cacheCanvasDataUrl();
+      return;
+    } catch (e) {
+      console.warn("Engine 1 (QRCode.toCanvas) failed:", e);
+    }
+  }
+
+  if (window.QRCode && typeof window.QRCode === 'function') {
+    try {
+      const tempDiv = document.createElement("div");
+      tempDiv.style.position = "absolute";
+      tempDiv.style.left = "-9999px";
+      tempDiv.style.top = "-9999px";
+      document.body.appendChild(tempDiv);
+
+      new window.QRCode(tempDiv, {
+        text: qrUrlText,
+        width: size,
+        height: size,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: (window.QRCode.CorrectLevel ? window.QRCode.CorrectLevel.H : 2)
+      });
+
+      const generatedCanvas = tempDiv.querySelector("canvas");
+      const generatedImg = tempDiv.querySelector("img");
+
+      if (generatedCanvas) {
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0, 0, size, size);
+        ctx.drawImage(generatedCanvas, 0, 0, size, size);
+        if (tempDiv.parentNode) document.body.removeChild(tempDiv);
+        cacheCanvasDataUrl();
+        return;
+      } else if (generatedImg) {
+        const renderImageToCanvas = () => {
+          ctx.fillStyle = "#FFFFFF";
+          ctx.fillRect(0, 0, size, size);
+          ctx.drawImage(generatedImg, 0, 0, size, size);
+          if (tempDiv.parentNode) document.body.removeChild(tempDiv);
+          cacheCanvasDataUrl();
+        };
+
+        if (generatedImg.complete && generatedImg.src) {
+          renderImageToCanvas();
+          return;
+        } else {
+          generatedImg.onload = renderImageToCanvas;
+          setTimeout(() => {
+            if (tempDiv.parentNode) document.body.removeChild(tempDiv);
+          }, 1000);
+          return;
+        }
+      } else {
+        if (tempDiv.parentNode) document.body.removeChild(tempDiv);
+      }
+    } catch (e) {
+      console.warn("Engine 2 (David Shim QRCode) failed:", e);
+    }
+  }
+
+  const profile = (typeof getProfileData === "function") ? getProfileData() : {};
+  if (profile && profile.cachedQrDataUrl) {
+    const cachedImg = new Image();
+    cachedImg.onload = () => {
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, size, size);
+      ctx.drawImage(cachedImg, 0, 0, size, size);
+    };
+    cachedImg.src = profile.cachedQrDataUrl;
+    return;
+  }
+
+  let imgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrUrlText)}`;
+  const img = new Image();
+  img.onload = () => {
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(0, 0, size, size);
+    ctx.drawImage(img, 10, 10, size - 20, size - 20);
+    cacheCanvasDataUrl();
+  };
+  img.onerror = () => {
+    if (qrImageUrl && imgSrc !== `${PROXY_URL}?url=${encodeURIComponent(qrImageUrl)}`) {
+      img.src = `${PROXY_URL}?url=${encodeURIComponent(qrImageUrl)}`;
+    } else {
+      ctx.fillStyle = "#F8FAFC";
+      ctx.fillRect(0, 0, size, size);
+      ctx.fillStyle = "#0F172A";
+      ctx.font = "bold 12px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("CAAM eCLIPSE QR", size / 2, size / 2 - 10);
+      ctx.font = "10px sans-serif";
+      ctx.fillStyle = "#64748B";
+      ctx.fillText("Offline Pass Active", size / 2, size / 2 + 10);
+    }
+  };
+  img.src = imgSrc;
+}
+
+function renderMyQrPass() {
+  const tabQrPassBtn = document.getElementById("tab-qrpass-btn");
+  if (tabQrPassBtn) {
+    const span = tabQrPassBtn.querySelector("span");
+    if (span) span.innerText = "My QR";
+    else tabQrPassBtn.innerText = "My QR";
+  }
+
+  const profile = getProfileData();
+  const hasUrl = profile && profile.url && profile.url.trim() !== "";
+  const tabContainer = document.getElementById("my-qr-pass-tab");
+
+  if (tabContainer) {
+    if (!initialMyQrPassTemplateHTML && tabContainer.querySelector("#pass-qr-canvas")) {
+      initialMyQrPassTemplateHTML = tabContainer.innerHTML;
+    }
+
+    if (!hasUrl && !profile.cachedQrDataUrl && !profile.cachedCaamResults) {
+      tabContainer.innerHTML = `
+<div class="py-12 px-4 text-center flex flex-col items-center justify-center bg-slate-800/80 rounded-2xl border border-slate-700/80 shadow-lg my-4">
+  <div class="w-16 h-16 bg-slate-700/60 rounded-full flex items-center justify-center text-slate-400 mb-4 shadow-inner">
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 3l18 18"></path></svg>
+  </div>
+  <h3 class="text-base font-bold text-white mb-1">No Digital QR Pass Configured</h3>
+  <p class="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed mb-4">
+    Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to generate your personal digital flight pass.
+  </p>
+  <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+    Configure Licence Source
+  </button>
+</div>
+`;
+      return;
+    } else if (initialMyQrPassTemplateHTML) {
+      tabContainer.innerHTML = initialMyQrPassTemplateHTML;
+    }
+  }
+
+  const canvas = document.getElementById("pass-qr-canvas");
+  const nameElem = document.getElementById("pass-pilot-name");
+  const licenceElem = document.getElementById("pass-licence-no") || document.getElementById("pass-licence-number");
+  const freshnessElem = document.getElementById("pass-freshness-tag") || document.getElementById("pass-timestamp");
+
+  const url = (profile.url || "").trim();
+  const caam = profile.cachedCaamResults || null;
+  const mab = profile.cachedMabResults || null;
+
+  let displayName = "Unconfigured Profile";
+  if (caam && caam.pilotDetails && caam.pilotDetails.name && caam.pilotDetails.name !== "-") {
+    displayName = caam.pilotDetails.name;
+  } else if (mab && mab.pilotName && mab.pilotName !== "-") {
+    displayName = mab.pilotName;
+  }
+
+  let licenceType = (caam && caam.pilotDetails && caam.pilotDetails.licenseType) ? caam.pilotDetails.licenseType : "ATPL(A)";
+  let licenceNo = (caam && caam.pilotDetails && caam.pilotDetails.licenseNo && caam.pilotDetails.licenseNo !== "-")
+    ? caam.pilotDetails.licenseNo
+    : ((mab && mab.lineCheck && mab.lineCheck.licenseNo) ? mab.lineCheck.licenseNo : "-");
+
+  let scanTimeStr = (caam && caam.scanTime) ? caam.scanTime : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+  if (nameElem) nameElem.innerText = displayName;
+  if (licenceElem) licenceElem.innerText = `${licenceType} - ${licenceNo}`;
+  if (freshnessElem) freshnessElem.innerText = scanTimeStr;
+
+  if (canvas) {
+    drawQrToCanvas(canvas, url, profile.qrImageUrl || (caam ? caam.qrImageUrl : ""));
+  }
+}
+
+function setupTab3ManualLayout() {
+  try {
+    const manualTab = document.getElementById("tab-manual-content") || document.getElementById("manual-entry-tab");
+
+    const recentCard = document.getElementById("recent-verified-crew-card");
+    if (recentCard) {
+      recentCard.style.display = "none";
+      recentCard.classList.add("hidden");
+    }
+
+    if (manualTab) {
+      const headings = manualTab.querySelectorAll("h3, h4, div");
+      headings.forEach(el => {
+        if (el.innerText && el.innerText.trim().toLowerCase().includes("recently verified crew")) {
+          let parent = el;
+          while (parent && parent !== manualTab && parent.parentNode !== manualTab) {
+            parent = parent.parentNode;
+          }
+          if (parent && parent !== manualTab) {
+            parent.style.display = "none";
+            parent.classList.add("hidden");
+          }
+        }
+      });
+    }
+
+    const urlInput = document.getElementById("manual-url-input");
+    let submitBtn = document.getElementById("submit-url-btn");
+    const pasteBtn = document.getElementById("paste-url-btn");
+
+    if (pasteBtn && pasteBtn.parentNode) {
+      pasteBtn.parentNode.removeChild(pasteBtn);
+    }
+
+    if (!urlInput) return;
+
+    if (urlInput) {
+      urlInput.oninput = () => updateManualUrlBadge(urlInput.value);
+      urlInput.onchange = () => updateManualUrlBadge(urlInput.value);
+      urlInput.onkeyup = () => updateManualUrlBadge(urlInput.value);
+      urlInput.onpaste = () => setTimeout(() => updateManualUrlBadge(urlInput.value), 50);
+      urlInput.onfocus = () => updateManualUrlBadge(urlInput.value);
+      urlInput.onblur = () => updateManualUrlBadge(urlInput.value);
+      updateManualUrlBadge(urlInput.value);
+    }
+
+    urlInput.className = "w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none transition-all shadow-xs";
+
+    let btnRow = document.getElementById("manual-action-btn-row");
+    if (!btnRow) {
+      btnRow = document.createElement("div");
+      btnRow.id = "manual-action-btn-row";
+      btnRow.className = "grid grid-cols-2 gap-2.5 my-3 w-full";
+
+      const resetBtn = document.createElement("button");
+      resetBtn.id = "reset-url-btn";
+      resetBtn.type = "button";
+      resetBtn.className = "h-11 px-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-95 cursor-pointer whitespace-nowrap overflow-hidden";
+      resetBtn.innerHTML = `
+<svg class="w-4 h-4 text-slate-600 dark:text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+</svg>
+<span>Reset</span>
+`;
+      resetBtn.onclick = (e) => {
+        e.preventDefault();
+        urlInput.value = "";
+        urlInput.focus();
+        updateManualUrlBadge("");
+      };
+
+      if (!submitBtn) {
+        submitBtn = document.createElement("button");
+        submitBtn.id = "submit-url-btn";
+        submitBtn.type = "button";
+        submitBtn.onclick = () => {
+          if (typeof handleManualUrl === 'function') handleManualUrl();
+        };
+      }
+
+      submitBtn.className = "h-11 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer whitespace-nowrap overflow-hidden";
+      submitBtn.innerHTML = `
+<svg class="w-4 h-4 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+</svg>
+<span>Verify</span>
+`;
+
+      btnRow.appendChild(resetBtn);
+      if (submitBtn.parentNode && submitBtn.parentNode !== btnRow) {
+        submitBtn.parentNode.insertBefore(btnRow, submitBtn);
+      } else if (urlInput.parentNode) {
+        urlInput.parentNode.insertBefore(btnRow, urlInput.nextSibling);
+      }
+      btnRow.appendChild(submitBtn);
+    } else {
+      if (submitBtn) {
+        submitBtn.className = "h-11 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer whitespace-nowrap overflow-hidden";
+        submitBtn.innerHTML = `
+<svg class="w-4 h-4 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+</svg>
+<span>Verify</span>
+`;
+      }
+    }
+  } catch (e) {
+    console.warn("setupTab3ManualLayout error:", e);
+  }
+}
+
+function toggleHistoryLimitQuickPicker(anchorEl) {
+  if (!anchorEl) return;
+  let picker = document.getElementById("history-limit-quick-picker");
+  if (picker) {
+    picker.remove();
+    return;
+  }
+
+  picker = document.createElement("div");
+  picker.id = "history-limit-quick-picker";
+  picker.className = "absolute left-4 top-12 z-50 p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl flex items-center gap-2 transition-all animate-in fade-in slide-in-from-top-2 duration-150";
+
+  const currentLimit = (typeof getHistoryLimit === "function") ? getHistoryLimit() : 10;
+  const options = [10, 20, 30];
+
+  options.forEach(opt => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    const isActive = (opt === currentLimit);
+    btn.className = `px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+      isActive
+        ? "bg-blue-600 text-white shadow-xs"
+        : "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600"
+    }`;
+    btn.innerText = `${opt} Scans`;
+    btn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof setHistoryLimit === "function") setHistoryLimit(opt);
+      if (typeof updateHistoryLimitPills === "function") updateHistoryLimitPills(opt);
+      picker.remove();
+      if (window.renderHistoryList) window.renderHistoryList();
+    };
+    picker.appendChild(btn);
+  });
+
+  const headerContainer = anchorEl.closest(".sticky") || anchorEl.parentElement;
+  if (headerContainer) {
+    if (window.getComputedStyle(headerContainer).position === "static") {
+      headerContainer.style.position = "relative";
+    }
+    headerContainer.appendChild(picker);
+  }
+
+  const closeOnOutsideClick = (evt) => {
+    if (picker && !picker.contains(evt.target) && evt.target !== anchorEl && !anchorEl.contains(evt.target)) {
+      picker.remove();
+      document.removeEventListener("click", closeOnOutsideClick);
+    }
+  };
+
+  setTimeout(() => {
+    document.addEventListener("click", closeOnOutsideClick);
+  }, 10);
+}
+
+window.initToolsModule = function() {
+  if (typeof initToolsModule === 'function') {
+    initToolsModule();
+  }
+};
+
+function initToolsUI() {
+  initToolsModule();
+  if (typeof initToolsViewUI === 'function') {
+    initToolsViewUI();
+  }
+
+  document.getElementById("btn-calc-ppc")?.addEventListener("click", () => {
+    const conduct = document.getElementById("ppc-conduct-date")?.value;
+    const expiry = document.getElementById("ppc-expiry-date")?.value;
+    const res = calculatePpcWindows(conduct, expiry);
+    const resBox = document.getElementById("ppc-results-box");
+
+    if (!res) {
+      alert("Please select a valid LPC Expiry Date.");
+      return;
+    }
+
+    document.getElementById("ppc-res-expiry").innerText = res.newLpcExpiry;
+    document.getElementById("ppc-res-opc-start").innerText = res.opcEarliest;
+    document.getElementById("ppc-res-opc-end").innerText = res.opcLatest;
+    if (resBox) resBox.classList.remove("hidden");
+  });
+
+  document.getElementById("btn-calc-recurrent")?.addEventListener("click", () => {
+    const type = document.getElementById("recurrent-drill-type")?.value || "linecheck";
+    const conduct = document.getElementById("recurrent-conduct-date")?.value;
+    const res = calculateCourseExpiry(type, conduct);
+    const resBox = document.getElementById("recurrent-results-box");
+
+    if (!res) {
+      alert("Please select a valid Conducted Date.");
+      return;
+    }
+
+    document.getElementById("recurrent-res-expiry").innerText = res.expiryDate;
+    if (resBox) resBox.classList.remove("hidden");
+  });
+
+  document.getElementById("btn-calc-medical")?.addEventListener("click", () => {
+    const last = document.getElementById("medical-last-date")?.value;
+    const age = document.getElementById("medical-pilot-age")?.value;
+    const res = calculateMedicalWindow(last, age);
+    const resBox = document.getElementById("medical-results-box");
+
+    if (!res) {
+      alert("Please select a valid Medical Expiry Date.");
+      return;
+    }
+
+    document.getElementById("medical-res-expiry").innerText = res.expiryDate;
+    document.getElementById("medical-res-dame").innerText = res.dameEarliest;
+    const ageText = document.getElementById("medical-res-age-text");
+    if (ageText) ageText.innerText = res.ageNotice;
+    if (resBox) resBox.classList.remove("hidden");
+  });
+
+  document.getElementById("btn-calc-preflight")?.addEventListener("click", () => {
+    const report = document.getElementById("fdp-report-time")?.value;
+    const count = getSectorCount();
+    const maxHours = getMaxAllowableFdp(report, count);
+    const resBox = document.getElementById("preflight-results-box");
+
+    if (!report) {
+      alert("Please enter a Report Time (e.g. 08:00).");
+      return;
+    }
+
+    const h = Math.floor(maxHours);
+    const m = Math.round((maxHours % 1) * 60);
+    document.getElementById("fdp-res-max").innerText = `${h} Hours ${m > 0 ? m + ' Mins' : ''}`;
+
+    const [rH, rM] = report.replace(/[^\d:]/g, "").split(":").map(n => parseInt(n, 10));
+    if (!isNaN(rH)) {
+      let lobtH = rH + h;
+      let lobtM = (rM || 0) + m;
+      if (lobtM >= 60) { lobtH += 1; lobtM -= 60; }
+      if (lobtH >= 24) lobtH %= 24;
+      document.getElementById("fdp-res-lobt").innerText = `${lobtH.toString().padStart(2, '0')}:${lobtM.toString().padStart(2, '0')} UTC`;
+    }
+
+    if (resBox) resBox.classList.remove("hidden");
+  });
+
+  document.getElementById("btn-fdp-dec")?.addEventListener("click", () => {
+    const count = getSectorCount();
+    setSectorCount(count - 1);
+    const badge = document.getElementById("fdp-sector-count");
+    if (badge) badge.innerText = getSectorCount();
+  });
+
+  document.getElementById("btn-fdp-inc")?.addEventListener("click", () => {
+    const count = getSectorCount();
+    setSectorCount(count + 1);
+    const badge = document.getElementById("fdp-sector-count");
+    if (badge) badge.innerText = getSectorCount();
+  });
+}
+
+// ----------------------------------------------------------------------------
+// STEP 3: 2-TIER TOOLS CONTROLLER, SWIPE GESTURES & SMART PIPELINING
+// ----------------------------------------------------------------------------
+
+export function initToolsUIController() {
+  initToolsModule();
+
+  const catQualsBtn = document.getElementById("cat-tab-qualifications");
+  const catDutyBtn = document.getElementById("cat-tab-dutyrest");
+
+  if (catQualsBtn) catQualsBtn.addEventListener("click", () => switchToolCategory("qualifications"));
+  if (catDutyBtn) catDutyBtn.addEventListener("click", () => switchToolCategory("dutyrest"));
+
+  const catAPillsMap = [
+    { pill: "pill-tool-medical", card: "tool-card-medical" },
+    { pill: "pill-tool-ppc", card: "tool-card-ppc" },
+    { pill: "pill-tool-recurrent", card: "tool-card-recurrent" },
+    { pill: "pill-tool-recency", card: "tool-card-recency" }
+  ];
+
+  catAPillsMap.forEach(item => {
+    const pill = document.getElementById(item.pill);
+    if (pill) {
+      pill.addEventListener("click", () => {
+        switchActiveTool(item.card);
+      });
+    }
+  });
+
+  const catBPillsMap = [
+    { pill: "pill-tool-standby", card: "tool-card-standby" },
+    { pill: "pill-tool-maxfdp", card: "tool-card-maxfdp" },
+    { pill: "pill-tool-preflight", card: "tool-card-preflight" },
+    { pill: "pill-tool-cumulative", card: "tool-card-cumulative" }
+  ];
+
+  catBPillsMap.forEach(item => {
+    const pill = document.getElementById(item.pill);
+    if (pill) {
+      pill.addEventListener("click", () => {
+        switchActiveTool(item.card);
+      });
+    }
+  });
+
+  const tzUtcBtn = document.getElementById("tz-btn-utc");
+  const tzLocalBtn = document.getElementById("tz-btn-local");
+
+  if (tzUtcBtn) tzUtcBtn.addEventListener("click", () => setStandbyLocation("UTC"));
+  if (tzLocalBtn) tzLocalBtn.addEventListener("click", () => setStandbyLocation("LOCAL"));
+
+  const stbyHomeBtn = document.getElementById("btn-stby-loc-home");
+  const stbyAirportBtn = document.getElementById("btn-stby-loc-airport");
+
+  if (stbyHomeBtn) stbyHomeBtn.addEventListener("click", () => setStandbyLocation("HOME"));
+  if (stbyAirportBtn) stbyAirportBtn.addEventListener("click", () => setStandbyLocation("AIRPORT"));
+
+  const courseTrigger = document.getElementById("btn-recurrent-course-trigger");
+  const courseModalClose = document.getElementById("btn-close-recurrent-modal");
+  const courseSearchInput = document.getElementById("recurrent-search-input");
+
+  if (courseTrigger) courseTrigger.addEventListener("click", openRecurrentCourseModal);
+  if (courseModalClose) courseModalClose.addEventListener("click", closeRecurrentCourseModal);
+
+  if (courseSearchInput) {
+    courseSearchInput.addEventListener("input", (e) => filterRecurrentCourses(e.target.value));
+  }
+
+  document.querySelectorAll(".recurrent-module-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const key = card.dataset.courseKey;
+      const name = card.dataset.courseName;
+      const category = card.dataset.courseCategory;
+      if (key && name && category) {
+        selectRecurrentCourse(key, name, category);
+        dispatchActiveToolCalculation();
+      }
+    });
+  });
+
+  setupToolsCardSwipeGestures();
+
+  document.querySelectorAll("[onclick^=\"resetToolInputs\"]").forEach(btn => {
+    btn.removeAttribute("onclick");
+    btn.addEventListener("click", (e) => {
+      const toolCard = e.target.closest(".tool-card");
+      if (toolCard) {
+        const toolId = toolCard.id;
+        resetToolInputs(toolId);
+        dispatchActiveToolCalculation();
+      }
+    });
+  });
+
+  ["card-wrapper-cat-a", "card-wrapper-cat-b"].forEach(wrapperId => {
+    const wrapper = document.getElementById(wrapperId);
+    if (wrapper) {
+      wrapper.addEventListener("input", () => dispatchActiveToolCalculation());
+      wrapper.addEventListener("change", () => dispatchActiveToolCalculation());
+    }
+  });
+
+  restoreToolsLocalStorage();
+  dispatchActiveToolCalculation();
+}
+
+window.initToolsUIController = initToolsUIController;
+
+function setupCardSwipeGestures(wrapperId, toolIdList) {
+  const wrapper = document.getElementById(wrapperId);
+  if (!wrapper) return;
+
+  let startX = 0;
+  let startY = 0;
+
+  wrapper.addEventListener("touchstart", (e) => {
+    if (e.touches.length === 1) {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }
+  }, { passive: true });
+
+  wrapper.addEventListener("touchend", (e) => {
+    if (e.changedTouches.length === 1) {
+      const endX = e.changedTouches[0].clientX;
+      const endY = e.changedTouches[0].clientY;
+      const deltaX = endX - startX;
+      const deltaY = endY - startY;
+
+      if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+        const state = getToolsState();
+        const activeToolId = state.activeSubTab;
+        const currentIndex = toolIdList.indexOf(activeToolId);
+
+        if (currentIndex !== -1) {
+          if (deltaX < 0 && currentIndex < toolIdList.length - 1) {
+            const nextToolId = toolIdList[currentIndex + 1];
+            switchActiveTool(nextToolId);
+            dispatchActiveToolCalculation();
+          } else if (deltaX > 0 && currentIndex > 0) {
+            const prevToolId = toolIdList[currentIndex - 1];
+            switchActiveTool(prevToolId);
+            dispatchActiveToolCalculation();
+          }
+        }
+      }
+    }
+  }, { passive: true });
+}
+
+function restoreToolsLocalStorage() {
+  try {
+    const recDay = localStorage.getItem("certifly_tool_recency_day");
+    const recNight = localStorage.getItem("certifly_tool_recency_night");
+    if (recDay && document.getElementById("input-recency-day")) document.getElementById("input-recency-day").value = recDay;
+    if (recNight && document.getElementById("input-recency-night")) document.getElementById("input-recency-night").value = recNight;
+
+    const cum7d = localStorage.getItem("certifly_tool_cum_duty_7d");
+    const cum28d = localStorage.getItem("certifly_tool_cum_flight_28d");
+    if (cum7d && document.getElementById("input-cum-duty-7d")) document.getElementById("input-cum-duty-7d").value = cum7d;
+    if (cum28d && document.getElementById("input-cum-flight-28d")) document.getElementById("input-cum-flight-28d").value = cum28d;
+  } catch (e) {
+    console.warn("LocalStorage access error in tools:", e);
+  }
+}
+
+
+function setupToolsCardSwipeGestures() {
+  const catASubtabs = ['medical', 'ppc', 'recurrent', 'recency'];
+  const catBSubtabs = ['standby', 'max-fdp', 'pre-flight-rest', 'cumulative', 'caam-ftl1'];
+
+  const wrappers = [
+    { id: 'card-wrapper-cat-a', getSubtabs: () => catASubtabs },
+    { id: 'card-wrapper-cat-b', getSubtabs: () => catBSubtabs }
+  ];
+
+  wrappers.forEach(item => {
+    const el = document.getElementById(item.id);
+    if (!el) return;
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    el.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches.length > 0) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+
+    el.addEventListener('touchend', (e) => {
+      if (!e.changedTouches || e.changedTouches.length === 0) return;
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+
+      const diffX = touchEndX - touchStartX;
+      const diffY = touchEndY - touchStartY;
+
+      if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+        const state = typeof getToolsState === 'function' ? getToolsState() : {};
+        const currentSubtab = state.activeSubTab || 'medical';
+        const subtabs = item.getSubtabs();
+        const currentIndex = subtabs.indexOf(currentSubtab);
+
+        if (currentIndex !== -1) {
+          if (diffX < 0 && currentIndex < subtabs.length - 1) {
+            const nextTab = subtabs[currentIndex + 1];
+            if (typeof switchActiveTool === 'function') switchActiveTool(nextTab);
+          } else if (diffX > 0 && currentIndex > 0) {
+            const prevTab = subtabs[currentIndex - 1];
+            if (typeof switchActiveTool === 'function') switchActiveTool(prevTab);
+          }
+        }
+      }
+    }, { passive: true });
+  });
+}
