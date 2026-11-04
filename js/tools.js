@@ -1,4 +1,4 @@
-// ./js/tools.js (0311_R338) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (0311_R342) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1035,6 +1035,9 @@ export function runToolCalculation(toolType, inputData = {}) {
         const sectors = parseInt(document.getElementById('input-maxfdp-sectors')?.value || '2', 10);
         const acclim = (document.getElementById('input-maxfdp-acclimatised')?.value === 'true');
         const reliefType = document.getElementById('input-maxfdp-relief')?.value || 'NONE';
+        let mappedReliefType = reliefType;
+        if (reliefType === 'CLASS_1_BUNK' || reliefType === 'BUNK') mappedReliefType = 'BUNK';
+        else if (reliefType === 'CLASS_2_SEAT' || reliefType === 'SEAT') mappedReliefType = 'SEAT';
 
         const now = new Date();
         const y = now.getFullYear();
@@ -1054,7 +1057,7 @@ export function runToolCalculation(toolType, inputData = {}) {
           sectorsPlanned: sectors,
           longestSectorHours: toolsState.maxfdpLongestSector || 0,
           fleetType: 'B737',
-          inflightReliefType: reliefType,
+          inflightReliefType: mappedReliefType,
           inflightRestHours: toolsState.maxfdpInflightRestHours || 0,
           splitDutyGroundRestHours: toolsState.maxfdpSplitDutyRestHours || 0
         };
@@ -2271,7 +2274,7 @@ export function openMaxFdpModifiersModal() {
 
   const longestLabels = { '0': 'Standard Sector (< 7h)', '8': 'Long Sector (> 7h to 9h)', '10': 'Extended Sector (> 9h to 11h)', '12': 'Ultra Long Sector (> 11h)' };
   const splitLabels = { '0': 'None (0h)', '3.5': '3.5 Hours Ground Rest', '4': '4.0 Hours Ground Rest', '5': '5.0 Hours Ground Rest', '6': '6.0+ Hours Ground Rest' };
-  const inflightLabels = { '0': '0.0 Hours', '3': '3.0 Hours Rest', '4': '4.0 Hours Rest', '5': '5.0 Hours Rest', '6': '6.0 Hours Rest' };
+  const inflightLabels = { '0': '0.0 Hours', '3': '3.0 Hours Rest', '3.5': '3.5 Hours Rest', '4': '4.0 Hours Rest', '4.5': '4.5 Hours Rest', '5': '5.0 Hours Rest', '5.5': '5.5 Hours Rest', '6': '6.0 Hours Rest' };
   const crewLabels = { '2': '2 Pilots (Standard Crew)', '3': '3 Pilots (Augmented Crew)', '4': '4 Pilots (Double Crew)' };
   const precLabels = { 'UP_TO_18_OR_OVER_30': 'Up to 18h OR Over 30h', 'BETWEEN_18_AND_30': 'Between 18h and 30h' };
 
