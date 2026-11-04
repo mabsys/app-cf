@@ -1,4 +1,4 @@
-// ./js/tools.js (0411_R353) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (0411_R355) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -233,6 +233,18 @@ export function setEfbDatePreset(presetKey) {
 
 export function selectEfbDate(isoVal) {
   if (efbDatePickerState.targetInputId) {
+    if (efbDatePickerState.targetInputId === 'profile-passport-expiry') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const selDate = new Date(isoVal);
+      if (selDate < today) {
+        if (typeof alert === 'function') {
+          alert('Passport expiry date cannot be in the past.');
+        }
+        return;
+      }
+    }
+
     const inputEl = document.getElementById(efbDatePickerState.targetInputId);
     if (inputEl) inputEl.value = isoVal;
 
@@ -247,7 +259,8 @@ export function selectEfbDate(isoVal) {
       'input-recency-l1-date': 'input-recency-l1-date-display',
       'input-recency-l2-date': 'input-recency-l2-date-display',
       'input-recency-l3-date': 'input-recency-l3-date-display',
-      'input-recency-variant-date': 'input-recency-variant-date-display'
+      'input-recency-variant-date': 'input-recency-variant-date-display',
+      'profile-passport-expiry': 'profile-passport-expiry-display'
     };
 
     const displayId = displayIdMap[efbDatePickerState.targetInputId] || `${efbDatePickerState.targetInputId}-display`;
