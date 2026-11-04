@@ -1,4 +1,4 @@
-// ./main.js (0411_R364) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0411_R366) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
 import { initToolsModule, filterRecurrentCourses, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
@@ -861,6 +861,7 @@ function initApp() {
   window.startScanner = startScanner;
   window.showScannerView = showScannerView;
   window.renderMyQrPass = renderMyQrPass;
+  window.openOriginalLicense = openOriginalLicense;
 
   saveDashboardTemplates();
 
@@ -918,7 +919,17 @@ function handleManualUrl() {
 
 function openOriginalLicense() {
   const profile = typeof getProfileData === 'function' ? getProfileData() : {};
-  const targetUrl = lastScannedUrl || (profile && profile.url ? profile.url : "");
+  let targetUrl = lastScannedUrl;
+  if (!targetUrl && profile) {
+    if (profile.url) {
+      targetUrl = profile.url;
+    } else if (profile.cachedCaamResults && profile.cachedCaamResults.qrImageUrl) {
+      targetUrl = profile.cachedCaamResults.qrImageUrl;
+    } else if (profile.qrImageUrl) {
+      targetUrl = profile.qrImageUrl;
+    }
+  }
+
   if (targetUrl) {
     let cleanUrl = targetUrl.trim();
     if (!cleanUrl.startsWith("http://") && !cleanUrl.startsWith("https://")) {
@@ -2272,6 +2283,11 @@ ${badgeHtml}
 }
 
 async function setupDocumentViewers() {
+  const openCaamLicenceBtn = getDashEl("open-original-btn");
+  if (openCaamLicenceBtn) {
+    openCaamLicenceBtn.onclick = openOriginalLicense;
+  }
+
   const attestationBtn = getDashEl("mab-view-attestation-btn");
   const qsBtn = getDashEl("mab-view-qs-btn");
   const qsBadgeText = getDashEl("mab-qs-status-text");
