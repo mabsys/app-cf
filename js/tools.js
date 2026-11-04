@@ -1,4 +1,4 @@
-// ./js/tools.js (0411_R347) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (0411_R348) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1530,7 +1530,7 @@ export function normalizeOutput(toolType, rawResult) {
         statusTheme,
         headlineTitle: 'PRE-FLIGHT MINIMUM REST',
         headlineValue: restVal,
-        targetClockLabel: 'Earliest Available Report:',
+        targetClockLabel: 'Earliest Reporting Time:',
         targetClockValue: reportStr,
         breakdownGrid: [
           { label: 'PRECEDING DUTY', value: dutyStr },
