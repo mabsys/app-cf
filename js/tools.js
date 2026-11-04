@@ -1,4 +1,4 @@
-// ./js/tools.js (0411_R348) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (0411_R351) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -278,6 +278,21 @@ export function openEfbTimePicker(targetInputId, labelTitle = 'SELECT TIME') {
   const titleEl = document.getElementById('efb-time-picker-title');
   if (titleEl) titleEl.innerText = labelTitle;
 
+  // Render dynamic time shortcut presets based on targetInputId
+  const presetsMap = {
+    'input-cum-duty-7d': ['15:00', '25:00', '35:00', '45:00'],
+    'input-cum-duty-14d': ['55:00', '65:00', '75:00', '85:00'],
+    'input-cum-duty-28d': ['95:00', '120:00', '145:00', '170:00'],
+    'input-cum-flight-28d': ['25:00', '50:00', '75:00', '100:00']
+  };
+  const presets = presetsMap[targetInputId] || ['03:00', '06:00', '12:00', '16:00'];
+  const presetsGrid = document.getElementById('efb-time-presets-grid');
+  if (presetsGrid) {
+    presetsGrid.innerHTML = presets.map(p => 
+      `<button type="button" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer" onclick="setEfbTimePreset('${p}')">${p}</button>`
+    ).join('');
+  }
+
   updateEfbTimeDisplay();
 
   const modal = document.getElementById('efb-time-picker-modal');
@@ -297,7 +312,12 @@ function updateEfbTimeDisplay() {
 }
 
 export function stepEfbTimeHour(delta) {
-  efbTimePickerState.hh = (efbTimePickerState.hh + delta + 24) % 24;
+  const isCumulative = efbTimePickerState.targetInputId && efbTimePickerState.targetInputId.startsWith('input-cum-');
+  if (isCumulative) {
+    efbTimePickerState.hh = Math.max(0, Math.min(250, efbTimePickerState.hh + delta));
+  } else {
+    efbTimePickerState.hh = (efbTimePickerState.hh + delta + 24) % 24;
+  }
   updateEfbTimeDisplay();
 }
 
@@ -1123,16 +1143,39 @@ export function runToolCalculation(toolType, inputData = {}) {
       }
 
       case 'cumulative': {
-        const d7 = document.getElementById('input-cum-duty-7d')?.value || '32:15';
-        const d14 = document.getElementById('input-cum-duty-14d')?.value || '68:30';
-        const d28 = document.getElementById('input-cum-duty-28d')?.value || '120:00';
-        const f28 = document.getElementById('input-cum-flight-28d')?.value || '78:30';
-        if (CumulativeEngineModule && typeof CumulativeEngineModule.calculateCumulativeHours === 'function') {
-          result = CumulativeEngineModule.calculateCumulativeHours({ duty7DaysStr: d7, duty14DaysStr: d14, duty28DaysStr: d28, flight28DaysStr: f28 });
-        } else {
-          result = { duty7Days: d7, isExceeded: false };
+        const d7 = document.getElementById('input-cum-duty-7d')?.value || '55:00';
+        const d14 = document.getElementById('input-cum-duty-14d')?.value || '95:00';
+        const d28 = document.getElementById('input-cum-duty-28d')?.value || '190:00';
+        const f28 = document.getElementById('input-cum-flight-28d')?.value || '100:00';
+
+        const parseHHMM = (str) => {
+          if (!str || typeof str !== 'string' || !str.includes(':')) return parseFloat(str) || 0;
+          const parts = str.split(':');
+          return (parseInt(parts[0], 10) || 0) + (parseInt(parts[1], 10) || 0) / 60;
+        };
+
+        const calcParams = {
+          loggedDutyHours7Days: parseHHMM(d7),
+          loggedDutyHours14Days: parseHHMM(d14),
+          loggedDutyHours28Days: parseHHMM(d28),
+          loggedFlightHours28Days: parseHHMM(f28)
+        };
+
+        if (typeof CumulativeEngineModule !== 'undefined') {
+          if (typeof CumulativeEngineModule.calculateCumulativeBudget === 'function') {
+            result = CumulativeEngineModule.calculateCumulativeBudget(calcParams);
+          } else if (CumulativeEngineModule.CumulativeHoursEngine && typeof CumulativeEngineModule.CumulativeHoursEngine.calculateCumulativeBudget === 'function') {
+            result = CumulativeEngineModule.CumulativeHoursEngine.calculateCumulativeBudget(calcParams);
+          } else if (CumulativeEngineModule.default && typeof CumulativeEngineModule.default.calculateCumulativeBudget === 'function') {
+            result = CumulativeEngineModule.default.calculateCumulativeBudget(calcParams);
+          }
+        }
+
+        if (!result && typeof CumulativeHoursEngine !== 'undefined' && typeof CumulativeHoursEngine.calculateCumulativeBudget === 'function') {
+          result = CumulativeHoursEngine.calculateCumulativeBudget(calcParams);
         }
         break;
+      }
       }
     }
   } catch (err) {
@@ -1542,25 +1585,43 @@ export function normalizeOutput(toolType, rawResult) {
     }
 
     case 'cumulative': {
-      const isOverLimit = rawResult ? (rawResult.isExceeded || rawResult.isOverCap) : false;
-      statusTheme = isOverLimit ? 'rose' : 'emerald';
-      const duty7Val = (rawResult && rawResult.duty7Days) ? `${rawResult.duty7Days.currentFormatted || rawResult.duty7Days} / 55:00` : '32:15 / 55:00';
-      const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? rawResult.notes : [];
+      const isExceeded = rawResult ? (rawResult.isCleared === false || rawResult.duty7?.isExceeded || rawResult.duty14?.isExceeded || rawResult.duty28?.isExceeded || rawResult.flight28?.isExceeded) : false;
+      statusTheme = isExceeded ? 'rose' : 'emerald';
+
+      const d7Current = rawResult?.duty7?.currentFormatted || '55:00';
+      const d7Cap = rawResult?.duty7?.limitFormatted || '55:00';
+      const d7Remaining = rawResult?.duty7?.remainingFormatted || '00:00';
+
+      const d14Current = rawResult?.duty14?.currentFormatted || '95:00';
+      const d14Cap = rawResult?.duty14?.limitFormatted || '95:00';
+
+      const d28Current = rawResult?.duty28?.currentFormatted || '190:00';
+      const d28Cap = rawResult?.duty28?.limitFormatted || '190:00';
+
+      const f28Current = rawResult?.flight28?.currentFormatted || '100:00';
+      const f28Cap = rawResult?.flight28?.limitFormatted || '100:00';
+
+      const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? [...rawResult.notes] : [];
+      if (rawResult && rawResult.warnings && Array.isArray(rawResult.warnings)) {
+        calcNotes.push(...rawResult.warnings);
+      }
+
       return {
         calculationNotes: calcNotes,
         statusTheme,
         headlineTitle: '7-DAY CUMULATIVE DUTY',
-        headlineValue: duty7Val,
+        headlineValue: `${d7Current} / ${d7Cap}`,
         targetClockLabel: '7-Day Rolling Duty Budget:',
-        targetClockValue: '22:45 Hours Margin Remaining',
+        targetClockValue: isExceeded ? 'BUDGET EXCEEDED' : `${d7Remaining} Hours Margin Remaining`,
         breakdownGrid: [
-          { label: '14-DAY DUTY (CAP 95H)', value: '68:30 / 95:00' },
-          { label: '28-DAY DUTY (CAP 190H)', value: '120:00 / 190:00' },
-          { label: '28-DAY FLIGHT (CAP 100H)', value: '78:30 / 100:00' }
+          { label: '14-DAY DUTY (CAP 95H)', value: `${d14Current} / ${d14Cap}` },
+          { label: '28-DAY DUTY (CAP 190H)', value: `${d28Current} / ${d28Cap}` },
+          { label: '28-DAY FLIGHT (CAP 100H)', value: `${f28Current} / ${f28Cap}` }
         ],
         auditNotes: ['Grounded in CAAM CAD 1901 Rolling Flight & Duty Time Caps.']
       };
-    }
+    };
+    }}
   }
 
   return null;
@@ -1955,10 +2016,21 @@ export function resetToolInputs(toolId) {
     const d14In = document.getElementById('input-cum-duty-14d');
     const d28In = document.getElementById('input-cum-duty-28d');
     const f28In = document.getElementById('input-cum-flight-28d');
-    if (d7In) d7In.value = '32:15';
-    if (d14In) d14In.value = '68:30';
-    if (d28In) d28In.value = '120:00';
-    if (f28In) f28In.value = '78:30';
+
+    const d7Disp = document.getElementById('btn-cum-7d-display');
+    const d14Disp = document.getElementById('btn-cum-14d-display');
+    const d28Disp = document.getElementById('btn-cum-28d-display');
+    const f28Disp = document.getElementById('btn-cum-flt28d-display');
+
+    if (d7In) d7In.value = '55:00';
+    if (d14In) d14In.value = '95:00';
+    if (d28In) d28In.value = '190:00';
+    if (f28In) f28In.value = '100:00';
+
+    if (d7Disp) d7Disp.textContent = '55:00';
+    if (d14Disp) d14Disp.textContent = '95:00';
+    if (d28Disp) d28Disp.textContent = '190:00';
+    if (f28Disp) f28Disp.textContent = '100:00';
   }
 }
 
