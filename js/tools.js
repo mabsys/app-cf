@@ -1,4 +1,4 @@
-// ./js/tools.js (0411_R351) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (0411_R352) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1176,7 +1176,6 @@ export function runToolCalculation(toolType, inputData = {}) {
         }
         break;
       }
-      }
     }
   } catch (err) {
     console.warn(`Error calculating for ${toolType}:`, err);
@@ -1620,8 +1619,7 @@ export function normalizeOutput(toolType, rawResult) {
         ],
         auditNotes: ['Grounded in CAAM CAD 1901 Rolling Flight & Duty Time Caps.']
       };
-    };
-    }}
+    }
   }
 
   return null;
