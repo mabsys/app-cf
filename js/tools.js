@@ -1,4 +1,4 @@
-// ./js/tools.js (3110_R334) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (0311_R336) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -2172,8 +2172,8 @@ export function closeAuditOverlay(toolKey) {
 // ==================================================================
 
 export function toggleModifierAccordion(paramId) {
-  const accordion = document.getElementById();
-  const arrow = document.getElementById();
+  const accordion = document.getElementById(`accordion-${paramId}`);
+  const arrow = document.getElementById(`arrow-${paramId}`);
   if (!accordion) return;
 
   const isClosed = accordion.classList.contains('hidden');
@@ -2198,7 +2198,7 @@ export function toggleModifierAccordion(paramId) {
 }
 
 export function updateModifierInlineSelectionUI(paramId, val) {
-  const accordion = document.getElementById();
+  const accordion = document.getElementById(`accordion-${paramId}`);
   if (!accordion) return;
 
   const btns = accordion.querySelectorAll('.modifier-opt-btn');
@@ -2234,10 +2234,10 @@ export function selectModifierInlineOption(paramId, val, label) {
   updateModifierInlineSelectionUI(paramId, val);
 
   // Collapse accordion
-  const accordion = document.getElementById();
+  const accordion = document.getElementById(`accordion-${paramId}`);
   if (accordion) accordion.classList.add('hidden');
 
-  const arrow = document.getElementById();
+  const arrow = document.getElementById(`arrow-${paramId}`);
   if (arrow) {
     arrow.textContent = '▼';
     arrow.classList.remove('rotate-180');
