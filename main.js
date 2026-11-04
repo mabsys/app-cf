@@ -3216,16 +3216,16 @@ function renderResults(caamResults, mabResults = null) {
   if (caamResults && overallBadge && headerEl) {
     if (caamResults.overallStatus === "EXPIRED") {
       headerEl.innerText = "Licence Lapsed";
-      overallBadge.className = "status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-xs tracking-wider mt-4 shadow-md bg-rose-600";
-      overallBadge.innerText = "EXPIRED";
+      overallBadge.className = "status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-xs tracking-wider shadow-md bg-rose-600";
+      overallBadge.innerText = "DO NOT FLY";
     } else if (caamResults.overallStatus === "EXPIRING_SOON") {
       headerEl.innerText = "Licence Expiring Soon";
-      overallBadge.className = "status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-xs tracking-wider mt-4 shadow-md bg-amber-500";
-      overallBadge.innerText = "EXPIRING SOON";
+      overallBadge.className = "status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-xs tracking-wider shadow-md bg-amber-500";
+      overallBadge.innerText = "FLY WITH CAUTION";
     } else {
       headerEl.innerText = "Licence Valid";
-      overallBadge.className = "status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-xs tracking-wider mt-4 shadow-md bg-emerald-600";
-      overallBadge.innerText = "VALID";
+      overallBadge.className = "status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-xs tracking-wider shadow-md bg-emerald-600";
+      overallBadge.innerText = "CLEARED FOR DUTY";
     }
 
     let resAdvisoryBox = getResEl("res-advisory-box");
