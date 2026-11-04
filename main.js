@@ -1,4 +1,4 @@
-// ./main.js (0411_R368) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0411_R369) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
 import { initToolsModule, filterRecurrentCourses, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
@@ -153,17 +153,7 @@ function initScanHubUI() {
     });
   }
 
-  const verifyMyLicenceBtn = document.getElementById("verify-my-licence-btn");
-  if (verifyMyLicenceBtn) {
-    verifyMyLicenceBtn.addEventListener("click", () => {
-      const profile = getProfileData();
-      if (profile && profile.url) {
-        processLicenseUrl(profile.url);
-      } else {
-        showError("No stored licence URL. Please configure credentials in My Credentials.");
-      }
-    });
-  }
+
 
   const pausedOverlay = document.getElementById("scanner-paused-overlay");
   if (pausedOverlay) {
@@ -1161,6 +1151,7 @@ function getDashEl(id) {
 let initialOverviewTemplateHTML = "";
 let initialCaamTemplateHTML = "";
 let initialMabTemplateHTML = "";
+let initialMyQrPassTemplateHTML = "";
 
 function saveDashboardTemplates() {
   const dashView = document.getElementById("dashboard-view");
@@ -3571,18 +3562,7 @@ function renderMyQrPass() {
   const canvas = document.getElementById("pass-qr-canvas");
   const nameElem = document.getElementById("pass-pilot-name");
   const licenceElem = document.getElementById("pass-licence-no") || document.getElementById("pass-licence-number");
-  const badgeElem = document.getElementById("pass-eligibility-badge") || document.getElementById("pass-status-badge");
   const freshnessElem = document.getElementById("pass-freshness-tag") || document.getElementById("pass-timestamp");
-  const verifyBtn = document.getElementById("verify-my-licence-btn");
-
-  if (verifyBtn) {
-    verifyBtn.classList.add("hidden");
-  }
-
-  if (badgeElem) {
-    badgeElem.classList.add("hidden");
-    badgeElem.style.display = "none";
-  }
 
   const url = (profile.url || "").trim();
   const caam = profile.cachedCaamResults || null;
