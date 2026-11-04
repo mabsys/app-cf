@@ -1435,7 +1435,7 @@ export function normalizeOutput(toolType, rawResult) {
         ? `${rawResult.acclimatisedStatus || 'Acclimatised'}\nBand ${rawResult.timeBand || '0600-0759'}`
         : 'Acclimatised\nBand 0600-0759';
 
-      const auditNoteStr = isProhibited && rawResult && rawResult.prohibitionReason ? rawResult.prohibitionReason : 'Grounded in CAAM CAD 1901 Table A/B & OM-A Section 7.5.';
+      const auditNoteStr = 'Grounded in CAAM CAD 1901 Table A/B & OM-A Section 7.5.';
 
       const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? rawResult.notes : [];
       return {
