@@ -1,4 +1,4 @@
-// ./js/animations.js (3110_R315) - CertiFly Centralized Motion & Animation Engine
+// ./js/animations.js (0311_R337) - CertiFly Centralized Motion & Animation Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -309,8 +309,9 @@ export function animateOverviewDashboard(animData = {}) {
  * @param {boolean} isMulti - Multi-Variant (MFF) state flag
  */
 export function animateRecencyCardExpansion(cardEl, variantWrapper, isMulti) {
+  if (cardEl) cardEl.style.height = "350px";
+
   if (!isAnimeAvailable()) {
-    if (cardEl) cardEl.style.height = isMulti ? "400px" : "350px";
     if (variantWrapper) {
       if (isMulti) {
         variantWrapper.classList.remove("hidden");
@@ -323,34 +324,25 @@ export function animateRecencyCardExpansion(cardEl, variantWrapper, isMulti) {
   }
 
   if (isMulti) {
-    // 1. Expand Card Height to 400px with cubic bezier smooth curve
-    runAnime({
-      targets: cardEl,
-      height: "400px",
-      duration: 320,
-      easing: "easeOutCubic"
-    });
-
-    // 2. Slide & Fade In 2nd Variant Date Row
+    // Slide & Fade In 2nd Variant Date Row (card height remains fixed 350px)
     if (variantWrapper) {
       variantWrapper.classList.remove("hidden");
       variantWrapper.style.opacity = "0";
       runAnime({
         targets: variantWrapper,
         opacity: [0, 1],
-        translateY: [-10, 0],
-        duration: 250,
-        delay: 50,
+        translateY: [-8, 0],
+        duration: 220,
         easing: "easeOutQuad"
       });
     }
   } else {
-    // 1. Fade Out 2nd Variant Date Row
+    // Fade Out 2nd Variant Date Row
     if (variantWrapper) {
       runAnime({
         targets: variantWrapper,
         opacity: [1, 0],
-        translateY: [0, -10],
+        translateY: [0, -8],
         duration: 150,
         easing: "easeInQuad",
         complete: () => {
@@ -358,14 +350,6 @@ export function animateRecencyCardExpansion(cardEl, variantWrapper, isMulti) {
         }
       });
     }
-
-    // 2. Collapse Card Height back to 350px
-    runAnime({
-      targets: cardEl,
-      height: "350px",
-      duration: 320,
-      easing: "easeOutCubic"
-    });
   }
 }
 
