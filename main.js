@@ -1,4 +1,4 @@
-// ./main.js (0411_R360) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0411_R361) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
 import { initToolsModule, filterRecurrentCourses, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
@@ -647,12 +647,16 @@ function initProfileUI() {
         return;
       }
 
-      if (selectedAttestationFile) {
-        await setAttestationPdf(selectedAttestationFile);
-      }
-      if (selectedQsFile && selectedQsParsed) {
-        await setQualificationSlipPdf(selectedQsFile);
-        setQualificationSlipData(selectedQsParsed);
+      try {
+        if (selectedAttestationFile) {
+          await setAttestationPdf(selectedAttestationFile);
+        }
+        if (selectedQsFile && selectedQsParsed) {
+          await setQualificationSlipPdf(selectedQsFile);
+          setQualificationSlipData(selectedQsParsed);
+        }
+      } catch (pdfStorageErr) {
+        console.warn('Could not store PDF file to IndexedDB:', pdfStorageErr);
       }
 
       const passNoVal = passNoInput ? passNoInput.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '') : "";
