@@ -1,4 +1,4 @@
-// ./js/tools.js (3110_R321) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (3110_R334) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
