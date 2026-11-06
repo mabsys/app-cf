@@ -1,5 +1,6 @@
-// ./main.js (0411_R369) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0411_R375) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
+import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
 import { initToolsModule, filterRecurrentCourses, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
 import { PROXY_URL, APP_VERSION } from './js/config.js';
@@ -264,16 +265,8 @@ function updateProfileUrlBadge(urlStr) {
   applyUrlInputValidationStyle(urlInput, cleanUrl);
 }
 
-function showProfileToast(msg = "Crew credentials saved successfully!") {
-  const toast = document.getElementById("profile-toast");
-  const toastMsg = document.getElementById("profile-toast-msg");
-  if (toast) {
-    if (toastMsg) toastMsg.innerText = msg;
-    toast.classList.remove("hidden");
-    setTimeout(() => {
-      toast.classList.add("hidden");
-    }, 2500);
-  }
+function showProfileToast(msg = "Crew credentials saved successfully!", type = 'info') {
+  showToast(msg, type);
 }
 
 function initProfileUI() {
@@ -503,12 +496,12 @@ function initProfileUI() {
         const buffer = await file.slice(0, 5).arrayBuffer();
         const header = new TextDecoder().decode(buffer);
         if (header !== "%PDF-") {
-          alert("Invalid File Format: Selected file is not a valid PDF document.");
+          await showAlertModal("Invalid File Format", "Selected file is not a valid PDF document.", "error");
           resetToStoredOrEmpty();
           return;
         }
       } catch (err) {
-        alert("Failed to read file header. Please try again.");
+        await showAlertModal("File Error", "Failed to read file header. Please try again.", "error");
         resetToStoredOrEmpty();
         return;
       }
@@ -519,7 +512,7 @@ function initProfileUI() {
         const validation = validateAttestationContent(extractedText);
 
         if (!validation.isValid) {
-          alert(`Validation Failed: ${validation.reason}`);
+          await showAlertModal("Validation Failed", validation.reason, "error");
           resetToStoredOrEmpty();
           return;
         }
@@ -532,9 +525,9 @@ function initProfileUI() {
           pdfStatusBadge.classList.remove("hidden");
           pdfStatusText.innerText = "Valid Attestation PDF file";
         }
-        showProfileToast("MAB Attestation PDF verified!");
+        showToast("MAB Attestation PDF verified!", "success");
       } catch (err) {
-        alert("Could not process PDF contents. Please ensure the file is not corrupted or password-protected.");
+        await showAlertModal("PDF Processing Error", "Could not process PDF contents. Please ensure the file is not corrupted or password-protected.", "error");
         resetToStoredOrEmpty();
       }
     };
@@ -573,12 +566,12 @@ function initProfileUI() {
         const buffer = await file.slice(0, 5).arrayBuffer();
         const header = new TextDecoder().decode(buffer);
         if (header !== "%PDF-") {
-          alert("Invalid File Format: Selected file is not a valid PDF document.");
+          await showAlertModal("Invalid File Format", "Selected file is not a valid PDF document.", "error");
           resetQsToStoredOrEmpty();
           return;
         }
       } catch (err) {
-        alert("Failed to read file header. Please try again.");
+        await showAlertModal("File Error", "Failed to read file header. Please try again.", "error");
         resetQsToStoredOrEmpty();
         return;
       }
@@ -588,14 +581,14 @@ function initProfileUI() {
         const isValid = validateQualificationSlipContent(extractedText);
 
         if (!isValid) {
-          alert("Validation Failed: Selected PDF is not a valid MAB Qualification Slip document.");
+          await showAlertModal("Validation Failed", "Selected PDF is not a valid MAB Qualification Slip document.", "error");
           resetQsToStoredOrEmpty();
           return;
         }
 
         const parsedData = parseQualificationSlipText(extractedText);
         if (!parsedData) {
-          alert("Parsing Failed: Could not extract qualification data from the PDF.");
+          await showAlertModal("Parsing Failed", "Could not extract qualification data from the PDF.", "error");
           resetQsToStoredOrEmpty();
           return;
         }
@@ -610,9 +603,9 @@ function initProfileUI() {
           qsPdfStatusBadge.classList.remove("hidden");
           if (qsPdfStatusText) qsPdfStatusText.innerText = "Valid Qualification Slip (QS) file";
         }
-        showProfileToast("Qualification Slip PDF verified!");
+        showToast("Qualification Slip PDF verified!", "success");
       } catch (err) {
-        alert("Could not process PDF contents. Please ensure the file is not corrupted or password-protected.");
+        await showAlertModal("PDF Processing Error", "Could not process PDF contents. Please ensure the file is not corrupted or password-protected.", "error");
         resetQsToStoredOrEmpty();
       }
     };
@@ -628,12 +621,12 @@ function initProfileUI() {
       const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (currentProfile.attestationFileName || "");
 
       if (!urlVal || !isValidCaamUrl(urlVal)) {
-        alert("Please enter or scan a valid CAAM eCLIPSE URL.");
+        await showAlertModal("Invalid Licence URL", "Please enter or scan a valid CAAM eCLIPSE URL.", "warning");
         return;
       }
 
       if (!selectedAttestationFile && !currentProfile.attestationFileName) {
-        alert("Please upload a valid MAB company attestation PDF file.");
+        await showAlertModal("Missing Attestation", "Please upload a valid MAB company attestation PDF file.", "warning");
         return;
       }
 
@@ -653,12 +646,12 @@ function initProfileUI() {
       const passExpVal = passExpInput ? passExpInput.value.trim() : "";
 
       if (passNoVal && !passExpVal) {
-        alert("Please select your passport expiry date.");
+        await showAlertModal("Passport Expiry Required", "Please select your passport expiry date.", "warning");
         return;
       }
 
       if (passExpVal && !passNoVal) {
-        alert("Please enter your passport number.");
+        await showAlertModal("Passport Number Required", "Please enter your passport number.", "warning");
         return;
       }
 
@@ -667,7 +660,7 @@ function initProfileUI() {
         today.setHours(0, 0, 0, 0);
         const expD = new Date(passExpVal);
         if (expD < today) {
-          alert("Passport expiry date cannot be in the past.");
+          await showAlertModal("Expired Passport", "Passport expiry date cannot be in the past.", "error");
           return;
         }
       }
@@ -684,7 +677,7 @@ function initProfileUI() {
         pdfStatusBadge.classList.remove("hidden");
         pdfStatusText.innerText = "Stored Attestation PDF file";
       }
-      showProfileToast("Crew credentials saved successfully!");
+      showToast("Crew credentials saved successfully!", "success");
       closeMenu();
 
       showLoading("Processing licence & attestation for Dashboard...");
@@ -710,7 +703,8 @@ function initProfileUI() {
       stopScanner();
       profileQrScannerActive = false;
 
-      if (confirm("Clear saved crew profile data from this device?")) {
+      const confirmed = await showConfirmDialog({ title: "Clear Crew Profile", message: "Are you sure you want to clear saved crew profile data from this device?", confirmText: "Clear Profile", cancelText: "Cancel", type: "danger" });
+      if (confirmed) {
         clearProfileData();
         clearQualificationSlipData();
         await removeQualificationSlipPdf();
@@ -738,14 +732,14 @@ function initProfileUI() {
         if (urlStatusBadge) urlStatusBadge.classList.add("hidden");
         if (pdfStatusBadge) pdfStatusBadge.classList.add("hidden");
 
-        showProfileToast("Credentials cleared successfully.");
+        showToast("Credentials cleared successfully.", "info");
         renderDashboardView();
       }
     };
   }
 }
 
-function handleProfileQrScanned(scannedUrl) {
+async function handleProfileQrScanned(scannedUrl) {
   if (!scannedUrl) return;
   stopScanner();
   profileQrScannerActive = false;
@@ -756,7 +750,7 @@ function handleProfileQrScanned(scannedUrl) {
   }
 
   if (!isValidCaamUrl(cleanUrl)) {
-    alert("Invalid QR Code: Must be an official CAAM eCLIPSE QR URL.");
+    await showAlertModal("Invalid QR Code", "Must be an official CAAM eCLIPSE QR URL.", "warning");
     return;
   }
   scannedUrl = cleanUrl;
@@ -787,7 +781,7 @@ function handleProfileQrScanned(scannedUrl) {
   const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (profile.attestationFileName || "");
 
   saveProfileData({ url: scannedUrl, attestationFileName: attestationName });
-  showProfileToast("Licence QR scanned & captured!");
+  showToast("Licence QR scanned & captured!", "success");
 }
 
 function initSettingsUI() {
@@ -837,8 +831,9 @@ function initStorageUI() {
   });
 
   document.getElementById("storage-clear-history-btn")?.addEventListener("click", clearHistory);
-  document.getElementById("storage-reset-all-btn")?.addEventListener("click", () => {
-    if (confirm("Are you sure you want to reset all CertiFly local storage data?")) {
+  document.getElementById("storage-reset-all-btn")?.addEventListener("click", async () => {
+    const confirmed = await showConfirmDialog({ title: "Reset Application Data", message: "Are you sure you want to reset all CertiFly local storage data? This action cannot be undone.", confirmText: "Reset All Data", cancelText: "Cancel", type: "danger" });
+    if (confirmed) {
       localStorage.clear();
       location.reload();
     }
@@ -907,7 +902,7 @@ function handleManualUrl() {
   processLicenseUrl(urlVal);
 }
 
-function openOriginalLicense() {
+async function openOriginalLicense() {
   const profile = typeof getProfileData === 'function' ? getProfileData() : {};
   let targetUrl = lastScannedUrl;
   if (!targetUrl && profile) {
@@ -928,7 +923,7 @@ function openOriginalLicense() {
     window.open(cleanUrl, "_blank");
   } else {
     if (typeof alert === 'function') {
-      alert("No stored licence URL. Please configure credentials in My Credentials.");
+      await showAlertModal("Licence URL Missing", "No stored licence URL. Please configure credentials in My Credentials.", "warning");
     }
   }
 }
@@ -1079,7 +1074,7 @@ async function processLicenseUrl(url) {
     if (isProfileUrlMatch && profile.cachedCaamResults) {
       caamResults = profile.cachedCaamResults;
       caamResults.scanTime = scanTime + " (Cached)";
-      showProfileToast("CAAM server offline/error. Displaying stored licence data.");
+      showToast("CAAM server offline/error. Displaying stored licence data.", "warning");
     } else if (isValidCaamUrl(cleanUrl)) {
       caamResults = {
         overallStatus: "VALID",
@@ -1096,7 +1091,7 @@ async function processLicenseUrl(url) {
           { name: "Class 1 Medical Expiry", dateText: "30 Sep 2027", status: "VALID", daysRemaining: 365 }
         ]
       };
-      showProfileToast("Digital licence scanned & verified.");
+      showToast("Digital licence scanned & verified.", "success");
     } else {
       let errMsg = "CAAM eCLIPSE Server Error: Could not connect to digital licence server.";
       if (fetchStatus === 500) {
@@ -1305,6 +1300,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   if (overviewPane && initialOverviewTemplateHTML && !(overviewPane.querySelector("#overview-hero-card") || overviewPane.querySelector("#ov-caam-expiry"))) {
     overviewPane.innerHTML = initialOverviewTemplateHTML;
   }
+  renderNoticeCard("tab-overview-content", { id: "ov-reference-notice", title: "For Personal Reference Only:", message: "This digital summary MUST NOT be used for operational flight duty purposes.", type: "warning", dismissible: true });
   if (caamPane && initialCaamTemplateHTML && !caamPane.querySelector("#pilot-name")) {
     caamPane.innerHTML = initialCaamTemplateHTML;
   }
@@ -2324,7 +2320,7 @@ async function setupDocumentViewers() {
           const blobUrl = URL.createObjectURL(blob);
           window.open(blobUrl, "_blank");
         } else {
-          alert("Attestation PDF file not found in local storage.");
+          await showAlertModal("File Not Found", "Attestation PDF file not found in local storage.", "error");
         }
       };
     } else {
@@ -2346,7 +2342,7 @@ async function setupDocumentViewers() {
           const blobUrl = URL.createObjectURL(blob);
           window.open(blobUrl, "_blank");
         } else {
-          alert("Qualification Slip PDF file not found in local storage.");
+          await showAlertModal("File Not Found", "Qualification Slip PDF file not found in local storage.", "error");
         }
       };
     } else {
@@ -2526,7 +2522,7 @@ function initHistoryManageModeControls() {
 
   if (deleteBtn && !deleteBtn.dataset.bound) {
     deleteBtn.dataset.bound = "true";
-    deleteBtn.addEventListener("click", () => {
+    deleteBtn.addEventListener("click", async () => {
       if (selectedRecordIds.size === 0) {
         if (typeof showProfileToast === "function") showProfileToast("No crew cards selected");
         return;
@@ -2538,9 +2534,8 @@ function initHistoryManageModeControls() {
         ? "Are you sure you want to delete 1 selected crew record?"
         : `Are you sure you want to delete ${count} selected crew records?`;
 
-      if (!window.confirm(confirmMsg)) {
-        return;
-      }
+      const confirmed = await showConfirmDialog({ title: "Delete Crew Records", message: confirmMsg, confirmText: "Delete", cancelText: "Cancel", type: "danger" });
+      if (!confirmed) return;
 
       if (typeof window.deleteHistoryRecords === "function") {
         window.deleteHistoryRecords(targetIds);
@@ -3216,12 +3211,12 @@ function renderResults(caamResults, mabResults = null) {
   if (caamResults && overallBadge && headerEl) {
     if (caamResults.overallStatus === "EXPIRED") {
       headerEl.innerText = "Licence Lapsed";
-      overallBadge.className = "status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-xs tracking-wider shadow-md bg-rose-600";
-      overallBadge.innerText = "DO NOT FLY";
+      overallBadge.className = "status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-xs tracking-wider shadow-md bg-rose-600 animate-pulse";
+      overallBadge.innerText = "DO NOT FLY!";
     } else if (caamResults.overallStatus === "EXPIRING_SOON") {
       headerEl.innerText = "Licence Expiring Soon";
       overallBadge.className = "status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-xs tracking-wider shadow-md bg-amber-500";
-      overallBadge.innerText = "FLY WITH CAUTION";
+      overallBadge.innerText = "PROCEED WITH CAUTION";
     } else {
       headerEl.innerText = "Licence Valid";
       overallBadge.className = "status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-xs tracking-wider shadow-md bg-emerald-600";
@@ -3770,14 +3765,14 @@ function initToolsUI() {
     initToolsViewUI();
   }
 
-  document.getElementById("btn-calc-ppc")?.addEventListener("click", () => {
+  document.getElementById("btn-calc-ppc")?.addEventListener("click", async () => {
     const conduct = document.getElementById("ppc-conduct-date")?.value;
     const expiry = document.getElementById("ppc-expiry-date")?.value;
     const res = calculatePpcWindows(conduct, expiry);
     const resBox = document.getElementById("ppc-results-box");
 
     if (!res) {
-      alert("Please select a valid LPC Expiry Date.");
+      await showAlertModal("Invalid Date", "Please select a valid LPC Expiry Date.", "warning");
       return;
     }
 
@@ -3787,14 +3782,14 @@ function initToolsUI() {
     if (resBox) resBox.classList.remove("hidden");
   });
 
-  document.getElementById("btn-calc-recurrent")?.addEventListener("click", () => {
+  document.getElementById("btn-calc-recurrent")?.addEventListener("click", async () => {
     const type = document.getElementById("recurrent-drill-type")?.value || "linecheck";
     const conduct = document.getElementById("recurrent-conduct-date")?.value;
     const res = calculateCourseExpiry(type, conduct);
     const resBox = document.getElementById("recurrent-results-box");
 
     if (!res) {
-      alert("Please select a valid Conducted Date.");
+      await showAlertModal("Invalid Date", "Please select a valid Conducted Date.", "warning");
       return;
     }
 
@@ -3802,14 +3797,14 @@ function initToolsUI() {
     if (resBox) resBox.classList.remove("hidden");
   });
 
-  document.getElementById("btn-calc-medical")?.addEventListener("click", () => {
+  document.getElementById("btn-calc-medical")?.addEventListener("click", async () => {
     const last = document.getElementById("medical-last-date")?.value;
     const age = document.getElementById("medical-pilot-age")?.value;
     const res = calculateMedicalWindow(last, age);
     const resBox = document.getElementById("medical-results-box");
 
     if (!res) {
-      alert("Please select a valid Medical Expiry Date.");
+      await showAlertModal("Invalid Date", "Please select a valid Medical Expiry Date.", "warning");
       return;
     }
 
@@ -3820,14 +3815,14 @@ function initToolsUI() {
     if (resBox) resBox.classList.remove("hidden");
   });
 
-  document.getElementById("btn-calc-preflight")?.addEventListener("click", () => {
+  document.getElementById("btn-calc-preflight")?.addEventListener("click", async () => {
     const report = document.getElementById("fdp-report-time")?.value;
     const count = getSectorCount();
     const maxHours = getMaxAllowableFdp(report, count);
     const resBox = document.getElementById("preflight-results-box");
 
     if (!report) {
-      alert("Please enter a Report Time (e.g. 08:00).");
+      await showAlertModal("Report Time Required", "Please enter a Report Time (e.g. 08:00).", "warning");
       return;
     }
 
