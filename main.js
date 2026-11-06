@@ -1,4 +1,4 @@
-// ./main.js (0511_R375) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0511_R383) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
@@ -269,8 +269,23 @@ function showProfileToast(msg = "Crew credentials saved successfully!", type = '
   showToast(msg, type);
 }
 
+export function updateSaveProfileButtonLabel() {
+  const saveBtn = document.getElementById("profile-save-btn");
+  if (!saveBtn) return;
+  const profile = getProfileData();
+  const storedQsData = typeof getQualificationSlipData === "function" ? getQualificationSlipData() : null;
+
+  const hasCredentials = !!(
+    (profile && (profile.url || profile.cachedCaamResults || profile.attestationFileName || profile.passportNo || profile.passportExpiry)) ||
+    storedQsData
+  );
+
+  saveBtn.innerText = hasCredentials ? "Update Credentials" : "Save Credentials";
+}
+
 function initProfileUI() {
   const profile = getProfileData();
+  updateSaveProfileButtonLabel();
   const urlInput = document.getElementById("profile-url-input");
   const pdfFileInput = document.getElementById("profile-pdf-file");
   const pdfLabel = document.getElementById("profile-pdf-label");
@@ -678,6 +693,7 @@ function initProfileUI() {
         pdfStatusText.innerText = "Stored Attestation PDF file";
       }
       showToast("Crew credentials saved successfully!", "success");
+      updateSaveProfileButtonLabel();
       closeMenu();
 
       showLoading("Processing licence & attestation for Dashboard...");
@@ -733,6 +749,7 @@ function initProfileUI() {
         if (pdfStatusBadge) pdfStatusBadge.classList.add("hidden");
 
         showToast("Credentials cleared successfully.", "info");
+        updateSaveProfileButtonLabel();
         renderDashboardView();
       }
     };
