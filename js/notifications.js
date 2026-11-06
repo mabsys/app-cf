@@ -1,4 +1,4 @@
-// js/notifications.js (0511_R378) - CertiFly Unified Notification Engine
+// js/notifications.js (0511_R379) - CertiFly Unified Notification Engine
 
 /**
  * 1. FLOATING TOAST NOTIFICATIONS (Auto-Dismiss Feedback)
@@ -16,17 +16,19 @@ export function showToast(message, type = 'info', duration = 3000) {
   }
 
   const styles = {
-    success: 'bg-emerald-600 text-white border-emerald-500',
-    error: 'bg-rose-600 text-white border-rose-500',
-    warning: 'bg-amber-500 text-slate-950 font-black border-amber-400',
-    info: 'bg-slate-900 dark:bg-slate-800 text-slate-100 border-slate-700'
+    success: 'bg-emerald-600 text-white border-emerald-500 shadow-lg',
+    error: 'bg-rose-600 text-white border-rose-500 shadow-lg',
+    warning: 'bg-amber-500 text-slate-950 font-black border-amber-400 shadow-lg',
+    info: 'bg-blue-600 text-white border-blue-500 shadow-lg',
+    offline: 'bg-amber-500 dark:bg-amber-400 text-slate-950 font-extrabold border-amber-300 dark:border-amber-200 shadow-xl'
   };
 
   const icons = {
     success: `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
     error: `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9.303 3.376c.866 1.5-.217 3.374-1.948 3.374H4.551c-1.73 0-2.813-1.874-1.948-3.374L10.051 3.378c.866-1.5 3.032-1.5 3.898 0l7.354 12.748zM12 15.75h.007v.008H12v-.008z" /></svg>`,
     warning: `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>`,
-    info: `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`
+    info: `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+    offline: `<svg class="w-4 h-4 shrink-0 text-slate-950" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9.303 3.376c.866 1.5-.217 3.374-1.948 3.374H4.551c-1.73 0-2.813-1.874-1.948-3.374L10.051 3.378c.866-1.5 3.032-1.5 3.898 0l7.354 12.748zM12 15.75h.007v.008H12v-.008z" /></svg>`
   };
 
   const toast = document.createElement('div');
