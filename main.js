@@ -1,4 +1,4 @@
-// ./main.js (0411_R375) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0511_R375) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
