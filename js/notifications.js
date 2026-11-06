@@ -1,4 +1,4 @@
-// js/notifications.js (0511_R381) - CertiFly Unified Notification Engine
+// js/notifications.js (0511_R383) - CertiFly Unified Notification Engine
 
 /**
  * 1. FLOATING TOAST NOTIFICATIONS (Auto-Dismiss Feedback)
@@ -126,6 +126,10 @@ export function renderNoticeCard(container, { title, message, type = 'warning', 
   const targetEl = typeof container === 'string' ? document.getElementById(container) : container;
   if (!targetEl) return;
 
+  if (id && sessionStorage.getItem(`dismissed_notice_${id}`) === 'true') {
+    return;
+  }
+
   if (id) {
     const existing = targetEl.querySelector(`#${id}`);
     if (existing) existing.remove();
@@ -172,7 +176,7 @@ export function renderNoticeCard(container, { title, message, type = 'warning', 
       ${title ? `<strong class="font-extrabold uppercase tracking-wide block ${theme.titleColor}">${title}</strong>` : ''}
       <span class="font-medium">${message}</span>
     </div>
-    ${dismissible ? `<button type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold leading-none p-1 transition-colors cursor-pointer" onclick="this.closest('[data-notice-card]').remove()"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>` : ''}
+    ${dismissible ? `<button type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold leading-none p-1 transition-colors cursor-pointer" onclick="${id ? `sessionStorage.setItem('dismissed_notice_${id}', 'true'); ` : ''}this.closest('[data-notice-card]').remove()"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>` : ''}
   `;
 
   targetEl.prepend(card);
