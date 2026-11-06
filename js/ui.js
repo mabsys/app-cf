@@ -1,4 +1,4 @@
-// ./js/ui.js (2810_R277) - CertiFly Navigation, View Controller & UI State
+// ./js/ui.js (2810_R279) - CertiFly Navigation, View Controller & UI State
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -491,7 +491,7 @@ export function updateNetworkStatus() {
   const checkerBadge = document.getElementById("checker-status-badge");
 
   if (!isOnline) {
-    setTopBanner("Offline — Please check your internet connection", "offline", true, true);
+    setTopBanner("OFFLINE MODE", "offline", true, true);
   } else {
     setTopBanner("", "offline", false);
   }
@@ -553,7 +553,7 @@ export function showView(viewId, defaultTab = null) {
   if (viewId === "history-view") {
     renderHistoryList();
     if (!navigator.onLine) {
-      showToast("Offline Mode — Displaying stored scan history", "info", 3000);
+      showToast("Offline Mode — Displaying stored scan history", "info", 3500);
     }
   }
 
