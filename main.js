@@ -1,4 +1,4 @@
-// ./main.js (0511_R383) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0611_R384) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
@@ -2821,7 +2821,13 @@ function customRenderHistoryList() {
     retentionTag.onclick = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      toggleHistoryLimitQuickPicker(retentionTag);
+      const currentLimit = (typeof getHistoryLimit === "function") ? getHistoryLimit() : 10;
+      const limits = [10, 20, 30];
+      const nextLimit = limits[(limits.indexOf(currentLimit) + 1) % limits.length];
+      if (typeof setHistoryLimit === "function") setHistoryLimit(nextLimit);
+      if (typeof updateHistoryLimitPills === "function") updateHistoryLimitPills(nextLimit);
+      customRenderHistoryList();
+      if (typeof showToast === "function") showToast(`History limit set to ${nextLimit} scans`, "info", 2000);
     };
   }
 
