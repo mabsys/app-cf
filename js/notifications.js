@@ -1,9 +1,9 @@
-// js/notifications.js (0511_R379) - CertiFly Unified Notification Engine
+// js/notifications.js (0511_R381) - CertiFly Unified Notification Engine
 
 /**
  * 1. FLOATING TOAST NOTIFICATIONS (Auto-Dismiss Feedback)
  * @param {string} message - Text message to display
- * @param {'info'|'success'|'warning'|'error'} type - Notification type styling
+ * @param {'info'|'success'|'warning'|'error'|'offline'} type - Notification type styling
  * @param {number} duration - Auto-dismiss delay in ms (default: 3000ms)
  */
 export function showToast(message, type = 'info', duration = 3000) {
@@ -26,7 +26,7 @@ export function showToast(message, type = 'info', duration = 3000) {
   const icons = {
     success: `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
     error: `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9.303 3.376c.866 1.5-.217 3.374-1.948 3.374H4.551c-1.73 0-2.813-1.874-1.948-3.374L10.051 3.378c.866-1.5 3.032-1.5 3.898 0l7.354 12.748zM12 15.75h.007v.008H12v-.008z" /></svg>`,
-    warning: `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>`,
+    warning: `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874-1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>`,
     info: `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
     offline: `<svg class="w-4 h-4 shrink-0 text-slate-950" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9.303 3.376c.866 1.5-.217 3.374-1.948 3.374H4.551c-1.73 0-2.813-1.874-1.948-3.374L10.051 3.378c.866-1.5 3.032-1.5 3.898 0l7.354 12.748zM12 15.75h.007v.008H12v-.008z" /></svg>`
   };
@@ -72,7 +72,7 @@ export function setTopBanner(message, type = 'warning', show = true, dismissible
   if (!banner) {
     banner = document.createElement('div');
     banner.id = 'certifly-top-banner';
-    banner.className = 'fixed left-0 right-0 z-40 text-[10px] font-black uppercase tracking-widest text-center py-2.5 px-4 shadow-md flex items-center justify-between transition-all duration-300 -translate-y-full';
+    banner.className = 'fixed left-0 right-0 z-40 text-[10px] font-black uppercase tracking-widest text-center py-2.5 px-4 shadow-md flex items-center justify-between transition-transform duration-300 -translate-y-full hidden';
     document.body.appendChild(banner);
   }
 
@@ -86,12 +86,13 @@ export function setTopBanner(message, type = 'warning', show = true, dismissible
   }
 
   if (!show || banner.getAttribute('data-dismissed') === 'true') {
-    banner.classList.add('-translate-y-full');
-    if (!show) banner.removeAttribute('data-dismissed');
+    banner.classList.remove('translate-y-0');
+    banner.classList.add('-translate-y-full', 'hidden');
+    if (!show) {
+      banner.removeAttribute('data-dismissed');
+    }
     return;
   }
-
-  
 
   const styles = {
     offline: 'bg-rose-600 text-white border-b border-rose-700 animate-pulse',
@@ -101,17 +102,18 @@ export function setTopBanner(message, type = 'warning', show = true, dismissible
 
   const icons = {
     offline: `<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9.303 3.376c.866 1.5-.217 3.374-1.948 3.374H4.551c-1.73 0-2.813-1.874-1.948-3.374L10.051 3.378c.866-1.5 3.032-1.5 3.898 0l7.354 12.748zM12 15.75h.007v.008H12v-.008z" /></svg>`,
-    warning: `<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>`,
+    warning: `<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874-1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>`,
     info: `<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`
   };
 
-  banner.className = `fixed top-[56px] left-0 right-0 z-40 text-[10px] font-black uppercase tracking-widest py-2.5 px-4 shadow-md flex items-center justify-between transition-transform duration-300 translate-y-0 ${styles[type] || styles.info}`;
+  banner.className = `fixed left-0 right-0 z-40 text-[10px] font-black uppercase tracking-widest py-2.5 px-4 shadow-md flex items-center justify-between transition-transform duration-300 translate-y-0 ${styles[type] || styles.info}`;
+  banner.classList.remove('-translate-y-full', 'hidden');
   banner.innerHTML = `
     <div class="flex items-center justify-center gap-2 mx-auto">
       ${icons[type] || icons.info}
       <span>${message}</span>
     </div>
-    ${dismissible ? `<button type="button" class="opacity-80 hover:opacity-100 cursor-pointer p-0.5 ml-2 shrink-0" aria-label="Dismiss Banner" onclick="const b=document.getElementById('certifly-top-banner'); if(b){ b.classList.add('-translate-y-full'); b.setAttribute('data-dismissed','true'); }"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>` : ''}
+    ${dismissible ? `<button type="button" class="opacity-80 hover:opacity-100 cursor-pointer p-0.5 ml-2 shrink-0" aria-label="Dismiss Banner" onclick="const b=document.getElementById('certifly-top-banner'); if(b){ b.classList.remove('translate-y-0'); b.classList.add('-translate-y-full', 'hidden'); b.setAttribute('data-dismissed','true'); }"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>` : ''}
   `;
 }
 
@@ -134,7 +136,7 @@ export function renderNoticeCard(container, { title, message, type = 'warning', 
       bg: 'bg-amber-500/10 border-amber-500/20 text-slate-700 dark:text-slate-300',
       iconColor: 'text-amber-500',
       titleColor: 'text-amber-600 dark:text-amber-400',
-      svg: `<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />`
+      svg: `<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874-1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />`
     },
     danger: {
       bg: 'bg-rose-500/10 border-rose-500/40 text-rose-800 dark:text-rose-200',
