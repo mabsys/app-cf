@@ -1,14 +1,14 @@
-// ./js/ui.js (0511_R374) - CertiFly Navigation, View Controller & UI State (Grounded in 2810_R276)
+// ./js/ui.js (0511_R375) - CertiFly Navigation, View Controller & UI State
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
+import { setTopBanner, showToast } from './notifications.js';
 import { initToolsModule, runToolCalculation, setToolsTab, getToolsState, getSectorCount, setSectorCount } from './tools.js';
 import { stopScanner, switchScanHubTab } from './scanner.js';
 import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData, getProfileData, getAttestationData } from './storage.js';
 import { topbarHTML } from './components/topbar.js';
 import { dockHTML } from './components/dock.js';
 import { menuHTML } from './components/menu.js';
-import { setTopBanner } from './notifications.js';
 
 const textSizeIcons = {
   std: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l3-7 3 7M5 15h4"/><path d="M13 18l4-11 4 11M14 14h6"/><path d="M11 7h2"/></svg>`,
@@ -477,20 +477,18 @@ export function initNavigationBars() {
 
 export function updateNetworkStatus() {
   const isOnline = navigator.onLine;
-
-  if (!isOnline) {
-    setTopBanner("Offline — Please check your internet connection", "offline", true, true);
-  } else {
-    setTopBanner("", "offline", false);
-  }
-
   const overlay = document.getElementById("offline-overlay");
   const startScanBtn = document.getElementById("start-scan-btn");
   const submitUrlBtn = document.getElementById("submit-url-btn");
   const manualInput = document.getElementById("manual-url-input");
   const openOriginalBtn = document.getElementById("open-original-btn");
   const checkerBadge = document.getElementById("checker-status-badge");
-  const historyCacheBadge = document.getElementById("history-cache-badge");
+
+  if (!isOnline) {
+    setTopBanner("Offline — Please check your internet connection", "offline", true, true);
+  } else {
+    setTopBanner("", "offline", false);
+  }
 
   if (overlay) {
     if (isOnline) overlay.classList.add("hidden");
@@ -507,14 +505,6 @@ export function updateNetworkStatus() {
     } else {
       checkerBadge.innerText = "Cached View";
       checkerBadge.className = "text-[10px] text-gray-50 bg-gray-500 px-2 py-0.5 rounded-md font-bold uppercase transition-all duration-300 ease-in-out";
-    }
-  }
-
-  if (historyCacheBadge) {
-    if (isOnline) {
-      historyCacheBadge.classList.add("hidden");
-    } else {
-      historyCacheBadge.classList.remove("hidden");
     }
   }
 
@@ -560,6 +550,9 @@ export function showView(viewId, defaultTab = null) {
 
   if (viewId === "history-view") {
     renderHistoryList();
+    if (!navigator.onLine) {
+      showToast("Offline Mode — Displaying stored scan history", "info", 3000);
+    }
   }
 
   if (viewId === "dashboard-view") {
