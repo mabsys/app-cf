@@ -1,4 +1,4 @@
-// js/notifications.js (0511_R377) - CertiFly Unified Notification Engine
+// js/notifications.js (0511_R378) - CertiFly Unified Notification Engine
 
 /**
  * 1. FLOATING TOAST NOTIFICATIONS (Auto-Dismiss Feedback)
@@ -70,8 +70,17 @@ export function setTopBanner(message, type = 'warning', show = true, dismissible
   if (!banner) {
     banner = document.createElement('div');
     banner.id = 'certifly-top-banner';
-    banner.className = 'fixed top-[56px] left-0 right-0 z-40 text-[10px] font-black uppercase tracking-widest text-center py-2.5 px-4 shadow-md flex items-center justify-between transition-transform duration-300 -translate-y-full';
+    banner.className = 'fixed left-0 right-0 z-40 text-[10px] font-black uppercase tracking-widest text-center py-2.5 px-4 shadow-md flex items-center justify-between transition-all duration-300 -translate-y-full';
     document.body.appendChild(banner);
+  }
+
+  const topbar = document.getElementById('persistent-topbar');
+  if (topbar) {
+    const rect = topbar.getBoundingClientRect();
+    const topOffset = Math.max(0, rect.bottom);
+    banner.style.top = `${topOffset}px`;
+  } else {
+    banner.style.top = '0px';
   }
 
   if (!show || banner.getAttribute('data-dismissed') === 'true') {
@@ -79,6 +88,8 @@ export function setTopBanner(message, type = 'warning', show = true, dismissible
     if (!show) banner.removeAttribute('data-dismissed');
     return;
   }
+
+  
 
   const styles = {
     offline: 'bg-rose-600 text-white border-b border-rose-700 animate-pulse',
