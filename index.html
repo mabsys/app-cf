@@ -1,4 +1,4 @@
-<!-- ./index.html (0411_R369) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+<!-- ./index.html (0511_R376) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -105,15 +105,7 @@ navigator.serviceWorker.register('sw.js')
                     </button>
                 </div>
 
-                <!-- NEW REMINDER -->
-                <div id="res-reminder" class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-2.5 text-slate-700 dark:text-slate-300">
-                    <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                    </svg>
-                    <p class="text-[10px] leading-relaxed font-medium">
-                        <strong class="font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wide">For Personal Reference Only:</strong> This digital summary <strong>MUST NOT</strong> be used for operational purposes.
-                    </p>
-                </div>
+
 
                 <!-- TAB 1: OVERVIEW SUMMARY VIEW -->
                 <div id="tab-overview-content" class="res-tab-content flex flex-col gap-3.5">
@@ -622,14 +614,7 @@ navigator.serviceWorker.register('sw.js')
 
             <!-- TARGETED UPDATE 2: RESULT VIEW (Single-Licence Inspection Sheet) -->
             <div id="result-view" class="app-view hidden flex flex-col gap-4">
-                <div id="res-reminder" class="p-3 bg-red-500/10 border border-red-500/50 rounded-2xl flex items-start gap-2.5 text-red-600 dark:text-red-400">
-                    <svg class="w-4 h-4 text-red-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                    </svg>
-                    <p class="text-[10px] leading-relaxed font-semibold uppercase">
-                        <strong class="font-extrabold text-red-600 dark:text-red-600 uppercase tracking-wide">MANDATORY:</strong> Tap "View Licence Page" below to verify against official CAAM eCLIPSE records.
-                    </p>
-                </div>
+
 
                 <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-5 shadow-md flex flex-col items-center justify-center text-center gap-1.5">
                     <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">Master Compliance Status</span>
@@ -719,9 +704,7 @@ navigator.serviceWorker.register('sw.js')
                             <button id="btn-history-manage" type="button" class="py-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer">
                                 Manage
                             </button>
-                            <span id="history-cache-badge" class="hidden text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                                Cache View
-                            </span>
+
                         </div>
                     </div>
 
