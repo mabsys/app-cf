@@ -1,4 +1,4 @@
-// ./js/ui.js (2810_R279) - CertiFly Navigation, View Controller & UI State
+// ./js/ui.js (0511_R381) - CertiFly Navigation, View Controller & UI State
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -392,15 +392,15 @@ export function initNavigationBars() {
       dock.style.transform = `translateY(${progress * dockMaxTravel}px)`;
     }
 
-        if (topbar) {
+    if (topbar) {
       const topbarTranslate = -100 + (progress * 100);
       topbar.style.transform = `translateY(${topbarTranslate}%)`;
       topbar.style.opacity = progress.toFixed(2);
 
       const topBanner = document.getElementById("certifly-top-banner");
-      if (topBanner) {
-        const topbarHeight = 48;
-        const currentTop = Math.max(0, topbarHeight * progress);
+      if (topBanner && !topBanner.classList.contains("hidden")) {
+        const topbarActualHeight = topbar.offsetHeight || 48;
+        const currentTop = Math.max(0, topbarActualHeight * progress);
         topBanner.style.top = `${currentTop}px`;
       }
     }
@@ -421,7 +421,7 @@ export function initNavigationBars() {
     }
     showView("dashboard-view", "overview");
   });
-  
+
   document.getElementById("dock-history-btn")?.addEventListener("click", () => {
     stopScanner();
     renderHistoryList();
@@ -553,7 +553,7 @@ export function showView(viewId, defaultTab = null) {
   if (viewId === "history-view") {
     renderHistoryList();
     if (!navigator.onLine) {
-      showToast("Offline Mode — Displaying stored scan history", "info", 3500);
+      showToast("Offline Mode — Displaying stored scan history", "info", 3000);
     }
   }
 
@@ -658,12 +658,8 @@ if (typeof window !== 'undefined') {
   window.applyTextSize = applyTextSize;
 }
 
-
-// ==================================================================
-// PHASE 3: CERTIFLY™ TOOLS VIEW UI CONTROLLER
-// ==================================================================
-
-let activeCategory = 'qualifications'; // 'qualifications' | 'dutyrest'
+// Phase 3 Tools Controller
+let activeCategory = 'qualifications';
 let activeToolCardId = 'tool-card-medical';
 
 export function normalizeToolCardId(rawId) {
@@ -935,16 +931,13 @@ export function autoFillFromCredentials() {
 }
 
 export function initToolsViewUI() {
-  // Delegate tools view initialization to main.js / tools.js controller
   if (window.initToolsUIController) {
     window.initToolsUIController();
   }
 
-  // Bind Category Segmented Control
   document.getElementById('cat-tab-qualifications')?.addEventListener('click', () => switchToolCategory('qualifications'));
   document.getElementById('cat-tab-dutyrest')?.addEventListener('click', () => switchToolCategory('dutyrest'));
 
-  // Bind Sub-Tab Pills
   const subPills = [
     { id: 'pill-tool-medical', card: 'tool-card-medical' },
     { id: 'pill-tool-ppc', card: 'tool-card-ppc' },
