@@ -1,4 +1,4 @@
-// ./js/ui.js (0511_R375) - CertiFly Navigation, View Controller & UI State
+// ./js/ui.js (2810_R277) - CertiFly Navigation, View Controller & UI State
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -392,10 +392,17 @@ export function initNavigationBars() {
       dock.style.transform = `translateY(${progress * dockMaxTravel}px)`;
     }
 
-    if (topbar) {
+        if (topbar) {
       const topbarTranslate = -100 + (progress * 100);
       topbar.style.transform = `translateY(${topbarTranslate}%)`;
       topbar.style.opacity = progress.toFixed(2);
+
+      const topBanner = document.getElementById("certifly-top-banner");
+      if (topBanner) {
+        const topbarHeight = 48;
+        const currentTop = Math.max(0, topbarHeight * progress);
+        topBanner.style.top = `${currentTop}px`;
+      }
     }
 
     lastClampedScrollY = clampedScrollY;
@@ -477,7 +484,6 @@ export function initNavigationBars() {
 
 export function updateNetworkStatus() {
   const isOnline = navigator.onLine;
-  const overlay = document.getElementById("offline-overlay");
   const startScanBtn = document.getElementById("start-scan-btn");
   const submitUrlBtn = document.getElementById("submit-url-btn");
   const manualInput = document.getElementById("manual-url-input");
@@ -490,12 +496,8 @@ export function updateNetworkStatus() {
     setTopBanner("", "offline", false);
   }
 
-  if (overlay) {
-    if (isOnline) overlay.classList.add("hidden");
-    else {
-      overlay.classList.remove("hidden");
-      stopScanner();
-    }
+  if (!isOnline) {
+    stopScanner();
   }
 
   if (checkerBadge) {
