@@ -1,4 +1,4 @@
-// ./js/ui.js (0511_R382) - CertiFly Navigation, View Controller & UI State
+// ./js/ui.js (0511_R392) - CertiFly Navigation, View Controller & UI State
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -779,13 +779,18 @@ export function switchActiveTool(rawId) {
     { id: 'pill-tool-recency', card: 'tool-card-recency', idx: 3 }
   ];
 
-  let catAIdx = 0;
+  let catAIdx = -1;
   catAPills.forEach(item => {
     const pillBtn = document.getElementById(item.id);
     if (!pillBtn) return;
     if (item.card === toolCardId) {
       catAIdx = item.idx;
       pillBtn.className = "subtab-pill active flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-blue-500/40 bg-blue-500/20 text-blue-400 dark:text-blue-300 cursor-pointer";
+      const strip = document.getElementById('subtab-strip-cat-a') || pillBtn.parentElement;
+      if (strip) {
+        const targetLeft = pillBtn.offsetLeft - (strip.clientWidth / 2) + (pillBtn.clientWidth / 2);
+        strip.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+      }
     } else {
       pillBtn.className = "subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer";
     }
@@ -798,35 +803,44 @@ export function switchActiveTool(rawId) {
     { id: 'pill-tool-cumulative', card: 'tool-card-cumulative', idx: 3 }
   ];
 
-  let catBIdx = 0;
+  let catBIdx = -1;
   catBPills.forEach(item => {
     const pillBtn = document.getElementById(item.id);
     if (!pillBtn) return;
     if (item.card === toolCardId) {
       catBIdx = item.idx;
       pillBtn.className = "subtab-pill active flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-blue-500/40 bg-blue-500/20 text-blue-400 dark:text-blue-300 cursor-pointer";
+      const strip = document.getElementById('subtab-strip-cat-b') || pillBtn.parentElement;
+      if (strip) {
+        const targetLeft = pillBtn.offsetLeft - (strip.clientWidth / 2) + (pillBtn.clientWidth / 2);
+        strip.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+      }
     } else {
       pillBtn.className = "subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer";
     }
   });
 
-  const dotsA = document.querySelectorAll('#page-dots-cat-a .page-dot');
-  dotsA.forEach((dot, idx) => {
-    if (idx === catAIdx) {
-      dot.className = "page-dot active w-5 h-1.5 rounded-full bg-blue-500 transition-all duration-300";
-    } else {
-      dot.className = "page-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 transition-all duration-300";
-    }
-  });
+  if (catAIdx !== -1) {
+    const dotsA = document.querySelectorAll('#page-dots-cat-a .page-dot');
+    dotsA.forEach((dot, idx) => {
+      if (idx === catAIdx) {
+        dot.className = "page-dot active w-5 h-1.5 rounded-full bg-blue-500 transition-all duration-300";
+      } else {
+        dot.className = "page-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 transition-all duration-300";
+      }
+    });
+  }
 
-  const dotsB = document.querySelectorAll('#page-dots-cat-b .page-dot');
-  dotsB.forEach((dot, idx) => {
-    if (idx === catBIdx) {
-      dot.className = "page-dot active w-5 h-1.5 rounded-full bg-blue-500 transition-all duration-300";
-    } else {
-      dot.className = "page-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 transition-all duration-300";
-    }
-  });
+  if (catBIdx !== -1) {
+    const dotsB = document.querySelectorAll('#page-dots-cat-b .page-dot');
+    dotsB.forEach((dot, idx) => {
+      if (idx === catBIdx) {
+        dot.className = "page-dot active w-5 h-1.5 rounded-full bg-blue-500 transition-all duration-300";
+      } else {
+        dot.className = "page-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 transition-all duration-300";
+      }
+    });
+  }
 
   dispatchActiveToolCalculation();
 }
