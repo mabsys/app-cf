@@ -1,4 +1,4 @@
-// ./js/scanner.js (0711_R407) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (0711_R408) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
 import { getProfileData, getScanHistory } from './storage.js';
 
@@ -120,24 +120,8 @@ export function updateCameraCycleButtonLabel() {
 // ============================================================================
 
 function startNativeDetection(videoElem, handleSuccess) {
-  if (!nativeBarcodeDetector || !videoElem) return;
-  stopNativeDetection();
-
-  nativeScanInterval = setInterval(async () => {
-    if (!videoElem || videoElem.readyState < 2 || videoElem.paused || videoElem.ended) return;
-    try {
-      const barcodes = await nativeBarcodeDetector.detect(videoElem);
-      if (barcodes && barcodes.length > 0) {
-        const barcode = barcodes[0];
-        const raw = (barcode ? (barcode.rawValue || barcode.data || barcode.rawValueText) : '') || '';
-        const cleanScannedText = raw ? raw.trim() : "";
-        if (cleanScannedText) {
-          stopNativeDetection();
-          handleSuccess(cleanScannedText);
-        }
-      }
-    } catch (e) {}
-  }, 30); // 33 scans per second on GPU
+  // Rely exclusively on Nimiq QrScanner WebWorker engine for 100% reliable frame buffer decoding
+  return;
 }
 
 function stopNativeDetection() {
@@ -228,60 +212,33 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
     );
 
     qrScanner.start().then(() => {
-      // 1080p Full HD & Hardware Focus/Exposure Constraints
+      // Stable 1.0x Camera Stream Initialization (No Post-Start Track Mutating)
       try {
         const stream = videoElem.srcObject;
         if (stream) {
           activeMediaStream = stream;
           const track = stream.getVideoTracks()[0];
-          if (track && track.applyConstraints) {
-            const advancedConstraints = [];
-            if (track.getCapabilities) {
-              const isIPad = /iPad/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-              const caps = (track && typeof track.getCapabilities === 'function') ? track.getCapabilities() : {};
-              const hasMacroHardware = Boolean(caps.focusMode && caps.focusMode.includes('macro'));
-              const isSingleLensOrTablet = isIPad || (!hasMacroHardware && (availableCameraDevices ? availableCameraDevices.length : 0) <= 1);
-              
-              // NATIVE 1080P FULL HD 1.0X FOCUS PIPELINE (IPAD & IPHONE OPTIMAL 8-10 CM FOCAL DISTANCE)
-              const guidancePill = document.getElementById("qr-guidance-pill");
-              currentZoomLevel = 1.0;
-              if (videoElem) {
-                videoElem.style.transform = "none";
-              }
-              if (guidancePill) {
-                guidancePill.innerText = "Hold card 8–10 cm from camera";
-              }
+          
+          // Set UI guidance pill to optimal 8-10 cm focal distance
+          const guidancePill = document.getElementById("qr-guidance-pill");
+          currentZoomLevel = 1.0;
+          if (videoElem) {
+            videoElem.style.transform = "none";
+          }
+          if (guidancePill) {
+            guidancePill.innerText = "Hold card 8–10 cm from camera";
+          }
 
-              if (hasMacroHardware) {
-                advancedConstraints.push({ focusMode: 'macro' });
-              } else if (caps.focusMode && caps.focusMode.includes('continuous')) {
-                advancedConstraints.push({ focusMode: 'continuous' });
-              }
-              if (caps.exposureMode && caps.exposureMode.includes('continuous')) {
-                advancedConstraints.push({ exposureMode: 'continuous' });
-              }
-              if (caps.zoom) {
-                const targetZoom = Math.min(caps.zoom.max, Math.max(caps.zoom.min, currentZoomLevel));
-                advancedConstraints.push({ zoom: targetZoom });
-              }
-            }
-            track.applyConstraints({
-              width: { ideal: 1920 },
-              height: { ideal: 1080 },
-              advanced: advancedConstraints.length > 0 ? advancedConstraints : undefined
-            }).catch(() => {});
-
-            // Check torch availability
-            const torchBtn = document.getElementById("torch-toggle-btn");
-            if (torchBtn) {
-              const caps = track.getCapabilities ? track.getCapabilities() : null;
-              if (caps && caps.torch) {
-                torchBtn.classList.remove("hidden");
-                torchBtn.classList.add("flex");
-              } else {
-                torchBtn.classList.add("hidden");
-                torchBtn.classList.remove("flex");
-              }
+          // Check torch availability safely without mutating resolution
+          const torchBtn = document.getElementById("torch-toggle-btn");
+          if (torchBtn) {
+            const caps = (track && typeof track.getCapabilities === 'function') ? track.getCapabilities() : null;
+            if (caps && caps.torch) {
+              torchBtn.classList.remove("hidden");
+              torchBtn.classList.add("flex");
+            } else {
+              torchBtn.classList.add("hidden");
+              torchBtn.classList.remove("flex");
             }
           }
         }
