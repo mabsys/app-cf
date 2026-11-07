@@ -1,4 +1,4 @@
-// ./js/scanner.js (0711_R404) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (0711_R405) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
 import { getProfileData, getScanHistory } from './storage.js';
 
@@ -240,12 +240,27 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
               const caps = track.getCapabilities();
               const hasMacroHardware = caps.focusMode && caps.focusMode.includes('macro');
               
-              // HARDWARE-ADAPTIVE AUTO-ZOOM (FUTURE-PROOF FOR IPAD 10TH GEN+):
-              // Single-lens cameras (e.g. iPad 10th Gen) lack physical macro AF (min focus ~12-15 cm).
-              // Automatically engage 1.8x auto-zoom compensation on launch for optimal 15 cm card focus.
-              if (!hasMacroHardware && caps.zoom) {
-                if (!currentCameraDeviceId || currentCameraDeviceId === 'environment') {
-                  currentZoomLevel = 1.8;
+              // HARDWARE-ADAPTIVE AUTO-ZOOM & VIEWPORT COMPENSATOR (IPAD 10TH GEN+ & SINGLE-LENS)
+              const guidancePill = document.getElementById("qr-guidance-pill");
+              if (!hasMacroHardware) {
+                // Non-macro hardware (iPad 10th Gen, iPad Air, base iPads):
+                // Apply 1.8x CSS Viewport Zoom for visual 15 cm framing & sharp focus
+                currentZoomLevel = 1.8;
+                if (videoElem) {
+                  videoElem.style.transform = "scale(1.8)";
+                  videoElem.style.transformOrigin = "center center";
+                }
+                if (guidancePill) {
+                  guidancePill.innerText = "Hold ~15 cm from camera (In Focus)";
+                }
+              } else {
+                // Macro-capable hardware (iPhone Pro series):
+                currentZoomLevel = 1.0;
+                if (videoElem) {
+                  videoElem.style.transform = "none";
+                }
+                if (guidancePill) {
+                  guidancePill.innerText = "Place QR code within scan area";
                 }
               }
 
@@ -303,6 +318,11 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
 
 export function stopScanner() {
   stopNativeDetection();
+
+  const videoElem = document.getElementById("qr-video");
+  if (videoElem) {
+    videoElem.style.transform = "none";
+  }
 
   if (idleTimer) {
     clearTimeout(idleTimer);
