@@ -1,4 +1,4 @@
-// ./js/scanner.js (0711_R408) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (0711_R402) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
 import { getProfileData, getScanHistory } from './storage.js';
 
@@ -120,8 +120,24 @@ export function updateCameraCycleButtonLabel() {
 // ============================================================================
 
 function startNativeDetection(videoElem, handleSuccess) {
-  // Rely exclusively on Nimiq QrScanner WebWorker engine for 100% reliable frame buffer decoding
-  return;
+  if (!nativeBarcodeDetector || !videoElem) return;
+  stopNativeDetection();
+
+  nativeScanInterval = setInterval(async () => {
+    if (!videoElem || videoElem.readyState < 2 || videoElem.paused || videoElem.ended) return;
+    try {
+      const barcodes = await nativeBarcodeDetector.detect(videoElem);
+      if (barcodes && barcodes.length > 0) {
+        const barcode = barcodes[0];
+        const raw = (barcode ? (barcode.rawValue || barcode.data || barcode.rawValueText) : '') || '';
+        const cleanScannedText = raw ? raw.trim() : "";
+        if (cleanScannedText) {
+          stopNativeDetection();
+          handleSuccess(cleanScannedText);
+        }
+      }
+    } catch (e) {}
+  }, 30); // 33 scans per second on GPU
 }
 
 function stopNativeDetection() {
@@ -193,12 +209,12 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
         highlightScanRegion: false,
         highlightCodeOutline: true,
         maxScansPerSecond: 30,
-        alsoTryWithoutScanRegion: true,
+        alsoTryWithoutScanRegion: false,
         calculateScanRegion: (v) => {
           const w = v.videoWidth || 1280;
           const h = v.videoHeight || 720;
           const minDim = Math.min(w, h);
-          const factor = 0.75;
+          const factor = 0.52;
           const size = Math.round(minDim * factor);
           return {
             x: Math.round((w - size) / 2),
@@ -212,33 +228,46 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
     );
 
     qrScanner.start().then(() => {
-      // Stable 1.0x Camera Stream Initialization (No Post-Start Track Mutating)
+      // 1080p Full HD & Hardware Focus/Exposure Constraints
       try {
         const stream = videoElem.srcObject;
         if (stream) {
           activeMediaStream = stream;
-          const track = stream.getVideoTracks()[0];
-          
-          // Set UI guidance pill to optimal 8-10 cm focal distance
-          const guidancePill = document.getElementById("qr-guidance-pill");
-          currentZoomLevel = 1.0;
-          if (videoElem) {
-            videoElem.style.transform = "none";
-          }
-          if (guidancePill) {
-            guidancePill.innerText = "Hold card 8–10 cm from camera";
-          }
+          const track = stream.getVideoTracks();
+          if (track && track.applyConstraints) {
+            const advancedConstraints = [];
+            if (track.getCapabilities) {
+              const caps = track.getCapabilities();
+              if (caps.focusMode && caps.focusMode.includes('macro')) {
+                advancedConstraints.push({ focusMode: 'macro' });
+              } else if (caps.focusMode && caps.focusMode.includes('continuous')) {
+                advancedConstraints.push({ focusMode: 'continuous' });
+              }
+              if (caps.exposureMode && caps.exposureMode.includes('continuous')) {
+                advancedConstraints.push({ exposureMode: 'continuous' });
+              }
+              if (caps.zoom) {
+                const targetZoom = Math.min(caps.zoom.max, Math.max(caps.zoom.min, currentZoomLevel));
+                advancedConstraints.push({ zoom: targetZoom });
+              }
+            }
+            track.applyConstraints({
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+              advanced: advancedConstraints.length > 0 ? advancedConstraints : undefined
+            }).catch(() => {});
 
-          // Check torch availability safely without mutating resolution
-          const torchBtn = document.getElementById("torch-toggle-btn");
-          if (torchBtn) {
-            const caps = (track && typeof track.getCapabilities === 'function') ? track.getCapabilities() : null;
-            if (caps && caps.torch) {
-              torchBtn.classList.remove("hidden");
-              torchBtn.classList.add("flex");
-            } else {
-              torchBtn.classList.add("hidden");
-              torchBtn.classList.remove("flex");
+            // Check torch availability
+            const torchBtn = document.getElementById("torch-toggle-btn");
+            if (torchBtn) {
+              const caps = track.getCapabilities ? track.getCapabilities() : null;
+              if (caps && caps.torch) {
+                torchBtn.classList.remove("hidden");
+                torchBtn.classList.add("flex");
+              } else {
+                torchBtn.classList.add("hidden");
+                torchBtn.classList.remove("flex");
+              }
             }
           }
         }
@@ -263,11 +292,6 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
 
 export function stopScanner() {
   stopNativeDetection();
-
-  const videoElem = document.getElementById("qr-video");
-  if (videoElem) {
-    videoElem.style.transform = "none";
-  }
 
   if (idleTimer) {
     clearTimeout(idleTimer);
@@ -500,7 +524,7 @@ export async function cycleCameraLens() {
   try {
     const videoElem = document.getElementById("qr-video");
     if (videoElem && videoElem.srcObject) {
-      const track = videoElem.srcObject.getVideoTracks()[0];
+      const track = videoElem.srcObject.getVideoTracks();
       if (track && track.getCapabilities) {
         const capabilities = track.getCapabilities();
         const advanced = [];
