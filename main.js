@@ -1,7 +1,7 @@
-// ./main.js (0611_R384) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0611_R387) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
-import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
+import { animateOverviewDashboard, animateOverviewEntrance, animateCardSlide, animateEdgeBounce, isCardSwipeAnimating } from './js/animations.js';
 import { initToolsModule, filterRecurrentCourses, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -2816,7 +2816,7 @@ function customRenderHistoryList() {
   const limit = (typeof getHistoryLimit === "function") ? getHistoryLimit() : 10;
 
   if (retentionTag) {
-    retentionTag.innerText = `${limit} scans`;
+    retentionTag.innerText = `${limit} Scans`;
     retentionTag.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 text-xs font-bold transition-all cursor-pointer shadow-2xs active:scale-95";
     retentionTag.onclick = (e) => {
       e.preventDefault();
@@ -4047,53 +4047,95 @@ function restoreToolsLocalStorage() {
 }
 
 
-function setupToolsCardSwipeGestures() {
-  const catASubtabs = ['medical', 'ppc', 'recurrent', 'recency'];
-  const catBSubtabs = ['standby', 'max-fdp', 'pre-flight-rest', 'cumulative', 'caam-ftl1'];
+let isSwipeAnimating = false;
 
-  const wrappers = [
-    { id: 'card-wrapper-cat-a', getSubtabs: () => catASubtabs },
-    { id: 'card-wrapper-cat-b', getSubtabs: () => catBSubtabs }
+function setupToolsCardSwipeGestures() {
+  const catACards = ['tool-card-medical', 'tool-card-ppc', 'tool-card-recurrent', 'tool-card-recency'];
+  const catBCards = ['tool-card-standby', 'tool-card-maxfdp', 'tool-card-preflight', 'tool-card-cumulative'];
+
+  const categoryConfigs = [
+    { wrapperId: 'card-wrapper-cat-a', menuId: 'subtab-container-cat-a', cards: catACards },
+    { wrapperId: 'card-wrapper-cat-b', menuId: 'subtab-container-cat-b', cards: catBCards }
   ];
 
-  wrappers.forEach(item => {
-    const el = document.getElementById(item.id);
-    if (!el) return;
+  categoryConfigs.forEach(config => {
+    const wrapper = document.getElementById(config.wrapperId);
+    const menu = document.getElementById(config.menuId);
+    const targetElements = [wrapper, menu].filter(Boolean);
+
+    if (wrapper) {
+      const cards = wrapper.querySelectorAll('.tool-card, .card-front, .card-back, .card-3d-inner');
+      cards.forEach(c => targetElements.push(c));
+    }
 
     let touchStartX = 0;
     let touchStartY = 0;
 
-    el.addEventListener('touchstart', (e) => {
-      if (e.touches && e.touches.length > 0) {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-      }
-    }, { passive: true });
+    targetElements.forEach(el => {
+      if (!el) return;
 
-    el.addEventListener('touchend', (e) => {
-      if (!e.changedTouches || e.changedTouches.length === 0) return;
-      const touchEndX = e.changedTouches[0].clientX;
-      const touchEndY = e.changedTouches[0].clientY;
+      el.addEventListener('touchstart', (e) => {
+        if (e.touches && e.touches.length === 1) {
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+        }
+      }, { passive: true });
 
-      const diffX = touchEndX - touchStartX;
-      const diffY = touchEndY - touchStartY;
+      el.addEventListener('touchend', (e) => {
+        if (typeof isCardSwipeAnimating === 'function' && isCardSwipeAnimating()) return;
+        if (!e.changedTouches || e.changedTouches.length === 0) return;
 
-      if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
-        const state = typeof getToolsState === 'function' ? getToolsState() : {};
-        const currentSubtab = state.activeSubTab || 'medical';
-        const subtabs = item.getSubtabs();
-        const currentIndex = subtabs.indexOf(currentSubtab);
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const diffX = touchEndX - touchStartX;
+        const diffY = touchEndY - touchStartY;
 
-        if (currentIndex !== -1) {
-          if (diffX < 0 && currentIndex < subtabs.length - 1) {
-            const nextTab = subtabs[currentIndex + 1];
-            if (typeof switchActiveTool === 'function') switchActiveTool(nextTab);
-          } else if (diffX > 0 && currentIndex > 0) {
-            const prevTab = subtabs[currentIndex - 1];
-            if (typeof switchActiveTool === 'function') switchActiveTool(prevTab);
+        // Threshold check: horizontal movement > 35px and dominant over vertical scroll
+        if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY) * 1.2) {
+          const activeCardEl = document.querySelector('.tool-card.active') || document.getElementById(config.cards[0]);
+          if (!activeCardEl) return;
+
+          const currentCardId = activeCardEl.id;
+          const cardsList = config.cards;
+          const currentIndex = cardsList.indexOf(currentCardId);
+
+          if (currentIndex === -1) return;
+
+          const isLeftSwipe = diffX < 0;  // Swipe Left -> Next Tool
+          const isRightSwipe = diffX > 0; // Swipe Right -> Prev Tool
+
+          // 1. EDGE-BOUNCE ELASTIC SPRING EFFECT (Delegated to animations.js)
+          if ((isLeftSwipe && currentIndex === cardsList.length - 1) || (isRightSwipe && currentIndex === 0)) {
+            const bounceDir = isLeftSwipe ? 'left' : 'right';
+            if (typeof animateEdgeBounce === 'function') {
+              animateEdgeBounce(activeCardEl, bounceDir);
+            } else if (window.CertiFlyAnimations && window.CertiFlyAnimations.animateEdgeBounce) {
+              window.CertiFlyAnimations.animateEdgeBounce(activeCardEl, bounceDir);
+            }
+            return;
+          }
+
+          // 2. VISUAL CARD-SLIDE TRANSITION (Delegated to animations.js)
+          const targetIndex = isLeftSwipe ? currentIndex + 1 : currentIndex - 1;
+          const targetCardId = cardsList[targetIndex];
+          const targetCardEl = document.getElementById(targetCardId);
+
+          if (!targetCardEl) return;
+
+          // Update sub-tab menu pills and page dots
+          if (typeof switchActiveTool === 'function') {
+            switchActiveTool(targetCardId);
+          }
+
+          // Delegate animation to animations.js
+          const slideDir = isLeftSwipe ? 'next' : 'prev';
+          if (typeof animateCardSlide === 'function') {
+            animateCardSlide(activeCardEl, targetCardEl, slideDir);
+          } else if (window.CertiFlyAnimations && window.CertiFlyAnimations.animateCardSlide) {
+            window.CertiFlyAnimations.animateCardSlide(activeCardEl, targetCardEl, slideDir);
           }
         }
-      }
-    }, { passive: true });
+      }, { passive: true });
+    });
   });
 }
