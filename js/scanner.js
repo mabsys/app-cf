@@ -1,4 +1,4 @@
-// ./js/scanner.js (0711_R410) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (0711_R412) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
 import { getProfileData, getScanHistory } from './storage.js';
 
@@ -84,8 +84,8 @@ export async function updateCameraControlUI() {
       const current = availableCameraDevices[index >= 0 ? index : 0];
       targetEl.innerText = formatCameraLabel(current, index >= 0 ? index : 0, numRearCams);
     }
-  } else if (hasZoom) {
-    // TIER 2: Single Rear Camera with Hardware Zoom -> Digital Zoom Toggle
+  } else if (hasZoom && !(/iPad/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))) {
+    // TIER 2: Single Rear Camera with Hardware Zoom -> Digital Zoom Toggle (iPhone Single Lens)
     if (cycleBtn) {
       cycleBtn.classList.remove("hidden");
       cycleBtn.classList.add("flex");
@@ -213,8 +213,10 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
           activeMediaStream = stream;
           const track = stream.getVideoTracks()[0];
           
+          const isIPad = /iPad/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+          currentZoomLevel = isIPad ? 1.8 : 1.0;
+
           const guidancePill = document.getElementById("qr-guidance-pill");
-          currentZoomLevel = 1.0;
           if (videoElem) {
             videoElem.style.transform = "none";
           }
@@ -232,6 +234,10 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
             }
             if (caps.exposureMode && caps.exposureMode.includes('continuous')) {
               advancedConstraints.push({ exposureMode: 'continuous' });
+            }
+            if (caps.zoom) {
+              const targetZoom = Math.min(caps.zoom.max, Math.max(caps.zoom.min, currentZoomLevel));
+              advancedConstraints.push({ zoom: targetZoom });
             }
 
             if (advancedConstraints.length > 0) {
@@ -498,13 +504,20 @@ export async function cycleCameraLens() {
     }
   }
 
-  // MODE B: Single Rear Camera Stream -> Cycle Macro/Zoom modes (1.0x -> 1.8x Close-Up -> 2.5x Telephoto)
+  // MODE B: Single Rear Camera Stream -> Cycle Macro/Zoom modes (1.0x -> 1.8x -> 2.5x)
+  const isIPad = /iPad/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (isIPad) {
+    // iPad strictly locked to default 1.8x zoom constraint
+    currentZoomLevel = 1.8;
+    return;
+  }
+
   if (currentZoomLevel === 1.0) {
-    currentZoomLevel = 1.8; // Macro / Close-Up
+    currentZoomLevel = 1.8;
   } else if (currentZoomLevel === 1.8) {
-    currentZoomLevel = 2.5; // Telephoto
+    currentZoomLevel = 2.5;
   } else {
-    currentZoomLevel = 1.0; // Standard Back Wide
+    currentZoomLevel = 1.0;
   }
 
   try {
