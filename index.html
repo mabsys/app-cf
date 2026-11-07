@@ -1,4 +1,4 @@
-<!-- ./index.html (0711_R400) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+<!-- ./index.html (0711_R401) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -782,9 +782,9 @@ navigator.serviceWorker.register('sw.js')
                 <div id="camera-scan-tab" class="flex flex-col gap-4">
                     <div id="qr-reader-container" class="w-full overflow-hidden rounded-2xl bg-slate-900 aspect-square flex items-center justify-center relative shadow-inner">
                         <video id="qr-video" class="w-full h-full object-cover" playsinline webkit-playsinline muted></video>
-                        <div id="qr-reticle" class="absolute inset-8 border-2 border-dashed border-white/70 rounded-2xl pointer-events-none flex items-end justify-center pb-3 transition-colors">
-                            <span class="text-[10px] font-bold text-white bg-black/60 px-2.5 py-1 rounded-full backdrop-blur-md uppercase tracking-wider shadow-sm">
-                                Align QR code within reticle
+                        <div id="qr-reticle" class="absolute w-44 h-44 border-2 border-dashed border-white/80 rounded-2xl pointer-events-none flex flex-col items-center justify-end pb-2.5 transition-all shadow-[0_0_0_9999px_rgba(15,23,42,0.45)]">
+                            <span class="text-[10px] font-bold text-white bg-black/70 px-2.5 py-1 rounded-full backdrop-blur-md uppercase tracking-wider shadow-sm text-center">
+                                Place QR code within scan area
                             </span>
                         </div>
                         <div id="scanner-paused-overlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex-col items-center justify-center gap-2 text-center p-4 cursor-pointer z-20">
