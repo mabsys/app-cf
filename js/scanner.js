@@ -1,584 +1,1081 @@
-// ./js/scanner.js (0711_R402) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+
+// ./js/scanner.js (0711_R403)
+// Optimized Nimiq QR Scanner
+// Targets: iPad 10th Gen+, iPhone, Android
+// Browsers: Safari and Chrome
+// QR target: Version 7, 14mm x 14mm
+// Scan distance: 5-10cm
+//
+// IMPORTANT:
+// - Uses Nimiq's internal BarcodeDetector/Worker selection.
+// - Does not run a competing external detector.
+// - Retains the 52% central scan region.
+// - Preserves more image detail with up to 640px processing.
+// - Applies camera constraints to the actual MediaStreamTrack.
 
 import { getProfileData, getScanHistory } from './storage.js';
 
+// ============================================================================
+// 1. CONFIGURATION
+// ============================================================================
+
+const CONFIG = Object.freeze({
+    IDLE_TIMEOUT_MS: 60000,
+
+    SCAN_REGION_FACTOR: 0.52,
+
+    // Preserve detail without making processing excessively expensive.
+    SCAN_PROCESSING_MAX: 640,
+
+    MAX_SCANS_PER_SECOND: 22,
+
+    CAMERA_WIDTH: 2560,
+    CAMERA_HEIGHT: 1440,
+    CAMERA_FALLBACK_WIDTH: 1920,
+    CAMERA_FALLBACK_HEIGHT: 1080,
+
+    CAMERA_FRAME_RATE: 30,
+
+    // Avoid unnecessary digital zoom by default.
+    DEFAULT_ZOOM: 1.0,
+
+    // Supported zoom presets; actual values are clamped to capabilities.
+    ZOOM_PRESETS: [1.0, 1.8, 2.5]
+});
+
+// ============================================================================
+// 2. STATE
+// ============================================================================
+
 let qrScanner = null;
+
 let currentCameraDeviceId = null;
 let availableCameraDevices = [];
+
 let activeMediaStream = null;
+
 let torchActive = false;
 let idleTimer = null;
 let wakeLock = null;
-let currentZoomLevel = 1.8;
 
-// Hardware-Accelerated Native BarcodeDetector Engine
-let nativeBarcodeDetector = null;
-let nativeScanInterval = null;
+let currentZoomLevel = CONFIG.DEFAULT_ZOOM;
 
-if ('BarcodeDetector' in window) {
-  try {
-    nativeBarcodeDetector = new window.BarcodeDetector({ formats: ['qr_code'] });
-  } catch (e) {
-    nativeBarcodeDetector = null;
-  }
+let activeDecodeCallback = null;
+let activeErrorCallback = null;
+
+let scannerGeneration = 0;
+let decodeHandled = false;
+let scannerStarting = false;
+
+// Native BarcodeDetector is deliberately NOT instantiated here.
+// Nimiq manages native detection and worker fallback internally.
+
+// ============================================================================
+// 3. CAMERA UTILITIES
+// ============================================================================
+
+function getActiveVideoTrack() {
+    if (!activeMediaStream) return null;
+
+    const tracks = activeMediaStream.getVideoTracks();
+
+    return tracks.length ? tracks[0] : null;
 }
 
-// IDLE TIMEOUT THRESHOLD: 60 Seconds
-const IDLE_TIMEOUT_MS = 60000;
-
-// Filter out front/selfie/user-facing cameras strictly
 function filterRearCameras(cameras) {
-  if (!Array.isArray(cameras)) return [];
-  return cameras.filter(cam => {
-    const label = (cam.label || '').toLowerCase();
-    if (label.includes('front') || label.includes('user') || label.includes('selfie') || label.includes('facing front')) {
-      return false;
-    }
-    return true;
-  });
+    if (!Array.isArray(cameras)) return [];
+
+    return cameras.filter(cam => {
+        const label = (cam.label || '').toLowerCase();
+
+        return !(
+            label.includes('front') ||
+            label.includes('user') ||
+            label.includes('selfie') ||
+            label.includes('facing front')
+        );
+    });
 }
 
-// Format camera device or macro/zoom level labels for clear user feedback
 function formatCameraLabel(camObj, index, total) {
-  if (!camObj && total <= 1) {
-    if (currentZoomLevel === 1.0) return 'Back 1.0x';
-    if (currentZoomLevel === 1.8) return 'Macro / Close-Up (1.8x)';
-    return `Back ${currentZoomLevel.toFixed(1)}x`;
-  }
-  const label = camObj ? (camObj.label || '').toLowerCase() : '';
-  if (label.includes('ultra') || label.includes('0.5x') || label.includes('wide-angle') || label.includes('macro')) {
-    return 'Macro Mode (0.5x)';
-  }
-  if (label.includes('telephoto') || label.includes('zoom') || label.includes('2x') || label.includes('3x')) {
-    return 'Telephoto 2.0x';
-  }
-  if (label.includes('back') || label.includes('rear') || label.includes('environment') || label.includes('wide')) {
-    return index === 0 ? 'Back 1.0x' : `Back Lens ${index + 1}`;
-  }
-  if (total > 1) {
-    return `Back Lens ${index + 1}`;
-  }
-  return `Back ${currentZoomLevel.toFixed(1)}x`;
+    if (!camObj && total <= 1) {
+        return `Back ${currentZoomLevel.toFixed(1)}x`;
+    }
+
+    const label = camObj
+        ? (camObj.label || '').toLowerCase()
+        : '';
+
+    if (
+        label.includes('ultra') ||
+        label.includes('0.5x') ||
+        label.includes('wide-angle') ||
+        label.includes('macro')
+    ) {
+        return 'Wide / Macro';
+    }
+
+    if (
+        label.includes('telephoto') ||
+        label.includes('zoom') ||
+        label.includes('2x') ||
+        label.includes('3x')
+    ) {
+        return 'Telephoto';
+    }
+
+    if (
+        label.includes('back') ||
+        label.includes('rear') ||
+        label.includes('environment') ||
+        label.includes('wide')
+    ) {
+        return index === 0
+            ? 'Back Camera'
+            : `Back Lens ${index + 1}`;
+    }
+
+    return total > 1
+        ? `Back Lens ${index + 1}`
+        : `Back ${currentZoomLevel.toFixed(1)}x`;
 }
+
+// ============================================================================
+// 4. CAMERA CAPABILITY DETECTION
+// ============================================================================
+
+function supportsCapability(caps, name, value) {
+    if (!caps || !caps[name]) return false;
+
+    const supported = caps[name];
+
+    return Array.isArray(supported)
+        ? supported.includes(value)
+        : false;
+}
+
+async function applyCameraOptimizations(videoElem) {
+    if (!videoElem || !videoElem.srcObject) return;
+
+    const stream = videoElem.srcObject;
+
+    if (!(stream instanceof MediaStream)) return;
+
+    const track = stream.getVideoTracks()[0];
+
+    if (!track || track.readyState !== 'live') return;
+
+    activeMediaStream = stream;
+
+    let caps = {};
+
+    try {
+        if (typeof track.getCapabilities === 'function') {
+            caps = track.getCapabilities();
+        }
+    } catch (e) {
+        console.warn('[R403] Camera capabilities unavailable:', e);
+    }
+
+    // ------------------------------------------------------------
+    // A. Resolution and frame rate
+    // ------------------------------------------------------------
+
+    const resolutionConstraints = {
+        width: {
+            ideal: CONFIG.CAMERA_WIDTH
+        },
+        height: {
+            ideal: CONFIG.CAMERA_HEIGHT
+        },
+        frameRate: {
+            ideal: CONFIG.CAMERA_FRAME_RATE,
+            max: CONFIG.CAMERA_FRAME_RATE
+        }
+    };
+
+    try {
+        await track.applyConstraints(resolutionConstraints);
+    } catch (firstError) {
+        console.warn(
+            '[R403] 1440p request unavailable. Trying 1080p.',
+            firstError
+        );
+
+        try {
+            await track.applyConstraints({
+                width: {
+                    ideal: CONFIG.CAMERA_FALLBACK_WIDTH
+                },
+                height: {
+                    ideal: CONFIG.CAMERA_FALLBACK_HEIGHT
+                },
+                frameRate: {
+                    ideal: CONFIG.CAMERA_FRAME_RATE,
+                    max: CONFIG.CAMERA_FRAME_RATE
+                }
+            });
+        } catch (fallbackError) {
+            console.warn(
+                '[R403] Camera resolution fallback unavailable.',
+                fallbackError
+            );
+        }
+    }
+
+    // ------------------------------------------------------------
+    // B. Focus and exposure
+    // ------------------------------------------------------------
+
+    const advanced = [];
+
+    try {
+        if (supportsCapability(caps, 'focusMode', 'continuous')) {
+            advanced.push({
+                focusMode: 'continuous'
+            });
+        }
+
+        if (supportsCapability(caps, 'exposureMode', 'continuous')) {
+            advanced.push({
+                exposureMode: 'continuous'
+            });
+        }
+
+        // Do not force macro mode.
+        // Some devices report macro capability but cannot focus
+        // reliably at the requested physical scanning distance.
+
+        if (caps.zoom) {
+            const zoom = Math.min(
+                caps.zoom.max,
+                Math.max(caps.zoom.min, currentZoomLevel)
+            );
+
+            advanced.push({ zoom });
+        }
+
+        if (advanced.length) {
+            await track.applyConstraints({
+                advanced
+            });
+        }
+    } catch (e) {
+        console.warn(
+            '[R403] Optional focus/exposure/zoom settings unavailable:',
+            e
+        );
+    }
+
+    // ------------------------------------------------------------
+    // C. Record actual camera settings
+    // ------------------------------------------------------------
+
+    try {
+        const settings = track.getSettings();
+
+        console.info('[R403] Active camera settings:', {
+            width: settings.width,
+            height: settings.height,
+            frameRate: settings.frameRate,
+            facingMode: settings.facingMode,
+            focusMode: settings.focusMode,
+            exposureMode: settings.exposureMode,
+            zoom: settings.zoom
+        });
+    } catch (e) {}
+
+    updateTorchButton(track);
+}
+
+function updateTorchButton(track) {
+    const torchBtn = document.getElementById('torch-toggle-btn');
+
+    if (!torchBtn) return;
+
+    let hasTorch = false;
+
+    try {
+        const caps = track &&
+            typeof track.getCapabilities === 'function'
+            ? track.getCapabilities()
+            : {};
+
+        hasTorch = Boolean(caps.torch);
+    } catch (e) {}
+
+    torchBtn.classList.toggle('hidden', !hasTorch);
+    torchBtn.classList.toggle('flex', hasTorch);
+}
+
+// ============================================================================
+// 5. CAMERA CONTROL UI
+// ============================================================================
 
 export async function updateCameraControlUI() {
-  const cycleBtn = document.getElementById("camera-cycle-btn");
-  const cycleLabel = document.getElementById("camera-cycle-label");
-  const targetEl = cycleLabel || cycleBtn;
+    const cycleBtn = document.getElementById('camera-cycle-btn');
+    const cycleLabel = document.getElementById('camera-cycle-label');
 
-  if (!availableCameraDevices || availableCameraDevices.length === 0) {
+    const targetEl = cycleLabel || cycleBtn;
+
+    if (!availableCameraDevices.length) {
+        try {
+            if (window.QrScanner) {
+                const cameras = await window.QrScanner.listCameras(true);
+
+                availableCameraDevices = filterRearCameras(
+                    cameras || []
+                );
+            }
+        } catch (e) {}
+    }
+
+    const track = getActiveVideoTrack();
+
+    let hasZoom = false;
+
     try {
-      if (window.QrScanner) {
-        const cameras = await window.QrScanner.listCameras(true);
-        availableCameraDevices = filterRearCameras(cameras || []);
-      }
+        const caps = track && track.getCapabilities
+            ? track.getCapabilities()
+            : {};
+
+        hasZoom = Boolean(caps.zoom);
     } catch (e) {}
-  }
 
-  const numRearCams = availableCameraDevices ? availableCameraDevices.length : 0;
-  const track = activeMediaStream ? activeMediaStream.getVideoTracks()[0] : null;
-  const caps = (track && track.getCapabilities) ? track.getCapabilities() : {};
-  const hasZoom = Boolean(caps.zoom);
+    const multipleCameras = availableCameraDevices.length > 1;
 
-  if (numRearCams > 1) {
-    // TIER 1: Multiple Physical Rear Lenses (e.g. iPhone Pro)
+    const showControl = multipleCameras || hasZoom;
+
     if (cycleBtn) {
-      cycleBtn.classList.remove("hidden");
-      cycleBtn.classList.add("flex");
+        cycleBtn.classList.toggle('hidden', !showControl);
+        cycleBtn.classList.toggle('flex', showControl);
     }
-    if (targetEl) {
-      const index = availableCameraDevices.findIndex(c => c.id === currentCameraDeviceId);
-      const current = availableCameraDevices[index >= 0 ? index : 0];
-      targetEl.innerText = formatCameraLabel(current, index >= 0 ? index : 0, numRearCams);
+
+    if (!showControl || !targetEl) return;
+
+    if (multipleCameras) {
+        const index = availableCameraDevices.findIndex(
+            c => c.id === currentCameraDeviceId
+        );
+
+        const actualIndex = index >= 0 ? index : 0;
+
+        targetEl.innerText = formatCameraLabel(
+            availableCameraDevices[actualIndex],
+            actualIndex,
+            availableCameraDevices.length
+        );
+    } else {
+        targetEl.innerText = `Zoom ${currentZoomLevel.toFixed(1)}x`;
     }
-  } else if (hasZoom) {
-    // TIER 2: Single Rear Camera with Hardware Zoom -> Digital Zoom Toggle
-    if (cycleBtn) {
-      cycleBtn.classList.remove("hidden");
-      cycleBtn.classList.add("flex");
-    }
-    if (targetEl) {
-      if (currentZoomLevel === 1.0) targetEl.innerText = 'Zoom 1.0x';
-      else if (currentZoomLevel === 1.8) targetEl.innerText = 'Macro 1.8x';
-      else targetEl.innerText = `Zoom ${currentZoomLevel.toFixed(1)}x`;
-    }
-  } else {
-    // TIER 3: Fixed Single Rear Lens (No Zoom, e.g. base iPad / Laptop) -> Hide Completely
-    if (cycleBtn) {
-      cycleBtn.classList.add("hidden");
-      cycleBtn.classList.remove("flex");
-    }
-  }
 }
 
 export function updateCameraCycleButtonLabel() {
-  updateCameraControlUI();
+    updateCameraControlUI();
 }
 
 // ============================================================================
-// 1. HARDWARE-ACCELERATED NATIVE BARCODE DETECTOR LOOP
+// 6. OPTIMIZED NIMIQ SCAN REGION
 // ============================================================================
 
-function startNativeDetection(videoElem, handleSuccess) {
-  if (!nativeBarcodeDetector || !videoElem) return;
-  stopNativeDetection();
+function calculateOptimizedScanRegion(video) {
+    const width = video.videoWidth;
+    const height = video.videoHeight;
 
-  nativeScanInterval = setInterval(async () => {
-    if (!videoElem || videoElem.readyState < 2 || videoElem.paused || videoElem.ended) return;
-    try {
-      const barcodes = await nativeBarcodeDetector.detect(videoElem);
-      if (barcodes && barcodes.length > 0) {
-        const barcode = barcodes[0];
-        const raw = (barcode ? (barcode.rawValue || barcode.data || barcode.rawValueText) : '') || '';
-        const cleanScannedText = raw ? raw.trim() : "";
-        if (cleanScannedText) {
-          stopNativeDetection();
-          handleSuccess(cleanScannedText);
-        }
-      }
-    } catch (e) {}
-  }, 30); // 33 scans per second on GPU
-}
-
-function stopNativeDetection() {
-  if (nativeScanInterval) {
-    clearInterval(nativeScanInterval);
-    nativeScanInterval = null;
-  }
-}
-
-// ============================================================================
-// 2. TAB 1: LIVE CAMERA SCANNER & HARDWARE STREAM CONTROLLER
-// ============================================================================
-
-export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemId = "qr-video") {
-  const errorMsg = document.getElementById("error-message");
-  if (errorMsg) errorMsg.innerText = "";
-
-  const videoElem = document.getElementById(customVideoElemId);
-  if (!videoElem) {
-    if (onErrorCallback) onErrorCallback("Camera feed element not found.");
-    return;
-  }
-
-  // Hide paused overlay if visible
-  const pausedOverlay = document.getElementById("scanner-paused-overlay");
-  if (pausedOverlay) pausedOverlay.classList.add("hidden");
-
-  // Maintain stream if scanner is already active and playing
-  if (qrScanner && activeMediaStream && activeMediaStream.active && videoElem && videoElem.readyState >= 2 && !videoElem.paused) {
-    resetIdleTimer(onDecodeCallback, onErrorCallback);
-    return;
-  }
-
-  // Reset idle timer
-  resetIdleTimer(onDecodeCallback, onErrorCallback);
-
-  // Stop active native detector and scanner instance
-  stopNativeDetection();
-  if (qrScanner) {
-    try {
-      qrScanner.destroy();
-    } catch (e) {}
-    qrScanner = null;
-  }
-
-  const handleQrSuccess = (cleanScannedText) => {
-    stopScanner();
-    if (navigator.vibrate) {
-      try { navigator.vibrate(100); } catch (e) {}
+    if (!width || !height) {
+        return {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0
+        };
     }
-    const callback = onDecodeCallback || window.processLicenseUrl;
-    if (typeof callback === 'function') {
-      callback(cleanScannedText);
-    }
-  };
 
-  if (window.QrScanner) {
-    qrScanner = new window.QrScanner(
-      videoElem,
-      (result) => {
-        const decodedText = (typeof result === 'object' ? (result.data || result.text) : result) || "";
-        const cleanScannedText = decodedText ? decodedText.trim() : "";
-        if (cleanScannedText) {
-          handleQrSuccess(cleanScannedText);
-        }
-      },
-      {
-        onDecodeError: () => {},
-        highlightScanRegion: false,
-        highlightCodeOutline: true,
-        maxScansPerSecond: 30,
-        alsoTryWithoutScanRegion: false,
-        calculateScanRegion: (v) => {
-          const w = v.videoWidth || 1280;
-          const h = v.videoHeight || 720;
-          const minDim = Math.min(w, h);
-          const factor = 0.52;
-          const size = Math.round(minDim * factor);
-          return {
-            x: Math.round((w - size) / 2),
-            y: Math.round((h - size) / 2),
-            width: size,
-            height: size
-          };
-        },
-        preferredCamera: currentCameraDeviceId || 'environment'
-      }
+    const smallestDimension = Math.min(width, height);
+
+    // Preserve the intended physical-card positioning area.
+    const size = Math.round(
+        smallestDimension * CONFIG.SCAN_REGION_FACTOR
     );
 
-    qrScanner.start().then(() => {
-      // 1080p Full HD & Hardware Focus/Exposure Constraints
-      try {
-        const stream = videoElem.srcObject;
-        if (stream) {
-          activeMediaStream = stream;
-          const track = stream.getVideoTracks();
-          if (track && track.applyConstraints) {
-            const advancedConstraints = [];
-            if (track.getCapabilities) {
-              const caps = track.getCapabilities();
-              if (caps.focusMode && caps.focusMode.includes('macro')) {
-                advancedConstraints.push({ focusMode: 'macro' });
-              } else if (caps.focusMode && caps.focusMode.includes('continuous')) {
-                advancedConstraints.push({ focusMode: 'continuous' });
-              }
-              if (caps.exposureMode && caps.exposureMode.includes('continuous')) {
-                advancedConstraints.push({ exposureMode: 'continuous' });
-              }
-              if (caps.zoom) {
-                const targetZoom = Math.min(caps.zoom.max, Math.max(caps.zoom.min, currentZoomLevel));
-                advancedConstraints.push({ zoom: targetZoom });
-              }
-            }
-            track.applyConstraints({
-              width: { ideal: 1920 },
-              height: { ideal: 1080 },
-              advanced: advancedConstraints.length > 0 ? advancedConstraints : undefined
-            }).catch(() => {});
+    const x = Math.round((width - size) / 2);
+    const y = Math.round((height - size) / 2);
 
-            // Check torch availability
-            const torchBtn = document.getElementById("torch-toggle-btn");
-            if (torchBtn) {
-              const caps = track.getCapabilities ? track.getCapabilities() : null;
-              if (caps && caps.torch) {
-                torchBtn.classList.remove("hidden");
-                torchBtn.classList.add("flex");
-              } else {
-                torchBtn.classList.add("hidden");
-                torchBtn.classList.remove("flex");
-              }
-            }
-          }
-        }
-      } catch (e) {}
+    // Do not force a 400x400 downscale.
+    // Preserve the crop's original detail up to 640px.
+    const processingSize = Math.min(
+        size,
+        CONFIG.SCAN_PROCESSING_MAX
+    );
 
-      // Start Native GPU BarcodeDetector loop alongside jsQR
-      if (nativeBarcodeDetector) {
-        startNativeDetection(videoElem, handleQrSuccess);
-      }
+    return {
+        x,
+        y,
+        width: size,
+        height: size,
 
-      // Enumerate and filter rear cameras for lens switcher
-      window.QrScanner.listCameras(true).then((cameras) => {
-        availableCameraDevices = filterRearCameras(cameras || []);
-        updateCameraCycleButtonLabel();
-      }).catch(() => {});
-    }).catch((err) => {
-      console.error("Camera start failed:", err);
-      if (onErrorCallback) onErrorCallback("Unable to access camera. Please verify permissions.");
-    });
-  }
+        downScaledWidth: processingSize,
+        downScaledHeight: processingSize
+    };
 }
+
+// ============================================================================
+// 7. IDLE TIMER
+// ============================================================================
+
+function resetIdleTimer() {
+    if (idleTimer) {
+        clearTimeout(idleTimer);
+    }
+
+    idleTimer = setTimeout(() => {
+        stopScanner();
+
+        const pausedOverlay = document.getElementById(
+            'scanner-paused-overlay'
+        );
+
+        if (pausedOverlay) {
+            pausedOverlay.classList.remove('hidden');
+        }
+    }, CONFIG.IDLE_TIMEOUT_MS);
+}
+
+// ============================================================================
+// 8. CAMERA START
+// ============================================================================
+
+export function startScanner(
+    onDecodeCallback,
+    onErrorCallback,
+    customVideoElemId = 'qr-video'
+) {
+    const errorMsg = document.getElementById('error-message');
+
+    if (errorMsg) errorMsg.innerText = '';
+
+    const videoElem = document.getElementById(customVideoElemId);
+
+    if (!videoElem) {
+        if (onErrorCallback) {
+            onErrorCallback('Camera feed element not found.');
+        }
+
+        return;
+    }
+
+    const pausedOverlay = document.getElementById(
+        'scanner-paused-overlay'
+    );
+
+    if (pausedOverlay) {
+        pausedOverlay.classList.add('hidden');
+    }
+
+    // Always update callbacks, even when reusing an active scanner.
+    activeDecodeCallback = onDecodeCallback;
+    activeErrorCallback = onErrorCallback;
+
+    // Reuse a functioning scanner.
+    if (
+        qrScanner &&
+        activeMediaStream &&
+        activeMediaStream.active &&
+        videoElem.readyState >= 2 &&
+        !videoElem.paused
+    ) {
+        resetIdleTimer();
+        return;
+    }
+
+    if (scannerStarting) return;
+
+    stopNativeDetection();
+
+    // Invalidate older asynchronous startup operations.
+    const generation = ++scannerGeneration;
+
+    if (qrScanner) {
+        try {
+            qrScanner.destroy();
+        } catch (e) {}
+
+        qrScanner = null;
+    }
+
+    activeMediaStream = null;
+
+    decodeHandled = false;
+    scannerStarting = true;
+
+    const handleQrSuccess = (result) => {
+        if (decodeHandled) return;
+
+        const decodedText = (
+            typeof result === 'object'
+                ? result.data || result.text || ''
+                : result
+        );
+
+        if (typeof decodedText !== 'string') return;
+
+        const cleanScannedText = decodedText.trim();
+
+        if (!cleanScannedText) return;
+
+        // Single successful callback protection.
+        decodeHandled = true;
+
+        const callback =
+            activeDecodeCallback ||
+            window.processLicenseUrl;
+
+        stopScanner();
+
+        if (navigator.vibrate) {
+            try {
+                navigator.vibrate(80);
+            } catch (e) {}
+        }
+
+        if (typeof callback === 'function') {
+            callback(cleanScannedText);
+        }
+    };
+
+    const reportError = (message) => {
+        const callback = activeErrorCallback;
+
+        if (typeof callback === 'function') {
+            callback(message);
+        }
+    };
+
+    if (!window.QrScanner) {
+        scannerStarting = false;
+
+        reportError('Nimiq QR scanner library is unavailable.');
+
+        return;
+    }
+
+    // Use Nimiq's modern detailed-result API.
+    // Its engine selects native BarcodeDetector or Worker internally.
+    try {
+        qrScanner = new window.QrScanner(
+            videoElem,
+            handleQrSuccess,
+            {
+                returnDetailedScanResult: true,
+
+                onDecodeError: () => {},
+
+                preferredCamera:
+                    currentCameraDeviceId || 'environment',
+
+                maxScansPerSecond:
+                    CONFIG.MAX_SCANS_PER_SECOND,
+
+                highlightScanRegion: false,
+
+                highlightCodeOutline: true,
+
+                calculateScanRegion:
+                    calculateOptimizedScanRegion
+            }
+        );
+    } catch (e) {
+        scannerStarting = false;
+
+        console.error('[R403] Scanner initialization failed:', e);
+
+        reportError('Unable to initialize QR scanner.');
+
+        return;
+    }
+
+    qrScanner.start()
+        .then(async () => {
+            if (generation !== scannerGeneration) {
+                return;
+            }
+
+            scannerStarting = false;
+
+            if (!qrScanner) return;
+
+            try {
+                await applyCameraOptimizations(videoElem);
+            } catch (e) {
+                console.warn(
+                    '[R403] Camera optimization incomplete:',
+                    e
+                );
+            }
+
+            if (generation !== scannerGeneration) return;
+
+            // Refresh the active stream after camera initialization.
+            activeMediaStream = videoElem.srcObject;
+
+            resetIdleTimer();
+
+            // Camera enumeration after permission is granted.
+            try {
+                const cameras = await window.QrScanner.listCameras(true);
+
+                availableCameraDevices = filterRearCameras(
+                    cameras || []
+                );
+
+                await updateCameraControlUI();
+            } catch (e) {
+                console.warn(
+                    '[R403] Camera enumeration unavailable:',
+                    e
+                );
+            }
+        })
+        .catch(err => {
+            if (generation !== scannerGeneration) return;
+
+            scannerStarting = false;
+
+            console.error('[R403] Camera start failed:', err);
+
+            reportError(
+                'Unable to access camera. Please verify permissions.'
+            );
+        });
+}
+
+// ============================================================================
+// 9. STOP SCANNER
+// ============================================================================
 
 export function stopScanner() {
-  stopNativeDetection();
+    // Invalidate outstanding asynchronous startup operations.
+    scannerGeneration++;
 
-  if (idleTimer) {
-    clearTimeout(idleTimer);
-    idleTimer = null;
-  }
+    scannerStarting = false;
 
-  if (qrScanner) {
-    try {
-      qrScanner.stop();
-      qrScanner.destroy();
-    } catch (e) {}
-    qrScanner = null;
-  }
+    if (idleTimer) {
+        clearTimeout(idleTimer);
+        idleTimer = null;
+    }
 
-  if (activeMediaStream) {
-    try {
-      activeMediaStream.getTracks().forEach(track => track.stop());
-    } catch (e) {}
-    activeMediaStream = null;
-  }
+    if (qrScanner) {
+        try {
+            qrScanner.stop();
+            qrScanner.destroy();
+        } catch (e) {}
 
-  torchActive = false;
-  const torchBtn = document.getElementById("torch-toggle-btn");
-  if (torchBtn) {
-    torchBtn.classList.add("hidden");
-    torchBtn.classList.remove("flex");
-  }
+        qrScanner = null;
+    }
 
-  releaseWakeLock();
-}
+    // Nimiq normally stops its own video stream during destroy.
+    // Stop any remaining active tracks defensively.
+    if (activeMediaStream) {
+        try {
+            activeMediaStream.getTracks().forEach(track => {
+                if (track.readyState === 'live') {
+                    track.stop();
+                }
+            });
+        } catch (e) {}
 
-export function switchScanHubTab(tabName) {
-  const tabCamera = document.getElementById('camera-scan-tab');
-  const tabQrPass = document.getElementById('my-qr-pass-tab');
-  const tabManual = document.getElementById('manual-entry-tab');
+        activeMediaStream = null;
+    }
 
-  const btnCamera = document.getElementById('tab-camera-btn');
-  const btnQrPass = document.getElementById('tab-qrpass-btn');
-  const btnManual = document.getElementById('tab-manual-btn');
+    torchActive = false;
 
-  const activeBtnClass = 'flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-xs';
-  const inactiveBtnClass = 'flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100';
+    decodeHandled = false;
 
-  if (tabCamera) tabCamera.classList.add('hidden');
-  if (tabQrPass) tabQrPass.classList.add('hidden');
-  if (tabManual) tabManual.classList.add('hidden');
+    activeDecodeCallback = null;
+    activeErrorCallback = null;
 
-  if (btnCamera) btnCamera.className = inactiveBtnClass;
-  if (btnQrPass) btnQrPass.className = inactiveBtnClass;
-  if (btnManual) btnManual.className = inactiveBtnClass;
+    const torchBtn = document.getElementById('torch-toggle-btn');
 
-  if (tabName === 'camera') {
-    if (tabCamera) tabCamera.classList.remove('hidden');
-    if (btnCamera) btnCamera.className = activeBtnClass;
-    startScanner(
-      (scannedUrl) => {
-        if (typeof window.processLicenseUrl === 'function') {
-          window.processLicenseUrl(scannedUrl);
-        }
-      },
-      (err) => {
-        const errorMsg = document.getElementById("error-message");
-        if (errorMsg) errorMsg.innerText = err;
-      }
-    );
-  } else if (tabName === 'qrpass') {
-    if (tabQrPass) tabQrPass.classList.remove('hidden');
-    if (btnQrPass) btnQrPass.className = activeBtnClass;
-    stopScanner();
-    renderMyQrPass();
-  } else if (tabName === 'manual') {
-    if (tabManual) tabManual.classList.remove('hidden');
-    if (btnManual) btnManual.className = activeBtnClass;
-    stopScanner();
-    renderRecentPilotsList();
-  }
+    if (torchBtn) {
+        torchBtn.classList.add('hidden');
+        torchBtn.classList.remove('flex');
+    }
+
+    releaseWakeLock();
 }
 
 // ============================================================================
-// 3. TAB 2: MY QR PASS GENERATOR & DISPLAY CONTROLLER
+// 10. TAB CONTROLLER
+// ============================================================================
+
+export function switchScanHubTab(tabName) {
+    const tabCamera = document.getElementById('camera-scan-tab');
+    const tabQrPass = document.getElementById('my-qr-pass-tab');
+    const tabManual = document.getElementById('manual-entry-tab');
+
+    const btnCamera = document.getElementById('tab-camera-btn');
+    const btnQrPass = document.getElementById('tab-qrpass-btn');
+    const btnManual = document.getElementById('tab-manual-btn');
+
+    const activeBtnClass =
+        'flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-xs';
+
+    const inactiveBtnClass =
+        'flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100';
+
+    if (tabCamera) tabCamera.classList.add('hidden');
+    if (tabQrPass) tabQrPass.classList.add('hidden');
+    if (tabManual) tabManual.classList.add('hidden');
+
+    if (btnCamera) btnCamera.className = inactiveBtnClass;
+    if (btnQrPass) btnQrPass.className = inactiveBtnClass;
+    if (btnManual) btnManual.className = inactiveBtnClass;
+
+    if (tabName === 'camera') {
+        if (tabCamera) tabCamera.classList.remove('hidden');
+
+        if (btnCamera) btnCamera.className = activeBtnClass;
+
+        startScanner(
+            scannedUrl => {
+                if (typeof window.processLicenseUrl === 'function') {
+                    window.processLicenseUrl(scannedUrl);
+                }
+            },
+            err => {
+                const errorMsg = document.getElementById('error-message');
+
+                if (errorMsg) errorMsg.innerText = err;
+            }
+        );
+
+    } else if (tabName === 'qrpass') {
+        if (tabQrPass) tabQrPass.classList.remove('hidden');
+
+        if (btnQrPass) btnQrPass.className = activeBtnClass;
+
+        stopScanner();
+
+        renderMyQrPass();
+
+    } else if (tabName === 'manual') {
+        if (tabManual) tabManual.classList.remove('hidden');
+
+        if (btnManual) btnManual.className = activeBtnClass;
+
+        stopScanner();
+
+        renderRecentPilotsList();
+    }
+}
+
+// ============================================================================
+// 11. MY QR PASS
 // ============================================================================
 
 export function renderMyQrPass() {
-  const profile = getProfileData();
-  const canvas = document.getElementById("pass-qr-canvas");
-  const pilotNameEl = document.getElementById("pass-pilot-name");
-  const licenceNoEl = document.getElementById("pass-licence-no");
-  const badgeEl = document.getElementById("pass-eligibility-badge");
-  const freshnessTag = document.getElementById("pass-freshness-tag");
+    const profile = getProfileData();
 
-  if (pilotNameEl) pilotNameEl.innerText = profile.name || "-";
-  if (licenceNoEl) {
-    const lType = profile.licenceType || "-";
-    const lNo = profile.licenceNo || "-";
-    licenceNoEl.innerText = `${lType} • ${lNo}`;
-  }
+    const canvas = document.getElementById('pass-qr-canvas');
 
-  const isEligible = profile.dutyStatus ? profile.dutyStatus === 'ELIGIBLE' : true;
-  if (badgeEl) {
-    if (isEligible) {
-      badgeEl.innerText = "ELIGIBLE FOR FLIGHT DUTY";
-      badgeEl.className = "mt-3 px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300";
-    } else {
-      badgeEl.innerText = "LAPSED / INELIGIBLE";
-      badgeEl.className = "mt-3 px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300";
+    const pilotNameEl = document.getElementById('pass-pilot-name');
+    const licenceNoEl = document.getElementById('pass-licence-no');
+
+    const badgeEl = document.getElementById('pass-eligibility-badge');
+    const freshnessTag = document.getElementById('pass-freshness-tag');
+
+    if (pilotNameEl) {
+        pilotNameEl.innerText = profile.name || '-';
     }
-  }
 
-  if (freshnessTag) {
-    freshnessTag.innerText = profile.lastVerified ? `Verified ${profile.lastVerified}` : "Cached Offline";
-  }
+    if (licenceNoEl) {
+        const lType = profile.licenceType || '-';
+        const lNo = profile.licenceNo || '-';
 
-  if (canvas && window.QrScanner) {
-    const qrContent = profile.url || "https://eclipse.caam.gov.my";
-    try {
-      window.QrScanner.hasCamera();
-    } catch (e) {}
-  }
+        licenceNoEl.innerText = `${lType} • ${lNo}`;
+    }
 
-  requestWakeLock();
+    const isEligible = profile.dutyStatus
+        ? profile.dutyStatus === 'ELIGIBLE'
+        : true;
+
+    if (badgeEl) {
+        if (isEligible) {
+            badgeEl.innerText = 'ELIGIBLE FOR FLIGHT DUTY';
+
+            badgeEl.className =
+                'mt-3 px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300';
+        } else {
+            badgeEl.innerText = 'LAPSED / INELIGIBLE';
+
+            badgeEl.className =
+                'mt-3 px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300';
+        }
+    }
+
+    if (freshnessTag) {
+        freshnessTag.innerText = profile.lastVerified
+            ? `Verified ${profile.lastVerified}`
+            : 'Cached Offline';
+    }
+
+    if (canvas && window.QrScanner) {
+        try {
+            window.QrScanner.hasCamera();
+        } catch (e) {}
+    }
+
+    requestWakeLock();
 }
 
 // ============================================================================
-// 4. TAB 3: MANUAL URL ENTRY & RECENT PILOTS CONTROLLER
+// 12. RECENT PILOTS
 // ============================================================================
 
 export function renderRecentPilotsList() {
-  const container = document.getElementById("recent-pilots-list");
-  const countTag = document.getElementById("recent-count-tag");
-  if (!container) return;
+    const container = document.getElementById('recent-pilots-list');
 
-  const history = getScanHistory();
-  if (countTag) countTag.innerText = history.length;
+    const countTag = document.getElementById('recent-count-tag');
 
-  if (history.length === 0) {
-    container.innerHTML = '<div class="py-4 text-center text-xs text-slate-400 font-medium">No recently verified pilots</div>';
-    return;
-  }
+    if (!container) return;
 
-  container.innerHTML = "";
-  history.slice(0, 5).forEach(item => {
-    const name = item.pilotName || "Verified Crew";
-    const licence = item.licenceNo || "ATPL(A)";
-    const time = item.timestamp || "Recent";
+    const history = getScanHistory();
 
-    const div = document.createElement("div");
-    div.className = "py-3 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 px-2 rounded-xl transition-colors";
-    div.innerHTML = `
-      <div class="flex flex-col">
-        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">${name}</span>
-        <span class="text-[10px] text-slate-400 font-medium">${licence} • ${time}</span>
-      </div>
-      <span class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 uppercase">View</span>
-    `;
-    div.onclick = () => {
-      if (window.loadHistoricalRecord) window.loadHistoricalRecord(item.id);
-    };
-    container.appendChild(div);
-  });
-}
-
-export async function handleClipboardPaste() {
-  const input = document.getElementById("manual-url-input");
-  if (!input) return;
-
-  try {
-    if (navigator.clipboard && navigator.clipboard.readText) {
-      const text = await navigator.clipboard.readText();
-      if (text) {
-        input.value = text.trim();
-      }
+    if (countTag) {
+        countTag.innerText = history.length;
     }
-  } catch (err) {
-    console.warn("Clipboard permission denied:", err);
-  }
+
+    if (!history.length) {
+        container.innerHTML =
+            '<div class="py-4 text-center text-xs text-slate-400 font-medium">No recently verified pilots</div>';
+
+        return;
+    }
+
+    container.innerHTML = '';
+
+    history.slice(0, 5).forEach(item => {
+        const name = item.pilotName || 'Verified Crew';
+        const licence = item.licenceNo || 'ATPL(A)';
+        const time = item.timestamp || 'Recent';
+
+        const div = document.createElement('div');
+
+        div.className =
+            'py-3 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 px-2 rounded-xl transition-colors';
+
+        const details = document.createElement('div');
+        details.className = 'flex flex-col';
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'text-xs font-bold text-slate-800 dark:text-slate-200';
+        nameEl.textContent = name;
+
+        const infoEl = document.createElement('span');
+        infoEl.className = 'text-[10px] text-slate-400 font-medium';
+        infoEl.textContent = `${licence} • ${time}`;
+
+        details.appendChild(nameEl);
+        details.appendChild(infoEl);
+
+        const viewEl = document.createElement('span');
+        viewEl.className =
+            'text-[10px] font-extrabold text-blue-600 dark:text-blue-400 uppercase';
+
+        viewEl.textContent = 'View';
+
+        div.appendChild(details);
+        div.appendChild(viewEl);
+
+        div.onclick = () => {
+            if (window.loadHistoricalRecord) {
+                window.loadHistoricalRecord(item.id);
+            }
+        };
+
+        container.appendChild(div);
+    });
 }
 
 // ============================================================================
-// 5. HARDWARE TOOLBAR CONTROLLERS (LENS SWITCHER & FLASHLIGHT)
+// 13. MANUAL CLIPBOARD ENTRY
+// ============================================================================
+
+export async function handleClipboardPaste() {
+    const input = document.getElementById('manual-url-input');
+
+    if (!input) return;
+
+    try {
+        if (
+            navigator.clipboard &&
+            navigator.clipboard.readText
+        ) {
+            const text = await navigator.clipboard.readText();
+
+            if (text) {
+                input.value = text.trim();
+            }
+        }
+    } catch (err) {
+        console.warn('[R403] Clipboard permission denied:', err);
+    }
+}
+
+// ============================================================================
+// 14. CAMERA LENS / ZOOM SWITCHER
 // ============================================================================
 
 export async function cycleCameraLens() {
-  const cycleBtn = document.getElementById("camera-cycle-btn");
-  const cycleLabel = document.getElementById("camera-cycle-label");
-  const targetEl = cycleLabel || cycleBtn;
+    const cycleBtn = document.getElementById('camera-cycle-btn');
 
-  if (targetEl) targetEl.innerText = "Switching...";
+    const cycleLabel = document.getElementById('camera-cycle-label');
 
-  if (!availableCameraDevices || availableCameraDevices.length === 0) {
-    try {
-      if (window.QrScanner) {
-        const cameras = await window.QrScanner.listCameras(true);
-        availableCameraDevices = filterRearCameras(cameras || []);
-      }
-    } catch (e) {}
-  }
+    const targetEl = cycleLabel || cycleBtn;
 
-  // MODE A: Multiple Rear Cameras Detected (Wide, Ultra Wide / Macro, Telephoto)
-  if (availableCameraDevices && availableCameraDevices.length > 1) {
-    const currentIndex = availableCameraDevices.findIndex(c => c.id === currentCameraDeviceId);
-    const nextIndex = (currentIndex + 1) % availableCameraDevices.length;
-    const nextCamera = availableCameraDevices[nextIndex];
-    currentCameraDeviceId = nextCamera.id;
+    if (targetEl) {
+        targetEl.innerText = 'Switching...';
+    }
 
-    try {
-      if (qrScanner) {
-        await qrScanner.setCamera(currentCameraDeviceId);
-      } else {
-        startScanner(
-          (url) => { if (typeof window.processLicenseUrl === 'function') window.processLicenseUrl(url); },
-          null
+    if (!availableCameraDevices.length) {
+        try {
+            if (window.QrScanner) {
+                const cameras = await window.QrScanner.listCameras(true);
+
+                availableCameraDevices = filterRearCameras(
+                    cameras || []
+                );
+            }
+        } catch (e) {}
+    }
+
+    // ------------------------------------------------------------
+    // A. Physical rear camera switching
+    // ------------------------------------------------------------
+
+    if (availableCameraDevices.length > 1) {
+        const currentIndex = availableCameraDevices.findIndex(
+            c => c.id === currentCameraDeviceId
         );
-      }
-      updateCameraCycleButtonLabel();
-      return;
-    } catch (err) {
-      console.warn("Lens switch failed, attempting zoom/macro mode fallback:", err);
+
+        const nextIndex =
+            (currentIndex + 1) % availableCameraDevices.length;
+
+        const nextCamera = availableCameraDevices[nextIndex];
+
+        try {
+            if (qrScanner) {
+                currentCameraDeviceId = nextCamera.id;
+
+                await qrScanner.setCamera(currentCameraDeviceId);
+
+                const videoElem = document.getElementById('qr-video');
+
+                if (videoElem) {
+                    await applyCameraOptimizations(videoElem);
+                }
+
+                await updateCameraControlUI();
+
+                return;
+            }
+        } catch (e) {
+            console.warn('[R403] Physical lens switching failed:', e);
+        }
     }
-  }
 
-  // MODE B: Single Rear Camera Stream -> Cycle Macro/Zoom modes (1.0x -> 1.8x Close-Up -> 2.5x Telephoto)
-  if (currentZoomLevel === 1.0) {
-    currentZoomLevel = 1.8; // Macro / Close-Up
-  } else if (currentZoomLevel === 1.8) {
-    currentZoomLevel = 2.5; // Telephoto
-  } else {
-    currentZoomLevel = 1.0; // Standard Back Wide
-  }
+    // ------------------------------------------------------------
+    // B. Hardware zoom
+    // ------------------------------------------------------------
 
-  try {
-    const videoElem = document.getElementById("qr-video");
-    if (videoElem && videoElem.srcObject) {
-      const track = videoElem.srcObject.getVideoTracks();
-      if (track && track.getCapabilities) {
-        const capabilities = track.getCapabilities();
-        const advanced = [];
-        if (capabilities.focusMode && capabilities.focusMode.includes('macro')) {
-          advanced.push({ focusMode: 'macro' });
-        }
-        if (capabilities.zoom) {
-          const targetZoom = Math.min(capabilities.zoom.max, Math.max(capabilities.zoom.min, currentZoomLevel));
-          advanced.push({ zoom: targetZoom });
-        }
-        if (advanced.length > 0) {
-          await track.applyConstraints({ advanced });
-        }
-      }
+    const track = getActiveVideoTrack();
+
+    if (!track || typeof track.getCapabilities !== 'function') {
+        await updateCameraControlUI();
+        return;
     }
-  } catch (e) {}
 
-  updateCameraCycleButtonLabel();
+    try {
+        const caps = track.getCapabilities();
+
+        if (!caps.zoom) return;
+
+        const presets = CONFIG.ZOOM_PRESETS;
+
+        const currentIndex = presets.findIndex(
+            value => Math.abs(value - currentZoomLevel) < 0.05
+        );
+
+        const nextIndex = (currentIndex + 1) % presets.length;
+
+        const requestedZoom = presets[nextIndex];
+
+        const actualZoom = Math.min(
+            caps.zoom.max,
+            Math.max(caps.zoom.min, requestedZoom)
+        );
+
+        await track.applyConstraints({
+            advanced: [
+                { zoom: actualZoom }
+            ]
+        });
+
+        currentZoomLevel = actualZoom;
+
+    } catch (e) {
+        console.warn('[R403] Zoom unavailable:', e);
+    }
+
+    await updateCameraControlUI();
 }
+
+// ============================================================================
+// 15. TORCH CONTROL
+// ============================================================================
 
 export function toggleTorch() {
-  if (!qrScanner) return;
-  torchActive = !torchActive;
-  if (torchActive) {
-    qrScanner.turnFlashOn().catch(() => { torchActive = false; });
-  } else {
-    qrScanner.turnFlashOff().catch(() => {});
-  }
+    if (!qrScanner) return;
+
+    torchActive = !torchActive;
+
+    if (torchActive) {
+        qrScanner.turnFlashOn().catch(() => {
+            torchActive = false;
+        });
+    } else {
+        qrScanner.turnFlashOff().catch(() => {
+            torchActive = false;
+        });
+    }
 }
 
 // ============================================================================
-// 6. AUTO-TEARDOWN & POWER MANAGEMENT (60s IDLE TIMEOUT & WAKE LOCK)
+// 16. WAKE LOCK
 // ============================================================================
-
-function resetIdleTimer(onDecodeCallback, onErrorCallback) {
-  if (idleTimer) clearTimeout(idleTimer);
-  idleTimer = setTimeout(() => {
-    stopScanner();
-    const pausedOverlay = document.getElementById("scanner-paused-overlay");
-    if (pausedOverlay) pausedOverlay.classList.remove("hidden");
-  }, IDLE_TIMEOUT_MS);
-}
 
 async function requestWakeLock() {
-  try {
-    if ('wakeLock' in navigator && !wakeLock) {
-      wakeLock = await navigator.wakeLock.request('screen');
-    }
-  } catch (e) {}
+    try {
+        if ('wakeLock' in navigator && !wakeLock) {
+            wakeLock = await navigator.wakeLock.request('screen');
+
+            wakeLock.addEventListener('release', () => {
+                wakeLock = null;
+            });
+        }
+    } catch (e) {}
 }
 
 function releaseWakeLock() {
-  if (wakeLock) {
-    wakeLock.release().catch(() => {});
-    wakeLock = null;
-  }
+    if (wakeLock) {
+        const lock = wakeLock;
+
+        wakeLock = null;
+
+        lock.release().catch(() => {});
+    }
 }
+
+// ============================================================================
+// END R403
+// ============================================================================
