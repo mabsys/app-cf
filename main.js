@@ -1,7 +1,7 @@
-// ./main.js (0611_R387) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0611_R389) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
-import { animateOverviewDashboard, animateOverviewEntrance, animateCardSlide, animateEdgeBounce, isCardSwipeAnimating } from './js/animations.js';
+import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
 import { initToolsModule, filterRecurrentCourses, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, switchActiveTool, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -4082,7 +4082,6 @@ function setupToolsCardSwipeGestures() {
       }, { passive: true });
 
       el.addEventListener('touchend', (e) => {
-        if (typeof isCardSwipeAnimating === 'function' && isCardSwipeAnimating()) return;
         if (!e.changedTouches || e.changedTouches.length === 0) return;
 
         const touchEndX = e.changedTouches[0].clientX;
@@ -4104,35 +4103,13 @@ function setupToolsCardSwipeGestures() {
           const isLeftSwipe = diffX < 0;  // Swipe Left -> Next Tool
           const isRightSwipe = diffX > 0; // Swipe Right -> Prev Tool
 
-          // 1. EDGE-BOUNCE ELASTIC SPRING EFFECT (Delegated to animations.js)
-          if ((isLeftSwipe && currentIndex === cardsList.length - 1) || (isRightSwipe && currentIndex === 0)) {
-            const bounceDir = isLeftSwipe ? 'left' : 'right';
-            if (typeof animateEdgeBounce === 'function') {
-              animateEdgeBounce(activeCardEl, bounceDir);
-            } else if (window.CertiFlyAnimations && window.CertiFlyAnimations.animateEdgeBounce) {
-              window.CertiFlyAnimations.animateEdgeBounce(activeCardEl, bounceDir);
-            }
-            return;
-          }
-
-          // 2. VISUAL CARD-SLIDE TRANSITION (Delegated to animations.js)
-          const targetIndex = isLeftSwipe ? currentIndex + 1 : currentIndex - 1;
-          const targetCardId = cardsList[targetIndex];
-          const targetCardEl = document.getElementById(targetCardId);
-
-          if (!targetCardEl) return;
-
-          // Update sub-tab menu pills and page dots
-          if (typeof switchActiveTool === 'function') {
-            switchActiveTool(targetCardId);
-          }
-
-          // Delegate animation to animations.js
-          const slideDir = isLeftSwipe ? 'next' : 'prev';
-          if (typeof animateCardSlide === 'function') {
-            animateCardSlide(activeCardEl, targetCardEl, slideDir);
-          } else if (window.CertiFlyAnimations && window.CertiFlyAnimations.animateCardSlide) {
-            window.CertiFlyAnimations.animateCardSlide(activeCardEl, targetCardEl, slideDir);
+          // Next / Prev Tool Card with Instant Switch (No animation latency/collateral jitter)
+          if (isLeftSwipe && currentIndex < cardsList.length - 1) {
+            const targetCardId = cardsList[currentIndex + 1];
+            if (typeof switchActiveTool === 'function') switchActiveTool(targetCardId);
+          } else if (isRightSwipe && currentIndex > 0) {
+            const targetCardId = cardsList[currentIndex - 1];
+            if (typeof switchActiveTool === 'function') switchActiveTool(targetCardId);
           }
         }
       }, { passive: true });
