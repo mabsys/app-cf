@@ -1,4 +1,4 @@
-// ./js/scanner.js (0711_R406) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (0711_R407) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
 import { getProfileData, getScanHistory } from './storage.js';
 
@@ -242,28 +242,14 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
               const hasMacroHardware = Boolean(caps.focusMode && caps.focusMode.includes('macro'));
               const isSingleLensOrTablet = isIPad || (!hasMacroHardware && (availableCameraDevices ? availableCameraDevices.length : 0) <= 1);
               
-              // HARDWARE-ADAPTIVE AUTO-ZOOM & VIEWPORT COMPENSATOR (IPAD 10TH GEN+ & SINGLE-LENS)
+              // NATIVE 1080P FULL HD 1.0X FOCUS PIPELINE (IPAD & IPHONE OPTIMAL 8-10 CM FOCAL DISTANCE)
               const guidancePill = document.getElementById("qr-guidance-pill");
-              if (isSingleLensOrTablet) {
-                // Non-macro hardware (iPad 10th Gen, iPad Air, base iPads):
-                // Apply 1.8x CSS Viewport Zoom for visual 15 cm framing & sharp focus
-                currentZoomLevel = 1.8;
-                if (videoElem) {
-                  videoElem.style.transform = "scale(1.8)";
-                  videoElem.style.transformOrigin = "center center";
-                }
-                if (guidancePill) {
-                  guidancePill.innerText = "Hold ~15 cm from camera (In Focus)";
-                }
-              } else {
-                // Macro-capable hardware (iPhone Pro series):
-                currentZoomLevel = 1.0;
-                if (videoElem) {
-                  videoElem.style.transform = "none";
-                }
-                if (guidancePill) {
-                  guidancePill.innerText = "Place QR code within scan area";
-                }
+              currentZoomLevel = 1.0;
+              if (videoElem) {
+                videoElem.style.transform = "none";
+              }
+              if (guidancePill) {
+                guidancePill.innerText = "Hold card 8–10 cm from camera";
               }
 
               if (hasMacroHardware) {
