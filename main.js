@@ -1,4 +1,4 @@
-// ./main.js (0611_R391) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0611_R392) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
@@ -4054,8 +4054,8 @@ function setupToolsCardSwipeGestures() {
   const catBCards = ['tool-card-standby', 'tool-card-maxfdp', 'tool-card-preflight', 'tool-card-cumulative'];
 
   const categoryConfigs = [
-    { wrapperId: 'card-wrapper-cat-a', menuId: 'subtab-container-cat-a', cards: catACards },
-    { wrapperId: 'card-wrapper-cat-b', menuId: 'subtab-container-cat-b', cards: catBCards }
+    { wrapperId: 'card-wrapper-cat-a', menuId: 'subtab-strip-cat-a', cards: catACards },
+    { wrapperId: 'card-wrapper-cat-b', menuId: 'subtab-strip-cat-b', cards: catBCards }
   ];
 
   categoryConfigs.forEach(config => {
