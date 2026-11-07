@@ -1,4 +1,4 @@
-// ./js/scanner.js (0711_R409) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (0711_R410) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
 import { getProfileData, getScanHistory } from './storage.js';
 
@@ -177,7 +177,7 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
         onDecodeError: () => {},
         highlightScanRegion: false,
         highlightCodeOutline: true,
-        maxScansPerSecond: 30,
+        maxScansPerSecond: 22,
         alsoTryWithoutScanRegion: true,
         calculateScanRegion: (v) => {
           const w = v.videoWidth || 1280;
@@ -189,7 +189,9 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
             x: Math.round((w - size) / 2),
             y: Math.round((h - size) / 2),
             width: size,
-            height: size
+            height: size,
+            downScaledWidth: 560,
+            downScaledHeight: 560
           };
         },
         preferredCamera: currentCameraDeviceId || 'environment'
