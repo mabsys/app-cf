@@ -1,6 +1,4 @@
-// ./js/scanner.js (0611_R394) - 3-Tab Pilot Scan Hub Hardware & UI Controller
-// Developed by: Capt. Mohd Sallehuddin Zaidy
-// CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
+// ./js/scanner.js (0611_R396) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
 import { getProfileData, getScanHistory } from './storage.js';
 
@@ -11,7 +9,7 @@ let activeMediaStream = null;
 let torchActive = false;
 let idleTimer = null;
 let wakeLock = null;
-let currentZoomLevel = 1.8;
+let currentZoomLevel = 1.0;
 
 // Hardware-Accelerated Native BarcodeDetector Engine
 let nativeBarcodeDetector = null;
@@ -43,41 +41,81 @@ function filterRearCameras(cameras) {
 // Format camera device or macro/zoom level labels for clear user feedback
 function formatCameraLabel(camObj, index, total) {
   if (!camObj && total <= 1) {
-    if (currentZoomLevel === 1.0) return 'Back 1.0x';
-    if (currentZoomLevel === 1.8) return 'Macro / Close-Up (1.8x)';
-    return `Back ${currentZoomLevel.toFixed(1)}x`;
+    if (currentZoomLevel === 1.0) return 'Zoom 1.0x';
+    if (currentZoomLevel === 1.8) return 'Macro 1.8x';
+    return `Zoom ${currentZoomLevel.toFixed(1)}x`;
   }
   const label = camObj ? (camObj.label || '').toLowerCase() : '';
   if (label.includes('ultra') || label.includes('0.5x') || label.includes('wide-angle') || label.includes('macro')) {
-    return 'Macro Mode (0.5x)';
+    return 'Macro 0.5x';
   }
   if (label.includes('telephoto') || label.includes('zoom') || label.includes('2x') || label.includes('3x')) {
-    return 'Telephoto 2.0x';
+    return 'Tele 2.0x';
   }
   if (label.includes('back') || label.includes('rear') || label.includes('environment') || label.includes('wide')) {
-    return index === 0 ? 'Back 1.0x' : `Back Lens ${index + 1}`;
+    return index === 0 ? 'Lens: Wide 1.0x' : `Lens ${index + 1}`;
   }
   if (total > 1) {
-    return `Back Lens ${index + 1}`;
+    return `Lens ${index + 1}`;
   }
-  return `Back ${currentZoomLevel.toFixed(1)}x`;
+  return `Zoom ${currentZoomLevel.toFixed(1)}x`;
 }
 
-export function updateCameraCycleButtonLabel() {
-  const cycleLabel = document.getElementById("camera-cycle-label");
+/**
+ * Dynamic 3-Tier Camera Control Toolbar Logic
+ * - Multi-lens devices -> Physical Lens Switcher
+ * - Single-lens with zoom -> Digital Zoom Toggle
+ * - Single-lens fixed -> Hidden
+ */
+export async function updateCameraControlUI() {
   const cycleBtn = document.getElementById("camera-cycle-btn");
+  const cycleLabel = document.getElementById("camera-cycle-label");
   const targetEl = cycleLabel || cycleBtn;
-  if (!targetEl) return;
+  if (!cycleBtn) return;
 
-  if (!availableCameraDevices || availableCameraDevices.length <= 1) {
-    targetEl.innerText = formatCameraLabel(null, 0, 1);
-    return;
+  const totalRearCams = availableCameraDevices ? availableCameraDevices.length : 0;
+
+  if (totalRearCams > 1) {
+    // TIER 1: Multiple Physical Rear Lenses
+    cycleBtn.classList.remove("hidden");
+    cycleBtn.classList.add("flex");
+    const index = availableCameraDevices.findIndex(c => c.id === currentCameraDeviceId);
+    const current = availableCameraDevices[index >= 0 ? index : 0];
+    if (targetEl) targetEl.innerText = formatCameraLabel(current, index >= 0 ? index : 0, totalRearCams);
+  } else {
+    // Check digital zoom capabilities on single camera track
+    let hasZoom = false;
+    try {
+      const videoElem = document.getElementById("qr-video");
+      if (videoElem && videoElem.srcObject) {
+        const track = videoElem.srcObject.getVideoTracks()[0];
+        if (track && track.getCapabilities) {
+          const caps = track.getCapabilities();
+          if (caps && caps.zoom && caps.zoom.max > caps.zoom.min) {
+            hasZoom = true;
+          }
+        }
+      }
+    } catch (e) {}
+
+    if (hasZoom) {
+      // TIER 2: Single Rear Camera with Digital Zoom -> Digital Zoom Toggle
+      cycleBtn.classList.remove("hidden");
+      cycleBtn.classList.add("flex");
+      if (targetEl) {
+        if (currentZoomLevel === 1.0) targetEl.innerText = 'Zoom 1.0x';
+        else if (currentZoomLevel === 1.8) targetEl.innerText = 'Macro 1.8x';
+        else targetEl.innerText = `Zoom ${currentZoomLevel.toFixed(1)}x`;
+      }
+    } else {
+      // TIER 3: Fixed Single Rear Lens (No Zoom, e.g. base iPad) -> Hide Completely
+      cycleBtn.classList.add("hidden");
+      cycleBtn.classList.remove("flex");
+    }
   }
-
-  const index = availableCameraDevices.findIndex(c => c.id === currentCameraDeviceId);
-  const current = availableCameraDevices[index >= 0 ? index : 0];
-  targetEl.innerText = formatCameraLabel(current, index >= 0 ? index : 0, availableCameraDevices.length);
 }
+
+export const updateCameraCycleButtonLabel = updateCameraControlUI;
 
 // ============================================================================
 // 1. HARDWARE-ACCELERATED NATIVE BARCODE DETECTOR LOOP
@@ -92,9 +130,8 @@ function startNativeDetection(videoElem, handleSuccess) {
     try {
       const barcodes = await nativeBarcodeDetector.detect(videoElem);
       if (barcodes && barcodes.length > 0) {
-        // FIX: Extract rawValue from the first detected barcode object in the array
-        const first = barcodes[0];
-        const raw = (first && (first.rawValue || first.data)) || "";
+        const barcode = barcodes[0];
+        const raw = (barcode ? (barcode.rawValue || barcode.data || barcode.rawValueText) : '') || '';
         const cleanScannedText = raw ? raw.trim() : "";
         if (cleanScannedText) {
           stopNativeDetection();
@@ -113,143 +150,7 @@ function stopNativeDetection() {
 }
 
 // ============================================================================
-// 2. TAP-TO-ASSIST FOCUS & SNAPSHOT CONTROLLER
-// ============================================================================
-
-export async function triggerTapToFocus(event, videoElemId = "qr-video", onDecodeCallback = null) {
-  const videoElem = document.getElementById(videoElemId);
-  if (!videoElem) return;
-
-  // 1. Haptic feedback
-  if (navigator.vibrate) {
-    try { navigator.vibrate(35); } catch (e) {}
-  }
-
-  // 2. Visual target reticle ring at touch coordinates
-  if (event) {
-    renderTapFocusReticle(videoElem, event);
-  }
-
-  // 3. Hardware Auto-Focus / Zoom Re-trigger Pulse
-  if (videoElem.srcObject) {
-    try {
-      const track = videoElem.srcObject.getVideoTracks()[0];
-      if (track && track.applyConstraints) {
-        const caps = track.getCapabilities ? track.getCapabilities() : {};
-        if (caps.focusMode && caps.focusMode.includes('single-shot')) {
-          await track.applyConstraints({ advanced: [{ focusMode: 'single-shot' }] });
-          setTimeout(() => {
-            track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
-          }, 350);
-        } else if (caps.zoom) {
-          const currentZoom = track.getSettings().zoom || currentZoomLevel || 1.0;
-          const bumpedZoom = Math.min(caps.zoom.max, currentZoom + 0.08);
-          await track.applyConstraints({ advanced: [{ zoom: bumpedZoom }] });
-          setTimeout(() => {
-            track.applyConstraints({ advanced: [{ zoom: currentZoom }] }).catch(() => {});
-          }, 150);
-        }
-      }
-    } catch (err) {
-      console.warn("Tap focus constraint refresh skipped:", err);
-    }
-  }
-
-  // 4. Instant High-Contrast Processing Snapshot Capture
-  try {
-    const rawResult = await captureProcessedSnapshot(videoElem);
-    if (rawResult) {
-      const callback = onDecodeCallback || window.processLicenseUrl;
-      if (typeof callback === 'function') {
-        stopScanner();
-        callback(rawResult);
-      }
-    }
-  } catch (err) {}
-}
-
-function renderTapFocusReticle(videoElem, event) {
-  const container = videoElem.parentElement;
-  if (!container) return;
-
-  const rect = container.getBoundingClientRect();
-  const x = event.clientX - rect.left;
-  const y = event.clientY - rect.top;
-
-  let ring = document.getElementById("tap-focus-ring");
-  if (!ring) {
-    ring = document.createElement("div");
-    ring.id = "tap-focus-ring";
-    ring.className = "absolute w-12 h-12 border-2 border-blue-400 rounded-full pointer-events-none z-30 transition-all duration-300 transform -translate-x-1/2 -translate-y-1/2 scale-125 opacity-100 shadow-[0_0_12px_rgba(96,165,250,0.8)]";
-    container.appendChild(ring);
-  }
-
-  ring.style.left = `${x}px`;
-  ring.style.top = `${y}px`;
-  ring.classList.remove("scale-100", "opacity-0");
-  ring.classList.add("scale-125", "opacity-100");
-
-  requestAnimationFrame(() => {
-    ring.classList.remove("scale-125");
-    ring.classList.add("scale-100");
-    setTimeout(() => {
-      ring.classList.remove("opacity-100");
-      ring.classList.add("opacity-0");
-    }, 450);
-  });
-}
-
-async function captureProcessedSnapshot(videoElem) {
-  if (!videoElem || videoElem.readyState < 2) return null;
-
-  const canvas = document.createElement("canvas");
-  const w = videoElem.videoWidth || 1280;
-  const h = videoElem.videoHeight || 720;
-  canvas.width = w;
-  canvas.height = h;
-
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) return null;
-
-  ctx.drawImage(videoElem, 0, 0, w, h);
-
-  // Attempt 1: Native GPU BarcodeDetector on full-res frame
-  if (nativeBarcodeDetector) {
-    try {
-      const barcodes = await nativeBarcodeDetector.detect(canvas);
-      if (barcodes && barcodes.length > 0) {
-        const first = barcodes[0];
-        const raw = (first && (first.rawValue || first.data)) || "";
-        if (raw.trim()) return raw.trim();
-      }
-    } catch (e) {}
-  }
-
-  // Attempt 2: Binarization / Contrast Boost for dense or glossy QR codes
-  try {
-    const imgData = ctx.getImageData(0, 0, w, h);
-    const d = imgData.data;
-    for (let i = 0; i < d.length; i += 4) {
-      const avg = (d[i] + d[i + 1] + d[i + 2]) / 3;
-      const v = avg > 120 ? 255 : 0;
-      d[i] = v; d[i + 1] = v; d[i + 2] = v;
-    }
-    ctx.putImageData(imgData, 0, 0);
-
-    if (window.QrScanner) {
-      try {
-        const result = await window.QrScanner.scanImage(canvas, { returnDetailedScanResult: true });
-        const decodedText = (typeof result === 'object' ? (result.data || result.text) : result) || "";
-        if (decodedText.trim()) return decodedText.trim();
-      } catch (e) {}
-    }
-  } catch (e) {}
-
-  return null;
-}
-
-// ============================================================================
-// 3. TAB 1: LIVE CAMERA SCANNER & HARDWARE STREAM CONTROLLER
+// 2. TAB 1: LIVE CAMERA SCANNER & HARDWARE STREAM CONTROLLER
 // ============================================================================
 
 export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemId = "qr-video") {
@@ -265,16 +166,6 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
   // Hide paused overlay if visible
   const pausedOverlay = document.getElementById("scanner-paused-overlay");
   if (pausedOverlay) pausedOverlay.classList.add("hidden");
-
-  // Attach tap-to-focus listener on container
-  const container = videoElem.parentElement;
-  if (container && !container.dataset.tapFocusAttached) {
-    container.dataset.tapFocusAttached = "true";
-    container.addEventListener("click", (e) => {
-      if (e.target.closest("button")) return;
-      triggerTapToFocus(e, customVideoElemId, onDecodeCallback);
-    });
-  }
 
   // Reset idle timer
   resetIdleTimer(onDecodeCallback, onErrorCallback);
@@ -313,14 +204,13 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
         onDecodeError: () => {},
         highlightScanRegion: true,
         highlightCodeOutline: true,
-        maxScansPerSecond: 15, // Optimized 15 FPS to prevent WebWorker frame drops
+        maxScansPerSecond: 10,
         alsoTryWithoutScanRegion: true,
         calculateScanRegion: (v) => {
-          // Robust dimensions check to prevent 0x0 crop box bug
           const w = v.videoWidth || 1280;
           const h = v.videoHeight || 720;
           const minDim = Math.min(w, h);
-          const factor = 0.90; // Expanded scan region to 90%
+          const factor = 0.85;
           const size = Math.round(minDim * factor);
           return {
             x: Math.round((w - size) / 2),
@@ -334,7 +224,7 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
     );
 
     qrScanner.start().then(() => {
-      // 1080p Full HD & Hardware Focus/Exposure Constraints
+      // 720p HD & Hardware Continuous Focus / Exposure Constraints
       try {
         const stream = videoElem.srcObject;
         if (stream) {
@@ -344,22 +234,20 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
             const advancedConstraints = [];
             if (track.getCapabilities) {
               const caps = track.getCapabilities();
-              if (caps.focusMode && caps.focusMode.includes('macro')) {
-                advancedConstraints.push({ focusMode: 'macro' });
-              } else if (caps.focusMode && caps.focusMode.includes('continuous')) {
+              if (caps.focusMode && caps.focusMode.includes('continuous')) {
                 advancedConstraints.push({ focusMode: 'continuous' });
               }
               if (caps.exposureMode && caps.exposureMode.includes('continuous')) {
                 advancedConstraints.push({ exposureMode: 'continuous' });
               }
-              if (caps.zoom) {
+              if (caps.zoom && currentZoomLevel > 1.0) {
                 const targetZoom = Math.min(caps.zoom.max, Math.max(caps.zoom.min, currentZoomLevel));
                 advancedConstraints.push({ zoom: targetZoom });
               }
             }
             track.applyConstraints({
-              width: { ideal: 1920 },
-              height: { ideal: 1080 },
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
               advanced: advancedConstraints.length > 0 ? advancedConstraints : undefined
             }).catch(() => {});
 
@@ -379,16 +267,18 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
         }
       } catch (e) {}
 
-      // Start Native GPU BarcodeDetector loop alongside jsQR
+      // Start Native GPU BarcodeDetector loop alongside Nimiq WebWorker
       if (nativeBarcodeDetector) {
         startNativeDetection(videoElem, handleQrSuccess);
       }
 
       // Enumerate and filter rear cameras for lens switcher
-      window.QrScanner.listCameras(true).then((cameras) => {
+      window.QrScanner.listCameras(true).then(async (cameras) => {
         availableCameraDevices = filterRearCameras(cameras || []);
-        updateCameraCycleButtonLabel();
-      }).catch(() => {});
+        await updateCameraControlUI();
+      }).catch(() => {
+        updateCameraControlUI();
+      });
     }).catch((err) => {
       console.error("Camera start failed:", err);
       if (onErrorCallback) onErrorCallback("Unable to access camera. Please verify permissions.");
@@ -477,7 +367,7 @@ export function switchScanHubTab(tabName) {
 }
 
 // ============================================================================
-// 4. TAB 2: MY QR PASS GENERATOR & DISPLAY CONTROLLER
+// 3. TAB 2: MY QR PASS GENERATOR & DISPLAY CONTROLLER
 // ============================================================================
 
 export function renderMyQrPass() {
@@ -521,7 +411,7 @@ export function renderMyQrPass() {
 }
 
 // ============================================================================
-// 5. TAB 3: MANUAL URL ENTRY & RECENT PILOTS CONTROLLER
+// 4. TAB 3: MANUAL URL ENTRY & RECENT PILOTS CONTROLLER
 // ============================================================================
 
 export function renderRecentPilotsList() {
@@ -576,7 +466,7 @@ export async function handleClipboardPaste() {
 }
 
 // ============================================================================
-// 6. HARDWARE TOOLBAR CONTROLLERS (LENS SWITCHER & FLASHLIGHT)
+// 5. HARDWARE TOOLBAR CONTROLLERS (LENS SWITCHER & FLASHLIGHT)
 // ============================================================================
 
 export async function cycleCameraLens() {
@@ -595,7 +485,7 @@ export async function cycleCameraLens() {
     } catch (e) {}
   }
 
-  // MODE A: Multiple Rear Cameras Detected (Wide, Ultra Wide / Macro, Telephoto)
+  // MODE A: Multiple Physical Rear Cameras
   if (availableCameraDevices && availableCameraDevices.length > 1) {
     const currentIndex = availableCameraDevices.findIndex(c => c.id === currentCameraDeviceId);
     const nextIndex = (currentIndex + 1) % availableCameraDevices.length;
@@ -611,20 +501,20 @@ export async function cycleCameraLens() {
           null
         );
       }
-      updateCameraCycleButtonLabel();
+      await updateCameraControlUI();
       return;
     } catch (err) {
-      console.warn("Lens switch failed, attempting zoom/macro mode fallback:", err);
+      console.warn("Lens switch failed, attempting zoom fallback:", err);
     }
   }
 
-  // MODE B: Single Rear Camera Stream -> Cycle Macro/Zoom modes (1.0x -> 1.8x Close-Up -> 2.5x Telephoto)
+  // MODE B: Single Rear Camera Stream -> Cycle Digital Zoom modes (1.0x -> 1.8x Macro -> 2.5x Tele)
   if (currentZoomLevel === 1.0) {
-    currentZoomLevel = 1.8; // Macro / Close-Up
+    currentZoomLevel = 1.8;
   } else if (currentZoomLevel === 1.8) {
-    currentZoomLevel = 2.5; // Telephoto
+    currentZoomLevel = 2.5;
   } else {
-    currentZoomLevel = 1.0; // Standard Back Wide
+    currentZoomLevel = 1.0;
   }
 
   try {
@@ -648,7 +538,7 @@ export async function cycleCameraLens() {
     }
   } catch (e) {}
 
-  updateCameraCycleButtonLabel();
+  await updateCameraControlUI();
 }
 
 export function toggleTorch() {
@@ -662,7 +552,7 @@ export function toggleTorch() {
 }
 
 // ============================================================================
-// 7. AUTO-TEARDOWN & POWER MANAGEMENT (60s IDLE TIMEOUT & WAKE LOCK)
+// 6. AUTO-TEARDOWN & POWER MANAGEMENT (60s IDLE TIMEOUT & WAKE LOCK)
 // ============================================================================
 
 function resetIdleTimer(onDecodeCallback, onErrorCallback) {
@@ -687,13 +577,4 @@ function releaseWakeLock() {
     wakeLock.release().catch(() => {});
     wakeLock = null;
   }
-}
-
-if (typeof window !== 'undefined') {
-  window.triggerTapToFocus = triggerTapToFocus;
-  window.startScanner = startScanner;
-  window.stopScanner = stopScanner;
-  window.switchScanHubTab = switchScanHubTab;
-  window.cycleCameraLens = cycleCameraLens;
-  window.toggleTorch = toggleTorch;
 }
