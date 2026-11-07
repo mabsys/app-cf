@@ -1,4 +1,4 @@
-// ./js/animations.js (0311_R338) - CertiFly Centralized Motion & Animation Engine
+// ./js/animations.js (0611_R388) - CertiFly Centralized Motion & Animation Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -362,6 +362,103 @@ export function animateRecencyCardExpansion(cardEl, variantWrapper, isMulti) {
   }
 }
 
+let isSwipeAnimating = false;
+
+export function isCardSwipeAnimating() {
+  return isSwipeAnimating;
+}
+
+/**
+ * Visual horizontal slide transition between tool cards
+ */
+export function animateCardSlide(outgoingEl, incomingEl, direction = 'next', onCompleteCb = null) {
+  if (!outgoingEl || !incomingEl) return;
+  isSwipeAnimating = true;
+  const isNext = direction === 'next';
+  const outSlideX = isNext ? '-100%' : '100%';
+  const inStartSlideX = isNext ? '100%' : '-100%';
+
+  outgoingEl.classList.remove('hidden');
+
+  if (isAnimeAvailable()) {
+    incomingEl.style.transform = `translateX(${inStartSlideX})`;
+    incomingEl.style.opacity = '0.3';
+    incomingEl.classList.remove('hidden');
+
+    runAnime({
+      targets: outgoingEl,
+      translateX: [0, outSlideX],
+      opacity: [1, 0.2],
+      duration: 240,
+      easing: 'easeOutCubic',
+      complete: () => {
+        outgoingEl.classList.add('hidden');
+        outgoingEl.style.transform = '';
+        outgoingEl.style.opacity = '';
+      }
+    });
+
+    runAnime({
+      targets: incomingEl,
+      translateX: [inStartSlideX, '0%'],
+      opacity: [0.3, 1],
+      duration: 240,
+      easing: 'easeOutCubic',
+      complete: () => {
+        incomingEl.style.transform = '';
+        incomingEl.style.opacity = '';
+        isSwipeAnimating = false;
+        if (typeof onCompleteCb === 'function') onCompleteCb();
+      }
+    });
+  } else {
+    outgoingEl.classList.add('hidden');
+    outgoingEl.style.transform = '';
+    outgoingEl.style.opacity = '';
+    incomingEl.classList.remove('hidden');
+    incomingEl.style.transform = '';
+    incomingEl.style.opacity = '';
+    isSwipeAnimating = false;
+    if (typeof onCompleteCb === 'function') onCompleteCb();
+  }
+}
+
+/**
+ * Elastic spring bounce physics for deck boundaries (first/last card)
+ */
+export function animateEdgeBounce(cardEl, direction = 'left', onCompleteCb = null) {
+  if (!cardEl) return;
+  isSwipeAnimating = true;
+  const bounceOffset = direction === 'left' ? -32 : 32;
+
+  if (isAnimeAvailable()) {
+    runAnime({
+      targets: cardEl,
+      translateX: [0, bounceOffset, 0],
+      duration: 480,
+      easing: 'easeOutElastic(1, 0.45)',
+      complete: () => {
+        cardEl.style.transform = '';
+        isSwipeAnimating = false;
+        if (typeof onCompleteCb === 'function') onCompleteCb();
+      }
+    });
+  } else {
+    cardEl.style.transition = 'transform 0.15s ease-out';
+    cardEl.style.transform = `translateX(${bounceOffset}px)`;
+    setTimeout(() => {
+      cardEl.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+      cardEl.style.transform = 'translateX(0px)';
+      setTimeout(() => {
+        cardEl.style.transition = '';
+        cardEl.style.transform = '';
+        isSwipeAnimating = false;
+        if (typeof onCompleteCb === 'function') onCompleteCb();
+      }, 300);
+    }, 150);
+  }
+}
+
 // Global window fallback for non-module & module usage
 if (typeof window !== "undefined") {
   window.CertiFlyAnimations = {
@@ -375,6 +472,9 @@ if (typeof window !== "undefined") {
     animateHistogramBars,
     animatePassportAndElpBars,
     animateOverviewDashboard,
-    animateRecencyCardExpansion
+    animateRecencyCardExpansion,
+    isCardSwipeAnimating,
+    animateCardSlide,
+    animateEdgeBounce
   };
 }
