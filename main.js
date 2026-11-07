@@ -1,4 +1,4 @@
-// ./main.js (0611_R389) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0611_R390) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
@@ -4061,27 +4061,20 @@ function setupToolsCardSwipeGestures() {
   categoryConfigs.forEach(config => {
     const wrapper = document.getElementById(config.wrapperId);
     const menu = document.getElementById(config.menuId);
-    const targetElements = [wrapper, menu].filter(Boolean);
+    const targetContainers = [wrapper, menu].filter(Boolean);
 
-    if (wrapper) {
-      const cards = wrapper.querySelectorAll('.tool-card, .card-front, .card-back, .card-3d-inner');
-      cards.forEach(c => targetElements.push(c));
-    }
+    targetContainers.forEach(container => {
+      let touchStartX = 0;
+      let touchStartY = 0;
 
-    let touchStartX = 0;
-    let touchStartY = 0;
-
-    targetElements.forEach(el => {
-      if (!el) return;
-
-      el.addEventListener('touchstart', (e) => {
+      container.addEventListener('touchstart', (e) => {
         if (e.touches && e.touches.length === 1) {
           touchStartX = e.touches[0].clientX;
           touchStartY = e.touches[0].clientY;
         }
       }, { passive: true });
 
-      el.addEventListener('touchend', (e) => {
+      container.addEventListener('touchend', (e) => {
         if (!e.changedTouches || e.changedTouches.length === 0) return;
 
         const touchEndX = e.changedTouches[0].clientX;
@@ -4089,9 +4082,9 @@ function setupToolsCardSwipeGestures() {
         const diffX = touchEndX - touchStartX;
         const diffY = touchEndY - touchStartY;
 
-        // Threshold check: horizontal movement > 35px and dominant over vertical scroll
+        // Threshold check: horizontal swipe > 35px and dominant over vertical scroll
         if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY) * 1.2) {
-          const activeCardEl = document.querySelector('.tool-card.active') || document.getElementById(config.cards[0]);
+          const activeCardEl = (wrapper ? wrapper.querySelector('.tool-card.active') : null) || document.querySelector('.tool-card.active');
           if (!activeCardEl) return;
 
           const currentCardId = activeCardEl.id;
@@ -4103,7 +4096,6 @@ function setupToolsCardSwipeGestures() {
           const isLeftSwipe = diffX < 0;  // Swipe Left -> Next Tool
           const isRightSwipe = diffX > 0; // Swipe Right -> Prev Tool
 
-          // Next / Prev Tool Card with Instant Switch (No animation latency/collateral jitter)
           if (isLeftSwipe && currentIndex < cardsList.length - 1) {
             const targetCardId = cardsList[currentIndex + 1];
             if (typeof switchActiveTool === 'function') switchActiveTool(targetCardId);
