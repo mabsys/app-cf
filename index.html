@@ -1,4 +1,4 @@
-<!-- ./index.html (0711_R405) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+<!-- ./index.html (0711_R407) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -2359,6 +2359,57 @@ navigator.serviceWorker.register('sw.js')
             <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex gap-2 shrink-0">
                 <button type="button" class="w-1/2 py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-center" onclick="closeMaxFdpModifiersModal()">Cancel</button>
                 <button type="button" class="w-1/2 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md cursor-pointer text-center" onclick="confirmMaxFdpModifiers()">Save Modifiers</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- QR PHOTO SCANNER MODAL OVERLAY -->
+    <div id="qr-photo-modal" class="fixed inset-0 z-[70] hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 select-none" onclick="if(event.target === this) closeQrPhotoModal()">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full border border-slate-100 dark:border-slate-800 shadow-2xl flex flex-col gap-4 text-center relative">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/50 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                        </svg>
+                    </div>
+                    <span class="text-sm font-black text-slate-900 dark:text-slate-100">Scan QR Photo</span>
+                </div>
+                <button type="button" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 font-bold flex items-center justify-center text-xs transition-colors cursor-pointer" onclick="closeQrPhotoModal()">✕</button>
+            </div>
+
+            <!-- DROPZONE -->
+            <div id="qr-photo-dropzone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-400 rounded-2xl p-6 cursor-pointer transition-all bg-slate-50/50 dark:bg-slate-800/30 flex flex-col items-center justify-center gap-2 group">
+                <div class="w-12 h-12 rounded-2xl bg-blue-100/70 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                    </svg>
+                </div>
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Select or Drop Photo</span>
+                <span class="text-[10px] font-medium text-slate-400">Supports PNG, JPG, WEBP, HEIC</span>
+                <input type="file" id="modal-qr-file-input" accept="image/*" class="hidden" />
+            </div>
+
+            <!-- PREVIEW CONTAINER -->
+            <div id="qr-photo-preview-container" class="hidden flex-col items-center gap-3">
+                <div class="relative w-full max-h-48 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-950">
+                    <img id="qr-photo-preview-img" class="w-full h-48 object-contain" alt="QR Preview" />
+                    <div id="qr-photo-spinner" class="absolute inset-0 bg-slate-950/60 backdrop-blur-xs flex flex-col items-center justify-center gap-2 text-white">
+                        <svg class="w-6 h-6 animate-spin text-blue-400" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span class="text-[11px] font-bold">Decoding QR Code...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ERROR CONTAINER -->
+            <div id="qr-photo-error" class="hidden text-xs text-rose-600 bg-rose-50 dark:bg-rose-950/40 p-3 rounded-xl font-semibold border border-rose-100 dark:border-rose-900/50 text-center"></div>
+
+            <div class="flex gap-2 pt-1">
+                <button type="button" class="w-full py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors" onclick="closeQrPhotoModal()">Cancel</button>
             </div>
         </div>
     </div>
