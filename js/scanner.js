@@ -1,4 +1,4 @@
-// ./js/scanner.js (0711_R403) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (0711_R404) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
 import { getProfileData, getScanHistory } from './storage.js';
 
@@ -209,12 +209,12 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
         highlightScanRegion: false,
         highlightCodeOutline: true,
         maxScansPerSecond: 30,
-        alsoTryWithoutScanRegion: false,
+        alsoTryWithoutScanRegion: true,
         calculateScanRegion: (v) => {
           const w = v.videoWidth || 1280;
           const h = v.videoHeight || 720;
           const minDim = Math.min(w, h);
-          const factor = 0.52;
+          const factor = 0.75;
           const size = Math.round(minDim * factor);
           return {
             x: Math.round((w - size) / 2),
