@@ -1,4 +1,4 @@
-// ./js/ui.js (0511_R392) - CertiFly Navigation, View Controller & UI State
+// ./js/ui.js (0711_R402) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -576,13 +576,16 @@ export function showView(viewId, defaultTab = null) {
 }
 
 export function showScannerView() {
-  stopScanner();
+  const scannerView = document.getElementById("scanner-view");
+  const isAlreadyVisible = scannerView && !scannerView.classList.contains("hidden");
 
-  const errorMsg = document.getElementById("error-message");
-  if (errorMsg) errorMsg.innerText = "";
-
-  const manualInput = document.getElementById("manual-url-input");
-  if (manualInput) manualInput.value = "";
+  if (!isAlreadyVisible) {
+    stopScanner();
+    const errorMsg = document.getElementById("error-message");
+    if (errorMsg) errorMsg.innerText = "";
+    const manualInput = document.getElementById("manual-url-input");
+    if (manualInput) manualInput.value = "";
+  }
 
   document.body.classList.remove("bg-green-100", "bg-orange-100", "bg-red-100");
   document.body.classList.add("bg-slate-50");
