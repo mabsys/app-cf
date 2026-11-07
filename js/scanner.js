@@ -1,4 +1,4 @@
-// ./js/scanner.js (0611_R398) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (0611_R399) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
 import { getProfileData, getScanHistory } from './storage.js';
 
@@ -38,65 +38,72 @@ function filterRearCameras(cameras) {
   });
 }
 
-// Dynamic 3-Tier Camera Control UI & Lens Switcher
+// Format camera device or macro/zoom level labels for clear user feedback
+function formatCameraLabel(camObj, index, total) {
+  if (!camObj && total <= 1) {
+    if (currentZoomLevel === 1.0) return 'Back 1.0x';
+    if (currentZoomLevel === 1.8) return 'Macro / Close-Up (1.8x)';
+    return `Back ${currentZoomLevel.toFixed(1)}x`;
+  }
+  const label = camObj ? (camObj.label || '').toLowerCase() : '';
+  if (label.includes('ultra') || label.includes('0.5x') || label.includes('wide-angle') || label.includes('macro')) {
+    return 'Macro Mode (0.5x)';
+  }
+  if (label.includes('telephoto') || label.includes('zoom') || label.includes('2x') || label.includes('3x')) {
+    return 'Telephoto 2.0x';
+  }
+  if (label.includes('back') || label.includes('rear') || label.includes('environment') || label.includes('wide')) {
+    return index === 0 ? 'Back 1.0x' : `Back Lens ${index + 1}`;
+  }
+  if (total > 1) {
+    return `Back Lens ${index + 1}`;
+  }
+  return `Back ${currentZoomLevel.toFixed(1)}x`;
+}
+
 export async function updateCameraControlUI() {
-  const cycleLabel = document.getElementById("camera-cycle-label");
   const cycleBtn = document.getElementById("camera-cycle-btn");
+  const cycleLabel = document.getElementById("camera-cycle-label");
   const targetEl = cycleLabel || cycleBtn;
 
-  if (!cycleBtn) return;
+  if (!availableCameraDevices || availableCameraDevices.length === 0) {
+    try {
+      if (window.QrScanner) {
+        const cameras = await window.QrScanner.listCameras(true);
+        availableCameraDevices = filterRearCameras(cameras || []);
+      }
+    } catch (e) {}
+  }
 
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const videoInputs = devices.filter(d => d.kind === 'videoinput');
-    const rearInputs = filterRearCameras(videoInputs);
+  const numRearCams = availableCameraDevices ? availableCameraDevices.length : 0;
+  const track = activeMediaStream ? activeMediaStream.getVideoTracks()[0] : null;
+  const caps = (track && track.getCapabilities) ? track.getCapabilities() : {};
+  const hasZoom = Boolean(caps.zoom);
 
-    if (rearInputs.length > 1) {
-      // TIER 1: Physical Multi-Lens Switcher (iPhone Pro / Multi-Cam Android)
-      availableCameraDevices = rearInputs;
+  if (numRearCams > 1) {
+    // TIER 1: Multiple Physical Rear Lenses (e.g. iPhone Pro)
+    if (cycleBtn) {
       cycleBtn.classList.remove("hidden");
       cycleBtn.classList.add("flex");
-
-      const idx = rearInputs.findIndex(c => c.id === currentCameraDeviceId);
-      const activeCam = rearInputs[idx >= 0 ? idx : 0];
-      const label = (activeCam.label || '').toLowerCase();
-
-      if (targetEl) {
-        if (label.includes('ultra') || label.includes('0.5x') || label.includes('macro')) {
-          targetEl.innerText = 'Macro Mode (0.5x)';
-        } else if (label.includes('tele') || label.includes('2x') || label.includes('3x')) {
-          targetEl.innerText = 'Telephoto 2.0x';
-        } else {
-          targetEl.innerText = (idx <= 0) ? 'Back 1.0x' : `Back Lens ${idx + 1}`;
-        }
-      }
-    } else {
-      // Single Rear Camera Check for Hardware Digital Zoom Capability
-      let hasHardwareZoom = false;
-      if (activeMediaStream) {
-        const track = activeMediaStream.getVideoTracks()[0];
-        if (track && track.getCapabilities) {
-          const caps = track.getCapabilities();
-          if (caps && caps.zoom) hasHardwareZoom = true;
-        }
-      }
-
-      if (hasHardwareZoom) {
-        // TIER 2: Single Rear Camera with Digital Zoom -> Relabel as Digital Zoom Toggle
-        cycleBtn.classList.remove("hidden");
-        cycleBtn.classList.add("flex");
-        if (targetEl) {
-          if (currentZoomLevel === 1.0) targetEl.innerText = 'Zoom 1.0x';
-          else if (currentZoomLevel === 1.8) targetEl.innerText = 'Macro 1.8x';
-          else targetEl.innerText = `Zoom ${currentZoomLevel.toFixed(1)}x`;
-        }
-      } else {
-        // TIER 3: Fixed Single Rear Lens (No Zoom, e.g. base iPad / Laptop) -> Hide Cleanly
-        cycleBtn.classList.add("hidden");
-        cycleBtn.classList.remove("flex");
-      }
     }
-  } catch (err) {
+    if (targetEl) {
+      const index = availableCameraDevices.findIndex(c => c.id === currentCameraDeviceId);
+      const current = availableCameraDevices[index >= 0 ? index : 0];
+      targetEl.innerText = formatCameraLabel(current, index >= 0 ? index : 0, numRearCams);
+    }
+  } else if (hasZoom) {
+    // TIER 2: Single Rear Camera with Hardware Zoom -> Digital Zoom Toggle
+    if (cycleBtn) {
+      cycleBtn.classList.remove("hidden");
+      cycleBtn.classList.add("flex");
+    }
+    if (targetEl) {
+      if (currentZoomLevel === 1.0) targetEl.innerText = 'Zoom 1.0x';
+      else if (currentZoomLevel === 1.8) targetEl.innerText = 'Macro 1.8x';
+      else targetEl.innerText = `Zoom ${currentZoomLevel.toFixed(1)}x`;
+    }
+  } else {
+    // TIER 3: Fixed Single Rear Lens (No Zoom, e.g. base iPad / Laptop) -> Hide Completely
     if (cycleBtn) {
       cycleBtn.classList.add("hidden");
       cycleBtn.classList.remove("flex");
@@ -104,7 +111,9 @@ export async function updateCameraControlUI() {
   }
 }
 
-export const updateCameraCycleButtonLabel = updateCameraControlUI;
+export function updateCameraCycleButtonLabel() {
+  updateCameraControlUI();
+}
 
 // ============================================================================
 // 1. HARDWARE-ACCELERATED NATIVE BARCODE DETECTOR LOOP
@@ -128,7 +137,7 @@ function startNativeDetection(videoElem, handleSuccess) {
         }
       }
     } catch (e) {}
-  }, 35); // ~30 scans per second on GPU
+  }, 30); // 33 scans per second on GPU
 }
 
 function stopNativeDetection() {
@@ -193,13 +202,13 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
         onDecodeError: () => {},
         highlightScanRegion: false,
         highlightCodeOutline: true,
-        maxScansPerSecond: 25,
-        alsoTryWithoutScanRegion: true,
+        maxScansPerSecond: 30,
+        alsoTryWithoutScanRegion: false,
         calculateScanRegion: (v) => {
-          const w = v.videoWidth || 1920;
-          const h = v.videoHeight || 1080;
+          const w = v.videoWidth || 1280;
+          const h = v.videoHeight || 720;
           const minDim = Math.min(w, h);
-          const factor = 0.78;
+          const factor = 0.70;
           const size = Math.round(minDim * factor);
           return {
             x: Math.round((w - size) / 2),
@@ -213,23 +222,25 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
     );
 
     qrScanner.start().then(() => {
-      // 1080p Full HD & Hardware Continuous Focus / Exposure Constraints
+      // 1080p Full HD & Hardware Focus/Exposure Constraints
       try {
         const stream = videoElem.srcObject;
         if (stream) {
           activeMediaStream = stream;
-          const track = stream.getVideoTracks()[0];
+          const track = stream.getVideoTracks();
           if (track && track.applyConstraints) {
             const advancedConstraints = [];
             if (track.getCapabilities) {
               const caps = track.getCapabilities();
-              if (caps.focusMode && caps.focusMode.includes('continuous')) {
+              if (caps.focusMode && caps.focusMode.includes('macro')) {
+                advancedConstraints.push({ focusMode: 'macro' });
+              } else if (caps.focusMode && caps.focusMode.includes('continuous')) {
                 advancedConstraints.push({ focusMode: 'continuous' });
               }
               if (caps.exposureMode && caps.exposureMode.includes('continuous')) {
                 advancedConstraints.push({ exposureMode: 'continuous' });
               }
-              if (caps.zoom && currentZoomLevel > 1.0) {
+              if (caps.zoom) {
                 const targetZoom = Math.min(caps.zoom.max, Math.max(caps.zoom.min, currentZoomLevel));
                 advancedConstraints.push({ zoom: targetZoom });
               }
@@ -261,8 +272,11 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
         startNativeDetection(videoElem, handleQrSuccess);
       }
 
-      // Update Toolbar Controls
-      updateCameraControlUI();
+      // Enumerate and filter rear cameras for lens switcher
+      window.QrScanner.listCameras(true).then((cameras) => {
+        availableCameraDevices = filterRearCameras(cameras || []);
+        updateCameraCycleButtonLabel();
+      }).catch(() => {});
     }).catch((err) => {
       console.error("Camera start failed:", err);
       if (onErrorCallback) onErrorCallback("Unable to access camera. Please verify permissions.");
@@ -485,7 +499,7 @@ export async function cycleCameraLens() {
           null
         );
       }
-      updateCameraControlUI();
+      updateCameraCycleButtonLabel();
       return;
     } catch (err) {
       console.warn("Lens switch failed, attempting zoom/macro mode fallback:", err);
@@ -504,7 +518,7 @@ export async function cycleCameraLens() {
   try {
     const videoElem = document.getElementById("qr-video");
     if (videoElem && videoElem.srcObject) {
-      const track = videoElem.srcObject.getVideoTracks()[0];
+      const track = videoElem.srcObject.getVideoTracks();
       if (track && track.getCapabilities) {
         const capabilities = track.getCapabilities();
         const advanced = [];
@@ -522,7 +536,7 @@ export async function cycleCameraLens() {
     }
   } catch (e) {}
 
-  updateCameraControlUI();
+  updateCameraCycleButtonLabel();
 }
 
 export function toggleTorch() {
