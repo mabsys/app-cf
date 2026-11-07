@@ -1,4 +1,4 @@
-// ./js/scanner.js (0611_R393) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (0611_R394) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -92,7 +92,9 @@ function startNativeDetection(videoElem, handleSuccess) {
     try {
       const barcodes = await nativeBarcodeDetector.detect(videoElem);
       if (barcodes && barcodes.length > 0) {
-        const raw = barcodes[0].rawValue || barcodes[0].data || "";
+        // FIX: Extract rawValue from the first detected barcode object in the array
+        const first = barcodes[0];
+        const raw = (first && (first.rawValue || first.data)) || "";
         const cleanScannedText = raw ? raw.trim() : "";
         if (cleanScannedText) {
           stopNativeDetection();
@@ -100,7 +102,7 @@ function startNativeDetection(videoElem, handleSuccess) {
         }
       }
     } catch (e) {}
-  }, 40); // 25 scans per second on GPU
+  }, 50); // 20 scans per second on GPU
 }
 
 function stopNativeDetection() {
@@ -111,45 +113,59 @@ function stopNativeDetection() {
 }
 
 // ============================================================================
-// 2. TAP-TO-ASSIST FOCUS & VISUAL RETICLE CONTROLLER
+// 2. TAP-TO-ASSIST FOCUS & SNAPSHOT CONTROLLER
 // ============================================================================
 
-export async function triggerTapToFocus(event, customVideoId = "qr-video") {
-  const videoElem = document.getElementById(customVideoId);
-  if (!videoElem || !videoElem.srcObject) return;
+export async function triggerTapToFocus(event, videoElemId = "qr-video", onDecodeCallback = null) {
+  const videoElem = document.getElementById(videoElemId);
+  if (!videoElem) return;
 
-  const stream = videoElem.srcObject;
-  const track = stream.getVideoTracks()[0];
-  if (!track) return;
-
-  // 1. Instant haptic feedback
+  // 1. Haptic feedback
   if (navigator.vibrate) {
-    try { navigator.vibrate(30); } catch (e) {}
+    try { navigator.vibrate(35); } catch (e) {}
   }
 
-  // 2. Render visual focus reticle ring at tap coordinates
-  renderTapFocusReticle(videoElem, event);
+  // 2. Visual target reticle ring at touch coordinates
+  if (event) {
+    renderTapFocusReticle(videoElem, event);
+  }
 
-  // 3. Hardware Auto-Focus & Auto-Exposure Refresh Trigger
-  try {
-    const caps = track.getCapabilities ? track.getCapabilities() : {};
-    if (caps.focusMode && caps.focusMode.includes('single-shot')) {
-      await track.applyConstraints({ advanced: [{ focusMode: 'single-shot' }] });
-      setTimeout(() => {
-        track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
-      }, 400);
-    } else if (caps.zoom) {
-      const settings = track.getSettings ? track.getSettings() : {};
-      const currentZoom = settings.zoom || currentZoomLevel || 1.0;
-      const bumpedZoom = Math.min(caps.zoom.max, currentZoom + 0.05);
-      await track.applyConstraints({ advanced: [{ zoom: bumpedZoom }] });
-      setTimeout(() => {
-        track.applyConstraints({ advanced: [{ zoom: currentZoom }] });
-      }, 150);
+  // 3. Hardware Auto-Focus / Zoom Re-trigger Pulse
+  if (videoElem.srcObject) {
+    try {
+      const track = videoElem.srcObject.getVideoTracks()[0];
+      if (track && track.applyConstraints) {
+        const caps = track.getCapabilities ? track.getCapabilities() : {};
+        if (caps.focusMode && caps.focusMode.includes('single-shot')) {
+          await track.applyConstraints({ advanced: [{ focusMode: 'single-shot' }] });
+          setTimeout(() => {
+            track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+          }, 350);
+        } else if (caps.zoom) {
+          const currentZoom = track.getSettings().zoom || currentZoomLevel || 1.0;
+          const bumpedZoom = Math.min(caps.zoom.max, currentZoom + 0.08);
+          await track.applyConstraints({ advanced: [{ zoom: bumpedZoom }] });
+          setTimeout(() => {
+            track.applyConstraints({ advanced: [{ zoom: currentZoom }] }).catch(() => {});
+          }, 150);
+        }
+      }
+    } catch (err) {
+      console.warn("Tap focus constraint refresh skipped:", err);
     }
-  } catch (err) {
-    console.warn("Tap focus constraint refresh skipped:", err);
   }
+
+  // 4. Instant High-Contrast Processing Snapshot Capture
+  try {
+    const rawResult = await captureProcessedSnapshot(videoElem);
+    if (rawResult) {
+      const callback = onDecodeCallback || window.processLicenseUrl;
+      if (typeof callback === 'function') {
+        stopScanner();
+        callback(rawResult);
+      }
+    }
+  } catch (err) {}
 }
 
 function renderTapFocusReticle(videoElem, event) {
@@ -183,16 +199,53 @@ function renderTapFocusReticle(videoElem, event) {
   });
 }
 
-function setupTapToFocusListener(videoElem) {
-  const container = videoElem?.parentElement || document.getElementById("qr-reader-container");
-  if (!container || container.dataset.tapFocusBound === "true") return;
+async function captureProcessedSnapshot(videoElem) {
+  if (!videoElem || videoElem.readyState < 2) return null;
 
-  container.dataset.tapFocusBound = "true";
-  container.addEventListener("click", (e) => {
-    // Ignore clicks on buttons inside container (e.g. torch/cycle buttons)
-    if (e.target.closest("button")) return;
-    triggerTapToFocus(e, videoElem.id);
-  });
+  const canvas = document.createElement("canvas");
+  const w = videoElem.videoWidth || 1280;
+  const h = videoElem.videoHeight || 720;
+  canvas.width = w;
+  canvas.height = h;
+
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return null;
+
+  ctx.drawImage(videoElem, 0, 0, w, h);
+
+  // Attempt 1: Native GPU BarcodeDetector on full-res frame
+  if (nativeBarcodeDetector) {
+    try {
+      const barcodes = await nativeBarcodeDetector.detect(canvas);
+      if (barcodes && barcodes.length > 0) {
+        const first = barcodes[0];
+        const raw = (first && (first.rawValue || first.data)) || "";
+        if (raw.trim()) return raw.trim();
+      }
+    } catch (e) {}
+  }
+
+  // Attempt 2: Binarization / Contrast Boost for dense or glossy QR codes
+  try {
+    const imgData = ctx.getImageData(0, 0, w, h);
+    const d = imgData.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const avg = (d[i] + d[i + 1] + d[i + 2]) / 3;
+      const v = avg > 120 ? 255 : 0;
+      d[i] = v; d[i + 1] = v; d[i + 2] = v;
+    }
+    ctx.putImageData(imgData, 0, 0);
+
+    if (window.QrScanner) {
+      try {
+        const result = await window.QrScanner.scanImage(canvas, { returnDetailedScanResult: true });
+        const decodedText = (typeof result === 'object' ? (result.data || result.text) : result) || "";
+        if (decodedText.trim()) return decodedText.trim();
+      } catch (e) {}
+    }
+  } catch (e) {}
+
+  return null;
 }
 
 // ============================================================================
@@ -209,12 +262,19 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
     return;
   }
 
-  // Bind tap-to-focus listener to container
-  setupTapToFocusListener(videoElem);
-
   // Hide paused overlay if visible
   const pausedOverlay = document.getElementById("scanner-paused-overlay");
   if (pausedOverlay) pausedOverlay.classList.add("hidden");
+
+  // Attach tap-to-focus listener on container
+  const container = videoElem.parentElement;
+  if (container && !container.dataset.tapFocusAttached) {
+    container.dataset.tapFocusAttached = "true";
+    container.addEventListener("click", (e) => {
+      if (e.target.closest("button")) return;
+      triggerTapToFocus(e, customVideoElemId, onDecodeCallback);
+    });
+  }
 
   // Reset idle timer
   resetIdleTimer(onDecodeCallback, onErrorCallback);
@@ -253,15 +313,18 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
         onDecodeError: () => {},
         highlightScanRegion: true,
         highlightCodeOutline: true,
-        maxScansPerSecond: 25,
+        maxScansPerSecond: 15, // Optimized 15 FPS to prevent WebWorker frame drops
         alsoTryWithoutScanRegion: true,
         calculateScanRegion: (v) => {
-          const minDim = Math.min(v.videoWidth, v.videoHeight);
-          const factor = 0.85;
+          // Robust dimensions check to prevent 0x0 crop box bug
+          const w = v.videoWidth || 1280;
+          const h = v.videoHeight || 720;
+          const minDim = Math.min(w, h);
+          const factor = 0.90; // Expanded scan region to 90%
           const size = Math.round(minDim * factor);
           return {
-            x: Math.round((v.videoWidth - size) / 2),
-            y: Math.round((v.videoHeight - size) / 2),
+            x: Math.round((w - size) / 2),
+            y: Math.round((h - size) / 2),
             width: size,
             height: size
           };
@@ -297,7 +360,6 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
             track.applyConstraints({
               width: { ideal: 1920 },
               height: { ideal: 1080 },
-              frameRate: { ideal: 30 },
               advanced: advancedConstraints.length > 0 ? advancedConstraints : undefined
             }).catch(() => {});
 
@@ -627,14 +689,11 @@ function releaseWakeLock() {
   }
 }
 
-// Attach to window object for legacy & global invocation
 if (typeof window !== 'undefined') {
+  window.triggerTapToFocus = triggerTapToFocus;
   window.startScanner = startScanner;
   window.stopScanner = stopScanner;
   window.switchScanHubTab = switchScanHubTab;
   window.cycleCameraLens = cycleCameraLens;
   window.toggleTorch = toggleTorch;
-  window.triggerTapToFocus = triggerTapToFocus;
-  window.renderMyQrPass = renderMyQrPass;
-  window.handleClipboardPaste = handleClipboardPaste;
 }
