@@ -1,4 +1,4 @@
-// ./js/scanner.js (0711_R405) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (0711_R406) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
 import { getProfileData, getScanHistory } from './storage.js';
 
@@ -233,16 +233,18 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
         const stream = videoElem.srcObject;
         if (stream) {
           activeMediaStream = stream;
-          const track = stream.getVideoTracks();
+          const track = stream.getVideoTracks()[0];
           if (track && track.applyConstraints) {
             const advancedConstraints = [];
             if (track.getCapabilities) {
-              const caps = track.getCapabilities();
-              const hasMacroHardware = caps.focusMode && caps.focusMode.includes('macro');
+              const isIPad = /iPad/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+              const caps = (track && typeof track.getCapabilities === 'function') ? track.getCapabilities() : {};
+              const hasMacroHardware = Boolean(caps.focusMode && caps.focusMode.includes('macro'));
+              const isSingleLensOrTablet = isIPad || (!hasMacroHardware && (availableCameraDevices ? availableCameraDevices.length : 0) <= 1);
               
               // HARDWARE-ADAPTIVE AUTO-ZOOM & VIEWPORT COMPENSATOR (IPAD 10TH GEN+ & SINGLE-LENS)
               const guidancePill = document.getElementById("qr-guidance-pill");
-              if (!hasMacroHardware) {
+              if (isSingleLensOrTablet) {
                 // Non-macro hardware (iPad 10th Gen, iPad Air, base iPads):
                 // Apply 1.8x CSS Viewport Zoom for visual 15 cm framing & sharp focus
                 currentZoomLevel = 1.8;
@@ -555,7 +557,7 @@ export async function cycleCameraLens() {
   try {
     const videoElem = document.getElementById("qr-video");
     if (videoElem && videoElem.srcObject) {
-      const track = videoElem.srcObject.getVideoTracks();
+      const track = videoElem.srcObject.getVideoTracks()[0];
       if (track && track.getCapabilities) {
         const capabilities = track.getCapabilities();
         const advanced = [];
