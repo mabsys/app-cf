@@ -1,4 +1,4 @@
-// ./js/scanner.js (0711_R401) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (0711_R402) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
 import { getProfileData, getScanHistory } from './storage.js';
 
@@ -164,6 +164,12 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
   // Hide paused overlay if visible
   const pausedOverlay = document.getElementById("scanner-paused-overlay");
   if (pausedOverlay) pausedOverlay.classList.add("hidden");
+
+  // Maintain stream if scanner is already active and playing
+  if (qrScanner && activeMediaStream && activeMediaStream.active && videoElem && videoElem.readyState >= 2 && !videoElem.paused) {
+    resetIdleTimer(onDecodeCallback, onErrorCallback);
+    return;
+  }
 
   // Reset idle timer
   resetIdleTimer(onDecodeCallback, onErrorCallback);
