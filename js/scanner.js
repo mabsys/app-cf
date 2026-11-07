@@ -1,4 +1,6 @@
-// js/scanner.js (3009_R064) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (0611_R393) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// Developed by: Capt. Mohd Sallehuddin Zaidy
+// CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
 import { getProfileData, getScanHistory } from './storage.js';
 
@@ -90,7 +92,7 @@ function startNativeDetection(videoElem, handleSuccess) {
     try {
       const barcodes = await nativeBarcodeDetector.detect(videoElem);
       if (barcodes && barcodes.length > 0) {
-        const raw = barcodes.rawValue || barcodes.data || "";
+        const raw = barcodes[0].rawValue || barcodes[0].data || "";
         const cleanScannedText = raw ? raw.trim() : "";
         if (cleanScannedText) {
           stopNativeDetection();
@@ -109,7 +111,92 @@ function stopNativeDetection() {
 }
 
 // ============================================================================
-// 2. TAB 1: LIVE CAMERA SCANNER & HARDWARE STREAM CONTROLLER
+// 2. TAP-TO-ASSIST FOCUS & VISUAL RETICLE CONTROLLER
+// ============================================================================
+
+export async function triggerTapToFocus(event, customVideoId = "qr-video") {
+  const videoElem = document.getElementById(customVideoId);
+  if (!videoElem || !videoElem.srcObject) return;
+
+  const stream = videoElem.srcObject;
+  const track = stream.getVideoTracks()[0];
+  if (!track) return;
+
+  // 1. Instant haptic feedback
+  if (navigator.vibrate) {
+    try { navigator.vibrate(30); } catch (e) {}
+  }
+
+  // 2. Render visual focus reticle ring at tap coordinates
+  renderTapFocusReticle(videoElem, event);
+
+  // 3. Hardware Auto-Focus & Auto-Exposure Refresh Trigger
+  try {
+    const caps = track.getCapabilities ? track.getCapabilities() : {};
+    if (caps.focusMode && caps.focusMode.includes('single-shot')) {
+      await track.applyConstraints({ advanced: [{ focusMode: 'single-shot' }] });
+      setTimeout(() => {
+        track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+      }, 400);
+    } else if (caps.zoom) {
+      const settings = track.getSettings ? track.getSettings() : {};
+      const currentZoom = settings.zoom || currentZoomLevel || 1.0;
+      const bumpedZoom = Math.min(caps.zoom.max, currentZoom + 0.05);
+      await track.applyConstraints({ advanced: [{ zoom: bumpedZoom }] });
+      setTimeout(() => {
+        track.applyConstraints({ advanced: [{ zoom: currentZoom }] });
+      }, 150);
+    }
+  } catch (err) {
+    console.warn("Tap focus constraint refresh skipped:", err);
+  }
+}
+
+function renderTapFocusReticle(videoElem, event) {
+  const container = videoElem.parentElement;
+  if (!container) return;
+
+  const rect = container.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+
+  let ring = document.getElementById("tap-focus-ring");
+  if (!ring) {
+    ring = document.createElement("div");
+    ring.id = "tap-focus-ring";
+    ring.className = "absolute w-12 h-12 border-2 border-blue-400 rounded-full pointer-events-none z-30 transition-all duration-300 transform -translate-x-1/2 -translate-y-1/2 scale-125 opacity-100 shadow-[0_0_12px_rgba(96,165,250,0.8)]";
+    container.appendChild(ring);
+  }
+
+  ring.style.left = `${x}px`;
+  ring.style.top = `${y}px`;
+  ring.classList.remove("scale-100", "opacity-0");
+  ring.classList.add("scale-125", "opacity-100");
+
+  requestAnimationFrame(() => {
+    ring.classList.remove("scale-125");
+    ring.classList.add("scale-100");
+    setTimeout(() => {
+      ring.classList.remove("opacity-100");
+      ring.classList.add("opacity-0");
+    }, 450);
+  });
+}
+
+function setupTapToFocusListener(videoElem) {
+  const container = videoElem?.parentElement || document.getElementById("qr-reader-container");
+  if (!container || container.dataset.tapFocusBound === "true") return;
+
+  container.dataset.tapFocusBound = "true";
+  container.addEventListener("click", (e) => {
+    // Ignore clicks on buttons inside container (e.g. torch/cycle buttons)
+    if (e.target.closest("button")) return;
+    triggerTapToFocus(e, videoElem.id);
+  });
+}
+
+// ============================================================================
+// 3. TAB 1: LIVE CAMERA SCANNER & HARDWARE STREAM CONTROLLER
 // ============================================================================
 
 export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemId = "qr-video") {
@@ -121,6 +208,9 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
     if (onErrorCallback) onErrorCallback("Camera feed element not found.");
     return;
   }
+
+  // Bind tap-to-focus listener to container
+  setupTapToFocusListener(videoElem);
 
   // Hide paused overlay if visible
   const pausedOverlay = document.getElementById("scanner-paused-overlay");
@@ -186,7 +276,7 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
         const stream = videoElem.srcObject;
         if (stream) {
           activeMediaStream = stream;
-          const track = stream.getVideoTracks();
+          const track = stream.getVideoTracks()[0];
           if (track && track.applyConstraints) {
             const advancedConstraints = [];
             if (track.getCapabilities) {
@@ -207,6 +297,7 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
             track.applyConstraints({
               width: { ideal: 1920 },
               height: { ideal: 1080 },
+              frameRate: { ideal: 30 },
               advanced: advancedConstraints.length > 0 ? advancedConstraints : undefined
             }).catch(() => {});
 
@@ -324,7 +415,7 @@ export function switchScanHubTab(tabName) {
 }
 
 // ============================================================================
-// 3. TAB 2: MY QR PASS GENERATOR & DISPLAY CONTROLLER
+// 4. TAB 2: MY QR PASS GENERATOR & DISPLAY CONTROLLER
 // ============================================================================
 
 export function renderMyQrPass() {
@@ -368,7 +459,7 @@ export function renderMyQrPass() {
 }
 
 // ============================================================================
-// 4. TAB 3: MANUAL URL ENTRY & RECENT PILOTS CONTROLLER
+// 5. TAB 3: MANUAL URL ENTRY & RECENT PILOTS CONTROLLER
 // ============================================================================
 
 export function renderRecentPilotsList() {
@@ -423,7 +514,7 @@ export async function handleClipboardPaste() {
 }
 
 // ============================================================================
-// 5. HARDWARE TOOLBAR CONTROLLERS (LENS SWITCHER & FLASHLIGHT)
+// 6. HARDWARE TOOLBAR CONTROLLERS (LENS SWITCHER & FLASHLIGHT)
 // ============================================================================
 
 export async function cycleCameraLens() {
@@ -477,7 +568,7 @@ export async function cycleCameraLens() {
   try {
     const videoElem = document.getElementById("qr-video");
     if (videoElem && videoElem.srcObject) {
-      const track = videoElem.srcObject.getVideoTracks();
+      const track = videoElem.srcObject.getVideoTracks()[0];
       if (track && track.getCapabilities) {
         const capabilities = track.getCapabilities();
         const advanced = [];
@@ -509,7 +600,7 @@ export function toggleTorch() {
 }
 
 // ============================================================================
-// 6. AUTO-TEARDOWN & POWER MANAGEMENT (60s IDLE TIMEOUT & WAKE LOCK)
+// 7. AUTO-TEARDOWN & POWER MANAGEMENT (60s IDLE TIMEOUT & WAKE LOCK)
 // ============================================================================
 
 function resetIdleTimer(onDecodeCallback, onErrorCallback) {
@@ -534,4 +625,16 @@ function releaseWakeLock() {
     wakeLock.release().catch(() => {});
     wakeLock = null;
   }
+}
+
+// Attach to window object for legacy & global invocation
+if (typeof window !== 'undefined') {
+  window.startScanner = startScanner;
+  window.stopScanner = stopScanner;
+  window.switchScanHubTab = switchScanHubTab;
+  window.cycleCameraLens = cycleCameraLens;
+  window.toggleTorch = toggleTorch;
+  window.triggerTapToFocus = triggerTapToFocus;
+  window.renderMyQrPass = renderMyQrPass;
+  window.handleClipboardPaste = handleClipboardPaste;
 }
