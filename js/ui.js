@@ -1,4 +1,4 @@
-// ./js/ui.js (0711_R406) - View Switching & UI Management
+// ./js/ui.js (0811_R407) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -90,8 +90,6 @@ export function applyTextSize(size = currentTextSize) {
     tXl.className = `text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center ${size === "xl" ? activeClass : inactiveClass}`;
   }
 
-  document.documentElement.style.fontSize = "100%";
-
   let styleEl = document.getElementById("certifly-text-scale-style");
   if (!styleEl) {
     styleEl = document.createElement("style");
@@ -105,21 +103,24 @@ export function applyTextSize(size = currentTextSize) {
   }
 
   const mult = size === "lg" ? 1.15 : 1.30;
+  
+  const pxSizes = [6, 8, 9, 10, 11, 12, 13, 18, 20, 32];
+  const pxRules = pxSizes.map(px => 
+    `.dyn-txt.text-\[${px}px\] { font-size: ${(px * mult).toFixed(1)}px !important; }`
+  ).join('\n');
+
   styleEl.textContent = `
-    main { font-size: ${(mult * 100).toFixed(1)}% !important; }
-    main .text-\[9px\] { font-size: ${(9 * mult).toFixed(1)}px !important; }
-    main .text-\[10px\] { font-size: ${(10 * mult).toFixed(1)}px !important; }
-    main .text-\[11px\] { font-size: ${(11 * mult).toFixed(1)}px !important; }
-    main .text-\[13px\] { font-size: ${(13 * mult).toFixed(1)}px !important; }
-    main .text-xxs { font-size: ${(0.625 * mult).toFixed(4)}rem !important; }
-    main .text-xs { font-size: ${(0.75 * mult).toFixed(4)}rem !important; }
-    main .text-sm { font-size: ${(0.875 * mult).toFixed(4)}rem !important; }
-    main .text-base { font-size: ${(1.0 * mult).toFixed(4)}rem !important; }
-    main .text-lg { font-size: ${(1.125 * mult).toFixed(4)}rem !important; }
-    main .text-xl { font-size: ${(1.25 * mult).toFixed(4)}rem !important; }
-    main .text-2xl { font-size: ${(1.5 * mult).toFixed(4)}rem !important; }
-    main .text-3xl { font-size: ${(1.875 * mult).toFixed(4)}rem !important; }
-    main .text-4xl { font-size: ${(2.25 * mult).toFixed(4)}rem !important; }
+    .dyn-txt { font-size: calc(1em * ${mult}) !important; }
+    ${pxRules}
+    .dyn-txt.text-xxs { font-size: ${(0.625 * mult).toFixed(4)}rem !important; }
+    .dyn-txt.text-xs  { font-size: ${(0.75 * mult).toFixed(4)}rem !important; }
+    .dyn-txt.text-sm  { font-size: ${(0.875 * mult).toFixed(4)}rem !important; }
+    .dyn-txt.text-base { font-size: ${(1.0 * mult).toFixed(4)}rem !important; }
+    .dyn-txt.text-lg  { font-size: ${(1.125 * mult).toFixed(4)}rem !important; }
+    .dyn-txt.text-xl  { font-size: ${(1.25 * mult).toFixed(4)}rem !important; }
+    .dyn-txt.text-2xl { font-size: ${(1.5 * mult).toFixed(4)}rem !important; }
+    .dyn-txt.text-3xl { font-size: ${(1.875 * mult).toFixed(4)}rem !important; }
+    .dyn-txt.text-4xl { font-size: ${(2.25 * mult).toFixed(4)}rem !important; }
   `;
 }
 
