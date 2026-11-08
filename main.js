@@ -1,4 +1,4 @@
-// ./main.js (0611_R392) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0611_R395) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
@@ -283,6 +283,40 @@ export function updateSaveProfileButtonLabel() {
   saveBtn.innerText = hasCredentials ? "Update Credentials" : "Save Credentials";
 }
 
+
+export function resetProfileQrMode() {
+  if (typeof stopScanner === 'function') stopScanner();
+  profileQrScannerActive = false;
+
+  const qrBox = document.getElementById("profile-qr-box");
+  const urlBox = document.getElementById("profile-url-box");
+  const modeQrBtn = document.getElementById("profile-mode-qr-btn");
+  const modeUrlBtn = document.getElementById("profile-mode-url-btn");
+  const scannerControlsBox = document.getElementById("profile-scanner-controls");
+  const stopScanBtnProfile = document.getElementById("profile-stop-qr-btn") || document.getElementById("profile-stop-scan-btn");
+
+  if (qrBox) qrBox.classList.add("hidden");
+  if (urlBox) urlBox.classList.remove("hidden");
+
+  if (scannerControlsBox) {
+    scannerControlsBox.classList.add("hidden");
+    scannerControlsBox.classList.remove("flex");
+  }
+
+  if (stopScanBtnProfile) stopScanBtnProfile.classList.add("hidden");
+
+  if (modeUrlBtn) {
+    modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
+  }
+
+  if (modeQrBtn) {
+    modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
+  }
+}
+if (typeof window !== 'undefined') {
+  window.resetProfileQrMode = resetProfileQrMode;
+}
+
 function initProfileUI() {
   const profile = getProfileData();
   updateSaveProfileButtonLabel();
@@ -360,10 +394,7 @@ function initProfileUI() {
     }
   }
 
-  stopScanner();
-  profileQrScannerActive = false;
-
-  if (qrBox) qrBox.classList.add("hidden");
+  resetProfileQrMode();
   if (profile.url && urlBox && modeUrlBtn && modeQrBtn) {
     urlBox.classList.remove("hidden");
     modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
@@ -422,7 +453,7 @@ function initProfileUI() {
       modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
       modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
 
-      profileQrScannerActive = true;
+          profileQrScannerActive = true;
       setTimeout(() => {
         startScanner(handleProfileQrScanned, showError, "profile-qr-video");
       }, 150);
@@ -430,23 +461,7 @@ function initProfileUI() {
   };
 
   const activateUrlMode = () => {
-    if (qrBox && urlBox && modeQrBtn && modeUrlBtn) {
-      stopScanner();
-      profileQrScannerActive = false;
-
-      urlBox.classList.remove("hidden");
-      qrBox.classList.add("hidden");
-
-      if (scannerControlsBox) {
-        scannerControlsBox.classList.add("hidden");
-        scannerControlsBox.classList.remove("flex");
-      }
-
-      if (stopScanBtnProfile) stopScanBtnProfile.classList.add("hidden");
-
-      modeUrlBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer";
-      modeQrBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer";
-    }
+    resetProfileQrMode();
   };
 
   if (modeQrBtn) modeQrBtn.onclick = activateQrMode;
@@ -859,6 +874,7 @@ function initStorageUI() {
 
 function initApp() {
   window.processLicenseUrl = processLicenseUrl;
+  window.resetProfileQrMode = resetProfileQrMode;
   window.showError = showError;
   window.startScanner = startScanner;
   window.showScannerView = showScannerView;
