@@ -1,4 +1,4 @@
-<!-- ./index.html (0711_R415) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+<!-- ./index.html (0711_R416) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -627,13 +627,11 @@ navigator.serviceWorker.register('sw.js')
             <div id="result-view" class="app-view hidden flex flex-col gap-4">
 
 
-                <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-5 shadow-md flex flex-col items-center justify-center text-center gap-1.5">
-                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">Master Compliance Status</span>
-                    <h3 id="res-header" class="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wide">Licence Valid</h3>
-                    <div id="res-overall-status-badge" class="w-full py-2.5 rounded-2xl text-xs font-black uppercase text-center bg-emerald-600 text-white shadow-md tracking-wider mt-1">
-                        ELIGIBLE FOR FLIGHT DUTY
-                    </div>
-                    <p id="res-scan-timestamp" class="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-semibold mt-1">Last Checked: --:--</p>
+                <div id="res-status-card" class="bg-emerald-400 dark:bg-emerald-400/90 rounded-3xl p-5 shadow-md flex flex-col items-center justify-center text-center gap-1.5">
+                    <span id="res-status-label" class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800">Master Compliance Status</span>
+                    <h3 id="res-header" class="text-xs font-black text-white uppercase tracking-wide">Licence Valid</h3>
+                    <div id="res-overall-status-badge" class="status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-sm tracking-wider bg-emerald-900/50">CLEARED FOR DUTY</div>
+                    <p id="res-scan-timestamp" class="text-[10px] text-white uppercase font-semibold mt-1">Last Checked: --:--</p>
                 </div>
 
                 <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
