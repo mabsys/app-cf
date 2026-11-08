@@ -1,4 +1,4 @@
-<!-- ./index.html (0711_R408) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+<!-- ./index.html (0711_R409) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -783,9 +783,10 @@ navigator.serviceWorker.register('sw.js')
                     <div id="qr-reader-container" class="w-full overflow-hidden rounded-2xl bg-slate-900 aspect-square flex items-center justify-center relative shadow-inner">
                         <video id="qr-video" class="w-full h-full object-cover" playsinline webkit-playsinline muted></video>
                         <div id="qr-reticle" class="absolute w-44 h-44 border-2 border-dashed border-white/80 rounded-2xl pointer-events-none transition-all shadow-[0_0_0_9999px_rgba(15,23,42,0.45)]"></div>
-                        <div class="absolute bottom-5 inset-x-0 flex justify-center pointer-events-none z-10">
-                            <span id="qr-guidance-pill" class="text-[10px] font-bold text-white bg-black/75 px-3 py-1.2 rounded-full backdrop-blur-md uppercase tracking-wider shadow-sm text-center border border-white/10">
-                                Place QR code within scan area <br>Minimise shadows & reflections
+                        <div class="absolute bottom-4 inset-x-0 flex justify-center pointer-events-none z-10">
+                            <span id="qr-guidance-pill" class="text-[10px] font-bold text-white bg-black/75 px-3.5 py-1.5 rounded-2xl backdrop-blur-md uppercase tracking-wider shadow-sm text-center border border-white/10 leading-tight flex flex-col items-center gap-0.5">
+                                <span>Place QR code within scan area</span>
+                                <span class="text-[9px] text-slate-300 font-medium normal-case tracking-normal">Avoid glare & shadows</span>
                             </span>
                         </div>
                         <div id="scanner-paused-overlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex-col items-center justify-center gap-2 text-center p-4 cursor-pointer z-20">
