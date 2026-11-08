@@ -19,7 +19,7 @@ export function showToast(message, type = 'info', duration = 3000) {
     success: 'bg-emerald-600 text-white border-emerald-500 shadow-lg',
     error: 'bg-rose-600 text-white border-rose-500 shadow-lg',
     warning: 'bg-amber-500 text-slate-950 font-black border-amber-400 shadow-lg',
-    info: 'bg-blue-300 text-blue-800 shadow-lg',
+    info: 'bg-blue-200 text-blue-400 shadow-lg',
     offline: 'bg-amber-500 dark:bg-amber-400 text-slate-950 font-extrabold border-amber-300 dark:border-amber-200 shadow-xl'
   };
 
