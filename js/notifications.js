@@ -19,7 +19,7 @@ export function showToast(message, type = 'info', duration = 3000) {
     success: 'bg-emerald-600 text-white border-emerald-500 shadow-lg',
     error: 'bg-rose-600 text-white border-rose-500 shadow-lg',
     warning: 'bg-amber-500 text-slate-950 font-black border-amber-400 shadow-lg',
-    info: 'bg-blue-200 text-slate-800 shadow-lg',
+    info: 'bg-sky-500 text-white border-sky-400 shadow-lg',
     offline: 'bg-amber-500 dark:bg-amber-400 text-slate-950 font-extrabold border-amber-300 dark:border-amber-200 shadow-xl'
   };
 
@@ -32,7 +32,7 @@ export function showToast(message, type = 'info', duration = 3000) {
   };
 
   const toast = document.createElement('div');
-  toast.className = `px-4 py-3 rounded-2xl shadow-xl border text-xs font-bold tracking-normal flex items-center justify-between gap-3 pointer-events-auto transition-all duration-300 opacity-0 -translate-y-3 ${styles[type] || styles.info}`;
+  toast.className = `px-4 py-3 rounded-2xl shadow-xl text-xs font-bold tracking-normal flex items-center justify-between gap-3 pointer-events-auto transition-all duration-300 opacity-0 -translate-y-3 ${styles[type] || styles.info}`;
   toast.innerHTML = `
     <div class="flex items-center gap-2">
       ${icons[type] || icons.info}
