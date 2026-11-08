@@ -1,4 +1,4 @@
-// ./main.js (0611_R397) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0611_R398) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
@@ -1122,33 +1122,18 @@ async function processLicenseUrl(url) {
       caamResults = profile.cachedCaamResults;
       caamResults.scanTime = scanTime + " (Cached)";
       showToast("CAAM server offline/error. Displaying stored licence data.", "warning");
-    } else if (isValidCaamUrl(cleanUrl)) {
-      caamResults = {
-        overallStatus: "VALID",
-        scanTime: scanTime,
-        qrImageUrl: cleanUrl,
-        pilotDetails: {
-          name: "External Crew Member",
-          licenseType: "ATPL(A)",
-          licenseNo: "CAAM Digital Licence"
-        },
-        medicalLimitations: "NIL",
-        qualifications: [
-          { name: "Licence Validity Expiry", dateText: "31 Oct 2026", status: "VALID", daysRemaining: 30 },
-          { name: "Class 1 Medical Expiry", dateText: "30 Sep 2027", status: "VALID", daysRemaining: 365 }
-        ]
-      };
-      showToast("Digital licence scanned & verified.", "success");
     } else {
-      let errMsg = "CAAM eCLIPSE Server Error: Could not connect to digital licence server.";
+      let errMsg = "The official CAAM eCLIPSE server is currently unreachable or down. Please try again later.";
       if (fetchStatus === 500) {
         errMsg = "CAAM Portal Server Error (Status 500): The official CAAM eCLIPSE server (eclipse.caam.gov.my) or proxy service is temporarily unresponsive. Please try again shortly or verify manually.";
       } else if (fetchStatus === 404) {
         errMsg = "Licence Page Not Found (Status 404): The scanned CAAM eCLIPSE URL is invalid or no longer exists.";
       } else if (fetchStatus > 0) {
-        errMsg = `CAAM Server Error (Status ${fetchStatus}): Failed to fetch digital licence page.`;
+        errMsg = `CAAM Server Error (Status ${fetchStatus}): Failed to fetch digital licence page. Please try again later.`;
       }
-      showError(errMsg);
+      showScannerView();
+      await showAlertModal("CAAM Portal Unresponsive", errMsg, "warning");
+      startScanner(processLicenseUrl, showError);
       return;
     }
   }
