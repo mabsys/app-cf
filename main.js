@@ -1,4 +1,4 @@
-// ./main.js (0611_R398) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0611_R399) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
@@ -3246,19 +3246,34 @@ function renderResults(caamResults, mabResults = null) {
     medLimitEl.innerText = (caamResults && caamResults.medicalLimitations) ? caamResults.medicalLimitations : "NIL";
   }
 
+  const statusCard = getResEl("res-status-card") || (overallBadge ? overallBadge.parentElement : null);
+  const statusLabel = getResEl("res-status-label") || (statusCard ? statusCard.querySelector("span") : null);
+
   if (caamResults && overallBadge && headerEl) {
     if (caamResults.overallStatus === "EXPIRED") {
+      if (statusCard) statusCard.className = "bg-rose-600 dark:bg-rose-600/90 rounded-3xl p-5 shadow-md flex flex-col items-center justify-center text-center gap-1.5";
+      if (statusLabel) statusLabel.className = "text-[10px] font-extrabold uppercase tracking-wider text-rose-100";
       headerEl.innerText = "Licence Lapsed";
-      overallBadge.className = "status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-xs tracking-wider shadow-md bg-rose-600 animate-pulse";
+      headerEl.className = "text-xs font-black text-white uppercase tracking-wide";
+      overallBadge.className = "status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-sm tracking-wider bg-rose-950/60 animate-pulse";
       overallBadge.innerText = "DO NOT FLY!";
+      if (scanTimeEl) scanTimeEl.className = "text-[10px] text-white uppercase font-semibold mt-1";
     } else if (caamResults.overallStatus === "EXPIRING_SOON") {
+      if (statusCard) statusCard.className = "bg-amber-400 dark:bg-amber-400/90 rounded-3xl p-5 shadow-md flex flex-col items-center justify-center text-center gap-1.5";
+      if (statusLabel) statusLabel.className = "text-[10px] font-extrabold uppercase tracking-wider text-amber-900";
       headerEl.innerText = "Licence Expiring Soon";
-      overallBadge.className = "status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-xs tracking-wider shadow-md bg-amber-500";
+      headerEl.className = "text-xs font-black text-white uppercase tracking-wide";
+      overallBadge.className = "status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-sm tracking-wider bg-amber-900/50";
       overallBadge.innerText = "PROCEED WITH CAUTION";
+      if (scanTimeEl) scanTimeEl.className = "text-[10px] text-white uppercase font-semibold mt-1";
     } else {
+      if (statusCard) statusCard.className = "bg-emerald-400 dark:bg-emerald-400/90 rounded-3xl p-5 shadow-md flex flex-col items-center justify-center text-center gap-1.5";
+      if (statusLabel) statusLabel.className = "text-[10px] font-extrabold uppercase tracking-wider text-emerald-800";
       headerEl.innerText = "Licence Valid";
-      overallBadge.className = "status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-xs tracking-wider shadow-md bg-emerald-600";
+      headerEl.className = "text-xs font-black text-white uppercase tracking-wide";
+      overallBadge.className = "status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-sm tracking-wider bg-emerald-900/50";
       overallBadge.innerText = "CLEARED FOR DUTY";
+      if (scanTimeEl) scanTimeEl.className = "text-[10px] text-white uppercase font-semibold mt-1";
     }
 
     let resAdvisoryBox = getResEl("res-advisory-box");
