@@ -1,4 +1,4 @@
-// ./js/scanner.js (0711_R414) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (0711_R415) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
 import { getProfileData, getScanHistory } from './storage.js';
 
@@ -235,7 +235,7 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
             videoElem.style.transform = "none";
           }
           if (guidancePill) {
-            guidancePill.innerText = "Place QR code within scan area";
+            guidancePill.innerHTML = '<span>Place QR code within scan area</span><span class="text-[9px] text-slate-300 font-medium normal-case tracking-normal">Avoid glare & shadows</span>';
           }
 
           if (track && typeof track.getCapabilities === 'function' && typeof track.applyConstraints === 'function') {
