@@ -1,4 +1,4 @@
-// ./js/scanner.js (0711_R415) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (0711_R417) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
 import { getProfileData, getScanHistory } from './storage.js';
 
@@ -230,7 +230,7 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
           const isIPad = /iPad/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
           currentZoomLevel = isIPad ? 1.8 : 1.0;
 
-          const guidancePill = document.getElementById("qr-guidance-pill");
+          const guidancePill = document.getElementById(customVideoElemId === "profile-qr-video" ? "profile-qr-guidance-pill" : "qr-guidance-pill");
           if (videoElem) {
             videoElem.style.transform = "none";
           }
