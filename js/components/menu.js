@@ -82,7 +82,7 @@ export const menuHTML = `
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
       
-      <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 mb-3.5 px-1 tracking-normal">My Credentials Setup</h3>
+      <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-3.5 px-1 tracking-normal">My Credentials Setup</h3>
 
       <!-- Digital Licence Source -->
       <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs mb-2">
@@ -229,7 +229,7 @@ export const menuHTML = `
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
 
-      <h3 class="text-xs font-bold text-slate-800 dark:text-slate-100 mb-3.5 px-1 tracking-normal">App Display & Preferences</h3>
+      <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-3.5 px-1 tracking-normal">App Display & Preferences</h3>
 
       <div class="flex flex-col gap-3.5">
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
@@ -267,7 +267,7 @@ export const menuHTML = `
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
 
-      <h3 class="text-xs font-bold text-slate-800 dark:text-slate-100 mb-3.5 px-1 tracking-normal">Data & Storage Management</h3>
+      <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-3.5 px-1 tracking-normal">Data & Storage Management</h3>
 
       <div class="flex flex-col gap-3.5">
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
@@ -300,7 +300,7 @@ export const menuHTML = `
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
 
-      <h3 class="text-xs font-bold text-slate-800 dark:text-slate-100 mb-3.5 px-1 tracking-normal">About CertiFly App</h3>
+      <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-3.5 px-1 tracking-normal">About CertiFly App</h3>
 
       <div class="flex flex-col gap-3.5 pb-3">
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs text-center flex flex-col items-center">
