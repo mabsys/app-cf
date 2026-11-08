@@ -2098,7 +2098,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
           row.innerHTML = `
 <div>
   <div class="text-xs font-bold text-slate-800 dark:text-slate-200">${q.name}</div>
-  <div class="dyn-txt text-[10px] text-slate-400 tracking-wide pt-1 uppercase">Expiry: ${q.dateText || "No Expiry"}</div>
+  <div class="dyn-txt text-[10px] text-slate-400 tracking-wide pt-0.5 uppercase">Expiry:<b> ${q.dateText || "No Expiry"} </b></div>
 </div>
 ${badgeHtml}
 `;
