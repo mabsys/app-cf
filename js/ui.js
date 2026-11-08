@@ -1,4 +1,4 @@
-// ./js/ui.js (0711_R404) - View Switching & UI Management
+// ./js/ui.js (0711_R406) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -9,6 +9,55 @@ import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit
 import { topbarHTML } from './components/topbar.js';
 import { dockHTML } from './components/dock.js';
 import { menuHTML } from './components/menu.js';
+
+export function initSubTabDragScroll() {
+  const strips = document.querySelectorAll('.tools-subtab-strip');
+  strips.forEach(strip => {
+    if (strip.dataset.dragScrollInitialized) return;
+    strip.dataset.dragScrollInitialized = 'true';
+
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+    let hasDragged = false;
+
+    strip.addEventListener('mousedown', (e) => {
+      isDown = true;
+      hasDragged = false;
+      strip.classList.add('active');
+      startX = e.pageX - strip.offsetLeft;
+      scrollLeft = strip.scrollLeft;
+    });
+
+    strip.addEventListener('mouseleave', () => {
+      isDown = false;
+      strip.classList.remove('active');
+    });
+
+    strip.addEventListener('mouseup', () => {
+      isDown = false;
+      strip.classList.remove('active');
+    });
+
+    strip.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      const x = e.pageX - strip.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      if (Math.abs(walk) > 4) {
+        hasDragged = true;
+      }
+      strip.scrollLeft = scrollLeft - walk;
+    });
+
+    strip.addEventListener('click', (e) => {
+      if (hasDragged) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }, true);
+  });
+}
+
 
 const textSizeIcons = {
   std: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l3-7 3 7M5 15h4"/><path d="M13 18l4-11 4 11M14 14h6"/><path d="M11 7h2"/></svg>`,
@@ -979,6 +1028,7 @@ export function autoFillFromCredentials() {
 }
 
 export function initToolsViewUI() {
+  initSubTabDragScroll();
   if (window.initToolsUIController) {
     window.initToolsUIController();
   }
@@ -1011,6 +1061,7 @@ export function initToolsViewUI() {
 }
 
 if (typeof window !== 'undefined') {
+  window.initSubTabDragScroll = initSubTabDragScroll;
   window.initToolsViewUI = initToolsViewUI;
   window.switchToolCategory = switchToolCategory;
   window.switchActiveTool = switchActiveTool;
