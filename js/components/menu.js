@@ -1,4 +1,4 @@
-// ./js/components/menu.js (0411_R356) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
+// ./js/components/menu.js (0411_R357) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
 
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
@@ -82,7 +82,7 @@ export const menuHTML = `
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
 
-      <h3 class="text-xs font-black text-slate-800 dark:text-slate-100 mb-3.5 px-1 uppercase tracking-wider">Crew Credentials Setup</h3>
+      <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 mb-3.5 px-1 tracking-normal">Crew Credentials Setup</h3>
 
       <!-- Digital Licence Source -->
       <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs mb-2">
@@ -104,8 +104,12 @@ export const menuHTML = `
           <div id="profile-qr-box" class="hidden flex flex-col gap-2">
             <div id="profile-qr-reader-container" class="w-full overflow-hidden rounded-2xl bg-slate-900 aspect-square flex items-center justify-center relative shadow-inner">
               <video id="profile-qr-video" class="w-full h-full object-cover" playsinline webkit-playsinline muted></video>
-              <div class="absolute bottom-3 left-0 right-0 text-center pointer-events-none z-10">
-                <span class="text-white text-[9px] font-bold uppercase tracking-wider drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.85)]">Point camera at CAAM QR card</span>
+              <div id="profile-qr-reticle" class="absolute w-44 h-44 border-2 border-dashed border-white/80 rounded-2xl pointer-events-none transition-all shadow-[0_0_0_9999px_rgba(15,23,42,0.45)]"></div>
+              <div class="absolute bottom-4 inset-x-0 flex justify-center pointer-events-none z-10">
+                <span id="profile-qr-guidance-pill" class="text-[10px] font-bold text-white bg-black/75 px-3.5 py-1.5 rounded-2xl backdrop-blur-md uppercase tracking-wider shadow-sm text-center border border-white/10 leading-tight flex flex-col items-center gap-0.5">
+                  <span>Place QR code within scan area</span>
+                  <span class="text-[9px] text-slate-300 font-medium normal-case tracking-normal">Avoid glare &amp; shadows</span>
+                </span>
               </div>
             </div>
 
@@ -220,7 +224,7 @@ export const menuHTML = `
     </div>
 
     <!-- SUB-PANE 1: APP SETTINGS -->
-    <div id="pane-settings" class="sub-pane absolute top-8 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
+    <div id="pane-settings" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
       <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
@@ -258,7 +262,7 @@ export const menuHTML = `
     </div>
 
     <!-- SUB-PANE 2: DATA & STORAGE -->
-    <div id="pane-storage" class="sub-pane absolute top-8 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
+    <div id="pane-storage" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
       <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
@@ -291,7 +295,7 @@ export const menuHTML = `
     </div>
 
     <!-- SUB-PANE 3: ABOUT CERTIFLY -->
-    <div id="pane-about" class="sub-pane absolute top-8 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
+    <div id="pane-about" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
       <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
