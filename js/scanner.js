@@ -1,4 +1,4 @@
-// ./js/scanner.js (0711_R413) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (0711_R414) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
 import { getProfileData, getScanHistory } from './storage.js';
 
@@ -13,6 +13,8 @@ let currentZoomLevel = 1.0;
 
 // Session and Single-Decode Safeguards
 let scannerSessionId = 0;
+
+
 
 // IDLE TIMEOUT THRESHOLD: 60 Seconds
 const IDLE_TIMEOUT_MS = 60000;
@@ -110,8 +112,8 @@ export async function updateCameraControlUI() {
       cycleBtn.classList.remove("flex");
     }
     if (uploadBtn) {
-      uploadBtn.classList.add("col-span-2");
       uploadBtn.classList.remove("col-span-1");
+      uploadBtn.classList.add("col-span-2");
     }
   }
 }
@@ -120,127 +122,7 @@ export function updateCameraCycleButtonLabel() {
   updateCameraControlUI();
 }
 
-// ============================================================================
-// 1. PHOTO SCANNER MODAL OVERLAY CONTROLLER
-// ============================================================================
 
-export function openQrPhotoModal() {
-  const modal = document.getElementById("qr-photo-modal");
-  const errorBox = document.getElementById("qr-photo-error");
-  const previewBox = document.getElementById("qr-photo-preview-container");
-  const dropzone = document.getElementById("qr-photo-dropzone");
-  const fileInput = document.getElementById("modal-qr-file-input");
-
-  if (errorBox) { errorBox.innerText = ""; errorBox.classList.add("hidden"); }
-  if (previewBox) previewBox.classList.add("hidden");
-  if (dropzone) dropzone.classList.remove("hidden");
-  if (fileInput) fileInput.value = "";
-
-  if (modal) {
-    modal.classList.remove("hidden");
-  } else {
-    const legacyInput = document.getElementById("qr-file-input");
-    if (legacyInput) legacyInput.click();
-  }
-}
-
-export function closeQrPhotoModal() {
-  const modal = document.getElementById("qr-photo-modal");
-  if (modal) modal.classList.add("hidden");
-}
-
-export function initQrPhotoModalHandlers() {
-  const uploadQrBtn = document.getElementById("upload-qr-btn");
-  if (uploadQrBtn) {
-    uploadQrBtn.onclick = (e) => {
-      e.preventDefault();
-      openQrPhotoModal();
-    };
-  }
-
-  const dropzone = document.getElementById("qr-photo-dropzone");
-  const fileInput = document.getElementById("modal-qr-file-input");
-
-  if (dropzone && fileInput) {
-    dropzone.onclick = () => fileInput.click();
-
-    dropzone.ondragover = (e) => {
-      e.preventDefault();
-      dropzone.classList.add("border-blue-500", "bg-blue-50/50");
-    };
-
-    dropzone.ondragleave = () => {
-      dropzone.classList.remove("border-blue-500", "bg-blue-50/50");
-    };
-
-    dropzone.ondrop = (e) => {
-      e.preventDefault();
-      dropzone.classList.remove("border-blue-500", "bg-blue-50/50");
-      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
-        processUploadedPhotoFile(e.dataTransfer.files[0]);
-      }
-    };
-
-    fileInput.onchange = (e) => {
-      if (e.target.files && e.target.files[0]) {
-        processUploadedPhotoFile(e.target.files[0]);
-      }
-    };
-  }
-
-  window.openQrPhotoModal = openQrPhotoModal;
-  window.closeQrPhotoModal = closeQrPhotoModal;
-}
-
-export async function processUploadedPhotoFile(file) {
-  const errorBox = document.getElementById("qr-photo-error");
-  const previewBox = document.getElementById("qr-photo-preview-container");
-  const previewImg = document.getElementById("qr-photo-preview-img");
-  const spinner = document.getElementById("qr-photo-spinner");
-  const dropzone = document.getElementById("qr-photo-dropzone");
-
-  if (errorBox) { errorBox.innerText = ""; errorBox.classList.add("hidden"); }
-  if (dropzone) dropzone.classList.add("hidden");
-  if (previewBox && previewImg) {
-    previewImg.src = URL.createObjectURL(file);
-    previewBox.classList.remove("hidden");
-  }
-  if (spinner) spinner.classList.remove("hidden");
-
-  if (!window.QrScanner) {
-    if (spinner) spinner.classList.add("hidden");
-    if (errorBox) {
-      errorBox.innerText = "QR Scanner engine not available.";
-      errorBox.classList.remove("hidden");
-    }
-    return;
-  }
-
-  try {
-    const result = await window.QrScanner.scanImage(file, { returnDetailedScanResult: true });
-    const decodedText = (typeof result === 'object' ? (result.data || result.text) : result) || "";
-    const cleanText = decodedText ? decodedText.trim() : "";
-
-    if (cleanText) {
-      closeQrPhotoModal();
-      if (typeof window.processLicenseUrl === 'function') {
-        window.processLicenseUrl(cleanText);
-      }
-    } else {
-      if (spinner) spinner.classList.add("hidden");
-      if (errorBox) {
-        errorBox.innerText = "No readable CAAM QR code found in photo. Please ensure image is clear and in focus.";
-        errorBox.classList.remove("hidden");
-      }
-    }
-  } catch (err) {
-    if (spinner) spinner.classList.add("hidden");
-    if (errorBox) {
-      errorBox.innerText = "Unable to decode QR code from selected image. Please try another photo.";
-      errorBox.classList.remove("hidden");
-    }
-  }
-}
 
 // ============================================================================
 // 2. TAB 1: LIVE CAMERA SCANNER & HARDWARE STREAM CONTROLLER
@@ -255,9 +137,6 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
     if (onErrorCallback) onErrorCallback("Camera feed element not found.");
     return;
   }
-
-  // Initialize Modal Button Listeners
-  initQrPhotoModalHandlers();
 
   // Hide paused overlay if visible
   const pausedOverlay = document.getElementById("scanner-paused-overlay");
@@ -639,7 +518,14 @@ export async function cycleCameraLens() {
     }
   }
 
-  // MODE B: Single Rear Camera Stream -> Cycle Macro/Zoom modes (1.0x -> 1.8x Close-Up -> 2.5x Telephoto)
+  // MODE B: Single Rear Camera Stream -> Cycle Macro/Zoom modes (1.0x -> 1.8x -> 2.5x)
+  const isIPad = /iPad/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (isIPad) {
+    // iPad strictly locked to default 1.8x zoom constraint
+    currentZoomLevel = 1.8;
+    return;
+  }
+
   if (currentZoomLevel === 1.0) {
     currentZoomLevel = 1.8;
   } else if (currentZoomLevel === 1.8) {
