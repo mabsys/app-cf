@@ -105,12 +105,14 @@ export function applyTextSize(size = currentTextSize) {
   const mult = size === "lg" ? 1.10 : 1.20;
   
   const pxSizes = [6, 8, 9, 10, 11, 12, 13, 18, 20, 32];
-  const pxRules = pxSizes.map(px => 
-    `.dyn-txt.text-\[${px}px\] { font-size: ${(px * mult).toFixed(1)}px !important; }`
-  ).join('\n');
+  const pxRules = pxSizes.map(px => {
+    const selector = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(`text-[${px}px]`) : `text-\[${px}px\]`;
+    return `.dyn-txt.${selector} { font-size: ${(px * mult).toFixed(1)}px !important; }`;
+  }).join('
+');
 
   styleEl.textContent = `
-    .dyn-txt:not([class*="text-"]) { font-size: calc(1em * ${mult}) !important; }
+    .dyn-txt { font-size: calc(1em * ${mult}) !important; }
     ${pxRules}
     .dyn-txt.text-xxs { font-size: ${(0.625 * mult).toFixed(4)}rem !important; }
     .dyn-txt.text-xs  { font-size: ${(0.75 * mult).toFixed(4)}rem !important; }
