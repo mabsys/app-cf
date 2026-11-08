@@ -1,4 +1,4 @@
-// ./main.js (0611_R395) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0611_R396) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
@@ -1053,6 +1053,14 @@ async function processLicenseUrl(url) {
     return;
   }
   const cleanUrl = url.trim();
+
+  if (!isValidCaamUrl(cleanUrl)) {
+    await stopScanner();
+    await showAlertModal("Invalid QR Code", "Please scan an official CAAM eCLIPSE licence QR code.", "warning");
+    startScanner(processLicenseUrl, showError);
+    return;
+  }
+
   lastScannedUrl = cleanUrl;
   await stopScanner();
   showLoading("Fetching digital licence...");
