@@ -1,4 +1,4 @@
-// ./js/ui.js (0811_R408) - View Switching & UI Management
+// ./js/ui.js (0811_R409) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -110,7 +110,7 @@ export function applyTextSize(size = currentTextSize) {
   ).join('\n');
 
   styleEl.textContent = `
-    .dyn-txt { font-size: calc(1em * ${mult}) !important; }
+    .dyn-txt:not([class*="text-"]) { font-size: calc(1em * ${mult}) !important; }
     ${pxRules}
     .dyn-txt.text-xxs { font-size: ${(0.625 * mult).toFixed(4)}rem !important; }
     .dyn-txt.text-xs  { font-size: ${(0.75 * mult).toFixed(4)}rem !important; }
