@@ -1,4 +1,4 @@
-// ./js/ui.js (0711_R402) - View Switching & UI Management
+// ./js/ui.js (0711_R403) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -250,6 +250,9 @@ export function closeMenu() {
   if (!menu || !overlay) return;
 
   stopScanner();
+  if (typeof window.resetProfileQrMode === "function") {
+    window.resetProfileQrMode();
+  }
 
   overlay.classList.remove("opacity-100");
   overlay.classList.add("opacity-0");
@@ -462,6 +465,9 @@ export function initNavigationBars() {
 
       if (subPane && paneMain) {
         stopScanner();
+        if (typeof window.resetProfileQrMode === "function") {
+          window.resetProfileQrMode();
+        }
         subPane.classList.remove("translate-x-0", "opacity-100", "pointer-events-auto");
         subPane.classList.add("translate-x-full", "opacity-0", "pointer-events-none");
         paneMain.classList.remove("opacity-0", "pointer-events-none");
@@ -542,6 +548,9 @@ export function showView(viewId, defaultTab = null) {
   }
   if (viewId !== "scanner-view") {
     stopScanner();
+    if (typeof window.resetProfileQrMode === "function") {
+      window.resetProfileQrMode();
+    }
   }
 
   document.querySelectorAll(".app-view").forEach(view => {
@@ -651,6 +660,9 @@ export function switchResultTab(tabName = 'overview') {
 
 export function openProfileMenu() {
   openMenu();
+  if (typeof window.resetProfileQrMode === "function") {
+    window.resetProfileQrMode();
+  }
   setTimeout(() => {
     const navBtn = document.querySelector('[data-target="pane-profile"]');
     if (navBtn) navBtn.click();
