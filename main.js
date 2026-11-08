@@ -1,4 +1,4 @@
-// ./main.js (0611_R396) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0611_R397) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
@@ -773,7 +773,7 @@ function initProfileUI() {
 
 async function handleProfileQrScanned(scannedUrl) {
   if (!scannedUrl) return;
-  stopScanner();
+  await stopScanner();
   profileQrScannerActive = false;
 
   let cleanUrl = scannedUrl.trim();
@@ -781,13 +781,19 @@ async function handleProfileQrScanned(scannedUrl) {
     cleanUrl = "https://" + cleanUrl;
   }
 
+  const qrBox = document.getElementById("profile-qr-box");
+
   if (!isValidCaamUrl(cleanUrl)) {
     await showAlertModal("Invalid QR Code", "Must be an official CAAM eCLIPSE QR URL.", "warning");
+    if (qrBox && !qrBox.classList.contains("hidden")) {
+      profileQrScannerActive = true;
+      setTimeout(() => {
+        startScanner(handleProfileQrScanned, showError, "profile-qr-video");
+      }, 150);
+    }
     return;
   }
   scannedUrl = cleanUrl;
-
-  const qrBox = document.getElementById("profile-qr-box");
   const urlBox = document.getElementById("profile-url-box");
   const modeQrBtn = document.getElementById("profile-mode-qr-btn");
   const modeUrlBtn = document.getElementById("profile-mode-url-btn");
