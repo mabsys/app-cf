@@ -1,4 +1,4 @@
-<!-- ./index.html (0711_R416) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+<!-- ./index.html (0711_R417) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -40,6 +40,22 @@ navigator.serviceWorker.register('sw.js')
     <style>
         .no-scrollbar::-webkit-scrollbar { display: none !important; }
         .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
+        
+        .tools-subtab-strip {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          overflow-x: auto;
+          overflow-y: hidden;
+          -webkit-overflow-scrolling: touch;
+          touch-action: pan-x;
+          scroll-behavior: smooth;
+          user-select: none;
+          cursor: grab;
+        }
+        .tools-subtab-strip:active {
+          cursor: grabbing;
+        }
     </style>
     <style>
         .perspective-1000 { perspective: 1000px; -webkit-perspective: 1000px; }
