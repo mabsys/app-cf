@@ -213,12 +213,12 @@ export function showConfirmDialog({ title, message, confirmText = 'Confirm', can
     const btnBg = isDanger ? 'bg-rose-600 hover:bg-rose-700' : 'bg-blue-600 hover:bg-blue-700';
 
     overlay.innerHTML = `
-      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 max-w-xs w-full shadow-2xl flex flex-col gap-3 text-center">
-        <h3 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">${title}</h3>
-        <p class="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">${message}</p>
+      <div class="bg-white dark:bg-slate-300 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 max-w-xs w-full shadow-2xl flex flex-col gap-3 text-center">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-slate-800 tracking-normal">${title}</h3>
+        <p class="text-xs text-slate-600 dark:text-slate-500 font-medium leading-relaxed">${message}</p>
         <div class="grid ${showCancel ? 'grid-cols-2' : 'grid-cols-1'} gap-2 mt-2">
           ${showCancel ? `<button id="dialog-cancel" type="button" class="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs uppercase hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer">${cancelText}</button>` : ''}
-          <button id="dialog-confirm" type="button" class="py-2.5 px-3 rounded-xl ${btnBg} text-white font-bold text-xs uppercase shadow-md transition-all cursor-pointer">${confirmText}</button>
+          <button id="dialog-confirm" type="button" class="py-2.5 px-3 rounded-xl ${btnBg} text-white font-bold text-xs uppercase transition-all cursor-pointer">${confirmText}</button>
         </div>
       </div>
     `;
