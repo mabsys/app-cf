@@ -1,4 +1,4 @@
-<!-- ./index.html (0711_R421) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+<!-- ./index.html (0911_R423) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -444,23 +444,7 @@ navigator.serviceWorker.register('sw.js')
 
                 <!-- TAB 3: MAB COMPANY ATTESTATION VIEW -->
                 <div id="tab-mab-content" class="res-tab-content hidden flex flex-col gap-4">
-                    <div id="mab-void-warning-box" class="hidden bg-rose-500/10 border-l-4 border-rose-600 p-4 rounded-r-2xl text-rose-950 dark:text-rose-200">
-                        <div class="flex items-start gap-2.5">
-                            <svg class="w-5 h-5 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                            </svg>
-                            <div class="flex-1">
-                                <h4 class="text-xs font-black uppercase tracking-wider text-rose-700 dark:text-rose-300">MAB Attestation VOID / Stale</h4>
-                                <p id="mab-void-reason" class="text-[10px] text-rose-800 dark:text-rose-200 mt-1 leading-relaxed">Attestation PDF is older than 30 days or a qualification has lapsed. Please re-upload your latest monthly PDF.</p>
-                                <button onclick="openMenu(); setTimeout(() => { const nav = document.querySelector('[data-target=pane-profile]'); if(nav) nav.click(); }, 150);" type="button" class="mt-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[10px] uppercase py-2 px-3.5 rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer">
-                                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                                    </svg>
-                                    <span>Upload New Attestation PDF</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+
 
                     <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
                         <div class="border-b-2 border-slate-200 dark:border-slate-800 pb-2 flex justify-between items-center">
