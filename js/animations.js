@@ -1,6 +1,8 @@
-// ./js/animations.js (0611_R389) - CertiFly Centralized Motion & Animation Engine
+// ./js/animations.js (0811_R390) - CertiFly Centralized Motion & Animation Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
+
+import anime from './anime.min.js';
 
 /**
  * Check if Anime.js library is loaded globally
@@ -16,7 +18,6 @@ export function isAnimeAvailable() {
 export function runAnime(params = {}) {
   if (!isAnimeAvailable()) return null;
   if (typeof anime === "function") {
-    // Anime.js v3.x syntax: anime({...})
     try {
       return anime(params);
     } catch (err) {
@@ -24,7 +25,6 @@ export function runAnime(params = {}) {
       return null;
     }
   } else if (typeof anime === "object" && typeof anime.animate === "function") {
-    // Anime.js v4.x syntax: anime.animate(targets, parameters)
     try {
       const { targets, easing, ease, update, onUpdate, ...rest } = params;
       let v4Easing = easing || ease;
@@ -136,7 +136,6 @@ export function animateLegalityRings(opts = {}) {
     targetDays = 0
   } = opts;
 
-  // Inner Ring (CAAM, circumference = 188.50)
   const caamRings = [ringCaam, ringCaamBack].filter(Boolean);
   if (caamRings.length > 0) {
     caamRings.forEach(r => r.setAttribute("stroke", caamColor));
@@ -148,7 +147,6 @@ export function animateLegalityRings(opts = {}) {
     });
   }
 
-  // Outer Ring (MAB, circumference = 263.89)
   const mabRings = [ringMab, ringMabBack].filter(Boolean);
   if (mabRings.length > 0) {
     mabRings.forEach(r => r.setAttribute("stroke", mabColor));
@@ -160,7 +158,6 @@ export function animateLegalityRings(opts = {}) {
     });
   }
 
-  // Live Counter for Days Remaining in Ring Center (Front & Back)
   const targetElements = [percentEl, percentElBack].filter(Boolean);
   if (targetElements.length > 0 && typeof targetDays === "number" && !isNaN(targetDays)) {
     const isOverHundred = targetDays > 100;
@@ -220,7 +217,6 @@ export function animateHistogramBars() {
     easing: "easeOutCubic"
   });
 
-  // Stagger legend dots pop-in
   const dots = document.querySelectorAll("#tab-overview-content [id^=\"dot-legend-\"]");
   if (dots && dots.length > 0) {
     runAnime({
@@ -262,7 +258,6 @@ export function animatePassportAndElpBars() {
     });
   }
 
-  // Scale labels stagger
   const scaleSpans = document.querySelectorAll("#ov-elp-scale span");
   if (scaleSpans && scaleSpans.length > 0) {
     runAnime({
@@ -283,21 +278,14 @@ export function animatePassportAndElpBars() {
 export function animateOverviewDashboard(animData = {}) {
   if (!isAnimeAvailable()) return;
 
-  // Execute entrance cascade
   animateOverviewEntrance();
-
-  // Execute rings & counter
   animateLegalityRings(animData);
 
-  // Execute LVO marker glide
   if (typeof animData.lvoPct === "number") {
     animateLvoMarker(animData.lvoPct);
   }
 
-  // Execute histogram bars growth
   animateHistogramBars();
-
-  // Execute progress bars sweep
   animatePassportAndElpBars();
 }
 
@@ -327,10 +315,8 @@ export function animateRecencyCardExpansion(cardEl, variantWrapper, isMulti) {
   }
 
   if (isMulti) {
-    // Hide footnote text to preserve layout space
     if (footnoteEl) footnoteEl.classList.add("hidden");
 
-    // Slide & Fade In 2nd Variant Date Row (card height remains fixed 350px)
     if (variantWrapper) {
       variantWrapper.classList.remove("hidden");
       variantWrapper.style.opacity = "0";
@@ -343,7 +329,6 @@ export function animateRecencyCardExpansion(cardEl, variantWrapper, isMulti) {
       });
     }
   } else {
-    // Fade Out 2nd Variant Date Row and restore footnote text
     if (variantWrapper) {
       runAnime({
         targets: variantWrapper,
@@ -362,7 +347,46 @@ export function animateRecencyCardExpansion(cardEl, variantWrapper, isMulti) {
   }
 }
 
-// Global window fallback for non-module & module usage
+/**
+ * Animates floating mandatory verification bottom banner
+ * @param {HTMLElement} bannerEl - The bottom banner element
+ * @param {boolean} show - Slide in (true) or slide out (false)
+ */
+export function animateBottomBanner(bannerEl, show) {
+  if (!bannerEl) return;
+
+  if (!isAnimeAvailable()) {
+    if (show) {
+      bannerEl.classList.remove("hidden");
+    } else {
+      bannerEl.classList.add("hidden");
+    }
+    return;
+  }
+
+  if (show) {
+    bannerEl.classList.remove("hidden");
+    runAnime({
+      targets: bannerEl,
+      translateY: [40, 0],
+      opacity: [0, 1],
+      duration: 320,
+      easing: "easeOutCubic"
+    });
+  } else {
+    runAnime({
+      targets: bannerEl,
+      translateY: [0, 40],
+      opacity: [1, 0],
+      duration: 250,
+      easing: "easeInQuad",
+      complete: () => {
+        bannerEl.classList.add("hidden");
+      }
+    });
+  }
+}
+
 if (typeof window !== "undefined") {
   window.CertiFlyAnimations = {
     isAnimeAvailable,
@@ -375,6 +399,7 @@ if (typeof window !== "undefined") {
     animateHistogramBars,
     animatePassportAndElpBars,
     animateOverviewDashboard,
-    animateRecencyCardExpansion
+    animateRecencyCardExpansion,
+    animateBottomBanner
   };
 }
