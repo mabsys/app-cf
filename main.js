@@ -2302,7 +2302,7 @@ ${badgeHtml}
         row.innerHTML = `
 <div>
   <div class="text-xs font-bold text-slate-800 dark:text-slate-200">${d.name}</div>
-  <div class="dyn-txt text-[10px] text-slate-400 tracking-wide uppercase pt-0.5 font-semibold">${d.doneDate} → ${d.expiryDate}</div>
+  <div class="dyn-txt text-[10px] text-slate-400 tracking-wide uppercase pt-0.5 font-medium">${d.doneDate} → ${d.expiryDate}</div>
 </div>
 ${badgeHtml}
 `;
