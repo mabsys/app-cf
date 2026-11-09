@@ -3351,7 +3351,7 @@ function renderResults(caamResults, mabResults = null) {
           overallBadge.parentElement.appendChild(resAdvisoryBox);
         }
       }
-      resAdvisoryBox.className = "mt-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-left";
+      resAdvisoryBox.className = "mt-3 p-3 rounded-2xl bg-amber-900/20 border border-amber-900/20 text-left";
       resAdvisoryBox.innerHTML = `
 <div class="flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-300">
   <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
