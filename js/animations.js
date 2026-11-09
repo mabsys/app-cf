@@ -1,4 +1,4 @@
-// ./js/animations.js (0811_R391) - CertiFly Centralized Motion & Animation Engine
+// ./js/animations.js (0811_R392) - CertiFly Centralized Motion & Animation Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -422,7 +422,7 @@ export function animateBottomBanner(bannerEl, show) {
     if (isAnimeAvailable()) {
       runAnime({
         targets: bannerEl,
-        translateY: ['100%', '0%'],
+        translateY: ['120%', '0%'],
         opacity: [0, 1],
         duration: 320,
         easing: 'easeOutCubic'
@@ -435,7 +435,7 @@ export function animateBottomBanner(bannerEl, show) {
     if (isAnimeAvailable()) {
       runAnime({
         targets: bannerEl,
-        translateY: ['0%', '100%'],
+        translateY: ['0%', '120%'],
         opacity: [1, 0],
         duration: 250,
         easing: 'easeInQuad',
