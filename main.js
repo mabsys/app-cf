@@ -1,4 +1,4 @@
-// ./main.js (0811_R406) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0911_R407) - CertiFly Application Shell & Orchestrator
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
@@ -2154,15 +2154,46 @@ ${badgeHtml}
     }
 
     const voidBox = getDashEl("mab-void-warning-box");
-    const voidReasonEl = getDashEl("mab-void-reason");
+    if (voidBox) voidBox.classList.add("hidden");
 
-    if (voidBox && voidReasonEl) {
-      if (mabResults.isVoid) {
-        voidBox.classList.remove("hidden");
-        voidReasonEl.innerText = mabResults.voidReason;
-      } else {
-        voidBox.classList.add("hidden");
+    if (mabResults.isVoid) {
+      const freshnessLimit = typeof getFreshnessLimit === 'function' ? getFreshnessLimit() : 30;
+      const voidMsg = mabResults.voidReason || `Attestation PDF is older than ${freshnessLimit} days or a qualification has lapsed.`;
+
+      renderNoticeCard("tab-mab-content", {
+        id: "mab-void-notice",
+        title: "MAB ATTESTATION VOID / STALE",
+        message: `${voidMsg}<br/><button onclick="if(typeof openProfileMenu==='function'){openProfileMenu();}else{openMenu();setTimeout(()=>{const nav=document.querySelector('[data-target=pane-profile]');if(nav)nav.click();},150);}" type="button" class="mt-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[10px] uppercase py-2 px-3.5 rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"><svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg><span>Upload New Attestation PDF</span></button>`,
+        type: "danger",
+        dismissible: false
+      });
+
+      if (!sessionStorage.getItem("mab_void_modal_prompted")) {
+        sessionStorage.setItem("mab_void_modal_prompted", "true");
+        setTimeout(async () => {
+          const confirmed = await showConfirmDialog({
+            title: "MAB Attestation VOID / Stale",
+            message: `Your MAB attestation PDF has expired (>${freshnessLimit} days) or has lapsed qualifications. Would you like to upload a new monthly PDF in Credentials now?`,
+            confirmText: "Upload New PDF",
+            cancelText: "Dismiss",
+            type: "danger"
+          });
+          if (confirmed) {
+            if (typeof openProfileMenu === "function") {
+              openProfileMenu();
+            } else if (typeof openMenu === "function") {
+              openMenu();
+              setTimeout(() => {
+                const nav = document.querySelector('[data-target="pane-profile"]');
+                if (nav) nav.click();
+              }, 150);
+            }
+          }
+        }, 200);
       }
+    } else {
+      const existingNotice = document.getElementById("mab-void-notice");
+      if (existingNotice) existingNotice.remove();
     }
 
     const mabPilot = getDashEl("mab-pilot-name");
