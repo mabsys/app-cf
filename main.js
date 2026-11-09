@@ -3351,15 +3351,15 @@ function renderResults(caamResults, mabResults = null) {
           overallBadge.parentElement.appendChild(resAdvisoryBox);
         }
       }
-      resAdvisoryBox.className = "mt-3 p-3 rounded-2xl bg-amber-900/20 border border-amber-900/20 text-left";
+      resAdvisoryBox.className = "mt-3 p-3 rounded-2xl bg-amber-600/50 text-left";
       resAdvisoryBox.innerHTML = `
-<div class="flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-300">
+<div class="flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-800">
   <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
   </svg>
   <span>SPECIALIZED ROLE ADVISORY</span>
 </div>
-<p class="mt-1 text-[11px] font-medium text-amber-700 dark:text-amber-400 leading-tight">
+<p class="mt-1 text-[11px] font-medium text-slate-800 dark:text-slate-800 leading-tight">
   ${caamResults.advisoryNotice.message}
 </p>
 `;
