@@ -1,4 +1,4 @@
-// ./main.js (0811_R403) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0811_R405) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
@@ -2957,15 +2957,15 @@ function customRenderHistoryList() {
     const safeId = String(item.id || '').replace(/'/g, "\'");
     const pinBadge = isPinned ? `<svg class="w-3.5 h-3.5 text-orange-400 dark:text-orange-400 shrink-0 inline-block align-middle ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>` : '';
 
-    let badgeStyle = "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60";
+    let badgeStyle = "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300";
     let statusLabel = "Valid";
 
     if (item.overallStatus === "EXPIRED") {
       statusLabel = "Expired";
-      badgeStyle = "bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60";
+      badgeStyle = "bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300";
     } else if (item.overallStatus === "EXPIRING_SOON") {
       statusLabel = "Expiring";
-      badgeStyle = "bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60";
+      badgeStyle = "bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300";
     }
 
     const nameUpper = (item.name || 'UNKNOWN').toUpperCase();
