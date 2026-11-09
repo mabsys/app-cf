@@ -3,7 +3,7 @@
 export const dockHTML = `
 <!-- PERSISTENT FULL-WIDTH BOTTOM NAVIGATION BAR -->
 <div id="persistent-dock" 
-     class="fixed bottom-0 left-0 right-0 h-16 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-200/80 dark:border-slate-800 shadow-lg z-40 transform translate-y-0 will-change-transform">
+     class="fixed bottom-0 left-0 right-0 h-16 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-xl border-t border-slate-200/80 dark:border-slate-800 shadow-lg z-40 transform translate-y-0 will-change-transform">
   
   <div class="max-w-md mx-auto h-full grid grid-cols-5 items-center justify-items-center px-1">
 
