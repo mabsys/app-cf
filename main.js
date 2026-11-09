@@ -1,4 +1,4 @@
-// ./main.js (0811_R400) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0811_R402) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
@@ -1355,8 +1355,8 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     let title = "Captain";
     if (rawDesig) {
       const u = rawDesig.toUpperCase().trim();
-      if (u.includes("FIRST OFFICER") || u.includes("F/O") || u.includes("FO")) title = "FO";
-      else if (u.includes("SECOND OFFICER") || u.includes("S/O") || u.includes("SO")) title = "SO";
+      if (u.includes("FIRST OFFICER") || u.includes("F/O") || u.includes("FO")) title = "First Officer";
+      else if (u.includes("SECOND OFFICER") || u.includes("S/O") || u.includes("SO")) title = "Second Officer";
       else if (u.includes("CADET")) title = "Cadet";
       else if (u.includes("CAPTAIN") || u.includes("CAPT")) title = "Captain";
       else if (u.includes("FE") || u.includes("ENGINEER")) title = "FE";
@@ -1581,10 +1581,10 @@ async function renderDashboardResults(caamResults, mabResults = null) {
     if (lvoDaysTextEl) {
       if (lvoDaysRemaining <= 0) {
         lvoDaysTextEl.innerText = "Recency Expired (Lapsed)";
-        lvoDaysTextEl.className = "text-rose-600 dark:text-rose-400 font-extrabold";
+        lvoDaysTextEl.className = "text-[9px] font-bold text-rose-400 truncate";
       } else {
         lvoDaysTextEl.innerText = `${lvoDaysRemaining} Days Remaining`;
-        lvoDaysTextEl.className = "text-slate-800 dark:text-slate-200 font-extrabold";
+        lvoDaysTextEl.className = "text-[9px] font-bold text-slate-400 truncate";
       }
     }
 
@@ -1985,17 +1985,17 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   if (leastDays <= 0 || isCaamLapsed || isMabLapsed) {
     if (ringLabelEl) {
       ringLabelEl.innerText = "RESTRICTED";
-      ringLabelEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300";
+      ringLabelEl.className = "px-2 py-0.5 rounded text-[11px] font-black uppercase bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300";
     }
   } else if (leastDays <= userThreshold) {
     if (ringLabelEl) {
       ringLabelEl.innerText = "ATTENTION";
-      ringLabelEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300";
+      ringLabelEl.className = "px-2 py-0.5 rounded text-[11px] font-black uppercase bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300";
     }
   } else {
     if (ringLabelEl) {
       ringLabelEl.innerText = "OPERATIONAL";
-      ringLabelEl.className = "px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300";
+      ringLabelEl.className = "px-2 py-0.5 rounded text-[11px] font-black uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300";
     }
   }
 
