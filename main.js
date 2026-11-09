@@ -1,4 +1,4 @@
-// ./main.js (0911_R407) - CertiFly Application Shell & Orchestrator
+// ./main.js (0911_R408) - CertiFly Application Shell & Orchestrator
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
@@ -2302,7 +2302,7 @@ ${badgeHtml}
         row.innerHTML = `
 <div>
   <div class="text-xs font-bold text-slate-800 dark:text-slate-200">${d.name}</div>
-  <div class="dyn-txt text-[10px] text-slate-400 tracking-wide uppercase pt-0.5 font-medium">${d.doneDate} → ${d.expiryDate}</div>
+  <div class="dyn-txt text-[10px] text-slate-400 tracking-wide uppercase pt-0.5 font-semibold">${d.doneDate} → ${d.expiryDate}</div>
 </div>
 ${badgeHtml}
 `;
