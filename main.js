@@ -1,4 +1,4 @@
-// ./main.js (0811_R405) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
+// ./main.js (0811_R406) - CertiFly Application Shell & Orchestrator (Grounded in 2810_R274)
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
@@ -2078,7 +2078,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
           if (isSupervisory) {
             if (q.status === "EXPIRED" || q.status === "ROLE_EXPIRED") {
               const label = isDfeQual(q.name) ? "Examiner Lapsed" : (isFiQual(q.name) ? "Instructor Lapsed" : "Role Lapsed");
-              badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-700">${label}</span>`;
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">${label}</span>`;
             } else if (q.status === "EXPIRING_SOON") {
               badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">${q.daysRemaining} days left</span>`;
             } else {
