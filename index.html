@@ -1,4 +1,4 @@
-<!-- ./index.html (0711_R418) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+<!-- ./index.html (0711_R419) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -712,6 +712,28 @@ navigator.serviceWorker.register('sw.js')
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
                             </svg>
                             <span id="pin-button-text">Bookmark</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="res-bottom-banner" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-md bg-slate-900/95 dark:bg-slate-950/95 text-white backdrop-blur-md p-3 rounded-2xl shadow-2xl border border-slate-700/80 flex items-center justify-between gap-2.5 transition-all hidden cursor-pointer">
+                    <div class="flex items-center gap-2 text-xs font-bold min-w-0 flex-1">
+                        <svg class="w-4 h-4 text-rose-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874-1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                        </svg>
+                        <div class="text-[10px] leading-tight truncate">
+                            <span class="text-rose-400 font-extrabold uppercase tracking-wide">MANDATORY:</span>
+                            <span class="text-slate-200 font-medium ml-1">Tap to view official CAAM eCLIPSE record</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <svg class="w-4 h-4 text-blue-400 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm4.28 10.28a.75.75 0 000-1.06l-3-3a.75.75 0 10-1.06 1.06l1.72 1.72H8.25a.75.75 0 000 1.5h5.69l-1.72 1.72a.75.75 0 101.06 1.06l3-3Z" clip-rule="evenodd" />
+                        </svg>
+                        <button id="res-bottom-banner-close" type="button" class="text-slate-400 hover:text-white p-1 rounded-lg cursor-pointer transition-colors ml-1" aria-label="Close Notice">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                         </button>
                     </div>
                 </div>
