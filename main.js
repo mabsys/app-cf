@@ -1,4 +1,4 @@
-// ./main.js (0911_R408) - CertiFly Application Shell & Orchestrator
+// ./main.js (0911_R409) - CertiFly Application Shell & Orchestrator
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
@@ -3489,10 +3489,6 @@ ${badgeHtml}
 
   const resOpenBtn = getResEl("res-open-original-btn");
   if (resOpenBtn) {
-    resOpenBtn.classList.remove("border-t", "border-slate-100", "dark:border-slate-800", "border-slate-200", "dark:border-slate-700");
-    if (resOpenBtn.parentNode) {
-      resOpenBtn.parentNode.classList.remove("border-t", "border-slate-100", "dark:border-slate-800", "border-slate-200", "dark:border-slate-700");
-    }
     resOpenBtn.onclick = () => {
       if (lastScannedUrl) {
         window.open(lastScannedUrl, "_blank");
