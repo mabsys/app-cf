@@ -1,4 +1,4 @@
-// ./js/ui.js (1011_R412) - View Switching & UI Management
+// ./js/ui.js (1011_R413) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -711,9 +711,9 @@ export function switchResultTab(tabName = 'overview') {
   const activeTab = tabs.includes(tabName) ? tabName : 'overview';
   localStorage.setItem('certifly_active_tab', activeTab);
 
-  const baseBtnClass = 'res-tab-btn py-2 px-1 rounded-xl text-[11px] transition-all flex items-center justify-center gap-1.5 cursor-pointer';
-  const activeClass = baseBtnClass + ' bg-blue-600 text-white shadow-xs font-extrabold';
-  const inactiveClass = baseBtnClass + ' text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent';
+  const baseBtnClass = 'res-tab-btn py-2.5 px-1 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer';
+  const activeClass = baseBtnClass + ' bg-blue-600 text-white shadow-xs';
+  const inactiveClass = baseBtnClass + ' text-slate-600 dark:text-slate-300 hover:text-slate-900 bg-transparent';
 
   tabs.forEach(t => {
     const btns = document.querySelectorAll('#res-tab-btn-' + t);
@@ -782,8 +782,8 @@ export function switchToolCategory(category) {
   const paneA = document.getElementById('cat-pane-qualifications');
   const paneB = document.getElementById('cat-pane-dutyrest');
 
-  const activeTabClass = 'cat-tab-btn active py-2.5 px-3 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 text-center flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-md cursor-pointer';
-  const inactiveTabClass = 'cat-tab-btn py-2.5 px-3 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 text-center flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer';
+  const activeTabClass = 'cat-tab-btn active py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 text-center flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-xs cursor-pointer';
+  const inactiveTabClass = 'cat-tab-btn py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 text-center flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer';
 
   if (normCategory === 'qualifications') {
     if (tabA) { tabA.className = activeTabClass; tabA.setAttribute('aria-selected', 'true'); }
@@ -831,8 +831,8 @@ export function switchActiveTool(rawId) {
 
   const tabA = document.getElementById('cat-tab-qualifications');
   const tabB = document.getElementById('cat-tab-dutyrest');
-  const activeTabClass = 'cat-tab-btn active py-2.5 px-3 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 text-center flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-md cursor-pointer';
-  const inactiveTabClass = 'cat-tab-btn py-2.5 px-3 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 text-center flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer';
+  const activeTabClass = 'cat-tab-btn active py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 text-center flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-xs cursor-pointer';
+  const inactiveTabClass = 'cat-tab-btn py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 text-center flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer';
   if (tabA && tabB) {
     if (isCatA) {
       tabA.className = activeTabClass; tabA.setAttribute('aria-selected', 'true');
