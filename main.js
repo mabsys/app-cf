@@ -1,7 +1,7 @@
-// ./main.js (0911_R409) - CertiFly Application Shell & Orchestrator
+// ./main.js (0911_R410) - CertiFly Application Shell & Orchestrator
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
-import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
+import { animateOverviewDashboard, animateOverviewEntrance } from './js/animations.js';
 import { initToolsModule, filterRecurrentCourses, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -2098,7 +2098,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
           row.innerHTML = `
 <div>
   <div class="text-xs font-bold text-slate-800 dark:text-slate-200">${q.name}</div>
-  <div class="dyn-txt text-[10px] text-slate-400 tracking-wide uppercase pt-0.5 font-semibold">${q.dateText || "No Expiry"}</div>
+  <div class="dyn-txt text-[10px] text-slate-400 uppercase pt-0.5 font-semibold">${q.dateText || "No Expiry"}</div>
 </div>
 ${badgeHtml}
 `;
@@ -2302,7 +2302,7 @@ ${badgeHtml}
         row.innerHTML = `
 <div>
   <div class="text-xs font-bold text-slate-800 dark:text-slate-200">${d.name}</div>
-  <div class="dyn-txt text-[10px] text-slate-400 tracking-wide uppercase pt-0.5 font-semibold">${d.doneDate} → ${d.expiryDate}</div>
+  <div class="dyn-txt text-[10px] text-slate-400 uppercase pt-0.5 font-semibold">${d.doneDate} → ${d.expiryDate}</div>
 </div>
 ${badgeHtml}
 `;
@@ -3245,71 +3245,6 @@ function initHistorySearchAndFilters() {
   });
 }
 
-let resultScrollObserver = null;
-let isBannerDismissed = false;
-
-function setupResultViewScrollBanner(caamResults) {
-  const banner = document.getElementById("res-bottom-banner");
-  const closeBtn = document.getElementById("res-bottom-banner-close");
-  const statusCard = document.getElementById("res-status-card");
-  const actionsFooter = document.getElementById("res-actions-footer");
-  const resView = document.getElementById("result-view");
-
-  if (!banner) return;
-
-  isBannerDismissed = false;
-  banner.classList.add("hidden");
-
-  banner.onclick = (e) => {
-    if (e.target.closest("#res-bottom-banner-close")) return;
-    if (lastScannedUrl) {
-      window.open(lastScannedUrl, "_blank");
-    } else if (caamResults && caamResults.qrImageUrl) {
-      window.open(caamResults.qrImageUrl, "_blank");
-    }
-  };
-
-  if (closeBtn) {
-    closeBtn.onclick = (e) => {
-      e.stopPropagation();
-      isBannerDismissed = true;
-      animateBottomBanner(banner, false);
-    };
-  }
-
-  if (resultScrollObserver) {
-    resultScrollObserver.disconnect();
-    resultScrollObserver = null;
-  }
-
-  if (!statusCard || !actionsFooter || typeof IntersectionObserver === "undefined") return;
-
-  let isStatusCardVisible = true;
-  let isFooterVisible = false;
-
-  function updateBannerVisibility() {
-    if (isBannerDismissed) return;
-    const shouldShow = !isStatusCardVisible && !isFooterVisible && resView && !resView.classList.contains("hidden");
-    animateBottomBanner(banner, shouldShow);
-  }
-
-  resultScrollObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.target === statusCard) {
-        isStatusCardVisible = entry.isIntersecting;
-      } else if (entry.target === actionsFooter) {
-        isFooterVisible = entry.isIntersecting;
-      }
-    });
-    updateBannerVisibility();
-  }, {
-    root: null,
-    threshold: 0.1
-  });
-
-  resultScrollObserver.observe(statusCard);
-  resultScrollObserver.observe(actionsFooter);
-}
 
 function renderResults(caamResults, mabResults = null) {
   const profile = getProfileData();
@@ -3440,7 +3375,7 @@ function renderResults(caamResults, mabResults = null) {
         row.innerHTML = `
 <div>
   <div class="text-xs font-bold text-slate-800 dark:text-slate-200">${q.name}</div>
-  <div class="dyn-txt text-[10px] text-slate-400 tracking-wide uppercase pt-0.5 font-semibold">${q.dateText || "No Expiry"}</div>
+  <div class="dyn-txt text-[10px] text-slate-400 uppercase pt-0.5 font-semibold">${q.dateText || "No Expiry"}</div>
 </div>
 ${badgeHtml}
 `;
@@ -3507,7 +3442,6 @@ ${badgeHtml}
 
   setupReverifyOnlineButton();
   setupPinCardButton(caamResults);
-  setupResultViewScrollBanner(caamResults);
   showView("result-view");
 }
 
