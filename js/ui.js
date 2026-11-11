@@ -1,6 +1,8 @@
-// ./js/ui.js (1011_R421) - View Switching & UI Management
+// ./js/ui.js (1011_R423) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
+
+import { animateTabBounce, animateTabContentEntrance } from './animations.js';
 
 import { setTopBanner, showToast } from './notifications.js';
 import { initToolsModule, runToolCalculation, setToolsTab, getToolsState, getSectorCount, setSectorCount } from './tools.js';
@@ -9,7 +11,6 @@ import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit
 import { topbarHTML } from './components/topbar.js';
 import { dockHTML } from './components/dock.js';
 import { menuHTML } from './components/menu.js';
-import { animateTabBounce, animateTabContentEntrance } from './animations.js';
 
 export function initSubTabDragScroll() {
   const strips = document.querySelectorAll('.tools-subtab-strip');
@@ -330,6 +331,7 @@ export function closeMenu() {
       if (distFromBottom <= 64) {
         progress = distFromBottom / 64;
       }
+      currentTranslateY = progress * topbarHeight;
       dock.style.transform = `translateY(${progress * dockMaxTravel}px)`;
     }
 
@@ -444,12 +446,19 @@ export function initNavigationBars() {
 
     if (clampedScrollY <= 2) {
       currentTranslateY = 0;
-    } else if (distFromBottom <= 64) {
-      const bottomFactor = distFromBottom / 64;
-      currentTranslateY = topbarHeight * bottomFactor;
-    } else if (delta !== 0) {
-      currentTranslateY += delta;
-      currentTranslateY = Math.max(0, Math.min(currentTranslateY, topbarHeight));
+    } else if (delta > 0) {
+      // Scrolling DOWN
+      if (distFromBottom <= 64) {
+        // Smoothly pull dock/topbar down as user reaches bottom of document
+        const bottomTargetY = topbarHeight * (distFromBottom / 64);
+        currentTranslateY = Math.min(currentTranslateY, bottomTargetY);
+      } else {
+        // Midway scroll down: push currentTranslateY up to hide dock/topbar
+        currentTranslateY = Math.min(topbarHeight, currentTranslateY + delta);
+      }
+    } else if (delta < 0) {
+      // Scrolling UP: smoothly bring dock/topbar back into view without sudden pops or layout glitches
+      currentTranslateY = Math.max(0, currentTranslateY + delta);
     }
 
     const progress = currentTranslateY / topbarHeight;
@@ -1106,7 +1115,7 @@ if (typeof window !== 'undefined') {
   window.switchTier1 = switchToolCategory;
   window.switchSubTab = switchActiveTool;
 }
-// Auto-realign sliding tab indicators on window resize
+/// Auto-realign sliding tab indicators on window resize
 if (typeof window !== 'undefined') {
   window.addEventListener('resize', () => {
     const resTab = localStorage.getItem('certifly_active_tab') || 'overview';
