@@ -1,4 +1,4 @@
-// ./js/animations.js (0811_R392) - CertiFly Centralized Motion & Animation Engine
+// ./js/animations.js (1011_R395) - CertiFly Centralized Motion & Animation Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -450,6 +450,67 @@ export function animateBottomBanner(bannerEl, show) {
 }
 
 
+
+
+/**
+ * Animates a sliding active backdrop pill to match the targeted tab button.
+ * @param {HTMLElement} activeBtn - The clicked active button element.
+ * @param {HTMLElement} containerEl - The parent grid container element.
+ * @param {HTMLElement} indicatorEl - The absolute backdrop indicator div.
+ */
+export function animateTabIndicator(activeBtn, containerEl, indicatorEl) {
+  if (!activeBtn || !containerEl || !indicatorEl) return;
+  if (!isAnimeAvailable()) {
+    const containerRect = containerEl.getBoundingClientRect();
+    const btnRect = activeBtn.getBoundingClientRect();
+    indicatorEl.style.left = (btnRect.left - containerRect.left) + 'px';
+    indicatorEl.style.width = btnRect.width + 'px';
+    return;
+  }
+
+  const containerRect = containerEl.getBoundingClientRect();
+  const btnRect = activeBtn.getBoundingClientRect();
+
+  const targetLeft = btnRect.left - containerRect.left;
+  const targetWidth = btnRect.width;
+
+  runAnime({
+    targets: indicatorEl,
+    left: targetLeft,
+    width: targetWidth,
+    duration: 320,
+    easing: 'cubicBezier(0.34, 1.56, 0.64, 1)'
+  });
+
+  runAnime({
+    targets: activeBtn,
+    scale: [0.94, 1.02, 1],
+    duration: 280,
+    easing: 'easeOutQuad'
+  });
+}
+
+/**
+ * Smoothly reveals the newly selected tab content panel.
+ * @param {HTMLElement} contentPane - The target panel container div.
+ */
+export function animateTabContentEntrance(contentPane) {
+  if (!contentPane) return;
+  if (!isAnimeAvailable()) {
+    contentPane.style.opacity = '1';
+    contentPane.style.transform = 'translateY(0)';
+    return;
+  }
+
+  runAnime({
+    targets: contentPane,
+    opacity: [0, 1],
+    translateY: [8, 0],
+    duration: 250,
+    easing: 'easeOutCubic'
+  });
+}
+
 if (typeof window !== "undefined") {
   window.CertiFlyAnimations = {
     isAnimeAvailable,
@@ -465,6 +526,8 @@ if (typeof window !== "undefined") {
     animateRecencyCardExpansion,
     animateViewTransition,
     animateListEntrance,
-    animateBottomBanner
+    animateBottomBanner,
+    animateTabIndicator,
+    animateTabContentEntrance
   };
 }
