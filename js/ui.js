@@ -1,4 +1,4 @@
-// ./js/ui.js (1011_R415) - View Switching & UI Management
+// ./js/ui.js (1011_R416) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -711,8 +711,8 @@ export function switchResultTab(tabName = 'overview') {
   const activeTab = tabs.includes(tabName) ? tabName : 'overview';
   localStorage.setItem('certifly_active_tab', activeTab);
 
-  const activeClass = 'res-tab-btn py-2.5 px-1 rounded-xl text-xs font-bold transition-all bg-blue-600 text-white shadow-xs flex items-center justify-center gap-1.5 cursor-pointer';
-  const inactiveClass = 'res-tab-btn py-2.5 px-1 rounded-xl text-xs font-bold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 flex items-center justify-center gap-1.5 cursor-pointer';
+  const activeClass = 'res-tab-btn py-2.5 px-1 rounded-xl text-xs font-bold transition-colors bg-blue-600 text-white shadow-xs flex items-center justify-center gap-1.5 cursor-pointer';
+  const inactiveClass = 'res-tab-btn py-2.5 px-1 rounded-xl text-xs font-bold transition-colors text-slate-600 dark:text-slate-300 hover:text-slate-900 flex items-center justify-center gap-1.5 cursor-pointer';
 
   tabs.forEach(t => {
     const btns = document.querySelectorAll('#res-tab-btn-' + t);
