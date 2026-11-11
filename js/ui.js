@@ -1,4 +1,4 @@
-// ./js/ui.js (1011_R414) - View Switching & UI Management
+// ./js/ui.js (1011_R415) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -711,21 +711,28 @@ export function switchResultTab(tabName = 'overview') {
   const activeTab = tabs.includes(tabName) ? tabName : 'overview';
   localStorage.setItem('certifly_active_tab', activeTab);
 
-  const baseBtnClass = 'res-tab-btn py-2.5 px-1 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer';
-  const activeClass = baseBtnClass + ' bg-blue-600 text-white shadow-xs';
-  const inactiveClass = baseBtnClass + ' text-slate-600 dark:text-slate-300 hover:text-slate-900 bg-transparent';
+  const activeClass = 'res-tab-btn py-2.5 px-1 rounded-xl text-xs font-bold transition-all bg-blue-600 text-white shadow-xs flex items-center justify-center gap-1.5 cursor-pointer';
+  const inactiveClass = 'res-tab-btn py-2.5 px-1 rounded-xl text-xs font-bold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 flex items-center justify-center gap-1.5 cursor-pointer';
 
   tabs.forEach(t => {
     const btns = document.querySelectorAll('#res-tab-btn-' + t);
     const panes = document.querySelectorAll('#tab-' + t + '-content');
 
     btns.forEach(btn => {
+      const wasActive = btn.classList.contains('bg-blue-600');
       btn.className = (t === activeTab) ? activeClass : inactiveClass;
+      if (t === activeTab && !wasActive && typeof animateTabBounce === 'function') {
+        animateTabBounce(btn);
+      }
     });
 
     panes.forEach(pane => {
       if (t === activeTab) {
+        const wasHidden = pane.classList.contains('hidden');
         pane.classList.remove('hidden');
+        if (wasHidden && typeof animateTabContentEntrance === 'function') {
+          animateTabContentEntrance(pane);
+        }
       } else {
         pane.classList.add('hidden');
       }
@@ -782,13 +789,21 @@ export function switchToolCategory(category) {
   const paneA = document.getElementById('cat-pane-qualifications');
   const paneB = document.getElementById('cat-pane-dutyrest');
 
-  const activeTabClass = 'cat-tab-btn active py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 text-center flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-xs cursor-pointer';
-  const inactiveTabClass = 'cat-tab-btn py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 text-center flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer';
+  const activeTabClass = 'cat-tab-btn active py-2.5 px-3 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-xs cursor-pointer';
+  const inactiveTabClass = 'cat-tab-btn py-2.5 px-3 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer';
 
   if (normCategory === 'qualifications') {
-    if (tabA) { tabA.className = activeTabClass; tabA.setAttribute('aria-selected', 'true'); }
+    if (tabA) {
+      tabA.className = activeTabClass;
+      tabA.setAttribute('aria-selected', 'true');
+      if (typeof animateTabBounce === 'function') animateTabBounce(tabA);
+    }
     if (tabB) { tabB.className = inactiveTabClass; tabB.setAttribute('aria-selected', 'false'); }
-    if (paneA) paneA.classList.remove('hidden');
+    if (paneA) {
+      const wasHidden = paneA.classList.contains('hidden');
+      paneA.classList.remove('hidden');
+      if (wasHidden && typeof animateTabContentEntrance === 'function') animateTabContentEntrance(paneA);
+    }
     if (paneB) paneB.classList.add('hidden');
 
     const catACards = ['tool-card-medical', 'tool-card-ppc', 'tool-card-recurrent', 'tool-card-recency'];
@@ -796,9 +811,17 @@ export function switchToolCategory(category) {
     switchActiveTool(targetCard);
   } else {
     if (tabA) { tabA.className = inactiveTabClass; tabA.setAttribute('aria-selected', 'false'); }
-    if (tabB) { tabB.className = activeTabClass; tabB.setAttribute('aria-selected', 'true'); }
+    if (tabB) {
+      tabB.className = activeTabClass;
+      tabB.setAttribute('aria-selected', 'true');
+      if (typeof animateTabBounce === 'function') animateTabBounce(tabB);
+    }
     if (paneA) paneA.classList.add('hidden');
-    if (paneB) paneB.classList.remove('hidden');
+    if (paneB) {
+      const wasHidden = paneB.classList.contains('hidden');
+      paneB.classList.remove('hidden');
+      if (wasHidden && typeof animateTabContentEntrance === 'function') animateTabContentEntrance(paneB);
+    }
 
     const catBCards = ['tool-card-standby', 'tool-card-maxfdp', 'tool-card-preflight', 'tool-card-cumulative'];
     const targetCard = (state && catBCards.includes(state.activeToolId)) ? state.activeToolId : 'tool-card-standby';
