@@ -1,4 +1,4 @@
-// ./js/tools.js (1011_R432) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (1011_R433) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1528,7 +1528,7 @@ export function normalizeOutput(toolType, rawResult) {
         : 'Acclimatised\nBand 0600-0759';
 
       const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? [...rawResult.notes] : [];
-      if (isProhibited && rawResult && rawResult.prohibitionReason) {
+      if (isProhibited && rawResult && rawResult.prohibitionReason && !calcNotes.includes(rawResult.prohibitionReason)) {
         calcNotes.unshift(rawResult.prohibitionReason);
       }
       return {
@@ -1680,7 +1680,8 @@ export function updateSlot4Audit(toolId, calculationNotes = [], baseCitation = '
   }
 
   // 2. Unhide [ Notes ] trigger button ONLY if there are dynamic calculationNotes
-  const notesArr = Array.isArray(calculationNotes) ? calculationNotes : (calculationNotes ? [String(calculationNotes)] : []);
+  const rawNotes = Array.isArray(calculationNotes) ? calculationNotes : (calculationNotes ? [String(calculationNotes)] : []);
+  const notesArr = Array.from(new Set(rawNotes.filter(Boolean)));
   if (notesArr.length > 0) {
     if (triggerBtn) triggerBtn.classList.remove('hidden');
     if (overlayContent) {
