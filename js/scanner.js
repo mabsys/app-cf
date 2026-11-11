@@ -1,7 +1,7 @@
-// ./js/scanner.js (1011_R419) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (1011_R420) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
 import { getProfileData, getScanHistory } from './storage.js';
-import { animateTabIndicator, animateTabContentEntrance } from './animations.js';
+import { animateTabBounce, animateTabContentEntrance } from './animations.js';
 
 let qrScanner = null;
 let currentCameraDeviceId = null;
@@ -331,9 +331,6 @@ export function stopScanner() {
 }
 
 export function switchScanHubTab(tabName) {
-  const container = document.getElementById('scan-tab-container');
-  const indicator = document.getElementById('scan-tab-indicator');
-
   const tabCamera = document.getElementById('camera-scan-tab');
   const tabQrPass = document.getElementById('my-qr-pass-tab');
   const tabManual = document.getElementById('manual-entry-tab');
@@ -342,8 +339,8 @@ export function switchScanHubTab(tabName) {
   const btnQrPass = document.getElementById('tab-qrpass-btn');
   const btnManual = document.getElementById('tab-manual-btn');
 
-  const activeBtnClass = 'relative z-10 py-2.5 px-1 rounded-xl text-xs font-bold transition-colors text-white flex items-center justify-center gap-1.5 cursor-pointer';
-  const inactiveBtnClass = 'relative z-10 py-2.5 px-1 rounded-xl text-xs font-bold transition-colors text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 flex items-center justify-center gap-1.5 cursor-pointer';
+  const activeBtnClass = 'py-2.5 px-1 rounded-xl text-xs font-bold transition-all bg-blue-600 text-white shadow-xs flex items-center justify-center gap-1.5 cursor-pointer';
+  const inactiveBtnClass = 'py-2.5 px-1 rounded-xl text-xs font-bold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 flex items-center justify-center gap-1.5 cursor-pointer';
 
   if (tabCamera) tabCamera.classList.add('hidden');
   if (tabQrPass) tabQrPass.classList.add('hidden');
@@ -396,8 +393,8 @@ export function switchScanHubTab(tabName) {
     renderRecentPilotsList();
   }
 
-  if (activeBtn && container && indicator && typeof animateTabIndicator === 'function') {
-    animateTabIndicator(activeBtn, container, indicator);
+  if (activeBtn && typeof animateTabBounce === 'function') {
+    animateTabBounce(activeBtn);
   }
 }
 
