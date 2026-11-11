@@ -1,4 +1,4 @@
-// ./js/tools.js (1011_R430) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (1011_R431) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1650,7 +1650,7 @@ export const BASE_CITATIONS = {
   cumulative: 'Grounded in CAAM CAD 1901 Rolling Flight & Duty Time Caps.'
 };
 
-export function updateSlot4Audit(toolId, auditNotes = [], baseCitation = '') {
+export function updateSlot4Audit(toolId, calculationNotes = [], baseCitation = '') {
   const keyMap = {
     'medical': 'medical',
     'ppc': 'ppc',
@@ -1669,19 +1669,24 @@ export function updateSlot4Audit(toolId, auditNotes = [], baseCitation = '') {
   const triggerBtn = document.getElementById(`btn-audit-notes-trigger-${suffix}`);
   const overlayContent = document.getElementById(`audit-overlay-content-${suffix}`);
 
+  // 1. Footer paragraph strictly displays brief base citation only
   if (auditTextEl && targetCitation) {
     auditTextEl.innerText = targetCitation;
   }
 
-  const notesArr = Array.isArray(auditNotes) ? auditNotes : (auditNotes ? [String(auditNotes)] : []);
+  // 2. Unhide [ Notes ] trigger button ONLY if there are dynamic calculationNotes
+  const notesArr = Array.isArray(calculationNotes) ? calculationNotes : (calculationNotes ? [String(calculationNotes)] : []);
   if (notesArr.length > 0) {
     if (triggerBtn) triggerBtn.classList.remove('hidden');
     if (overlayContent) {
       overlayContent.innerHTML = notesArr.map(note => `<div class="flex items-start gap-2 py-1.5 border-b border-slate-200/80 dark:border-slate-800/50"><span class="text-blue-600 dark:text-blue-400 font-bold shrink-0">•</span><span class="leading-snug text-slate-700 dark:text-slate-300">${note}</span></div>`).join('');
     }
   } else {
+    // Keep it clean and simple — keep Notes button hidden when no calculation notes exist
     if (triggerBtn) triggerBtn.classList.add('hidden');
-    if (overlayContent) overlayContent.innerHTML = '<p class="text-slate-400 dark:text-slate-500 italic py-2">No additional calculation notes for this entry.</p>';
+    if (overlayContent) {
+      overlayContent.innerHTML = '<p class="text-slate-400 dark:text-slate-500 italic py-2">No additional calculation notes for this entry.</p>';
+    }
   }
 }
 
@@ -1762,9 +1767,10 @@ function renderToolsOutputCardForTool(toolType, normalized) {
     }
   }
 
-  // Slot 4: Brief Base Citation & Audit Overlay Routing
-  const notes = (normalized && (normalized.auditNotes || normalized.calculationNotes)) ? (normalized.auditNotes || normalized.calculationNotes) : [];
-  updateSlot4Audit(suffix, notes, BASE_CITATIONS[suffix]);
+  // Slot 4: Brief Base Citation & Audit Overlay Routing (Unhide Notes trigger ONLY if calculationNotes exist)
+  const calcNotes = (normalized && normalized.calculationNotes && Array.isArray(normalized.calculationNotes)) ? normalized.calculationNotes : [];
+  const baseCitation = (normalized && normalized.auditNotes) ? (Array.isArray(normalized.auditNotes) ? normalized.auditNotes[0] : normalized.auditNotes) : BASE_CITATIONS[suffix];
+  updateSlot4Audit(suffix, calcNotes, baseCitation);
 }
 
 export function renderNormalizedOutput(normalized) {
