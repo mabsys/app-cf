@@ -1,4 +1,4 @@
-// ./js/scanner.js (1011_R422) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (1011_R425) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
 import { getProfileData, getScanHistory } from './storage.js';
 import { animateTabBounce, animateTabContentEntrance } from './animations.js';
