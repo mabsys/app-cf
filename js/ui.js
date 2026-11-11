@@ -1,8 +1,6 @@
-// ./js/ui.js (1011_R426) - View Switching & UI Management
+// ./js/ui.js (1011_R421) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
-
-import { animateTabBounce, animateTabContentEntrance } from './animations.js';
 
 import { setTopBanner, showToast } from './notifications.js';
 import { initToolsModule, runToolCalculation, setToolsTab, getToolsState, getSectorCount, setSectorCount } from './tools.js';
@@ -11,6 +9,7 @@ import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit
 import { topbarHTML } from './components/topbar.js';
 import { dockHTML } from './components/dock.js';
 import { menuHTML } from './components/menu.js';
+import { animateTabBounce, animateTabContentEntrance } from './animations.js';
 
 export function initSubTabDragScroll() {
   const strips = document.querySelectorAll('.tools-subtab-strip');
@@ -331,8 +330,6 @@ export function closeMenu() {
       if (distFromBottom <= 64) {
         progress = distFromBottom / 64;
       }
-      currentDockY = progress * topbarHeight;
-      currentTopbarY = progress * topbarHeight;
       dock.style.transform = `translateY(${progress * dockMaxTravel}px)`;
     }
 
@@ -430,8 +427,7 @@ export function initNavigationBars() {
   }
 
   const dockMaxTravel = 80;
-  let currentDockY = 0;
-  let currentTopbarY = 0;
+  let currentTranslateY = 0;
   const getMaxScrollY = () => Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
 
   let lastClampedScrollY = Math.max(0, Math.min(window.scrollY, getMaxScrollY()));
@@ -446,24 +442,14 @@ export function initNavigationBars() {
 
     const distFromBottom = maxScrollY - clampedScrollY;
 
-    const maxStep = 14;
     if (clampedScrollY <= 2) {
       currentTranslateY = 0;
-    } else if (delta > 0) {
-      // Scrolling DOWN
-      if (distFromBottom <= 64) {
-        // Smoothly pull dock into view as user reaches end of document
-        const bottomTargetY = topbarHeight * (distFromBottom / 64);
-        currentTranslateY = Math.min(currentTranslateY, bottomTargetY);
-      } else {
-        // Midway scroll down: push dock down offscreen smoothly (capped at maxStep per event frame)
-        const step = Math.min(delta, maxStep);
-        currentTranslateY = Math.min(topbarHeight, currentTranslateY + step);
-      }
-    } else if (delta < 0) {
-      // Scrolling UP: bring dock smoothly back into view (capped at maxStep per event frame to prevent sudden pops)
-      const step = Math.max(delta, -maxStep);
-      currentTranslateY = Math.max(0, currentTranslateY + step);
+    } else if (distFromBottom <= 64) {
+      const bottomFactor = distFromBottom / 64;
+      currentTranslateY = topbarHeight * bottomFactor;
+    } else if (delta !== 0) {
+      currentTranslateY += delta;
+      currentTranslateY = Math.max(0, Math.min(currentTranslateY, topbarHeight));
     }
 
     const progress = currentTranslateY / topbarHeight;
@@ -1120,7 +1106,7 @@ if (typeof window !== 'undefined') {
   window.switchTier1 = switchToolCategory;
   window.switchSubTab = switchActiveTool;
 }
-/// Auto-realign sliding tab indicators on window resize
+// Auto-realign sliding tab indicators on window resize
 if (typeof window !== 'undefined') {
   window.addEventListener('resize', () => {
     const resTab = localStorage.getItem('certifly_active_tab') || 'overview';
