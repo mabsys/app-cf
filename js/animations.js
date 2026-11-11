@@ -1,4 +1,4 @@
-// ./js/animations.js (1011_R395) - CertiFly Centralized Motion & Animation Engine
+// ./js/animations.js (1011_R396) - CertiFly Centralized Motion & Animation Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -458,36 +458,26 @@ export function animateBottomBanner(bannerEl, show) {
  * @param {HTMLElement} containerEl - The parent grid container element.
  * @param {HTMLElement} indicatorEl - The absolute backdrop indicator div.
  */
-export function animateTabIndicator(activeBtn, containerEl, indicatorEl) {
-  if (!activeBtn || !containerEl || !indicatorEl) return;
-  if (!isAnimeAvailable()) {
-    const containerRect = containerEl.getBoundingClientRect();
-    const btnRect = activeBtn.getBoundingClientRect();
-    indicatorEl.style.left = (btnRect.left - containerRect.left) + 'px';
-    indicatorEl.style.width = btnRect.width + 'px';
-    return;
-  }
-
-  const containerRect = containerEl.getBoundingClientRect();
-  const btnRect = activeBtn.getBoundingClientRect();
-
-  const targetLeft = btnRect.left - containerRect.left;
-  const targetWidth = btnRect.width;
-
+/**
+ * Tactile micro-bounce scale response on active tab button click
+ * @param {HTMLElement} btnEl - Active tab button element
+ */
+export function animateTabBounce(btnEl) {
+  if (!btnEl || !isAnimeAvailable()) return;
   runAnime({
-    targets: indicatorEl,
-    left: targetLeft,
-    width: targetWidth,
-    duration: 320,
-    easing: 'cubicBezier(0.34, 1.56, 0.64, 1)'
-  });
-
-  runAnime({
-    targets: activeBtn,
-    scale: [0.94, 1.02, 1],
-    duration: 280,
+    targets: btnEl,
+    scale: [0.95, 1.02, 1],
+    duration: 260,
     easing: 'easeOutQuad'
   });
+}
+
+/**
+ * Backward compatible helper for sliding indicator or tab bounce
+ */
+export function animateTabIndicator(activeBtn) {
+  if (!activeBtn) return;
+  animateTabBounce(activeBtn);
 }
 
 /**
@@ -513,6 +503,7 @@ export function animateTabContentEntrance(contentPane) {
 
 if (typeof window !== "undefined") {
   window.CertiFlyAnimations = {
+    animateTabBounce,
     isAnimeAvailable,
     runAnime,
     runStagger,
