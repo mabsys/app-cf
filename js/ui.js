@@ -1,4 +1,4 @@
-// ./js/ui.js (1111_R429) - View Switching & UI Management
+// ./js/ui.js (1111_R430) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -427,7 +427,7 @@ export function initNavigationBars() {
   }
 
   const dockMaxTravel = 80;
-  let currentTranslateY = 0;
+  currentTranslateY = 0;
   const getMaxScrollY = () => Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
 
   let lastClampedScrollY = Math.max(0, Math.min(window.scrollY, getMaxScrollY()));
@@ -580,6 +580,7 @@ export function initNavigationBars() {
   updateFreshnessLimitPills();
 }
 
+let currentTranslateY = 0;
 let offlineHistoryToastShown = false;
 
 export function updateNetworkStatus() {
