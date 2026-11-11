@@ -1,4 +1,4 @@
-// ./js/components/menu.js (1111_R436) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
+// ./js/components/menu.js (1111_R437) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
 
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
@@ -19,7 +19,7 @@ export const menuHTML = `
     <div id="pane-main" class="w-full transition-opacity duration-300 ease-in-out">
       <div class="flex flex-col gap-2.5 px-1">
         <!-- Category 0: My Profile -->
-        <button class="nav-item-btn w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 active:scale-[0.98] transition-all" data-target="pane-profile">
+        <button class="nav-item-btn w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 active:scale-[0.98] transition-all cursor-pointer" data-target="pane-profile">
           <div class="flex items-center gap-3.5">
             <div class="p-2.5 bg-slate-200/80 dark:bg-slate-700/60 text-slate-700 dark:text-slate-200 rounded-xl">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>
@@ -33,42 +33,42 @@ export const menuHTML = `
         </button>
 
         <!-- Category 1: App Preferences -->
-        <button class="nav-item-btn w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 active:scale-[0.98] transition-all" data-target="pane-settings">
+        <button class="nav-item-btn w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 active:scale-[0.98] transition-all cursor-pointer" data-target="pane-settings">
           <div class="flex items-center gap-3.5">
             <div class="p-2.5 bg-slate-200/80 dark:bg-slate-700/60 text-slate-700 dark:text-slate-200 rounded-xl">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.27 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527a1.125 1.125 0 01-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             </div>
             <div class="text-left">
               <div class="text-xs font-bold text-slate-800 dark:text-slate-100">App Preferences</div>
-              <div class="text-[10px] text-slate-400">Cockpit theme, font scaling & alert thresholds</div>
+              <div class="text-[10px] text-slate-400">Cockpit theme, font scaling, alerts & festive overlays</div>
             </div>
           </div>
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
         </button>
 
         <!-- Category 2: Data & Storage -->
-        <button class="nav-item-btn w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 active:scale-[0.98] transition-all" data-target="pane-storage">
+        <button class="nav-item-btn w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 active:scale-[0.98] transition-all cursor-pointer" data-target="pane-storage">
           <div class="flex items-center gap-3.5">
             <div class="p-2.5 bg-slate-200/80 dark:bg-slate-700/60 text-slate-700 dark:text-slate-200 rounded-xl">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 5.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125"></path></svg>
             </div>
             <div class="text-left">
               <div class="text-xs font-bold text-slate-800 dark:text-slate-100">Data & Storage</div>
-              <div class="text-[10px] text-slate-400">Scan history limit & local cache management</div>
+              <div class="text-[10px] text-slate-400">Local scan history limits & application cache management</div>
             </div>
           </div>
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
         </button>
 
         <!-- Category 3: About & Support -->
-        <button class="nav-item-btn w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 active:scale-[0.98] transition-all" data-target="pane-about">
+        <button class="nav-item-btn w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 active:scale-[0.98] transition-all cursor-pointer" data-target="pane-about">
           <div class="flex items-center gap-3.5">
             <div class="p-2.5 bg-slate-200/80 dark:bg-slate-700/60 text-slate-700 dark:text-slate-200 rounded-xl">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"></path></svg>
             </div>
             <div class="text-left">
               <div class="text-xs font-bold text-slate-800 dark:text-slate-100">About & Support</div>
-              <div class="text-[10px] text-slate-400">App info, version status & user guide</div>
+              <div class="text-[10px] text-slate-400">App version, user manual & regulatory reference notes</div>
             </div>
           </div>
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
@@ -76,156 +76,187 @@ export const menuHTML = `
       </div>
     </div>
 
-    <!-- SUB-PANE 0: MY PROFILE -->
+    <!-- SUB-PANE 0: MY PROFILE (COLLAPSIBLE ACCORDIONS) -->
     <div id="pane-profile" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
-      <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1">
+      <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1 cursor-pointer">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
       
       <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-3.5 px-1 tracking-normal">My Credentials Setup</h3>
 
-      <!-- Digital Licence Source -->
-      <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs mb-2">
-        <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2.5">Digital Licence Source</label>
-
-        <div class="grid grid-cols-2 gap-2 mb-3">
-          <button id="profile-mode-qr-btn" type="button" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z" /></svg>
-            Scan Licence QR
+      <div class="flex flex-col gap-2.5">
+        <!-- ACCORDION 1: DIGITAL LICENCE SOURCE (DEFAULT EXPANDED) -->
+        <div class="accordion-card bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 overflow-hidden shadow-xs">
+          <button type="button" class="accordion-header w-full p-3.5 flex items-center justify-between text-left cursor-pointer" onclick="if(typeof toggleProfileAccordionSection === 'function') toggleProfileAccordionSection('licence');">
+            <div class="flex items-center gap-2.5">
+              <div class="p-1.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5Z" /></svg>
+              </div>
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-100">Digital Licence & QR Source</span>
+            </div>
+            <svg id="arrow-licence" class="w-4 h-4 text-slate-400 transition-transform duration-300 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
           </button>
 
-          <button id="profile-mode-url-btn" type="button" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white shadow-xs">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/></svg>
-            Paste URL
+          <div id="section-content-licence" class="p-3.5 pt-0 border-t border-slate-200/60 dark:border-slate-700/50">
+            <label class="text-[10px] font-extrabold text-slate-400 uppercase block my-2.5">Digital Licence Source</label>
+
+            <div class="grid grid-cols-2 gap-2 mb-3">
+              <button id="profile-mode-qr-btn" type="button" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z" /></svg>
+                Scan Licence QR
+              </button>
+
+              <button id="profile-mode-url-btn" type="button" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-xs cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/></svg>
+                Paste URL
+              </button>
+            </div>
+
+            <div id="profile-source-container" class="w-full">
+              <div id="profile-qr-box" class="hidden flex flex-col gap-2">
+                <div id="profile-qr-reader-container" class="w-full overflow-hidden rounded-2xl bg-slate-900 aspect-square flex items-center justify-center relative shadow-inner">
+                  <video id="profile-qr-video" class="w-full h-full object-cover" playsinline webkit-playsinline muted></video>
+                  <div id="profile-qr-reticle" class="absolute w-44 h-44 border-2 border-dashed border-white/80 rounded-2xl pointer-events-none transition-all shadow-[0_0_0_9999px_rgba(15,23,42,0.45)]"></div>
+                  <div class="absolute bottom-4 inset-x-0 flex justify-center pointer-events-none z-10">
+                    <span id="profile-qr-guidance-pill" class="text-[10px] font-bold text-white bg-black/75 px-3.5 py-1.5 rounded-2xl backdrop-blur-md uppercase tracking-wider shadow-sm text-center border border-white/10 leading-tight flex flex-col items-center gap-0.5">
+                      <span>Place QR code within scan area</span>
+                      <span class="text-[9px] text-slate-300 font-medium normal-case tracking-normal">Avoid glare &amp; shadows</span>
+                    </span>
+                  </div>
+                </div>
+
+                <div id="profile-scanner-controls" class="hidden flex flex-col gap-2 mt-1">
+                  <button id="profile-stop-qr-btn" type="button" class="w-full bg-slate-900 hover:bg-slate-950 text-white font-bold py-2.5 px-3 rounded-xl transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z"/></svg>
+                    Stop Scanner
+                  </button>
+
+                  <div class="grid grid-cols-2 gap-2">
+                    <button id="profile-cycle-btn" type="button" class="py-2 px-3 bg-slate-200/80 dark:bg-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-bold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                      Switch Lens
+                    </button>
+
+                    <button id="profile-upload-qr-btn" type="button" class="py-2 px-3 bg-slate-200/80 dark:bg-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-bold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                      Scan Photo
+                    </button>
+                  </div>
+
+                  <button id="profile-torch-btn" type="button" class="w-full py-2 px-3 bg-slate-200/80 dark:bg-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-bold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+                    Flashlight
+                  </button>
+
+                  <input type="file" id="profile-qr-file-input" accept="image/*" class="hidden">
+                </div>
+              </div>
+
+              <div id="profile-url-box" class="flex flex-col gap-2">
+                <div class="relative w-full">
+                  <input type="url" id="profile-url-input" placeholder="https://eclipse.caam.gov.my/ELICENSING/..." class="w-full p-2.5 pr-8 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none transition-all">
+                  <button id="profile-url-clear-btn" type="button" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer" title="Clear URL">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+                <p class="text-[9px] text-slate-400">Paste your official eCLIPSE URL directly if QR camera scanning is unavailable.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACCORDION 2: COMPANY FLIGHT DOCUMENTS (PDF) (SIDE-BY-SIDE GRID) -->
+        <div class="accordion-card bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 overflow-hidden shadow-xs">
+          <button type="button" class="accordion-header w-full p-3.5 flex items-center justify-between text-left cursor-pointer" onclick="if(typeof toggleProfileAccordionSection === 'function') toggleProfileAccordionSection('docs');">
+            <div class="flex items-center gap-2.5">
+              <div class="p-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+              </div>
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-100">Company Documents (PDF)</span>
+            </div>
+            <svg id="arrow-docs" class="w-4 h-4 text-slate-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
           </button>
-        </div>
 
-        <div id="profile-source-container" class="w-full">
-          <div id="profile-qr-box" class="hidden flex flex-col gap-2">
-            <div id="profile-qr-reader-container" class="w-full overflow-hidden rounded-2xl bg-slate-900 aspect-square flex items-center justify-center relative shadow-inner">
-              <video id="profile-qr-video" class="w-full h-full object-cover" playsinline webkit-playsinline muted></video>
-              <div id="profile-qr-reticle" class="absolute w-44 h-44 border-2 border-dashed border-white/80 rounded-2xl pointer-events-none transition-all shadow-[0_0_0_9999px_rgba(15,23,42,0.45)]"></div>
-              <div class="absolute bottom-4 inset-x-0 flex justify-center pointer-events-none z-10">
-                <span id="profile-qr-guidance-pill" class="text-[10px] font-bold text-white bg-black/75 px-3.5 py-1.5 rounded-2xl backdrop-blur-md uppercase tracking-wider shadow-sm text-center border border-white/10 leading-tight flex flex-col items-center gap-0.5">
-                  <span>Place QR code within scan area</span>
-                  <span class="text-[9px] text-slate-300 font-medium normal-case tracking-normal">Avoid glare &amp; shadows</span>
-                </span>
-              </div>
-            </div>
-
-            <div id="profile-scanner-controls" class="hidden flex flex-col gap-2 mt-1">
-              <button id="profile-stop-qr-btn" type="button" class="w-full bg-slate-900 hover:bg-slate-950 text-white font-bold py-2.5 px-3 rounded-xl transition-all text-xs flex items-center justify-center gap-1.5">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z"/></svg>
-                Stop Scanner
-              </button>
-
-              <div class="grid grid-cols-2 gap-2">
-                <button id="profile-cycle-btn" type="button" class="py-2.5 px-3 bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5 shadow-xs">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
-                  Switch Lens
-                </button>
-
-                <button id="profile-upload-qr-btn" type="button" class="py-2 px-3 bg-slate-200/80 dark:bg-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-bold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
-                  Scan Photo
-                </button>
+          <div id="section-content-docs" class="p-3.5 pt-0 border-t border-slate-200/60 dark:border-slate-700/50 hidden">
+            <div class="grid grid-cols-2 gap-2 my-2.5">
+              <!-- Left Col: Attestation PDF -->
+              <div class="flex flex-col gap-1.5 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                <label class="text-[9px] font-extrabold text-slate-400 uppercase truncate">Company Attestation</label>
+                <label for="profile-pdf-file" class="cursor-pointer bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 flex items-center justify-between text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:border-blue-500 transition-colors">
+                  <span id="profile-pdf-label" class="truncate">Select PDF...</span>
+                  <svg class="w-3.5 h-3.5 text-blue-600 shrink-0 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
+                </label>
+                <input type="file" id="profile-pdf-file" accept=".pdf" class="hidden">
+                <div id="profile-pdf-badge" class="hidden text-[9px] text-emerald-600 font-extrabold flex items-center gap-1">
+                  <span id="profile-pdf-status-text">✓ Valid PDF</span>
+                </div>
               </div>
 
-              <button id="profile-torch-btn" type="button" class="w-full py-2 px-3 bg-slate-200/80 dark:bg-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-bold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
-                Flashlight
-              </button>
-
-              <input type="file" id="profile-qr-file-input" accept="image/*" class="hidden">
+              <!-- Right Col: Qualification Slip PDF -->
+              <div class="flex flex-col gap-1.5 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                <label class="text-[9px] font-extrabold text-slate-400 uppercase truncate">Qualification Slip</label>
+                <label for="profile-qs-pdf-file" class="cursor-pointer bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 flex items-center justify-between text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:border-blue-500 transition-colors">
+                  <span id="profile-qs-pdf-label" class="truncate">Select PDF...</span>
+                  <svg class="w-3.5 h-3.5 text-blue-600 shrink-0 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
+                </label>
+                <input type="file" id="profile-qs-pdf-file" accept=".pdf" class="hidden">
+                <div id="profile-qs-pdf-badge" class="hidden text-[9px] text-emerald-600 font-extrabold flex items-center gap-1">
+                  <span id="profile-qs-pdf-status-text">✓ Valid QS</span>
+                </div>
+              </div>
             </div>
+            <p class="text-[9px] text-slate-400">Upload MAB Company Attestation and Qualification Slip for PBN & operational ratings checks.</p>
           </div>
+        </div>
 
-          <div id="profile-url-box" class="flex flex-col gap-2">
-            <div class="relative w-full">
-              <input type="url" id="profile-url-input" placeholder="https://eclipse.caam.gov.my/ELICENSING/..." class="w-full p-2.5 pr-8 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none transition-all">
-              <button id="profile-url-clear-btn" type="button" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer" title="Clear URL">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
+        <!-- ACCORDION 3: PASSPORT CLEARANCE DETAILS -->
+        <div class="accordion-card bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 overflow-hidden shadow-xs">
+          <button type="button" class="accordion-header w-full p-3.5 flex items-center justify-between text-left cursor-pointer" onclick="if(typeof toggleProfileAccordionSection === 'function') toggleProfileAccordionSection('passport');">
+            <div class="flex items-center gap-2.5">
+              <div class="p-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 9h-.75a3.75 3.75 0 1 0 0 7.5H15m0-7.5V6a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3v-3m0-6h3.75a3.75 3.75 0 1 1 0 7.5H15"/></svg>
+              </div>
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-100">Passport Clearance</span>
             </div>
-            <p class="text-[9px] text-slate-400">Paste your official eCLIPSE URL directly if QR camera scanning is unavailable.</p>
+            <svg id="arrow-passport" class="w-4 h-4 text-slate-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+
+          <div id="section-content-passport" class="p-3.5 pt-0 border-t border-slate-200/60 dark:border-slate-700/50 hidden">
+            <div class="grid grid-cols-2 gap-2.5 my-2.5">
+              <div>
+                <span class="text-[9px] text-slate-400 font-semibold block mb-1">Passport Number</span>
+                <input type="text" id="profile-passport-no" maxlength="12" placeholder="e.g. A12345678" class="w-full p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-100 focus:outline-none uppercase tracking-wider transition-all">
+              </div>
+
+              <div>
+                <span class="text-[9px] text-slate-400 font-semibold block mb-1">Expiry Date</span>
+                <button type="button" id="btn-passport-expiry-trigger" class="efb-date-trigger w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl p-2.5 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="openEfbDatePicker('profile-passport-expiry', 'PASSPORT EXPIRY DATE')">
+                  <span id="profile-passport-expiry-display" class="font-sans text-slate-700 dark:text-slate-300">Select Expiry</span>
+                  <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </button>
+                <input type="hidden" id="profile-passport-expiry" value="">
+              </div>
+            </div>
+            <p class="text-[9px] text-slate-400">Enter passport details to track validity & clearance on Dashboard.</p>
           </div>
         </div>
       </div>
 
-      <!-- Attestation PDF Upload -->
-      <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs mb-2">
-        <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-1">Company Attestation Document (PDF)</label>
-        <div class="flex items-center gap-2 mt-1">
-          <label for="profile-pdf-file" class="flex-1 cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-blue-500 transition-colors">
-            <span id="profile-pdf-label" class="truncate">Select PDF attestation file...</span>
-            <svg class="w-4 h-4 text-blue-600 shrink-0 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
-          </label>
-          <input type="file" id="profile-pdf-file" accept=".pdf" class="hidden">
-        </div>
-        <div id="profile-pdf-badge" class="hidden text-[10px] text-emerald-600 font-extrabold flex items-center gap-1 mt-1">
-          <span id="profile-pdf-status-text">✓ Valid Attestation PDF file</span>
-        </div>
-        <p class="text-[9px] text-slate-400 mt-1">Upload MAB company attestations PDF for compliance checks on Dashboard.</p>
-      </div>
-
-      <!-- Qualification Slip PDF Upload -->
-      <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs mb-2">
-        <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-1">Qualification Slip Document (PDF)</label>
-        <div class="flex items-center gap-2 mt-1">
-          <label for="profile-qs-pdf-file" class="flex-1 cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-blue-500 transition-colors">
-            <span id="profile-qs-pdf-label" class="truncate">Select PDF qualification slip file...</span>
-            <svg class="w-4 h-4 text-blue-600 shrink-0 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
-          </label>
-          <input type="file" id="profile-qs-pdf-file" accept=".pdf" class="hidden">
-        </div>
-        <div id="profile-qs-pdf-badge" class="hidden text-[10px] text-emerald-600 font-extrabold flex items-center gap-1 mt-1">
-          <span id="profile-qs-pdf-status-text">✓ Valid Qualification Slip (QS) file</span>
-        </div>
-        <p class="text-[9px] text-slate-400 mt-1">Upload MAB Qualification Slip for PBN & operational ratings checks.</p>
-      </div>
-
-      <!-- Passport Clearance Details -->
-      <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs mb-2 flex flex-col gap-2.5">
-        <label class="text-[10px] font-extrabold text-slate-400 uppercase block">Passport Details</label>
-        
-        <!-- Side-by-side Grid for Number and Expiry Date -->
-        <div class="grid grid-cols-2 gap-2.5">
-          <!-- Passport Number Input -->
-          <div>
-            <span class="text-[9px] text-slate-400 font-semibold block mb-1">Passport Number</span>
-            <input type="text" id="profile-passport-no" maxlength="12" placeholder="e.g. A12345678"
-              class="w-full p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-100 focus:outline-none uppercase tracking-wider transition-all">
-          </div>
-
-          <!-- Passport Expiry Date Field (Modal Datepicker Trigger) -->
-          <div>
-            <span class="text-[9px] text-slate-400 font-semibold block mb-1">Expiry Date</span>
-            <button type="button" id="btn-passport-expiry-trigger" class="efb-date-trigger w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl p-2.5 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="openEfbDatePicker('profile-passport-expiry', 'PASSPORT EXPIRY DATE')">
-              <span id="profile-passport-expiry-display" class="font-sans text-slate-700 dark:text-slate-300">Select Expiry</span>
-              <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-            </button>
-            <input type="hidden" id="profile-passport-expiry" value="">
-          </div>
-        </div>
-        
-        <p class="text-[9px] text-slate-400">Enter passport details to track its expiry.</p>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="px-1 flex flex-col gap-2 pt-1 py-3">
-        <button id="profile-save-btn" type="button" class="w-full p-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
+      <!-- Action Buttons (Solid Colored) -->
+      <div class="px-1 flex flex-col gap-2 pt-3 py-3">
+        <button id="profile-save-btn" type="button" class="w-full p-3.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
           Save Credentials
         </button>
 
-        <button id="profile-clear-btn" type="button" class="w-full p-3.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-all shadow-xs cursor-pointer">
+        <button id="profile-clear-btn" type="button" class="w-full p-3 bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
           Clear Credentials
         </button>
       </div>
     </div>
 
-    <!-- SUB-PANE 1: APP SETTINGS -->
+    <!-- SUB-PANE 1: APP PREFERENCES -->
     <div id="pane-settings" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
-      <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1">
+      <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1 cursor-pointer">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
 
@@ -235,27 +266,35 @@ export const menuHTML = `
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
           <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Appearance Theme</label>
           <div class="grid grid-cols-3 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
-            <button id="theme-pill-light" type="button" class="theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow-xs">Light</button>
-            <button id="theme-pill-dark" type="button" class="theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">Dark</button>
-            <button id="theme-pill-system" type="button" class="theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">System</button>
+            <button id="theme-pill-light" type="button" class="theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow-xs cursor-pointer">Light</button>
+            <button id="theme-pill-dark" type="button" class="theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer">Dark</button>
+            <button id="theme-pill-system" type="button" class="theme-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer">System</button>
           </div>
         </div>
 
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
           <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Text Font Scaling</label>
           <div class="grid grid-cols-3 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
-            <button id="text-pill-std" type="button" class="text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center bg-blue-600 text-white shadow-xs"><span class="text-[10px] font-bold">A</span></button>
-            <button id="text-pill-lg" type="button" class="text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-slate-900"><span class="text-xs font-bold">A</span></button>
-            <button id="text-pill-xl" type="button" class="text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-slate-900"><span class="text-sm font-extrabold">A</span></button>
+            <button id="text-pill-std" type="button" class="text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center bg-blue-600 text-white shadow-xs cursor-pointer"><span class="text-[10px] font-bold">A</span></button>
+            <button id="text-pill-lg" type="button" class="text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer"><span class="text-xs font-bold">A</span></button>
+            <button id="text-pill-xl" type="button" class="text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer"><span class="text-sm font-extrabold">A</span></button>
           </div>
         </div>
 
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
           <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Expiry Warning Threshold</label>
           <div class="grid grid-cols-3 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
-            <button id="threshold-pill-30" type="button" class="threshold-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow-xs">30 Days</button>
-            <button id="threshold-pill-60" type="button" class="threshold-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">60 Days</button>
-            <button id="threshold-pill-90" type="button" class="threshold-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">90 Days</button>
+            <button id="threshold-pill-30" type="button" class="threshold-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow-xs cursor-pointer">30 Days</button>
+            <button id="threshold-pill-60" type="button" class="threshold-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer">60 Days</button>
+            <button id="threshold-pill-90" type="button" class="threshold-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer">90 Days</button>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
+          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Seasonal & Festive Overlays</label>
+          <div class="grid grid-cols-2 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
+            <button id="festive-pill-enable" type="button" class="festive-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow-xs cursor-pointer">Enabled</button>
+            <button id="festive-pill-disable" type="button" class="festive-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer">Disabled</button>
           </div>
         </div>
       </div>
@@ -263,7 +302,7 @@ export const menuHTML = `
 
     <!-- SUB-PANE 2: DATA & STORAGE -->
     <div id="pane-storage" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
-      <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1">
+      <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1 cursor-pointer">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
 
@@ -273,40 +312,43 @@ export const menuHTML = `
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
           <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Scan History Storage Limit</label>
           <div class="grid grid-cols-3 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
-            <button id="history-limit-10" type="button" class="history-limit-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow-xs">10 Items</button>
-            <button id="history-limit-20" type="button" class="history-limit-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">20 Items</button>
-            <button id="history-limit-30" type="button" class="history-limit-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">30 Items</button>
+            <button id="history-limit-10" type="button" class="history-limit-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow-xs cursor-pointer">10 Items</button>
+            <button id="history-limit-20" type="button" class="history-limit-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer">20 Items</button>
+            <button id="history-limit-30" type="button" class="history-limit-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer">30 Items</button>
           </div>
         </div>
 
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
           <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Attestation Freshness Limit (MAB PDF)</label>
           <div class="grid grid-cols-2 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
-            <button id="freshness-limit-14" type="button" class="freshness-limit-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900">14 Days</button>
-            <button id="freshness-limit-30" type="button" class="freshness-limit-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow-xs">30 Days (Default)</button>
+            <button id="freshness-limit-14" type="button" class="freshness-limit-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer">14 Days</button>
+            <button id="freshness-limit-30" type="button" class="freshness-limit-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow-xs cursor-pointer">30 Days (Default)</button>
           </div>
         </div>
 
+        <!-- Data Action Buttons (Solid Colored) -->
         <div class="px-1 flex flex-col gap-2.5 pt-1 pb-3">
-          <button id="storage-clear-history-btn" type="button" class="w-full p-3.5 text-xs font-bold text-slate-950 bg-amber-500 hover:bg-amber-600 rounded-xl transition-all shadow-xs cursor-pointer">Clear Recent Scan History</button>
-          <button id="storage-reset-all-btn" type="button" class="w-full p-3.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-all shadow-xs cursor-pointer">Reset All Application Data</button>
+          <button id="storage-clear-history-btn" type="button" class="w-full p-3.5 text-xs font-bold text-slate-950 bg-amber-500 hover:bg-amber-600 active:scale-[0.98] rounded-xl transition-all shadow-xs flex items-center justify-center cursor-pointer">Clear Recent Scan History</button>
+          <button id="storage-reset-all-btn" type="button" class="w-full p-3.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 active:scale-[0.98] rounded-xl transition-all shadow-xs flex items-center justify-center cursor-pointer">Reset All Application Data</button>
         </div>
       </div>
     </div>
 
     <!-- SUB-PANE 3: ABOUT CERTIFLY -->
     <div id="pane-about" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out hidden translate-x-full opacity-0 pointer-events-none px-3 py-1">
-      <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1">
+      <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1 cursor-pointer">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
       </button>
 
       <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-3.5 px-1 tracking-normal">About CertiFly App</h3>
 
       <div class="flex flex-col gap-3.5 pb-3">
-        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs text-center flex flex-col items-center">
+        <!-- Brand Card with 14-Tap Trigger & Centered Tagline -->
+        <div id="brand-card-about" class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs text-center flex flex-col items-center cursor-pointer select-none active:scale-[0.99] transition-all" onclick="if(typeof handleBrandCardTap === 'function') handleBrandCardTap();">
           <div class="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-md mb-2">CF</div>
           <h4 class="text-sm font-black text-slate-800 dark:text-slate-100">CertiFly Compliance Checker</h4>
-          <span class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-0.5 rounded-full mt-1">Version 3.0 (PWA)</span>
+          <p class="text-[10px] italic font-medium text-slate-500 dark:text-slate-400 mt-0.5 text-center">by pilot for pilot...</p>
+          <span class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-0.5 rounded-full mt-1.5">Version 2.0 (PWA)</span>
         </div>
 
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs flex flex-col gap-2">
@@ -315,7 +357,7 @@ export const menuHTML = `
             <span>User Guide & Manual</span>
           </a>
 
-          <a href="https://forms.gle/certifly-feedback" target="_blank" class="w-full p-3 bg-slate-200/80 dark:bg-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-colors">
+          <a href="[suspicious link removed]" target="_blank" class="w-full p-2.5 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
             <span>Send App Feedback</span>
           </a>
@@ -326,7 +368,7 @@ export const menuHTML = `
   </div>
 </div>
 
-<!-- CAPTAIN'S EASTER EGG SPRING MODAL POPUP -->
+<!-- EASTER EGG MODAL DRAWER -->
 <div id="easter-egg-modal" class="fixed inset-0 z-[60] bg-black/75 backdrop-blur-md flex items-center justify-center p-4 hidden opacity-0 transition-all duration-300">
   <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-xs w-full shadow-2xl flex flex-col items-center text-center relative animate-fade-in">
     <!-- Pirate Flag SVG Logo -->
