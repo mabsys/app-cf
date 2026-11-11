@@ -1,4 +1,4 @@
-// ./js/scanner.js (1011_R420) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (1011_R422) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
 import { getProfileData, getScanHistory } from './storage.js';
 import { animateTabBounce, animateTabContentEntrance } from './animations.js';
@@ -339,8 +339,8 @@ export function switchScanHubTab(tabName) {
   const btnQrPass = document.getElementById('tab-qrpass-btn');
   const btnManual = document.getElementById('tab-manual-btn');
 
-  const activeBtnClass = 'py-2.5 px-1 rounded-xl text-xs font-bold transition-all bg-blue-600 text-white shadow-xs flex items-center justify-center gap-1.5 cursor-pointer';
-  const inactiveBtnClass = 'py-2.5 px-1 rounded-xl text-xs font-bold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 flex items-center justify-center gap-1.5 cursor-pointer';
+  const activeBtnClass = 'py-2.5 px-1 rounded-xl text-xs font-bold transition-colors bg-blue-600 text-white shadow-xs flex items-center justify-center gap-1.5 cursor-pointer';
+  const inactiveBtnClass = 'py-2.5 px-1 rounded-xl text-xs font-bold transition-colors text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 flex items-center justify-center gap-1.5 cursor-pointer';
 
   if (tabCamera) tabCamera.classList.add('hidden');
   if (tabQrPass) tabQrPass.classList.add('hidden');
