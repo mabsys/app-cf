@@ -1,4 +1,4 @@
-// ./js/ui.js (1011_R416) - View Switching & UI Management
+// ./js/ui.js (1011_R418) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -9,6 +9,7 @@ import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit
 import { topbarHTML } from './components/topbar.js';
 import { dockHTML } from './components/dock.js';
 import { menuHTML } from './components/menu.js';
+import { animateTabBounce, animateTabContentEntrance } from './animations.js';
 
 export function initSubTabDragScroll() {
   const strips = document.querySelectorAll('.tools-subtab-strip');
@@ -789,8 +790,8 @@ export function switchToolCategory(category) {
   const paneA = document.getElementById('cat-pane-qualifications');
   const paneB = document.getElementById('cat-pane-dutyrest');
 
-  const activeTabClass = 'cat-tab-btn active py-2.5 px-3 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-xs cursor-pointer';
-  const inactiveTabClass = 'cat-tab-btn py-2.5 px-3 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer';
+  const activeTabClass = 'cat-tab-btn active py-2.5 px-3 rounded-xl text-xs font-bold transition-colors text-center flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-xs cursor-pointer';
+  const inactiveTabClass = 'cat-tab-btn py-2.5 px-3 rounded-xl text-xs font-bold transition-colors text-center flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer';
 
   if (normCategory === 'qualifications') {
     if (tabA) {
