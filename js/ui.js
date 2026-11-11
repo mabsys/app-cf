@@ -1,4 +1,4 @@
-// ./js/ui.js (1011_R413) - View Switching & UI Management
+// ./js/ui.js (1011_R414) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1081,4 +1081,25 @@ if (typeof window !== 'undefined') {
   window.dispatchActiveToolCalculation = dispatchActiveToolCalculation;
   window.switchTier1 = switchToolCategory;
   window.switchSubTab = switchActiveTool;
+}
+// Auto-realign sliding tab indicators on window resize
+if (typeof window !== 'undefined') {
+  window.addEventListener('resize', () => {
+    const resTab = localStorage.getItem('certifly_active_tab') || 'overview';
+    const resBtn = document.getElementById('res-tab-btn-' + resTab);
+    const resCont = document.getElementById('res-tab-container');
+    const resInd = document.getElementById('res-tab-indicator');
+    if (resBtn && resCont && resInd && typeof animateTabIndicator === 'function') {
+      animateTabIndicator(resBtn, resCont, resInd, true);
+    }
+
+    const catBtnA = document.getElementById('cat-tab-qualifications');
+    const catBtnB = document.getElementById('cat-tab-dutyrest');
+    const catCont = document.getElementById('tools-nav-container');
+    const catInd = document.getElementById('cat-tab-indicator');
+    const activeCatBtn = (catBtnA && catBtnA.classList.contains('active')) ? catBtnA : catBtnB;
+    if (activeCatBtn && catCont && catInd && typeof animateTabIndicator === 'function') {
+      animateTabIndicator(activeCatBtn, catCont, catInd, true);
+    }
+  });
 }
