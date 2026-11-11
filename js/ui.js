@@ -1,4 +1,4 @@
-// ./js/ui.js (1011_R427) - View Switching & UI Management
+// ./js/ui.js (1011_R428) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -331,8 +331,7 @@ export function closeMenu() {
       if (distFromBottom <= 64) {
         progress = distFromBottom / 64;
       }
-      currentDockY = progress * topbarHeight;
-      currentTopbarY = progress * topbarHeight;
+      currentTranslateY = progress * topbarHeight;
       dock.style.transform = `translateY(${progress * dockMaxTravel}px)`;
     }
 
@@ -483,9 +482,17 @@ export function initNavigationBars() {
     }
 
     if (topbar) {
-      const topbarTranslate = -100 + (topbarProgress * 100);
-      topbar.style.transform = `translateY(${topbarTranslate}%)`;
-      topbar.style.opacity = topbarProgress.toFixed(2);
+      const scannerView = document.getElementById("scanner-view");
+      const isScannerActive = scannerView && !scannerView.classList.contains("hidden");
+
+      if (isScannerActive) {
+        topbar.style.transform = "translateY(-100%)";
+        topbar.style.opacity = "0";
+      } else {
+        const topbarTranslate = -100 + (topbarProgress * 100);
+        topbar.style.transform = `translateY(${topbarTranslate}%)`;
+        topbar.style.opacity = topbarProgress.toFixed(2);
+      }
 
       const topBanner = document.getElementById("certifly-top-banner");
       if (topBanner && !topBanner.classList.contains("hidden")) {
@@ -646,6 +653,12 @@ export function showView(viewId, defaultTab = null) {
 
   const targetView = document.getElementById(viewId);
   if (targetView) targetView.classList.remove("hidden");
+
+  const topbar = document.getElementById("persistent-topbar");
+  if (topbar && viewId === "scanner-view") {
+    topbar.style.transform = "translateY(-100%)";
+    topbar.style.opacity = "0";
+  }
 
   if (viewId === "tools-view") {
     if (typeof window.initToolsModule === "function") window.initToolsModule();
