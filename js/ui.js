@@ -1,4 +1,4 @@
-// ./js/ui.js (1011_R418) - View Switching & UI Management
+// ./js/ui.js (1011_R421) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -855,8 +855,8 @@ export function switchActiveTool(rawId) {
 
   const tabA = document.getElementById('cat-tab-qualifications');
   const tabB = document.getElementById('cat-tab-dutyrest');
-  const activeTabClass = 'cat-tab-btn active py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 text-center flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-xs cursor-pointer';
-  const inactiveTabClass = 'cat-tab-btn py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 text-center flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer';
+  const activeTabClass = 'cat-tab-btn active py-2.5 px-3 rounded-xl text-xs font-bold transition-colors text-center flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-xs cursor-pointer';
+  const inactiveTabClass = 'cat-tab-btn py-2.5 px-3 rounded-xl text-xs font-bold transition-colors text-center flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer';
   if (tabA && tabB) {
     if (isCatA) {
       tabA.className = activeTabClass; tabA.setAttribute('aria-selected', 'true');
