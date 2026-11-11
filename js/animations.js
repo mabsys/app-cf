@@ -1,4 +1,4 @@
-// ./js/animations.js (1011_R400) - CertiFly Centralized Motion & Animation Engine
+// ./js/animations.js (1111_R401) - CertiFly Centralized Motion & Animation Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -518,6 +518,194 @@ export function animateTabContentEntrance(contentPane) {
   });
 }
 
+
+
+/**
+ * Slide-over Bottom Sheet Menu Drawer Spring Animation
+ * @param {HTMLElement} menuEl - #bottom-sheet-menu
+ * @param {HTMLElement} overlayEl - #bottom-sheet-overlay
+ * @param {boolean} show - True to open, false to close
+ */
+export function animateMenuDrawer(menuEl, overlayEl, show = true) {
+  if (!menuEl || !overlayEl) return;
+  if (!isAnimeAvailable()) {
+    if (show) {
+      overlayEl.classList.remove('hidden', 'opacity-0');
+      overlayEl.classList.add('opacity-100');
+      menuEl.classList.remove('hidden');
+      menuEl.style.transform = 'translateY(0px)';
+    } else {
+      overlayEl.classList.add('hidden', 'opacity-0');
+      menuEl.classList.add('hidden');
+    }
+    return;
+  }
+
+  if (show) {
+    overlayEl.classList.remove('hidden');
+    menuEl.classList.remove('hidden');
+
+    runAnime({
+      targets: overlayEl,
+      opacity: [0, 1],
+      duration: 250,
+      easing: 'easeOutQuad'
+    });
+
+    runAnime({
+      targets: menuEl,
+      translateY: ['120%', '0%'],
+      duration: 380,
+      easing: 'cubicBezier(0.16, 1, 0.3, 1)',
+      complete: () => {
+        animateMenuStagger('#pane-main .nav-item-btn');
+      }
+    });
+  } else {
+    runAnime({
+      targets: overlayEl,
+      opacity: [1, 0],
+      duration: 200,
+      easing: 'easeInQuad',
+      complete: () => overlayEl.classList.add('hidden')
+    });
+
+    runAnime({
+      targets: menuEl,
+      translateY: ['0%', '120%'],
+      duration: 300,
+      easing: 'cubicBezier(0.7, 0, 0.84, 0)',
+      complete: () => menuEl.classList.add('hidden')
+    });
+  }
+}
+
+/**
+ * Staggered Category Buttons Entrance
+ * @param {string|NodeList} selector - Elements to stagger
+ */
+export function animateMenuStagger(selector = '#pane-main .nav-item-btn') {
+  const items = typeof selector === 'string' ? document.querySelectorAll(selector) : selector;
+  if (!items || items.length === 0 || !isAnimeAvailable()) return;
+
+  runAnime({
+    targets: items,
+    translateY: [12, 0],
+    opacity: [0, 1],
+    delay: runStagger(45),
+    duration: 350,
+    easing: 'easeOutCubic'
+  });
+}
+
+/**
+ * Smooth Accordion Expansion / Collapse for Profile & Credentials
+ * @param {HTMLElement} contentEl - Target collapsible content div
+ * @param {HTMLElement} arrowEl - Optional arrow icon element
+ * @param {boolean} isExpanding - Expansion direction
+ */
+export function animateProfileAccordion(contentEl, arrowEl, isExpanding) {
+  if (!contentEl) return;
+
+  if (!isAnimeAvailable()) {
+    if (isExpanding) {
+      contentEl.classList.remove('hidden');
+      if (arrowEl) arrowEl.style.transform = 'rotate(180deg)';
+    } else {
+      contentEl.classList.add('hidden');
+      if (arrowEl) arrowEl.style.transform = 'rotate(0deg)';
+    }
+    return;
+  }
+
+  if (isExpanding) {
+    contentEl.classList.remove('hidden');
+    const fullHeight = contentEl.scrollHeight || 200;
+
+    if (arrowEl) {
+      runAnime({
+        targets: arrowEl,
+        rotate: 180,
+        duration: 200,
+        easing: 'easeOutQuad'
+      });
+    }
+
+    runAnime({
+      targets: contentEl,
+      height: [0, fullHeight],
+      opacity: [0, 1],
+      duration: 300,
+      easing: 'easeOutCubic',
+      complete: () => {
+        contentEl.style.height = 'auto';
+      }
+    });
+  } else {
+    if (arrowEl) {
+      runAnime({
+        targets: arrowEl,
+        rotate: 0,
+        duration: 200,
+        easing: 'easeOutQuad'
+      });
+    }
+
+    runAnime({
+      targets: contentEl,
+      height: [contentEl.offsetHeight, 0],
+      opacity: [1, 0],
+      duration: 250,
+      easing: 'easeInCubic',
+      complete: () => {
+        contentEl.classList.add('hidden');
+      }
+    });
+  }
+}
+
+/**
+ * Pirate Flag Easter Egg Bouncy Spring Reveal
+ * @param {HTMLElement} modalEl - #easter-egg-modal
+ * @param {boolean} show - True to reveal, false to dismiss
+ */
+export function animateEasterEggModal(modalEl, show = true) {
+  if (!modalEl) return;
+  const cardEl = modalEl.querySelector('.bg-white, .dark\\:bg-slate-900') || modalEl;
+
+  if (!isAnimeAvailable()) {
+    if (show) {
+      modalEl.classList.remove('hidden', 'opacity-0');
+    } else {
+      modalEl.classList.add('hidden');
+    }
+    return;
+  }
+
+  if (show) {
+    modalEl.classList.remove('hidden');
+    runAnime({
+      targets: cardEl,
+      scale: [0.75, 1],
+      translateY: [20, 0],
+      opacity: [0, 1],
+      duration: 420,
+      easing: 'easeOutBack(1.4)'
+    });
+  } else {
+    runAnime({
+      targets: cardEl,
+      scale: [1, 0.75],
+      translateY: [0, 20],
+      opacity: [1, 0],
+      duration: 250,
+      easing: 'easeInQuad',
+      complete: () => {
+        modalEl.classList.add('hidden');
+      }
+    });
+  }
+}
 if (typeof window !== "undefined") {
   window.CertiFlyAnimations = {
     animateTabBounce,
@@ -536,6 +724,10 @@ if (typeof window !== "undefined") {
     animateListEntrance,
     animateBottomBanner,
     animateTabIndicator,
-    animateTabContentEntrance
+    animateTabContentEntrance,
+    animateMenuDrawer,
+    animateMenuStagger,
+    animateProfileAccordion,
+    animateEasterEggModal
   };
 }
