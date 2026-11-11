@@ -1,4 +1,4 @@
-// ./js/ui.js (1011_R424) - View Switching & UI Management
+// ./js/ui.js (1011_R425) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -267,50 +267,6 @@ export function updateActiveDockState(activeViewId) {
   });
 }
 
-
-let currentTranslateY = 0;
-let targetTranslateY = 0;
-let isScrollAnimActive = false;
-
-function updateScrollDockFrames() {
-  const topbar = document.getElementById("persistent-topbar");
-  const dock = document.getElementById("persistent-dock");
-  const topbarHeight = 48;
-  const dockMaxTravel = 80;
-
-  const diff = targetTranslateY - currentTranslateY;
-
-  if (Math.abs(diff) < 0.05) {
-    currentTranslateY = targetTranslateY;
-    isScrollAnimActive = false;
-  } else {
-    currentTranslateY += diff * 0.22;
-  }
-
-  const progress = currentTranslateY / topbarHeight;
-
-  if (dock) {
-    dock.style.transform = `translateY(${progress * dockMaxTravel}px)`;
-  }
-
-  if (topbar) {
-    const topbarTranslate = -100 + (progress * 100);
-    topbar.style.transform = `translateY(${topbarTranslate}%)`;
-    topbar.style.opacity = progress.toFixed(2);
-
-    const topBanner = document.getElementById("certifly-top-banner");
-    if (topBanner && !topBanner.classList.contains("hidden")) {
-      const topbarActualHeight = topbar.offsetHeight || 48;
-      const currentTop = Math.max(0, topbarActualHeight * progress);
-      topBanner.style.top = `${currentTop}px`;
-    }
-  }
-
-  if (isScrollAnimActive) {
-    requestAnimationFrame(updateScrollDockFrames);
-  }
-}
-
 export function openMenu() {
   const menu = document.getElementById("bottom-sheet-menu");
   const overlay = document.getElementById("bottom-sheet-overlay");
@@ -367,20 +323,16 @@ export function closeMenu() {
 
     if (dock) {
       const topbarHeight = 48;
+      const dockMaxTravel = 80;
       const maxScrollY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
       const clampedScrollY = Math.max(0, Math.min(window.scrollY, maxScrollY));
       const distFromBottom = maxScrollY - clampedScrollY;
-      if (clampedScrollY <= 2) {
-        targetTranslateY = 0;
-      } else if (distFromBottom <= 64) {
-        targetTranslateY = topbarHeight * (distFromBottom / 64);
-      } else {
-        targetTranslateY = 0;
+      let progress = Math.min(1, clampedScrollY / topbarHeight);
+      if (distFromBottom <= 64) {
+        progress = distFromBottom / 64;
       }
-      if (!isScrollAnimActive) {
-        isScrollAnimActive = true;
-        requestAnimationFrame(updateScrollDockFrames);
-      }
+      currentTranslateY = progress * topbarHeight;
+      dock.style.transform = `translateY(${progress * dockMaxTravel}px)`;
     }
 
     const paneMain = document.getElementById("pane-main");
@@ -476,6 +428,8 @@ export function initNavigationBars() {
     topbar.style.opacity = "0";
   }
 
+  const dockMaxTravel = 80;
+  let currentTranslateY = 0;
   const getMaxScrollY = () => Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
 
   let lastClampedScrollY = Math.max(0, Math.min(window.scrollY, getMaxScrollY()));
@@ -487,27 +441,49 @@ export function initNavigationBars() {
     const maxScrollY = getMaxScrollY();
     const clampedScrollY = Math.max(0, Math.min(window.scrollY, maxScrollY));
     const delta = clampedScrollY - lastClampedScrollY;
+
     const distFromBottom = maxScrollY - clampedScrollY;
 
+    const maxStep = 14;
     if (clampedScrollY <= 2) {
-      targetTranslateY = 0;
+      currentTranslateY = 0;
+    } else if (delta > 0) {
+      // Scrolling DOWN
+      if (distFromBottom <= 64) {
+        // Smoothly pull dock into view as user reaches end of document
+        const bottomTargetY = topbarHeight * (distFromBottom / 64);
+        currentTranslateY = Math.min(currentTranslateY, bottomTargetY);
+      } else {
+        // Midway scroll down: push dock down offscreen smoothly (capped at maxStep per event frame)
+        const step = Math.min(delta, maxStep);
+        currentTranslateY = Math.min(topbarHeight, currentTranslateY + step);
+      }
     } else if (delta < 0) {
-      // Scrolling UP anywhere on page -> show dock, hide topbar smoothly
-      targetTranslateY = 0;
-    } else if (distFromBottom <= 64) {
-      // Scrolling DOWN near bottom -> pull dock into view smoothly
-      targetTranslateY = topbarHeight * (distFromBottom / 64);
-    } else {
-      // Scrolling DOWN midway -> hide dock, show topbar
-      targetTranslateY = topbarHeight;
+      // Scrolling UP: bring dock smoothly back into view (capped at maxStep per event frame to prevent sudden pops)
+      const step = Math.max(delta, -maxStep);
+      currentTranslateY = Math.max(0, currentTranslateY + step);
+    }
+
+    const progress = currentTranslateY / topbarHeight;
+
+    if (dock) {
+      dock.style.transform = `translateY(${progress * dockMaxTravel}px)`;
+    }
+
+    if (topbar) {
+      const topbarTranslate = -100 + (progress * 100);
+      topbar.style.transform = `translateY(${topbarTranslate}%)`;
+      topbar.style.opacity = progress.toFixed(2);
+
+      const topBanner = document.getElementById("certifly-top-banner");
+      if (topBanner && !topBanner.classList.contains("hidden")) {
+        const topbarActualHeight = topbar.offsetHeight || 48;
+        const currentTop = Math.max(0, topbarActualHeight * progress);
+        topBanner.style.top = `${currentTop}px`;
+      }
     }
 
     lastClampedScrollY = clampedScrollY;
-
-    if (!isScrollAnimActive) {
-      isScrollAnimActive = true;
-      requestAnimationFrame(updateScrollDockFrames);
-    }
   }, { passive: true });
 
   document.getElementById("topbar-text-btn")?.addEventListener("click", cycleTextSize);
