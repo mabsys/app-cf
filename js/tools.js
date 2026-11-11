@@ -1,4 +1,4 @@
-// ./js/tools.js (1011_R431) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (1011_R432) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1213,9 +1213,10 @@ export function normalizeOutput(toolType, rawResult) {
       const isPreserved = rawResult ? !!rawResult.anniversaryPreserved : false;
 
       if (!isEligible || age >= 65) {
-        const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? rawResult.notes : [];
-      return {
-        calculationNotes: calcNotes,
+        const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? [...rawResult.notes] : [];
+        calcNotes.unshift('Commercial Air Transport pilot privileges cease at Age 65 per CAAM CAD 1 PEL.');
+        return {
+          calculationNotes: calcNotes,
           statusTheme: 'rose',
           statusBadge: 'CEASED (AGE 65+)',
           statusClass: 'bg-rose-600',
@@ -1228,7 +1229,7 @@ export function normalizeOutput(toolType, rawResult) {
             { label: 'VALIDITY', value: '0 Months' },
             { label: 'CREW LIMITATION', value: 'Commercial Privileges Ceased' }
           ],
-          auditNotes: ['Commercial Air Transport pilot privileges cease at Age 65 per CAAM CAD 1 PEL.']
+          auditNotes: ['Grounded in CAAM CAD 1 PEL Section 1.2.5.2 & OM-A 5.1.4.4.']
         };
       }
 
@@ -1303,7 +1304,10 @@ export function normalizeOutput(toolType, rawResult) {
         statusClass = 'bg-amber-600';
       }
 
-      const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? rawResult.notes : [];
+      const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? [...rawResult.notes] : [];
+      if (lapsedWarning) {
+        calcNotes.unshift(lapsedWarning);
+      }
       return {
         calculationNotes: calcNotes,
         statusTheme,
@@ -1318,7 +1322,7 @@ export function normalizeOutput(toolType, rawResult) {
           { label: 'NEXT OPC TARGET', value: targetOpcStr },
           { label: 'OPERATING STATUS', value: lapsedWarning ? 'ATO Refresher Req.' : 'Qualified & Cleared' }
         ],
-        auditNotes: [lapsedWarning || 'Grounded in CAAM CAD 6.9.4.4, CAD 1 PEL 2.1.5.10 & OM-A 5.1.4.6.']
+        auditNotes: ['Grounded in CAAM CAD 6.9.4.4, CAD 1 PEL 2.1.5.10 & OM-A 5.1.4.6.']
       };
     }
 
@@ -1387,18 +1391,17 @@ export function normalizeOutput(toolType, rawResult) {
         { label: 'VARIANT STATUS', value: 'Single Fleet' }
       ];
 
-      let auditNotes = [];
+      const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? [...rawResult.notes] : [];
       if (isCompliant) {
-        auditNotes = ['CAD 6 & OM-A 5.3.4 Recency Cleared. 3 PF landings in 90 days.'];
+        calcNotes.push('CAD 6 & OM-A 5.3.4 Recency Cleared. 3 PF landings in 90 days.');
       } else {
         const isPic45 = rawResult && rawResult.pic45Status && rawResult.pic45Status.isLapsed;
         const isVar = rawResult && rawResult.variantStatus && rawResult.variantStatus.isLapsed;
         const reason = isPic45 ? 'Captain 45d Rule' : (isVar ? 'MFF Variant Rule' : 'CAD 6 90d Rule');
         const fp = rawResult && rawResult.requalificationFootprint ? ` Req: ${rawResult.requalificationFootprint.summary}` : '';
-        auditNotes = [`CAD 6 / OM-A Lapsed (${reason}).${fp}`];
+        calcNotes.unshift(`CAD 6 / OM-A Lapsed (${reason}).${fp}`);
       }
 
-      const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? rawResult.notes : [];
       return {
         calculationNotes: calcNotes,
         statusTheme,
@@ -1408,7 +1411,7 @@ export function normalizeOutput(toolType, rawResult) {
         targetClockLabel,
         targetClockValue,
         breakdownGrid: grid,
-        auditNotes
+        auditNotes: ['Grounded in CAAM CAD 6 Part 1 & OM-A 5.3.4.']
       };
     }
 
@@ -1469,9 +1472,10 @@ export function normalizeOutput(toolType, rawResult) {
         ? `Case B (≥ 6h)\n${deductionStr} Excess Deducted`
         : `Case A (< 6h)\nNo Deduction Required`;
 
-      const auditNoteStr = 'Grounded in CAAM CAD 1901 Section 2.11 & OM-A 7.5.7 Standby FDP Adjustments.';
-
-      const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? rawResult.notes : [];
+      const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? [...rawResult.notes] : [];
+      if (isExceeded && rawResult && rawResult.warnings) {
+        calcNotes.push(...rawResult.warnings);
+      }
       return {
         calculationNotes: calcNotes,
         statusTheme,
@@ -1486,7 +1490,7 @@ export function normalizeOutput(toolType, rawResult) {
           { label: 'FDP DEDUCTION', value: deductionStr },
           { label: 'CASE RATIONALE', value: caseRationaleStr }
         ],
-        auditNotes: [auditNoteStr]
+        auditNotes: ['Grounded in CAAM CAD 1901 Section 2.11 Standby FDP Adjustments.']
       };
     }
 
@@ -1523,9 +1527,10 @@ export function normalizeOutput(toolType, rawResult) {
         ? `${rawResult.acclimatisedStatus || 'Acclimatised'}\nBand ${rawResult.timeBand || '0600-0759'}`
         : 'Acclimatised\nBand 0600-0759';
 
-      const auditNoteStr = isProhibited && rawResult && rawResult.prohibitionReason ? rawResult.prohibitionReason : 'Grounded in CAAM CAD 1901 Table A/B & OM-A Section 7.5.';
-
-      const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? rawResult.notes : [];
+      const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? [...rawResult.notes] : [];
+      if (isProhibited && rawResult && rawResult.prohibitionReason) {
+        calcNotes.unshift(rawResult.prohibitionReason);
+      }
       return {
         calculationNotes: calcNotes,
         statusTheme,
@@ -1540,7 +1545,7 @@ export function normalizeOutput(toolType, rawResult) {
           { label: 'EXTENSIONS CREDIT', value: extStr },
           { label: 'CALCULATION BASIS', value: basisStr }
         ],
-        auditNotes: [auditNoteStr]
+        auditNotes: ['Grounded in CAAM CAD 1901 Table A/B & OM-A Section 7.5.']
       };
     }
 
@@ -1767,9 +1772,9 @@ function renderToolsOutputCardForTool(toolType, normalized) {
     }
   }
 
-  // Slot 4: Brief Base Citation & Audit Overlay Routing (Unhide Notes trigger ONLY if calculationNotes exist)
+  // Slot 4: Brief Base Citation & Audit Overlay Routing (Strictly base citation in footer, calcNotes ONLY in overlay)
   const calcNotes = (normalized && normalized.calculationNotes && Array.isArray(normalized.calculationNotes)) ? normalized.calculationNotes : [];
-  const baseCitation = (normalized && normalized.auditNotes) ? (Array.isArray(normalized.auditNotes) ? normalized.auditNotes[0] : normalized.auditNotes) : BASE_CITATIONS[suffix];
+  const baseCitation = BASE_CITATIONS[suffix] || (normalized && normalized.auditNotes ? (Array.isArray(normalized.auditNotes) ? normalized.auditNotes[0] : normalized.auditNotes) : '');
   updateSlot4Audit(suffix, calcNotes, baseCitation);
 }
 
