@@ -1,4 +1,4 @@
-// ./js/tools.js (0411_R355) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (1011_R430) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1638,6 +1638,53 @@ export function normalizeOutput(toolType, rawResult) {
   return null;
 }
 
+
+export const BASE_CITATIONS = {
+  medical: 'Grounded in CAAM CAD 1 PEL Section 1.2.5.2 & OM-A 5.1.4.4.',
+  ppc: 'Grounded in CAAM CAD 6.9.4.4, CAD 1 PEL 2.1.5.10 & OM-A 5.1.4.6.',
+  recurrent: 'Grounded in CAAM CAD 6.9.4 & OM-D Chapter 2 Recurrent Standards.',
+  recency: 'Grounded in CAAM CAD 6 Part 1 & OM-A 5.3.4.',
+  standby: 'Grounded in CAAM CAD 1901 Section 2.11 Standby FDP Adjustments.',
+  maxfdp: 'Grounded in CAAM CAD 1901 Table A/B & OM-A Section 7.5.',
+  preflight: 'Grounded in CAAM CAD 1901 Section 2.14 & OM-A Section 7.5.12.',
+  cumulative: 'Grounded in CAAM CAD 1901 Rolling Flight & Duty Time Caps.'
+};
+
+export function updateSlot4Audit(toolId, auditNotes = [], baseCitation = '') {
+  const keyMap = {
+    'medical': 'medical',
+    'ppc': 'ppc',
+    'recurrent': 'recurrent',
+    'recency': 'recency',
+    'standby': 'standby',
+    'maxfdp': 'maxfdp',
+    'max-fdp': 'maxfdp',
+    'preflight': 'preflight',
+    'pre-flight-rest': 'preflight',
+    'cumulative': 'cumulative'
+  };
+  const suffix = keyMap[toolId] || toolId;
+  const targetCitation = baseCitation || BASE_CITATIONS[suffix] || '';
+  const auditTextEl = document.getElementById(`output-audit-text-${suffix}`);
+  const triggerBtn = document.getElementById(`btn-audit-notes-trigger-${suffix}`);
+  const overlayContent = document.getElementById(`audit-overlay-content-${suffix}`);
+
+  if (auditTextEl && targetCitation) {
+    auditTextEl.innerText = targetCitation;
+  }
+
+  const notesArr = Array.isArray(auditNotes) ? auditNotes : (auditNotes ? [String(auditNotes)] : []);
+  if (notesArr.length > 0) {
+    if (triggerBtn) triggerBtn.classList.remove('hidden');
+    if (overlayContent) {
+      overlayContent.innerHTML = notesArr.map(note => `<div class="flex items-start gap-2 py-1.5 border-b border-slate-200/80 dark:border-slate-800/50"><span class="text-blue-600 dark:text-blue-400 font-bold shrink-0">•</span><span class="leading-snug text-slate-700 dark:text-slate-300">${note}</span></div>`).join('');
+    }
+  } else {
+    if (triggerBtn) triggerBtn.classList.add('hidden');
+    if (overlayContent) overlayContent.innerHTML = '<p class="text-slate-400 dark:text-slate-500 italic py-2">No additional calculation notes for this entry.</p>';
+  }
+}
+
 function renderToolsOutputCardForTool(toolType, normalized) {
   if (!normalized) return;
 
@@ -1715,26 +1762,9 @@ function renderToolsOutputCardForTool(toolType, normalized) {
     }
   }
 
-  // Slot 4: Audit Citation Text
-  const auditTextEl = document.getElementById(`output-audit-text-${suffix}`);
-  if (auditTextEl && normalized.auditNotes) {
-    auditTextEl.innerText = Array.isArray(normalized.auditNotes) ? normalized.auditNotes.join('. ') : normalized.auditNotes;
-  }
-
-  // Audit Notes Overlay & Inline Trigger Button
-  const triggerBtn = document.getElementById(`btn-audit-notes-trigger-${suffix}`);
-  const overlayContent = document.getElementById(`audit-overlay-content-${suffix}`);
-  const notes = (normalized && normalized.calculationNotes) ? normalized.calculationNotes : [];
-
-  if (notes && Array.isArray(notes) && notes.length > 0) {
-    if (triggerBtn) triggerBtn.classList.remove('hidden');
-    if (overlayContent) {
-      overlayContent.innerHTML = notes.map(note => `<div class="flex items-start gap-2 py-1.5 border-b border-slate-200/80 dark:border-slate-800/50"><span class="text-blue-600 dark:text-blue-400 font-bold shrink-0">•</span><span class="leading-snug text-slate-700 dark:text-slate-300">${note}</span></div>`).join('');
-    }
-  } else {
-    if (triggerBtn) triggerBtn.classList.add('hidden');
-    if (overlayContent) overlayContent.innerHTML = '<p class="text-slate-400 dark:text-slate-500 italic py-2">No additional calculation notes for this entry.</p>';
-  }
+  // Slot 4: Brief Base Citation & Audit Overlay Routing
+  const notes = (normalized && (normalized.auditNotes || normalized.calculationNotes)) ? (normalized.auditNotes || normalized.calculationNotes) : [];
+  updateSlot4Audit(suffix, notes, BASE_CITATIONS[suffix]);
 }
 
 export function renderNormalizedOutput(normalized) {
@@ -2224,6 +2254,8 @@ if (typeof window !== 'undefined') {
   window.setEfbTimePreset = setEfbTimePreset;
   window.openAuditOverlay = openAuditOverlay;
   window.closeAuditOverlay = closeAuditOverlay;
+  window.updateSlot4Audit = updateSlot4Audit;
+  window.BASE_CITATIONS = BASE_CITATIONS;
   window.openMaxFdpModifiersModal = openMaxFdpModifiersModal;
   window.closeMaxFdpModifiersModal = closeMaxFdpModifiersModal;
   window.confirmMaxFdpModifiers = confirmMaxFdpModifiers;
