@@ -1,8 +1,8 @@
-// ./js/ui.js (1011_R428) - View Switching & UI Management
+// ./js/ui.js (1111_R429) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
-import { animateTabBounce, animateTabContentEntrance } from './animations.js';
+import { animateTabBounce, animateTabContentEntrance, animateMenuDrawer, animateMenuStagger, animateProfileAccordion, animateEasterEggModal } from './animations.js';
 
 import { setTopBanner, showToast } from './notifications.js';
 import { initToolsModule, runToolCalculation, setToolsTab, getToolsState, getSectorCount, setSectorCount } from './tools.js';
@@ -278,23 +278,23 @@ export function openMenu() {
     dock.style.transform = "translateY(120%)";
   }
 
-  overlay.classList.remove("hidden");
-  menu.classList.remove("hidden");
-
   applyTextSize(currentTextSize);
   applyThemeMode(currentThemeMode);
   updateThresholdPills();
   updateHistoryLimitPills();
   updateFreshnessLimitPills();
 
-  menu.style.transition = "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
-  menu.style.transform = "translateY(120%)";
-
-  requestAnimationFrame(() => {
-    overlay.classList.remove("opacity-0");
+  if (typeof animateMenuDrawer === 'function') {
+    animateMenuDrawer(menu, overlay, true);
+  } else if (typeof window.CertiFlyAnimations?.animateMenuDrawer === 'function') {
+    window.CertiFlyAnimations.animateMenuDrawer(menu, overlay, true);
+  } else {
+    overlay.classList.remove("hidden", "opacity-0");
     overlay.classList.add("opacity-100");
+    menu.classList.remove("hidden");
     menu.style.transform = "translateY(0px)";
-  });
+    if (typeof animateMenuStagger === 'function') animateMenuStagger('#pane-main .nav-item-btn');
+  }
 }
 
 export function closeMenu() {
@@ -309,18 +309,16 @@ export function closeMenu() {
     window.resetProfileQrMode();
   }
 
-  overlay.classList.remove("opacity-100");
-  overlay.classList.add("opacity-0");
-
-  menu.style.transition = "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
-  menu.style.transform = "translateY(120%)";
-
-  setTimeout(() => {
+  if (typeof animateMenuDrawer === 'function') {
+    animateMenuDrawer(menu, overlay, false);
+  } else if (typeof window.CertiFlyAnimations?.animateMenuDrawer === 'function') {
+    window.CertiFlyAnimations.animateMenuDrawer(menu, overlay, false);
+  } else {
     overlay.classList.add("hidden");
     menu.classList.add("hidden");
-    menu.style.transform = "";
-    menu.style.transition = "";
+  }
 
+  setTimeout(() => {
     if (dock) {
       const topbarHeight = 48;
       const dockMaxTravel = 80;
@@ -797,6 +795,7 @@ if (typeof window !== 'undefined') {
   window.openProfileMenu = openProfileMenu;
   window.applyThemeMode = applyThemeMode;
   window.applyTextSize = applyTextSize;
+  window.toggleProfileAccordionSection = toggleProfileAccordionSection;
 }
 
 // Phase 3 Tools Controller
@@ -1163,4 +1162,27 @@ if (typeof window !== 'undefined') {
       animateTabIndicator(activeCatBtn, catCont, catInd, true);
     }
   });
+}
+
+// Accordion Collapsible Controller for Credentials Setup
+export function toggleProfileAccordionSection(sectionId) {
+  const contentEl = document.getElementById(`section-content-${sectionId}`);
+  const arrowEl = document.getElementById(`arrow-${sectionId}`);
+  if (!contentEl) return;
+
+  const isExpanding = contentEl.classList.contains('hidden');
+
+  if (typeof animateProfileAccordion === 'function') {
+    animateProfileAccordion(contentEl, arrowEl, isExpanding);
+  } else if (typeof window.CertiFlyAnimations?.animateProfileAccordion === 'function') {
+    window.CertiFlyAnimations.animateProfileAccordion(contentEl, arrowEl, isExpanding);
+  } else {
+    if (isExpanding) {
+      contentEl.classList.remove('hidden');
+      if (arrowEl) arrowEl.style.transform = 'rotate(180deg)';
+    } else {
+      contentEl.classList.add('hidden');
+      if (arrowEl) arrowEl.style.transform = 'rotate(0deg)';
+    }
+  }
 }
