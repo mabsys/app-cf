@@ -1,6 +1,8 @@
-// ./js/ui.js (1011_R421) - View Switching & UI Management
+// ./js/ui.js (1011_R427) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
+
+import { animateTabBounce, animateTabContentEntrance } from './animations.js';
 
 import { setTopBanner, showToast } from './notifications.js';
 import { initToolsModule, runToolCalculation, setToolsTab, getToolsState, getSectorCount, setSectorCount } from './tools.js';
@@ -9,7 +11,6 @@ import { renderHistoryList, getThresholdDays, getHistoryLimit, getFreshnessLimit
 import { topbarHTML } from './components/topbar.js';
 import { dockHTML } from './components/dock.js';
 import { menuHTML } from './components/menu.js';
-import { animateTabBounce, animateTabContentEntrance } from './animations.js';
 
 export function initSubTabDragScroll() {
   const strips = document.querySelectorAll('.tools-subtab-strip');
@@ -330,6 +331,8 @@ export function closeMenu() {
       if (distFromBottom <= 64) {
         progress = distFromBottom / 64;
       }
+      currentDockY = progress * topbarHeight;
+      currentTopbarY = progress * topbarHeight;
       dock.style.transform = `translateY(${progress * dockMaxTravel}px)`;
     }
 
@@ -442,31 +445,52 @@ export function initNavigationBars() {
 
     const distFromBottom = maxScrollY - clampedScrollY;
 
+    const maxStep = 14;
     if (clampedScrollY <= 2) {
       currentTranslateY = 0;
-    } else if (distFromBottom <= 64) {
-      const bottomFactor = distFromBottom / 64;
-      currentTranslateY = topbarHeight * bottomFactor;
-    } else if (delta !== 0) {
-      currentTranslateY += delta;
-      currentTranslateY = Math.max(0, Math.min(currentTranslateY, topbarHeight));
+    } else if (delta > 0) {
+      // Scrolling DOWN
+      const step = Math.min(delta, maxStep);
+      currentTranslateY = Math.min(topbarHeight, currentTranslateY + step);
+    } else if (delta < 0) {
+      // Scrolling UP: bring topbar & dock smoothly back into place
+      const step = Math.max(delta, -maxStep);
+      currentTranslateY = Math.max(0, currentTranslateY + step);
     }
 
-    const progress = currentTranslateY / topbarHeight;
+    // Topbar progress: 0 at top, 1.0 when scrolled down midway or sitting at bottom of document
+    let topbarProgress = 0;
+    if (clampedScrollY <= 2) {
+      topbarProgress = 0;
+    } else if (distFromBottom <= 64 && delta >= 0) {
+      topbarProgress = 1.0;
+    } else {
+      topbarProgress = currentTranslateY / topbarHeight;
+    }
+
+    // Dock progress: 0 at top or at bottom, 1.0 when hidden midway
+    let dockProgress = 0;
+    if (clampedScrollY <= 2) {
+      dockProgress = 0;
+    } else if (distFromBottom <= 64) {
+      dockProgress = Math.min(currentTranslateY / topbarHeight, distFromBottom / 64);
+    } else {
+      dockProgress = currentTranslateY / topbarHeight;
+    }
 
     if (dock) {
-      dock.style.transform = `translateY(${progress * dockMaxTravel}px)`;
+      dock.style.transform = `translateY(${dockProgress * dockMaxTravel}px)`;
     }
 
     if (topbar) {
-      const topbarTranslate = -100 + (progress * 100);
+      const topbarTranslate = -100 + (topbarProgress * 100);
       topbar.style.transform = `translateY(${topbarTranslate}%)`;
-      topbar.style.opacity = progress.toFixed(2);
+      topbar.style.opacity = topbarProgress.toFixed(2);
 
       const topBanner = document.getElementById("certifly-top-banner");
       if (topBanner && !topBanner.classList.contains("hidden")) {
         const topbarActualHeight = topbar.offsetHeight || 48;
-        const currentTop = Math.max(0, topbarActualHeight * progress);
+        const currentTop = Math.max(0, topbarActualHeight * topbarProgress);
         topBanner.style.top = `${currentTop}px`;
       }
     }
@@ -1106,7 +1130,7 @@ if (typeof window !== 'undefined') {
   window.switchTier1 = switchToolCategory;
   window.switchSubTab = switchActiveTool;
 }
-// Auto-realign sliding tab indicators on window resize
+/// Auto-realign sliding tab indicators on window resize
 if (typeof window !== 'undefined') {
   window.addEventListener('resize', () => {
     const resTab = localStorage.getItem('certifly_active_tab') || 'overview';
