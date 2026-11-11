@@ -1,4 +1,4 @@
-// ./js/components/menu.js (1111_R434) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
+// ./js/components/menu.js (1111_R435) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
 
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
@@ -339,14 +339,14 @@ export const menuHTML = `
       "Crafted 'n coded with heart, matey! - Capt MSZ ✈"
     </p>
 
-    <button type="button" olclick="if(typeof closeEasterEggModal === 'function') closeEasterEggModal();" class="w-full py-2.5 px-4 bg-blue-600 hOver:bg-blue-700 active:scale-[0.98] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer">
+    <button type="button" onclick="if(typeof closeEasterEggModal === 'function') closeEasterEggModal();" class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer">
       Dismiss
     </button>
   </div>
 </div>
 `;
 
-*// ==================================================================
+// ==================================================================
 // EASTER EGG HANDLERS
 // ==================================================================
 let brandTapCount = 0;
