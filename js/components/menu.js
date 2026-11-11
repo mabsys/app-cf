@@ -1,4 +1,4 @@
-// ./js/components/menu.js (0411_R357) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
+// ./js/components/menu.js (1111_R434) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
 
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
@@ -26,21 +26,21 @@ export const menuHTML = `
             </div>
             <div class="text-left">
               <div class="text-xs font-bold text-slate-800 dark:text-slate-100">My Credentials</div>
-              <div class="text-[10px] text-slate-400">Manage licence QR / URL & company attestations</div>
+              <div class="text-[10px] text-slate-400">Manage licence QR, company documents & passport</div>
             </div>
           </div>
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
         </button>
 
-        <!-- Category 1: App Settings -->
+        <!-- Category 1: App Preferences -->
         <button class="nav-item-btn w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 active:scale-[0.98] transition-all" data-target="pane-settings">
           <div class="flex items-center gap-3.5">
             <div class="p-2.5 bg-slate-200/80 dark:bg-slate-700/60 text-slate-700 dark:text-slate-200 rounded-xl">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.27 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527a1.125 1.125 0 01-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             </div>
             <div class="text-left">
-              <div class="text-xs font-bold text-slate-800 dark:text-slate-100">App Settings</div>
-              <div class="text-[10px] text-slate-400">Theme, font scale & warning threshold</div>
+              <div class="text-xs font-bold text-slate-800 dark:text-slate-100">App Preferences</div>
+              <div class="text-[10px] text-slate-400">Cockpit theme, font scaling & alert thresholds</div>
             </div>
           </div>
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
@@ -60,15 +60,15 @@ export const menuHTML = `
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
         </button>
 
-        <!-- Category 3: About CertiFly -->
+        <!-- Category 3: About & Support -->
         <button class="nav-item-btn w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 active:scale-[0.98] transition-all" data-target="pane-about">
           <div class="flex items-center gap-3.5">
             <div class="p-2.5 bg-slate-200/80 dark:bg-slate-700/60 text-slate-700 dark:text-slate-200 rounded-xl">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"></path></svg>
             </div>
             <div class="text-left">
-              <div class="text-xs font-bold text-slate-800 dark:text-slate-100">About CertiFly</div>
-              <div class="text-[10px] text-slate-400">App info, proxy status & compliance notes</div>
+              <div class="text-xs font-bold text-slate-800 dark:text-slate-100">About & Support</div>
+              <div class="text-[10px] text-slate-400">App info, version status & user guide</div>
             </div>
           </div>
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
@@ -94,7 +94,7 @@ export const menuHTML = `
             Scan Licence QR
           </button>
 
-          <button id="profile-mode-url-btn" type="button" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-xs">
+          <button id="profile-mode-url-btn" type="button" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white shadow-xs">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/></svg>
             Paste URL
           </button>
@@ -120,7 +120,7 @@ export const menuHTML = `
               </button>
 
               <div class="grid grid-cols-2 gap-2">
-                <button id="profile-cycle-btn" type="button" class="py-2 px-3 bg-slate-200/80 dark:bg-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-bold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5">
+                <button id="profile-cycle-btn" type="button" class="py-2.5 px-3 bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5 shadow-xs">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
                   Switch Lens
                 </button>
@@ -213,11 +213,11 @@ export const menuHTML = `
 
       <!-- Action Buttons -->
       <div class="px-1 flex flex-col gap-2 pt-1 py-3">
-        <button id="profile-save-btn" type="button" class="w-full p-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5">
+        <button id="profile-save-btn" type="button" class="w-full p-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
           Save Credentials
         </button>
 
-        <button id="profile-clear-btn" type="button" class="w-full p-3 text-xs font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-100 dark:border-rose-900/50 hover:bg-rose-100 transition-all">
+        <button id="profile-clear-btn" type="button" class="w-full p-3.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-all shadow-xs cursor-pointer">
           Clear Credentials
         </button>
       </div>
@@ -288,8 +288,8 @@ export const menuHTML = `
         </div>
 
         <div class="px-1 flex flex-col gap-2.5 pt-1 pb-3">
-          <button id="storage-clear-history-btn" type="button" class="w-full p-3 text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-900/50 hover:bg-amber-100 transition-all">Clear Recent Scan History</button>
-          <button id="storage-reset-all-btn" type="button" class="w-full p-3 text-xs font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-100 dark:border-rose-900/50 hover:bg-rose-100 transition-all">Reset All Application Data</button>
+          <button id="storage-clear-history-btn" type="button" class="w-full p-3.5 text-xs font-bold text-slate-950 bg-amber-500 hover:bg-amber-600 rounded-xl transition-all shadow-xs cursor-pointer">Clear Recent Scan History</button>
+          <button id="storage-reset-all-btn" type="button" class="w-full p-3.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-all shadow-xs cursor-pointer">Reset All Application Data</button>
         </div>
       </div>
     </div>
@@ -315,7 +315,7 @@ export const menuHTML = `
             <span>User Guide & Manual</span>
           </a>
 
-          <a href="mailto:mabsys.dev@gmail.com?subject=CertiFly%20Feedback" class="w-full p-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-slate-200 transition-colors">
+          <a href="https://forms.gle/certifly-feedback" target="_blank" class="w-full p-3 bg-slate-200/80 dark:bg-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
             <span>Send App Feedback</span>
           </a>
@@ -325,4 +325,71 @@ export const menuHTML = `
 
   </div>
 </div>
+
+<!-- CAPTAIN'S EASTER EGG SPRING MODAL POPUP -->
+<div id="easter-egg-modal" class="fixed inset-0 z-[60] bg-black/75 backdrop-blur-md flex items-center justify-center p-4 hidden opacity-0 transition-all duration-300">
+  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-xs w-full shadow-2xl flex flex-col items-center text-center relative animate-fade-in">
+    <!-- Pirate Flag SVG Logo -->
+    <div class="w-16 h-16 bg-slate-900 dark:bg-slate-800 text-white rounded-2xl flex items-center justify-center shadow-md mb-3 border border-slate-700/50">
+      <svg xmlns="http://www.w3.org/2000/svg" width="2.5em" height="2.5em" viewBox="0 0 32 32" class="drop-shadow-sm"><title>pirate-flag</title><g fill="none"><path fill="#321b41" d="M2 7a1 1 0 0 1 1-1h26a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H3a 1 0 0 1-1-1z"/><path fill="#f3eef8" d="M11.707 10.707A1 1 0 1 0 10 10a1 1 0 1 0 .707 1.707l1.116 1.116a.25.25 0 0 0 .354 0l.646-.646a.25.25 0 0 0 0-.354zm0 10.482a1 1 0 1 1-1.707.707a1 1 0 1 1 .707-1.707l1.116-1.116a.25.25 0 0 1 .354 0l.646.647a.25.25 0 0 1 0 .353zM19.897 10c0 .276.111.526.292.707l-1.116 1.116a.25.25 0 0 0 0 .354l.647.646a.25.25 0 0 0 .353 0l1.116-1.116A1 1 0 1 0 21.896 10a1 1 0 1 0-2 0m.292 11.19a1 1 0 1 0 1.707.707a1 1 0 1 0-.707-1.708l-1.116-1.116a.25.25 0 0 0-.353 0l-.647.647a.25.25 0 0 0 0 .353zM19.75 15c0-1.933-1.679-3.5-3.75-3.5s-3.75 1.567-3.75 3.5c0 .4422.088.864.248 1.253l-.274.41a1.5 1.5 0 0 0 .934 2.3l.342.073v.716a.75.75 0 0 0 1.5 0v-.5h.25v.5a.75.75 0 0 0 1.5 0v-.5H17v.5a.75.75 0 0 0 1.5 0v-.714l.342-.074a1.5 1.5 0 0 0 .934-2.298l-.274-.41c.16-.39.248-.812.248-1.254m-4.82 1.582c-.48.482-1.184.558-1.57.172c-.323-.323-.27-1.3.074-1.645c.343-.343 1.396-.369 1.668-.097c.386.386.31 1.09-.172 1.57m3.7.172c-.387.386-1.09.31-1.571-.172c-.481-.48-.558-1.184-.172-1.57c.272-.272 1.325-.246 1.668.097c.344.344.397 1.322.074 1.645m-2.847.126a.25.25 0 0 1 .434 0l.57.996a.25.25 0 0 1-.218.374H15.43a.25.25 0 0 1-.217-.374z"/></g></svg>
+    </div>
+    
+    <h3 class="text-sm font-black text-slate-800 dark:text-slate-100 mb-1">Ahoy, Aviator!</h3>
+    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+      "Crafted 'n coded with heart, matey! - Capt MSZ ✈"
+    </p>
+
+    <button type="button" olclick="if(typeof closeEasterEggModal === 'function') closeEasterEggModal();" class="w-full py-2.5 px-4 bg-blue-600 hOver:bg-blue-700 active:scale-[0.98] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer">
+      Dismiss
+    </button>
+  </div>
+</div>
 `;
+
+*// ==================================================================
+// EASTER EGG HANDLERS
+// ==================================================================
+let brandTapCount = 0;
+let brandTapTimer = null;
+
+export function handleBrandCardTap() {
+  brandTapCount++;
+  if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+    navigator.vibrate(20);
+  }
+  
+  if (brandTapCount >= 14) {
+    brandTapCount = 0;
+    openEasterEggModal();
+  } else {
+    clearTimeout(brandTapTimer);
+    brandTapTimer = setTimeout(() => {
+      brandTapCount = 0;
+    }, 2000);
+  }
+}
+
+export function openEasterEggModal() {
+  const modal = document.getElementById('easter-egg-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  requestAnimationFrame(() => {
+    modal.classList.remove('opacity-0');
+  });
+}
+
+export function closeEasterEggModal() {
+  const modal = document.getElementById('easter-egg-modal');
+  if (!modal) return;
+  modal.classList.add('opacity-0');
+  setTimeout(() => {
+    modal.classList.add('hidden');
+  }, 300);
+}
+
+// Global window exposure for inline onclick handlers
+if (typeof window !== 'undefined') {
+  window.handleBrandCardTap = handleBrandCardTap;
+  window.openEasterEggModal = openEasterEggModal;
+  window.closeEasterEggModal = closeEasterEggModal;
+}
