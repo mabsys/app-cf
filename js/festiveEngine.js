@@ -1,4 +1,4 @@
-// ./js/festiveEngine.js (1111_R106) - CertiFly Hybrid Festive & Seasonal Overlay Engine
+// ./js/festiveEngine.js (1111_R107) - CertiFly Hybrid Festive & Seasonal Overlay Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -205,7 +205,12 @@ export function mountFestiveOverlay(overrideDateStr = null) {
 
   const activeEvent = getActiveFestiveEvent(overrideDateStr);
 
-  // Target floating mini topbar component (#persistent-topbar from topbar.js) as primary anchor
+  // Ensure persistent topbar exists in DOM if initNavigationBars has run
+  if (typeof window.initNavigationBars === 'function' && !document.getElementById('persistent-topbar')) {
+    try { window.initNavigationBars(); } catch (e) {}
+  }
+
+  // Target floating persistent mini topbar (#persistent-topbar from topbar.js) as primary anchor
   const topbar = document.getElementById('persistent-topbar')
               || document.getElementById('topbar')
               || document.querySelector('header');
@@ -215,12 +220,18 @@ export function mountFestiveOverlay(overrideDateStr = null) {
     return;
   }
 
+  // Ensure persistent topbar is visible when mounting festive overlay
+  if (topbar.id === 'persistent-topbar') {
+    topbar.style.transform = 'translateY(0%)';
+    topbar.style.opacity = '1';
+  }
+
   let shelf = document.getElementById('topbar-festive-shelf');
   if (!shelf) {
     shelf = document.createElement('div');
     shelf.id = 'topbar-festive-shelf';
-    // Anchored to bottom edge of #persistent-topbar (fixed top-0 left-0 right-0 h-12)
-    shelf.className = 'absolute top-full left-0 right-0 w-full max-w-md mx-auto pointer-events-none select-none overflow-visible z-50 flex items-center justify-center -mt-1 transition-opacity duration-300 opacity-100';
+    // Anchored directly to bottom edge of #persistent-topbar (fixed top-0 left-0 right-0 h-12)
+    shelf.className = 'absolute top-full left-0 right-0 w-full max-w-md mx-auto pointer-events-none select-none overflow-visible z-50 flex items-center justify-center -mt-0.5 transition-opacity duration-300 opacity-100';
     if (getComputedStyle(topbar).position === 'static') {
       topbar.style.position = 'relative';
     }
@@ -243,8 +254,6 @@ export function mountFestiveOverlay(overrideDateStr = null) {
       </div>
     </div>
   `;
-
-  initFestiveScrollFade();
 }
 
 /**
@@ -255,31 +264,6 @@ export function unmountFestiveOverlay() {
   if (shelf) {
     shelf.remove();
   }
-}
-
-/**
- * Smooth Scroll-Fade Listener: Fades out overlay when scrolling down past 25px
- */
-let isScrollListenerBound = false;
-export function initFestiveScrollFade() {
-  if (isScrollListenerBound) return;
-
-  const scrollContainer = document.getElementById('sheet-content') || window;
-  const handleScroll = () => {
-    const shelf = document.getElementById('topbar-festive-shelf');
-    if (!shelf) return;
-
-    const scrollTop = scrollContainer.scrollTop || window.scrollY || 0;
-    if (scrollTop > 25) {
-      shelf.style.opacity = '0';
-    } else {
-      shelf.style.opacity = '1';
-    }
-  };
-
-  scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
-  window.addEventListener('scroll', handleScroll, { passive: true });
-  isScrollListenerBound = true;
 }
 
 /**
