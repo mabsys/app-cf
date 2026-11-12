@@ -1,4 +1,4 @@
-<!-- ./index.html (1011_R438) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+<!-- ./index.html (1111_R440) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -73,7 +73,7 @@ navigator.serviceWorker.register('sw.js')
     <div class="max-w-md mx-auto w-full p-4 flex flex-col min-h-screen">
 
         <!-- Header -->
-        <header class="text-center py-3">
+        <header id="topbar" class="text-center py-3 relative">
             <h1 onclick="showScannerView()" class="text-3xl font-extrabold text-blue-950 dark:text-white tracking-tight italic flex items-center justify-center gap-1 leading-none cursor-pointer">
                 <span class="relative">
                     CertiFly<span class="align-super text-[6px] font-bold absolute -top-0.5 -right-1.5 dark:text-white">™</span>
@@ -2107,6 +2107,7 @@ navigator.serviceWorker.register('sw.js')
 
     <script src="js/vendor/anime.min.js"></script>
     <script type="module" src="js/animations.js"></script>
+    <script type="module" src="js/festiveEngine.js"></script>
     <script type="module" src="main.js"></script>
 
     <!-- CUSTOM EFB TIME PICKER MODAL -->
