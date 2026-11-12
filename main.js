@@ -1,4 +1,4 @@
-// ./main.js (1111_R412) - CertiFly Application Shell & Orchestrator
+// ./main.js (1111_R413) - CertiFly Application Shell & Orchestrator
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
@@ -90,6 +90,9 @@ document.addEventListener("DOMContentLoaded", () => {
   initProfileUI();
   initSettingsUI();
   initStorageUI();
+  if (typeof window.initFestiveEngine === "function") {
+    window.initFestiveEngine();
+  }
   renderDashboardView();
 });
 
@@ -872,6 +875,13 @@ function initSettingsUI() {
   document.getElementById("threshold-pill-90")?.addEventListener("click", () => {
     setThresholdDays(90);
     updateThresholdPills(90);
+  });
+
+  document.getElementById("festive-pill-enable")?.addEventListener("click", () => {
+    if (typeof window.setFestiveEnabled === "function") window.setFestiveEnabled(true);
+  });
+  document.getElementById("festive-pill-disable")?.addEventListener("click", () => {
+    if (typeof window.setFestiveEnabled === "function") window.setFestiveEnabled(false);
   });
 }
 
