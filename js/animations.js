@@ -1,4 +1,4 @@
-// ./js/animations.js (1111_R401) - CertiFly Centralized Motion & Animation Engine
+// ./js/animations.js (1111_R402) - CertiFly Centralized Motion & Animation Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -610,38 +610,58 @@ export function animateProfileAccordion(contentEl, arrowEl, isExpanding) {
   if (!isAnimeAvailable()) {
     if (isExpanding) {
       contentEl.classList.remove('hidden');
+      contentEl.style.height = 'auto';
+      contentEl.style.opacity = '1';
       if (arrowEl) arrowEl.style.transform = 'rotate(180deg)';
     } else {
       contentEl.classList.add('hidden');
+      contentEl.style.height = '';
+      contentEl.style.opacity = '';
       if (arrowEl) arrowEl.style.transform = 'rotate(0deg)';
     }
     return;
   }
 
   if (isExpanding) {
+    // 1. Temporarily unhide & reset height to 'auto' to measure true unconstrained border-box height
     contentEl.classList.remove('hidden');
-    const fullHeight = contentEl.scrollHeight || 200;
+    contentEl.style.height = 'auto';
+    contentEl.style.opacity = '1';
+    contentEl.style.overflow = 'hidden';
+
+    // 2. Measure complete border-box height (includes padding + borders)
+    const targetHeight = contentEl.offsetHeight || contentEl.scrollHeight || 200;
+
+    // 3. Reset to 0 height & opacity right before starting animation
+    contentEl.style.height = '0px';
+    contentEl.style.opacity = '0';
 
     if (arrowEl) {
       runAnime({
         targets: arrowEl,
         rotate: 180,
-        duration: 200,
+        duration: 220,
         easing: 'easeOutQuad'
       });
     }
 
     runAnime({
       targets: contentEl,
-      height: [0, fullHeight],
+      height: [0, targetHeight],
       opacity: [0, 1],
       duration: 300,
       easing: 'easeOutCubic',
       complete: () => {
+        // 4. Restore natural CSS layout after animation finishes
         contentEl.style.height = 'auto';
+        contentEl.style.opacity = '';
+        contentEl.style.overflow = '';
       }
     });
   } else {
+    contentEl.style.overflow = 'hidden';
+    const currentHeight = contentEl.offsetHeight || contentEl.scrollHeight;
+
     if (arrowEl) {
       runAnime({
         targets: arrowEl,
@@ -653,12 +673,15 @@ export function animateProfileAccordion(contentEl, arrowEl, isExpanding) {
 
     runAnime({
       targets: contentEl,
-      height: [contentEl.offsetHeight, 0],
+      height: [currentHeight, 0],
       opacity: [1, 0],
       duration: 250,
       easing: 'easeInCubic',
       complete: () => {
         contentEl.classList.add('hidden');
+        contentEl.style.height = '';
+        contentEl.style.opacity = '';
+        contentEl.style.overflow = '';
       }
     });
   }
