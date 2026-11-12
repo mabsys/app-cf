@@ -1,4 +1,4 @@
-// ./js/festiveEngine.js (1111_R104) - CertiFly Hybrid Festive & Seasonal Overlay Engine
+// ./js/festiveEngine.js (1111_R105) - CertiFly Hybrid Festive & Seasonal Overlay Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -204,7 +204,7 @@ export function mountFestiveOverlay(overrideDateStr = null) {
   }
 
   const activeEvent = getActiveFestiveEvent(overrideDateStr);
-  const topbar = document.getElementById('topbar');
+  const topbar = document.getElementById('topbar') || document.querySelector('header');
 
   if (!activeEvent || !topbar) {
     unmountFestiveOverlay();
