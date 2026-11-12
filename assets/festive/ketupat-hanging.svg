@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <clipPath id="diamond-clip">
+      <rect x="36" y="36" width="56" height="56" rx="10" ry="10" transform="rotate(45 64 64)"/>
+    </clipPath>
+  </defs>
+
+  <!-- Top Ribbons -->
+  <path d="M 60 32 L 56 12 L 60 15 L 64 11 L 65 32 Z" fill="#C5E17A" stroke="#364A22" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M 65 32 L 69 10 L 72 14 L 77 12 L 68 32 Z" fill="#8BC34A" stroke="#364A22" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- Top Knot -->
+  <rect x="57" y="25" width="14" height="5" rx="2.5" transform="rotate(-12 64 27.5)" fill="#8BC34A" stroke="#364A22" stroke-width="2.2"/>
+  <rect x="57" y="28" width="14" height="5" rx="2.5" transform="rotate(10 64 30.5)" fill="#A5D663" stroke="#364A22" stroke-width="2.2"/>
+
+  <!-- Bottom Ribbons -->
+  <path d="M 60 96 L 52 116 L 57 114 L 60 119 L 64 96 Z" fill="#8BC34A" stroke="#364A22" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M 65 96 L 67 119 L 71 114 L 76 116 L 68 96 Z" fill="#C5E17A" stroke="#364A22" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- Bottom Knot -->
+  <rect x="57" y="94" width="14" height="5" rx="2.5" transform="rotate(10 64 96.5)" fill="#A5D663" stroke="#364A22" stroke-width="2.2"/>
+  <rect x="57" y="97" width="14" height="5" rx="2.5" transform="rotate(-10 64 99.5)" fill="#8BC34A" stroke="#364A22" stroke-width="2.2"/>
+
+  <!-- Ketupat Diamond Body -->
+  <g clip-path="url(#diamond-clip)">
+    <g transform="rotate(45 64 64)">
+      <!-- Base Grid 3x3 -->
+      <rect x="34" y="34" width="20" height="20" fill="#8BC34A"/>
+      <rect x="54" y="34" width="20" height="20" fill="#C5E17A"/>
+      <rect x="74" y="34" width="20" height="20" fill="#8BC34A"/>
+
+      <rect x="34" y="54" width="20" height="20" fill="#C5E17A"/>
+      <rect x="54" y="54" width="20" height="20" fill="#8BC34A"/>
+      <rect x="74" y="54" width="20" height="20" fill="#C5E17A"/>
+
+      <rect x="34" y="74" width="20" height="20" fill="#8BC34A"/>
+      <rect x="54" y="74" width="20" height="20" fill="#C5E17A"/>
+      <rect x="74" y="74" width="20" height="20" fill="#8BC34A"/>
+
+      <!-- Woven Texture Lines -->
+      <g stroke="#689F38" stroke-width="1.2">
+        <line x1="38" y1="34" x2="38" y2="54"/>
+        <line x1="42" y1="34" x2="42" y2="54"/>
+        <line x1="46" y1="34" x2="46" y2="54"/>
+        <line x1="50" y1="34" x2="50" y2="54"/>
+
+        <line x1="74" y1="38" x2="94" y2="38"/>
+        <line x1="74" y1="42" x2="94" y2="42"/>
+        <line x1="74" y1="46" x2="94" y2="46"/>
+        <line x1="74" y1="50" x2="94" y2="50"/>
+
+        <line x1="34" y1="78" x2="54" y2="78"/>
+        <line x1="34" y1="82" x2="54" y2="82"/>
+        <line x1="34" y1="86" x2="54" y2="86"/>
+        <line x1="34" y1="90" x2="54" y2="90"/>
+
+        <line x1="78" y1="74" x2="78" y2="94"/>
+        <line x1="82" y1="74" x2="82" y2="94"/>
+        <line x1="86" y1="74" x2="86" y2="94"/>
+        <line x1="90" y1="74" x2="90" y2="94"/>
+      </g>
+
+      <!-- Grid Borders -->
+      <line x1="54" y1="34" x2="54" y2="94" stroke="#364A22" stroke-width="2.2"/>
+      <line x1="74" y1="34" x2="74" y2="94" stroke="#364A22" stroke-width="2.2"/>
+      <line x1="34" y1="54" x2="94" y2="54" stroke="#364A22" stroke-width="2.2"/>
+      <line x1="34" y1="74" x2="94" y2="74" stroke="#364A22" stroke-width="2.2"/>
+    </g>
+  </g>
+
+  <!-- Outer Diamond Outline -->
+  <rect x="36" y="36" width="56" height="56" rx="10" ry="10" transform="rotate(45 64 64)" fill="none" stroke="#364A22" stroke-width="2.8"/>
+
+  <!-- Cute Kawaii Face -->
+  <!-- Eyes -->
+  <circle cx="56" cy="62" r="3" fill="#2A381B"/>
+  <circle cx="55" cy="61" r="1" fill="#FFFFFF"/>
+  <circle cx="72" cy="62" r="3" fill="#2A381B"/>
+  <circle cx="71" cy="61" r="1" fill="#FFFFFF"/>
+
+  <!-- Blush -->
+  <ellipse cx="53.5" cy="66.5" rx="2.5" ry="1.5" fill="#F48FB1"/>
+  <ellipse cx="74.5" cy="66.5" rx="2.5" ry="1.5" fill="#F48FB1"/>
+
+  <!-- Smile -->
+  <path d="M 61.5 65.5 Q 64 68.5 66.5 65.5" fill="none" stroke="#2A381B" stroke-width="2" stroke-linecap="round"/>
+</svg>
