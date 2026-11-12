@@ -1,131 +1,74 @@
-// ./js/festiveEngine.js - CertiFly Hybrid Remote Festive Overlay Engine
+// ./js/festiveEngine.js (1111_R104) - CertiFly Hybrid Festive & Seasonal Overlay Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
-// CertiFly PWA - Flight Crew Compliance Suite
-
-const REMOTE_FESTIVE_CONFIG_URL = './assets/festive-config.json';
-const FESTIVE_STORAGE_ENABLED_KEY = 'certifly_festive_enabled';
-const FESTIVE_STORAGE_CONFIG_KEY = 'certifly_festive_config';
+// CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
 /**
- * Built-in Offline Fallback Calendar for Lunar & Annual Festive Events
+ * DEFAULT_FESTIVE_CONFIG
+ * Offline baseline fallback containing ONLY FIRM GREGORIAN ANNUAL DATES.
+ * Variable lunar-based events (Hari Raya, CNY, Deepavali, etc.) are fetched dynamically
+ * from remote festive-config.json to prevent stale offline dates across calendar years.
  */
 export const DEFAULT_FESTIVE_CONFIG = {
-  version: '2026.1',
-  updatedAt: '2026-11-12',
+  version: "2026.1",
+  updatedAt: "2026-11-12",
+  remoteConfigUrl: "./assets/festive-config.json",
   events: [
     {
-      id: 'pilots_day_2026',
+      id: "pilots_day",
       name: "World Pilots' Day",
-      type: 'pilots_day',
-      startDate: '2026-04-25',
-      endDate: '2026-04-27',
-      themeColor: '#3b82f6',
-      badgeText: "Happy World Pilots' Day!"
+      startDate: "2026-04-26",
+      endDate: "2026-04-27",
+      themeColor: "#f59e0b",
+      badgeText: "Happy World Pilots' Day!",
+      icon: "pilots-wings"
     },
     {
-      id: 'merdeka_2026',
-      name: 'National Day',
-      type: 'merdeka',
-      startDate: '2026-08-30',
-      endDate: '2026-09-01',
-      themeColor: '#2563eb',
-      badgeText: 'Selamat Hari Merdeka'
+      id: "merdeka_day",
+      name: "National Day (Merdeka)",
+      startDate: "2026-08-30",
+      endDate: "2026-09-01",
+      themeColor: "#3b82f6",
+      badgeText: "Selamat Hari Merdeka!",
+      icon: "flag-star"
     },
     {
-      id: 'year_end_2026',
-      name: 'Year End & New Year',
-      type: 'year_end',
-      startDate: '2026-12-22',
-      endDate: '2027-01-03',
-      themeColor: '#38bdf8',
-      badgeText: 'Happy Holidays & New Year'
+      id: "hari_malaysia",
+      name: "Hari Malaysia",
+      startDate: "2026-09-15",
+      endDate: "2026-09-17",
+      themeColor: "#f59e0b",
+      badgeText: "Selamat Hari Malaysia!",
+      icon: "flag-star"
+    },
+    {
+      id: "year_end",
+      name: "Year End & New Year",
+      startDate: "2026-12-24",
+      endDate: "2027-01-02",
+      themeColor: "#38bdf8",
+      badgeText: "Happy Holidays & Happy New Year!",
+      icon: "snow-sparkle"
     }
   ]
 };
 
-/**
- * SVG Graphics Templates for TopBar Center Archway & Hanging Side Accents
- */
-const FESTIVE_GRAPHICS_MAP = {
-  year_end: `
-    <div class="relative w-full h-full flex items-center justify-between px-2">
-      <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-0 opacity-30 dark:opacity-50">
-        <svg class="w-56 h-12" viewBox="0 0 220 50" fill="none">
-          <path d="M10 15 Q 110 40 210 15" stroke="#38bdf8" stroke-width="2" />
-          <polygon points="110,8 113,16 121,16 115,21 117,29 110,24 103,29 105,21 99,16 107,16" fill="#7dd3fc" />
-        </svg>
-      </div>
-      <div class="absolute top-full left-3 -mt-1 pointer-events-none">
-        <svg class="w-9 h-14 text-sky-400" viewBox="0 0 36 56" fill="none" stroke="currentColor" stroke-width="1.5">
-          <line x1="18" y1="0" x2="18" y2="24" stroke-dasharray="2 2" />
-          <path d="M18 24 M18 16 L18 32 M10 24 L26 24 M12 18 L24 30 M12 30 L24 18" />
-        </svg>
-      </div>
-      <div class="absolute top-full right-3 -mt-1 pointer-events-none">
-        <svg class="w-9 h-14 text-sky-400" viewBox="0 0 36 56" fill="none" stroke="currentColor" stroke-width="1.5">
-          <line x1="18" y1="0" x2="18" y2="24" stroke-dasharray="2 2" />
-          <path d="M18 24 M18 16 L18 32 M10 24 L26 24 M12 18 L24 30 M12 30 L24 18" />
-        </svg>
-      </div>
-    </div>
-  `,
-  pilots_day: `
-    <div class="relative w-full h-full flex items-center justify-between px-2">
-      <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-0 opacity-35 dark:opacity-55">
-        <svg class="w-56 h-12 text-blue-500" viewBox="0 0 220 50" fill="none" stroke="currentColor">
-          <path d="M20 25 C60 10 90 20 110 32 C130 20 160 10 200 25" stroke-width="2" />
-          <circle cx="110" cy="30" r="8" fill="#3b82f6" stroke="#fbbf24" stroke-width="1.5" />
-        </svg>
-      </div>
-      <div class="absolute top-full left-3 -mt-1 pointer-events-none">
-        <svg class="w-8 h-12 text-amber-400" viewBox="0 0 32 48" fill="none" stroke="currentColor">
-          <line x1="16" y1="0" x2="16" y2="18" stroke-width="1.5" />
-          <polygon points="16,18 26,26 22,38 16,33 10,38 6,26" fill="#fbbf24" stroke="#b45309" stroke-width="1.5" />
-        </svg>
-      </div>
-      <div class="absolute top-full right-3 -mt-1 pointer-events-none">
-        <svg class="w-8 h-12 text-amber-400" viewBox="0 0 32 48" fill="none" stroke="currentColor">
-          <line x1="16" y1="0" x2="16" y2="18" stroke-width="1.5" />
-          <polygon points="16,18 26,26 22,38 16,33 10,38 6,26" fill="#fbbf24" stroke="#b45309" stroke-width="1.5" />
-        </svg>
-      </div>
-    </div>
-  `,
-  merdeka: `
-    <div class="relative w-full h-full flex items-center justify-between px-2">
-      <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-0 opacity-30 dark:opacity-50">
-        <svg class="w-56 h-12" viewBox="0 0 220 50" fill="none">
-          <path d="M10 35 Q 110 10 210 35" stroke="#2563eb" stroke-width="2" />
-          <polygon points="110,12 113,20 121,20 115,25 117,33 110,28 103,33 105,25 99,20 107,20" fill="#f59e0b" />
-        </svg>
-      </div>
-      <div class="absolute top-full left-3 -mt-1 pointer-events-none">
-        <svg class="w-8 h-14" viewBox="0 0 32 56" fill="none">
-          <line x1="16" y1="0" x2="16" y2="20" stroke="#2563eb" stroke-width="1.5" />
-          <rect x="8" y="20" width="16" height="24" rx="2" fill="#dc2626" stroke="#fbbf24" stroke-width="1" />
-        </svg>
-      </div>
-      <div class="absolute top-full right-3 -mt-1 pointer-events-none">
-        <svg class="w-8 h-14" viewBox="0 0 32 56" fill="none">
-          <line x1="16" y1="0" x2="16" y2="20" stroke="#2563eb" stroke-width="1.5" />
-          <rect x="8" y="20" width="16" height="24" rx="2" fill="#dc2626" stroke="#fbbf24" stroke-width="1" />
-        </svg>
-      </div>
-    </div>
-  `
-};
+const STORAGE_KEY_ENABLED = 'certifly_festive_enabled';
+const STORAGE_KEY_CONFIG = 'certifly_festive_config';
 
+/**
+ * Check if Festive Overlays are enabled by the user (default: true)
+ */
 export function isFestiveEnabled() {
-  if (typeof localStorage === 'undefined') return true;
-  const stored = localStorage.getItem(FESTIVE_STORAGE_ENABLED_KEY);
-  return stored !== 'false';
+  const val = localStorage.getItem(STORAGE_KEY_ENABLED);
+  return val === null ? true : val === 'true';
 }
 
+/**
+ * Enable or disable Festive Overlays in App Preferences
+ */
 export function setFestiveEnabled(enabled) {
-  if (typeof localStorage !== 'undefined') {
-    localStorage.setItem(FESTIVE_STORAGE_ENABLED_KEY, enabled ? 'true' : 'false');
-  }
-  updateFestivePills(enabled);
+  localStorage.setItem(STORAGE_KEY_ENABLED, enabled ? 'true' : 'false');
+  updateFestivePills();
   if (enabled) {
     mountFestiveOverlay();
   } else {
@@ -133,46 +76,63 @@ export function setFestiveEnabled(enabled) {
   }
 }
 
+/**
+ * Get current cached or fallback festive config
+ */
 export function getFestiveConfig() {
-  if (typeof localStorage !== 'undefined') {
-    try {
-      const cached = localStorage.getItem(FESTIVE_STORAGE_CONFIG_KEY);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed && Array.isArray(parsed.events)) {
-          return parsed;
-        }
-      }
-    } catch (e) {
-      console.warn('FestiveEngine: Error reading cached festive config:', e);
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_CONFIG);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.events)) return parsed;
     }
+  } catch (err) {
+    console.warn('festiveEngine: Failed parsing stored festive config:', err);
   }
   return DEFAULT_FESTIVE_CONFIG;
 }
 
+/**
+ * Background Remote Sync for festive-config.json
+ */
 export async function syncFestiveConfigRemote() {
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
     return getFestiveConfig();
   }
 
+  const currentConfig = getFestiveConfig();
+  const url = currentConfig.remoteConfigUrl || DEFAULT_FESTIVE_CONFIG.remoteConfigUrl;
+
   try {
-    const res = await fetch(REMOTE_FESTIVE_CONFIG_URL, { cache: 'no-cache' });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+    const res = await fetch(url, {
+      cache: 'no-cache',
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
     if (res.ok) {
-      const remoteConfig = await res.json();
-      if (remoteConfig && Array.isArray(remoteConfig.events)) {
-        if (typeof localStorage !== 'undefined') {
-          localStorage.setItem(FESTIVE_STORAGE_CONFIG_KEY, JSON.stringify(remoteConfig));
+      const remoteData = await res.json();
+      if (remoteData && Array.isArray(remoteData.events)) {
+        localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(remoteData));
+        if (isFestiveEnabled()) {
+          mountFestiveOverlay();
         }
-        return remoteConfig;
+        return remoteData;
       }
     }
   } catch (err) {
-    console.warn('FestiveEngine: Remote sync skipped (offline or network block):', err);
+    console.warn('festiveEngine: Remote sync skipped or failed:', err.message || err);
   }
 
   return getFestiveConfig();
 }
 
+/**
+ * Evaluates current local date against active festive events
+ */
 export function getActiveFestiveEvent(overrideDateStr = null) {
   const config = getFestiveConfig();
   if (!config || !Array.isArray(config.events)) return null;
@@ -186,67 +146,103 @@ export function getActiveFestiveEvent(overrideDateStr = null) {
   }) || null;
 }
 
-let scrollListenerBound = false;
+/**
+ * Vector SVG Archetypes for Header Archway Halos
+ */
+function getFestiveSvgGraphic(iconType, themeColor) {
+  switch (iconType) {
+    case 'pilots-wings':
+      return `
+        <svg viewBox="0 0 400 80" class="w-full h-full text-amber-500 drop-shadow-md overflow-visible" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M 40 40 Q 120 10 180 35 T 200 45 T 220 35 Q 280 10 360 40" stroke="currentColor" stroke-linecap="round"/>
+          <circle cx="200" cy="42" r="14" fill="#f59e0b" fill-opacity="0.2" stroke="#f59e0b" stroke-width="2"/>
+          <path d="M 193 42 L 207 42 M 200 35 L 200 49" stroke="#fbbf24" stroke-width="2"/>
+        </svg>`;
 
-function initFestiveScrollFade() {
-  if (scrollListenerBound) return;
-  scrollListenerBound = true;
+    case 'flag-star':
+      return `
+        <svg viewBox="0 0 400 80" class="w-full h-full text-blue-500 drop-shadow-md overflow-visible" fill="none" stroke="currentColor">
+          <path d="M 30 20 Q 200 60 370 20" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4 4"/>
+          <circle cx="200" cy="38" r="18" fill="#ef4444" fill-opacity="0.15" stroke="#ef4444" stroke-width="1.5"/>
+          <polygon points="200,26 204,34 213,35 206,41 208,50 200,45 192,50 194,41 187,35 196,34" fill="#fbbf24"/>
+        </svg>`;
 
-  const handleScroll = () => {
-    const shelf = document.getElementById('topbar-festive-shelf');
-    if (!shelf) return;
+    case 'crescent-star':
+    case 'crescent-moon':
+      return `
+        <svg viewBox="0 0 400 80" class="w-full h-full text-emerald-500 drop-shadow-md overflow-visible" fill="none" stroke="currentColor">
+          <path d="M 20 15 Q 200 65 380 15" stroke="#10b981" stroke-width="2" stroke-dasharray="6 4"/>
+          <path d="M 192 22 A 16 16 0 1 0 212 42 A 13 13 0 1 1 192 22 Z" fill="#34d399" stroke="#10b981"/>
+          <polygon points="214,26 216,31 221,31 217,34 219,39 214,36 209,39 211,34 207,31 212,31" fill="#fbbf24"/>
+        </svg>`;
 
-    const scrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
-    if (scrollTop > 25) {
-      shelf.style.opacity = '0';
-    } else {
-      shelf.style.opacity = '1';
-    }
-  };
+    case 'lantern':
+      return `
+        <svg viewBox="0 0 400 80" class="w-full h-full text-red-500 drop-shadow-md overflow-visible" fill="none" stroke="currentColor">
+          <path d="M 10 10 Q 200 50 390 10" stroke="#ef4444" stroke-width="2"/>
+          <rect x="186" y="22" width="28" height="36" rx="12" fill="#ef4444" fill-opacity="0.8" stroke="#f59e0b" stroke-width="2"/>
+          <path d="M 200 58 L 200 70 M 194 70 L 206 70" stroke="#fbbf24" stroke-width="2"/>
+        </svg>`;
 
-  if (typeof window !== 'undefined') {
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    case 'snow-sparkle':
+    default:
+      return `
+        <svg viewBox="0 0 400 80" class="w-full h-full text-sky-400 drop-shadow-md overflow-visible" fill="none" stroke="currentColor">
+          <path d="M 20 10 Q 200 45 380 10" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="2 4"/>
+          <path d="M 200 20 L 200 56 M 182 38 L 218 38 M 188 26 L 212 50 M 188 50 L 212 26" stroke="#e0f2fe" stroke-width="2" stroke-linecap="round"/>
+        </svg>`;
   }
 }
 
-export function mountFestiveOverlay() {
+/**
+ * Mounts the TopBar-Attached Center Archway Overlay (#topbar-festive-shelf)
+ */
+export function mountFestiveOverlay(overrideDateStr = null) {
   if (!isFestiveEnabled()) {
     unmountFestiveOverlay();
     return;
   }
 
-  const activeEvent = getActiveFestiveEvent();
-  if (!activeEvent) {
+  const activeEvent = getActiveFestiveEvent(overrideDateStr);
+  const topbar = document.getElementById('topbar');
+
+  if (!activeEvent || !topbar) {
     unmountFestiveOverlay();
     return;
-  }
-
-  const topbar = document.getElementById('topbar') || document.querySelector('header');
-  if (!topbar) return;
-
-  if (!topbar.classList.contains('relative')) {
-    topbar.classList.add('relative');
   }
 
   let shelf = document.getElementById('topbar-festive-shelf');
   if (!shelf) {
     shelf = document.createElement('div');
     shelf.id = 'topbar-festive-shelf';
-    shelf.className = 'absolute inset-0 w-full max-w-md mx-auto pointer-events-none select-none z-20 overflow-visible transition-opacity duration-300 opacity-100';
+    shelf.className = 'absolute top-full left-0 right-0 w-full max-w-md mx-auto pointer-events-none select-none overflow-visible z-30 transition-opacity duration-300 opacity-100 flex items-center justify-center -mt-3';
+    topbar.style.position = 'relative';
     topbar.appendChild(shelf);
   }
 
-  const graphicMarkup = FESTIVE_GRAPHICS_MAP[activeEvent.type] || FESTIVE_GRAPHICS_MAP.raya;
-  shelf.innerHTML = graphicMarkup;
-
-  const brandTitle = topbar.querySelector('h1') || topbar.querySelector('.text-base') || topbar.querySelector('span');
-  if (brandTitle) {
-    brandTitle.classList.add('drop-shadow-sm');
-  }
+  const color = activeEvent.themeColor || '#10b981';
+  shelf.innerHTML = `
+    <div class="relative w-full h-16 max-w-xs flex items-center justify-center pointer-events-none">
+      ${
+        activeEvent.customSvg 
+          ? activeEvent.customSvg 
+          : (activeEvent.graphicUrl 
+              ? `<img src="${activeEvent.graphicUrl}" alt="${activeEvent.name}" class="w-full h-full object-contain drop-shadow-md pointer-events-none" />` 
+              : getFestiveSvgGraphic(activeEvent.icon, color))
+      }
+      <div class="absolute -bottom-2 bg-slate-900/90 dark:bg-slate-950/90 text-white border border-slate-700/80 px-3 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest shadow-md flex items-center gap-1.5 backdrop-blur-md">
+        <span class="w-1.5 h-1.5 rounded-full animate-ping" style="background-color: ${color}"></span>
+        <span>${activeEvent.badgeText || activeEvent.name}</span>
+      </div>
+    </div>
+  `;
 
   initFestiveScrollFade();
 }
 
+/**
+ * Unmounts the festive overlay from the DOM
+ */
 export function unmountFestiveOverlay() {
   const shelf = document.getElementById('topbar-festive-shelf');
   if (shelf) {
@@ -254,16 +250,46 @@ export function unmountFestiveOverlay() {
   }
 }
 
-export function updateFestivePills(enabledState = isFestiveEnabled()) {
+/**
+ * Smooth Scroll-Fade Listener: Fades out overlay when scrolling down past 25px
+ */
+let isScrollListenerBound = false;
+export function initFestiveScrollFade() {
+  if (isScrollListenerBound) return;
+
+  const scrollContainer = document.getElementById('sheet-content') || window;
+  const handleScroll = () => {
+    const shelf = document.getElementById('topbar-festive-shelf');
+    if (!shelf) return;
+
+    const scrollTop = scrollContainer.scrollTop || window.scrollY || 0;
+    if (scrollTop > 25) {
+      shelf.style.opacity = '0';
+    } else {
+      shelf.style.opacity = '1';
+    }
+  };
+
+  scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  isScrollListenerBound = true;
+}
+
+/**
+ * Sync App Preferences pill button selection (#festive-pill-enable / #festive-pill-disable)
+ */
+export function updateFestivePills() {
   const enableBtn = document.getElementById('festive-pill-enable');
   const disableBtn = document.getElementById('festive-pill-disable');
 
   if (!enableBtn || !disableBtn) return;
 
-  const activeClass = 'festive-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow-xs cursor-pointer font-extrabold';
-  const inactiveClass = 'festive-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer';
+  const enabled = isFestiveEnabled();
 
-  if (enabledState) {
+  const activeClass = "festive-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow-xs cursor-pointer";
+  const inactiveClass = "festive-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer";
+
+  if (enabled) {
     enableBtn.className = activeClass;
     disableBtn.className = inactiveClass;
   } else {
@@ -272,23 +298,23 @@ export function updateFestivePills(enabledState = isFestiveEnabled()) {
   }
 }
 
-export function initFestiveEngine() {
+/**
+ * Main Boot Initialization for Festive Engine
+ */
+export async function initFestiveEngine() {
   updateFestivePills();
 
   if (isFestiveEnabled()) {
     mountFestiveOverlay();
-    syncFestiveConfigRemote().then(() => {
-      if (isFestiveEnabled()) {
-        mountFestiveOverlay();
-      }
-    });
+    await syncFestiveConfigRemote();
   }
 }
 
 if (typeof window !== 'undefined') {
-  window.initFestiveEngine = initFestiveEngine;
+  window.isFestiveEnabled = isFestiveEnabled;
   window.setFestiveEnabled = setFestiveEnabled;
-  window.updateFestivePills = updateFestivePills;
+  window.initFestiveEngine = initFestiveEngine;
   window.mountFestiveOverlay = mountFestiveOverlay;
   window.unmountFestiveOverlay = unmountFestiveOverlay;
+  window.updateFestivePills = updateFestivePills;
 }
