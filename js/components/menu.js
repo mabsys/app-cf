@@ -1,4 +1,4 @@
-// ./js/components/menu.js (1111_R438) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
+// ./js/components/menu.js (1111_R439) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
 
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
@@ -367,18 +367,19 @@ export const menuHTML = `
 
   </div>
 </div>
+
 <!-- EASTER EGG MODAL DRAWER -->
 <div id="easter-egg-modal" class="fixed inset-0 z-[60] bg-black/75 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-300 opacity-0 hidden">
   <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-xs w-full shadow-2xl flex flex-col items-center text-center relative animate-fade-in">
     <!-- Pirate Flag SVG Logo -->
-    <div class="w-full text-white rounded-2xl flex items-center justify-center shadow-md mb-3 ">
-      <svg xmlns="http://www.w3.org/2000/svg" width="5em" height="5em" viewBox="8 8 16 16" class=""><title>pirate-flag</title><g fill="none"><path fill="" d="M2 7a1 1 0 0 1 1-1h26a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"></path><path fill="#f3eef8" d="M11.707 10.707A1 1 0 1 0 10 10a1 1 0 1 0 .707 1.707l1.116 1.116a.25.25 0 0 0 .354 0l.646-.646a.25.25 0 0 0 0-.354zm0 10.482a1 1 0 1 1-1.707.707a1 1 0 1 1 .707-1.707l1.116-1.116a.25.25 0 0 1 .354 0l.646.647a.25.25 0 0 1 0 .353zM19.897 10c0 .276.111.526.292.707l-1.116 1.116a.25.25 0 0 0 0 .354l.647.646a.25.25 0 0 0 .353 0l1.116-1.116A1 1 0 1 0 21.896 10a1 1 0 1 0-2 0m.292 11.19a1 1 0 1 0 1.707.707a1 1 0 1 0-.707-1.708l-1.116-1.116a.25.25 0 0 0-.353 0l-.647.647a.25.25 0 0 0 0 .353zM19.75 15c0-1.933-1.679-3.5-3.75-3.5s-3.75 1.567-3.75 3.5c0 .442.088.864.248 1.253l-.274.41a1.5 1.5 0 0 0 .934 2.3l.342.073v.714a.75.75 0 0 0 1.5 0v-.5h.25v.5a.75.75 0 0 0 1.5 0v-.5H17v.5a.75.75 0 0 0 1.5 0v-.714l.342-.074a1.5 1.5 0 0 0 .934-2.298l-.274-.41c.16-.39.248-.812.248-1.254m-4.82 1.582c-.48.482-1.184.558-1.57.172c-.323-.323-.27-1.3.074-1.645c.343-.343 1.396-.369 1.668-.097c.386.386.31 1.09-.172 1.57m3.7.172c-.387.386-1.09.31-1.571-.172c-.481-.48-.558-1.184-.172-1.57c.272-.272 1.325-.246 1.668.097c.344.344.397 1.322.074 1.645m-2.847.126a.25.25 0 0 1 .434 0l.57.996a.25.25 0 0 1-.218.374H15.43a.25.25 0 0 1-.217-.374z"></path></g></svg>
+    <div class="w-full text-white rounded-2xl flex items-center justify-center mb-3 ">
+      <svg xmlns="http://www.w3.org/2000/svg" width="5em" height="5em" viewBox="8 8 16 16" class=""><title>pirate-flag</title><g fill="none"><path fill="" d="M2 7a1 1 0 0 1 1-1h26a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"></path><path fill="currentColor" d="M11.707 10.707A1 1 0 1 0 10 10a1 1 0 1 0 .707 1.707l1.116 1.116a.25.25 0 0 0 .354 0l.646-.646a.25.25 0 0 0 0-.354zm0 10.482a1 1 0 1 1-1.707.707a1 1 0 1 1 .707-1.707l1.116-1.116a.25.25 0 0 1 .354 0l.646.647a.25.25 0 0 1 0 .353zM19.897 10c0 .276.111.526.292.707l-1.116 1.116a.25.25 0 0 0 0 .354l.647.646a.25.25 0 0 0 .353 0l1.116-1.116A1 1 0 1 0 21.896 10a1 1 0 1 0-2 0m.292 11.19a1 1 0 1 0 1.707.707a1 1 0 1 0-.707-1.708l-1.116-1.116a.25.25 0 0 0-.353 0l-.647.647a.25.25 0 0 0 0 .353zM19.75 15c0-1.933-1.679-3.5-3.75-3.5s-3.75 1.567-3.75 3.5c0 .442.088.864.248 1.253l-.274.41a1.5 1.5 0 0 0 .934 2.3l.342.073v.714a.75.75 0 0 0 1.5 0v-.5h.25v.5a.75.75 0 0 0 1.5 0v-.5H17v.5a.75.75 0 0 0 1.5 0v-.714l.342-.074a1.5 1.5 0 0 0 .934-2.298l-.274-.41c.16-.39.248-.812.248-1.254m-4.82 1.582c-.48.482-1.184.558-1.57.172c-.323-.323-.27-1.3.074-1.645c.343-.343 1.396-.369 1.668-.097c.386.386.31 1.09-.172 1.57m3.7.172c-.387.386-1.09.31-1.571-.172c-.481-.48-.558-1.184-.172-1.57c.272-.272 1.325-.246 1.668.097c.344.344.397 1.322.074 1.645m-2.847.126a.25.25 0 0 1 .434 0l.57.996a.25.25 0 0 1-.218.374H15.43a.25.25 0 0 1-.217-.374z" class="text-slate-800 dark:text-white"></path></g></svg>
     </div>
     
     <h3 class="text-sm font-black text-slate-800 dark:text-slate-100 mb-1">Ahoy, Crew!</h3>
-    <p class="text-xs font-normal text-slate-600 dark:text-slate-300 leading-relaxed">Crafted 'n coded with heart, matey!</p>      <p class="text-xs font-normal text-slate-600 dark:text-slate-300 leading-relaxed mb-4">- Captain MSZ</p>
+    <p class="text-xs font-normal text-slate-600 dark:text-slate-300 leading-relaxed">Crafted 'n coded with heart, matey!</p>      <p class="text-xs font-normal text-slate-600 dark:text-slate-300 leading-relaxed mb-4 italic">- Captain MSZ</p>
 
-    <button type="button" onclick="if(typeof closeEasterEggModal === 'function') closeEasterEggModal();" class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer animate-pulse">Now Be off with Ye!</button>
+    <button type="button" onclick="if(typeof closeEasterEggModal === 'function') closeEasterEggModal();" class="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-600 active:scale-[0.98] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer animate-pulse">Now be off with Ye!</button>
   </div>
 </div>
 `;
