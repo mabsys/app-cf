@@ -1,4 +1,4 @@
-// ./js/festiveEngine.js (1111_R105) - CertiFly Hybrid Festive & Seasonal Overlay Engine
+// ./js/festiveEngine.js (1111_R106) - CertiFly Hybrid Festive & Seasonal Overlay Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -195,7 +195,7 @@ function getFestiveSvgGraphic(iconType, themeColor) {
 }
 
 /**
- * Mounts the TopBar-Attached Center Archway Overlay (#topbar-festive-shelf)
+ * Mounts the Festive Overlay (#topbar-festive-shelf) anchored directly to #persistent-topbar
  */
 export function mountFestiveOverlay(overrideDateStr = null) {
   if (!isFestiveEnabled()) {
@@ -204,7 +204,11 @@ export function mountFestiveOverlay(overrideDateStr = null) {
   }
 
   const activeEvent = getActiveFestiveEvent(overrideDateStr);
-  const topbar = document.getElementById('topbar') || document.querySelector('header');
+
+  // Target floating mini topbar component (#persistent-topbar from topbar.js) as primary anchor
+  const topbar = document.getElementById('persistent-topbar')
+              || document.getElementById('topbar')
+              || document.querySelector('header');
 
   if (!activeEvent || !topbar) {
     unmountFestiveOverlay();
@@ -215,22 +219,25 @@ export function mountFestiveOverlay(overrideDateStr = null) {
   if (!shelf) {
     shelf = document.createElement('div');
     shelf.id = 'topbar-festive-shelf';
-    shelf.className = 'absolute top-full left-0 right-0 w-full max-w-md mx-auto pointer-events-none select-none overflow-visible z-30 transition-opacity duration-300 opacity-100 flex items-center justify-center -mt-3';
-    topbar.style.position = 'relative';
+    // Anchored to bottom edge of #persistent-topbar (fixed top-0 left-0 right-0 h-12)
+    shelf.className = 'absolute top-full left-0 right-0 w-full max-w-md mx-auto pointer-events-none select-none overflow-visible z-50 flex items-center justify-center -mt-1 transition-opacity duration-300 opacity-100';
+    if (getComputedStyle(topbar).position === 'static') {
+      topbar.style.position = 'relative';
+    }
     topbar.appendChild(shelf);
   }
 
   const color = activeEvent.themeColor || '#10b981';
   shelf.innerHTML = `
-    <div class="relative w-full h-16 max-w-xs flex items-center justify-center pointer-events-none">
+    <div class="relative w-full h-14 max-w-xs flex items-center justify-center pointer-events-none">
       ${
-        activeEvent.customSvg 
-          ? activeEvent.customSvg 
-          : (activeEvent.graphicUrl 
-              ? `<img src="${activeEvent.graphicUrl}" alt="${activeEvent.name}" class="w-full h-full object-contain drop-shadow-md pointer-events-none" />` 
+        activeEvent.customSvg
+          ? activeEvent.customSvg
+          : (activeEvent.graphicUrl
+              ? `<img src="${activeEvent.graphicUrl}" alt="${activeEvent.name}" class="w-full h-full object-contain drop-shadow-md pointer-events-none" />`
               : getFestiveSvgGraphic(activeEvent.icon, color))
       }
-      <div class="absolute -bottom-2 bg-slate-900/90 dark:bg-slate-950/90 text-white border border-slate-700/80 px-3 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest shadow-md flex items-center gap-1.5 backdrop-blur-md">
+      <div class="absolute -bottom-2 bg-slate-900/90 dark:bg-slate-950/90 text-white border border-slate-700/80 px-3 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest shadow-md flex items-center gap-1.5 backdrop-blur-md pointer-events-none">
         <span class="w-1.5 h-1.5 rounded-full animate-ping" style="background-color: ${color}"></span>
         <span>${activeEvent.badgeText || activeEvent.name}</span>
       </div>
