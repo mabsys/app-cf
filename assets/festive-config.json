@@ -47,8 +47,8 @@
     {
       "id": "cny_2027",
       "name": "Chinese New Year",
-      "startDate": "2027-02-05",
-      "endDate": "2026-11-13",
+      "startDate": "2026-11-10",
+      "endDate": "2026-11-14",
       "themeColor": "#ef4444",
       "badgeText": "Gong Xi Fa Cai! Happy Chinese New Year!",
       "icon": "lantern",
