@@ -1,4 +1,4 @@
-// ./js/festiveEngine.js (1111_R110) - CertiFly Hybrid Festive & Seasonal Overlay Engine
+// ./js/festiveEngine.js (1111_R111) - CertiFly Hybrid Festive & Seasonal Overlay Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -9,18 +9,30 @@
  * from remote festive-config.json to prevent stale offline dates across calendar years.
  */
 export const DEFAULT_FESTIVE_CONFIG = {
-  version: "2026.1",
+  version: "2026.3",
   updatedAt: "2026-11-12",
   remoteConfigUrl: "./assets/festive-config.json",
+  remoteAssetBaseUrl: "./assets/festive/",
   events: [
     {
       id: "pilots_day",
       name: "World Pilots' Day",
-      startDate: "2026-04-26",
+      startDate: "2026-04-25",
       endDate: "2026-04-27",
       themeColor: "#f59e0b",
       badgeText: "Happy World Pilots' Day!",
-      icon: "pilots-wings"
+      icon: "pilots-wings",
+      stickerUrl: "./assets/festive/aviator-wings-gold.svg"
+    },
+    {
+      id: "hari_raya",
+      name: "Hari Raya Aidilfitri",
+      startDate: "2026-03-20",
+      endDate: "2026-03-24",
+      themeColor: "#10b981",
+      badgeText: "Selamat Hari Raya Aidilfitri!",
+      icon: "crescent-star",
+      stickerUrl: "./assets/festive/ketupat-hanging.svg"
     },
     {
       id: "merdeka_day",
@@ -29,7 +41,8 @@ export const DEFAULT_FESTIVE_CONFIG = {
       endDate: "2026-09-01",
       themeColor: "#3b82f6",
       badgeText: "Selamat Hari Merdeka!",
-      icon: "flag-star"
+      icon: "flag-star",
+      stickerUrl: "./assets/festive/merdeka-star-ribbon.svg"
     },
     {
       id: "hari_malaysia",
@@ -38,7 +51,18 @@ export const DEFAULT_FESTIVE_CONFIG = {
       endDate: "2026-09-17",
       themeColor: "#f59e0b",
       badgeText: "Selamat Hari Malaysia!",
-      icon: "flag-star"
+      icon: "flag-star",
+      stickerUrl: "./assets/festive/hari-malaysia-badge.svg"
+    },
+    {
+      id: "cny",
+      name: "Chinese New Year",
+      startDate: "2027-02-05",
+      endDate: "2027-02-09",
+      themeColor: "#ef4444",
+      badgeText: "Gong Xi Fa Cai!",
+      icon: "lantern",
+      stickerUrl: "./assets/festive/cny-lantern-tassel.svg"
     },
     {
       id: "year_end",
@@ -47,7 +71,8 @@ export const DEFAULT_FESTIVE_CONFIG = {
       endDate: "2027-01-02",
       themeColor: "#38bdf8",
       badgeText: "Happy Holidays & Happy New Year!",
-      icon: "snow-sparkle"
+      icon: "snow-sparkle",
+      stickerUrl: "./assets/festive/snow-sparkle-frost.svg"
     }
   ]
 };
@@ -147,22 +172,23 @@ export function getActiveFestiveEvent(overrideDateStr = null) {
 }
 
 /**
- * Compact Sticker Vector Archetypes for Corner Badges (Overspilling Outer Bounds)
+ * Vector SVG Archetypes for Front-Face Card Corner Stickers (Offline Fallback)
  */
 function getFestiveStickerSvg(iconType, color) {
   switch (iconType) {
     case 'pilots-wings':
+    case 'aviator-wings':
       return `
         <svg viewBox="0 0 48 48" class="w-full h-full text-amber-500 overflow-visible" fill="none" stroke="currentColor">
-          <circle cx="24" cy="24" r="20" fill="#0f172a" fill-opacity="0.95" stroke="${color}" stroke-width="2"/>
-          <path d="M 10 24 Q 18 16 24 22 Q 30 16 38 24 Q 24 30 10 24 Z" fill="${color}" fill-opacity="0.35" stroke="${color}" stroke-width="1.5"/>
+          <circle cx="24" cy="24" r="20" fill="#0f172a" fill-opacity="0.9" stroke="${color}" stroke-width="2"/>
+          <path d="M 10 24 Q 18 16 24 22 Q 30 16 38 24 Q 24 30 10 24 Z" fill="${color}" fill-opacity="0.3" stroke="${color}" stroke-width="1.5"/>
           <circle cx="24" cy="24" r="4" fill="#fbbf24"/>
         </svg>`;
 
     case 'flag-star':
       return `
         <svg viewBox="0 0 48 48" class="w-full h-full text-blue-500 overflow-visible" fill="none">
-          <circle cx="24" cy="24" r="20" fill="#0f172a" fill-opacity="0.95" stroke="${color}" stroke-width="2"/>
+          <circle cx="24" cy="24" r="20" fill="#0f172a" fill-opacity="0.9" stroke="${color}" stroke-width="2"/>
           <polygon points="24,12 27,19 35,20 29,26 31,34 24,30 17,34 19,26 13,20 21,19" fill="#fbbf24"/>
         </svg>`;
 
@@ -170,7 +196,7 @@ function getFestiveStickerSvg(iconType, color) {
     case 'crescent-moon':
       return `
         <svg viewBox="0 0 48 48" class="w-full h-full text-emerald-500 overflow-visible" fill="none">
-          <circle cx="24" cy="24" r="20" fill="#0f172a" fill-opacity="0.95" stroke="${color}" stroke-width="2"/>
+          <circle cx="24" cy="24" r="20" fill="#0f172a" fill-opacity="0.9" stroke="${color}" stroke-width="2"/>
           <path d="M 16 14 A 12 12 0 1 0 28 34 A 10 10 0 1 1 16 14 Z" fill="#34d399"/>
           <polygon points="30,16 31,19 34,19 32,21 33,24 30,22 27,24 28,21 26,19 29,19" fill="#fbbf24"/>
         </svg>`;
@@ -178,7 +204,7 @@ function getFestiveStickerSvg(iconType, color) {
     case 'lantern':
       return `
         <svg viewBox="0 0 48 48" class="w-full h-full text-red-500 overflow-visible" fill="none">
-          <circle cx="24" cy="24" r="20" fill="#0f172a" fill-opacity="0.95" stroke="${color}" stroke-width="2"/>
+          <circle cx="24" cy="24" r="20" fill="#0f172a" fill-opacity="0.9" stroke="${color}" stroke-width="2"/>
           <rect x="17" y="14" width="14" height="20" rx="6" fill="#ef4444" stroke="#f59e0b" stroke-width="1.5"/>
           <path d="M 24 34 L 24 40" stroke="#fbbf24" stroke-width="2"/>
         </svg>`;
@@ -187,56 +213,47 @@ function getFestiveStickerSvg(iconType, color) {
     default:
       return `
         <svg viewBox="0 0 48 48" class="w-full h-full text-sky-400 overflow-visible" fill="none" stroke="currentColor">
-          <circle cx="24" cy="24" r="20" fill="#0f172a" fill-opacity="0.95" stroke="${color}" stroke-width="2"/>
+          <circle cx="24" cy="24" r="20" fill="#0f172a" fill-opacity="0.9" stroke="${color}" stroke-width="2"/>
           <path d="M 24 12 L 24 36 M 12 24 L 36 24 M 16 16 L 32 32 M 16 32 L 32 16" stroke="#e0f2fe" stroke-width="2" stroke-linecap="round"/>
         </svg>`;
   }
 }
 
 /**
- * Mounts the Festive Corner Sticker exclusively inside the Front Face of #overview-hero-card,
- * positioned with negative offsets (-top-3.5 -left-3.5) to spill over past card boundaries.
+ * Mounts the Festive Corner Sticker directly inside the Front Face of #overview-hero-card
  */
 export function mountFestiveOverlay(overrideDateStr = null) {
-  if (!isFestiveEnabled()) {
-    unmountFestiveOverlay();
-    return;
-  }
+  unmountFestiveOverlay();
+
+  if (!isFestiveEnabled()) return;
 
   const activeEvent = getActiveFestiveEvent(overrideDateStr);
   const heroCard = document.getElementById('overview-hero-card');
 
-  if (!activeEvent || !heroCard) {
-    unmountFestiveOverlay();
-    return;
-  }
+  if (!activeEvent || !heroCard) return;
 
-  // Target exclusively the Front Face container inside #overview-hero-card
+  // Target EXCLUSIVELY the Front Face container inside #overview-hero-card
   const frontFace = heroCard.firstElementChild;
   if (!frontFace) return;
 
-  let sticker = document.getElementById('hero-festive-sticker');
-  if (!sticker) {
-    sticker = document.createElement('div');
-    sticker.id = 'hero-festive-sticker';
-    // Spills outside top (-top-3.5) and left (-left-3.5) card boundaries while rotating in 3D with front face
-    sticker.className = 'absolute -top-3.5 -left-3.5 z-30 pointer-events-none select-none overflow-visible transition-transform duration-300 hover:scale-105';
-    frontFace.appendChild(sticker);
-  }
+  const sticker = document.createElement('div');
+  sticker.id = 'hero-festive-sticker';
+  // Spills outside top (-top-3.5) and left (-left-3.5) card boundaries
+  sticker.className = 'absolute -top-3.5 -left-3.5 z-30 pointer-events-none select-none overflow-visible transition-transform duration-300 hover:scale-105';
 
   const color = activeEvent.themeColor || '#10b981';
 
   sticker.innerHTML = `
     <div class="relative w-14 h-14 overflow-visible flex items-center justify-center drop-shadow-lg">
       ${
-        activeEvent.customSvg 
-          ? `<div class="w-full h-full overflow-visible">${activeEvent.customSvg}</div>`
-          : (activeEvent.graphicUrl 
-              ? `<img src="${activeEvent.graphicUrl}" alt="${activeEvent.name}" class="w-full h-full object-contain overflow-visible drop-shadow-md pointer-events-none" />` 
-              : getFestiveStickerSvg(activeEvent.icon, color))
+        activeEvent.stickerUrl
+          ? `<img src="${activeEvent.stickerUrl}" alt="${activeEvent.name}" class="w-full h-full object-contain overflow-visible drop-shadow-md pointer-events-none" />`
+          : getFestiveStickerSvg(activeEvent.icon, color)
       }
     </div>
   `;
+
+  frontFace.appendChild(sticker);
 }
 
 /**
