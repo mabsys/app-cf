@@ -1,4 +1,4 @@
-// ./js/festiveEngine.js (1111_R108) - CertiFly Hybrid Festive & Seasonal Overlay Engine
+// ./js/festiveEngine.js (1111_R110) - CertiFly Hybrid Festive & Seasonal Overlay Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -147,55 +147,55 @@ export function getActiveFestiveEvent(overrideDateStr = null) {
 }
 
 /**
- * Vector SVG Archetypes for Header Archway Halos
+ * Compact Sticker Vector Archetypes for Corner Badges (Overspilling Outer Bounds)
  */
-function getFestiveSvgGraphic(iconType, themeColor) {
+function getFestiveStickerSvg(iconType, color) {
   switch (iconType) {
     case 'pilots-wings':
       return `
-        <svg viewBox="0 0 400 80" class="w-full h-full text-amber-500 drop-shadow-md overflow-visible" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M 40 40 Q 120 10 180 35 T 200 45 T 220 35 Q 280 10 360 40" stroke="currentColor" stroke-linecap="round"/>
-          <circle cx="200" cy="42" r="14" fill="#f59e0b" fill-opacity="0.2" stroke="#f59e0b" stroke-width="2"/>
-          <path d="M 193 42 L 207 42 M 200 35 L 200 49" stroke="#fbbf24" stroke-width="2"/>
+        <svg viewBox="0 0 48 48" class="w-full h-full text-amber-500 overflow-visible" fill="none" stroke="currentColor">
+          <circle cx="24" cy="24" r="20" fill="#0f172a" fill-opacity="0.95" stroke="${color}" stroke-width="2"/>
+          <path d="M 10 24 Q 18 16 24 22 Q 30 16 38 24 Q 24 30 10 24 Z" fill="${color}" fill-opacity="0.35" stroke="${color}" stroke-width="1.5"/>
+          <circle cx="24" cy="24" r="4" fill="#fbbf24"/>
         </svg>`;
 
     case 'flag-star':
       return `
-        <svg viewBox="0 0 400 80" class="w-full h-full text-blue-500 drop-shadow-md overflow-visible" fill="none" stroke="currentColor">
-          <path d="M 30 20 Q 200 60 370 20" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4 4"/>
-          <circle cx="200" cy="38" r="18" fill="#ef4444" fill-opacity="0.15" stroke="#ef4444" stroke-width="1.5"/>
-          <polygon points="200,26 204,34 213,35 206,41 208,50 200,45 192,50 194,41 187,35 196,34" fill="#fbbf24"/>
+        <svg viewBox="0 0 48 48" class="w-full h-full text-blue-500 overflow-visible" fill="none">
+          <circle cx="24" cy="24" r="20" fill="#0f172a" fill-opacity="0.95" stroke="${color}" stroke-width="2"/>
+          <polygon points="24,12 27,19 35,20 29,26 31,34 24,30 17,34 19,26 13,20 21,19" fill="#fbbf24"/>
         </svg>`;
 
     case 'crescent-star':
     case 'crescent-moon':
       return `
-        <svg viewBox="0 0 400 80" class="w-full h-full text-emerald-500 drop-shadow-md overflow-visible" fill="none" stroke="currentColor">
-          <path d="M 20 15 Q 200 65 380 15" stroke="#10b981" stroke-width="2" stroke-dasharray="6 4"/>
-          <path d="M 192 22 A 16 16 0 1 0 212 42 A 13 13 0 1 1 192 22 Z" fill="#34d399" stroke="#10b981"/>
-          <polygon points="214,26 216,31 221,31 217,34 219,39 214,36 209,39 211,34 207,31 212,31" fill="#fbbf24"/>
+        <svg viewBox="0 0 48 48" class="w-full h-full text-emerald-500 overflow-visible" fill="none">
+          <circle cx="24" cy="24" r="20" fill="#0f172a" fill-opacity="0.95" stroke="${color}" stroke-width="2"/>
+          <path d="M 16 14 A 12 12 0 1 0 28 34 A 10 10 0 1 1 16 14 Z" fill="#34d399"/>
+          <polygon points="30,16 31,19 34,19 32,21 33,24 30,22 27,24 28,21 26,19 29,19" fill="#fbbf24"/>
         </svg>`;
 
     case 'lantern':
       return `
-        <svg viewBox="0 0 400 80" class="w-full h-full text-red-500 drop-shadow-md overflow-visible" fill="none" stroke="currentColor">
-          <path d="M 10 10 Q 200 50 390 10" stroke="#ef4444" stroke-width="2"/>
-          <rect x="186" y="22" width="28" height="36" rx="12" fill="#ef4444" fill-opacity="0.8" stroke="#f59e0b" stroke-width="2"/>
-          <path d="M 200 58 L 200 70 M 194 70 L 206 70" stroke="#fbbf24" stroke-width="2"/>
+        <svg viewBox="0 0 48 48" class="w-full h-full text-red-500 overflow-visible" fill="none">
+          <circle cx="24" cy="24" r="20" fill="#0f172a" fill-opacity="0.95" stroke="${color}" stroke-width="2"/>
+          <rect x="17" y="14" width="14" height="20" rx="6" fill="#ef4444" stroke="#f59e0b" stroke-width="1.5"/>
+          <path d="M 24 34 L 24 40" stroke="#fbbf24" stroke-width="2"/>
         </svg>`;
 
     case 'snow-sparkle':
     default:
       return `
-        <svg viewBox="0 0 400 80" class="w-full h-full text-sky-400 drop-shadow-md overflow-visible" fill="none" stroke="currentColor">
-          <path d="M 20 10 Q 200 45 380 10" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="2 4"/>
-          <path d="M 200 20 L 200 56 M 182 38 L 218 38 M 188 26 L 212 50 M 188 50 L 212 26" stroke="#e0f2fe" stroke-width="2" stroke-linecap="round"/>
+        <svg viewBox="0 0 48 48" class="w-full h-full text-sky-400 overflow-visible" fill="none" stroke="currentColor">
+          <circle cx="24" cy="24" r="20" fill="#0f172a" fill-opacity="0.95" stroke="${color}" stroke-width="2"/>
+          <path d="M 24 12 L 24 36 M 12 24 L 36 24 M 16 16 L 32 32 M 16 32 L 32 16" stroke="#e0f2fe" stroke-width="2" stroke-linecap="round"/>
         </svg>`;
   }
 }
 
 /**
- * Mounts the Festive Overlay (#topbar-festive-shelf) anchored directly to #persistent-topbar
+ * Mounts the Festive Corner Sticker exclusively inside the Front Face of #overview-hero-card,
+ * positioned with negative offsets (-top-3.5 -left-3.5) to spill over past card boundaries.
  */
 export function mountFestiveOverlay(overrideDateStr = null) {
   if (!isFestiveEnabled()) {
@@ -204,48 +204,48 @@ export function mountFestiveOverlay(overrideDateStr = null) {
   }
 
   const activeEvent = getActiveFestiveEvent(overrideDateStr);
+  const heroCard = document.getElementById('overview-hero-card');
 
-  if (!activeEvent) {
+  if (!activeEvent || !heroCard) {
     unmountFestiveOverlay();
     return;
   }
 
-  let shelf = document.getElementById('topbar-festive-shelf');
-  if (!shelf) {
-    shelf = document.createElement('div');
-    shelf.id = 'topbar-festive-shelf';
-    // Standalone fixed overlay at top of viewport - 100% independent of persistent-topbar
-    shelf.className = 'fixed top-0 left-0 right-0 w-full max-w-md mx-auto pointer-events-none select-none overflow-visible z-40 flex items-center justify-center pt-1 transition-opacity duration-300 opacity-100';
-    document.body.appendChild(shelf);
+  // Target exclusively the Front Face container inside #overview-hero-card
+  const frontFace = heroCard.firstElementChild;
+  if (!frontFace) return;
+
+  let sticker = document.getElementById('hero-festive-sticker');
+  if (!sticker) {
+    sticker = document.createElement('div');
+    sticker.id = 'hero-festive-sticker';
+    // Spills outside top (-top-3.5) and left (-left-3.5) card boundaries while rotating in 3D with front face
+    sticker.className = 'absolute -top-3.5 -left-3.5 z-30 pointer-events-none select-none overflow-visible transition-transform duration-300 hover:scale-105';
+    frontFace.appendChild(sticker);
   }
 
   const color = activeEvent.themeColor || '#10b981';
-  shelf.innerHTML = `
-    <div class="relative w-full h-14 max-w-xs flex items-center justify-center pointer-events-none">
+
+  sticker.innerHTML = `
+    <div class="relative w-14 h-14 overflow-visible flex items-center justify-center drop-shadow-lg">
       ${
-        activeEvent.customSvg
-          ? activeEvent.customSvg
-          : (activeEvent.graphicUrl
-              ? `<img src="${activeEvent.graphicUrl}" alt="${activeEvent.name}" class="w-full h-full object-contain drop-shadow-md pointer-events-none" />`
-              : getFestiveSvgGraphic(activeEvent.icon, color))
+        activeEvent.customSvg 
+          ? `<div class="w-full h-full overflow-visible">${activeEvent.customSvg}</div>`
+          : (activeEvent.graphicUrl 
+              ? `<img src="${activeEvent.graphicUrl}" alt="${activeEvent.name}" class="w-full h-full object-contain overflow-visible drop-shadow-md pointer-events-none" />` 
+              : getFestiveStickerSvg(activeEvent.icon, color))
       }
-      <div class="absolute -bottom-2 bg-slate-900/90 dark:bg-slate-950/90 text-white border border-slate-700/80 px-3 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest shadow-md flex items-center gap-1.5 backdrop-blur-md pointer-events-none">
-        <span class="w-1.5 h-1.5 rounded-full animate-ping" style="background-color: ${color}"></span>
-        <span>${activeEvent.badgeText || activeEvent.name}</span>
-      </div>
     </div>
   `;
-
-  initFestiveScrollFade();
 }
 
 /**
- * Unmounts the festive overlay from the DOM
+ * Unmounts the festive corner sticker from the DOM
  */
 export function unmountFestiveOverlay() {
-  const shelf = document.getElementById('topbar-festive-shelf');
-  if (shelf) {
-    shelf.remove();
+  const sticker = document.getElementById('hero-festive-sticker');
+  if (sticker) {
+    sticker.remove();
   }
 }
 
