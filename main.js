@@ -1,4 +1,4 @@
-// ./main.js (1111_R411) - CertiFly Application Shell & Orchestrator
+// ./main.js (1111_R412) - CertiFly Application Shell & Orchestrator
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
@@ -1246,7 +1246,7 @@ async function renderBlankDashboard() {
   <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
     Please set up your digital licence URL and company attestation PDF in My Credentials to activate your flight duty compliance dashboard.
   </p>
-  <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+  <button onclick="openProfileMenu('licence')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
     Set Up Credentials
   </button>
 </div>
@@ -1264,7 +1264,7 @@ async function renderBlankDashboard() {
   <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
     Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to view licence validities.
   </p>
-  <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+  <button onclick="openProfileMenu('licence')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
     Configure Licence Source
   </button>
 </div>
@@ -1282,7 +1282,7 @@ async function renderBlankDashboard() {
   <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
     Please upload your MAB E-Attestation PDF document in My Credentials to view company qualifications.
   </p>
-  <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+  <button onclick="openProfileMenu('docs')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
     Upload Attestation PDF
   </button>
 </div>
@@ -1778,6 +1778,13 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   const passNoEl = getDashEl("ov-passport-no");
   const passDaysEl = getDashEl("ov-passport-days");
   const passBarEl = getDashEl("ov-passport-bar");
+  const passCardEl = getDashEl("ov-passport-card") || (passExpEl ? (passExpEl.closest('.bento-card') || passExpEl.parentElement) : null);
+  if (passCardEl) {
+    passCardEl.style.cursor = "pointer";
+    passCardEl.onclick = () => {
+      if (typeof openProfileMenu === "function") openProfileMenu('passport');
+    };
+  }
 
   const passportNo = (profile && profile.passportNo) ? profile.passportNo.trim() : "";
   const rawPassExp = (profile && profile.passportExpiry) ? profile.passportExpiry.trim() : "";
@@ -2169,7 +2176,7 @@ ${badgeHtml}
   <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
     Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to view licence validities.
   </p>
-  <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+  <button onclick="openProfileMenu('licence')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
     Configure Licence Source
   </button>
 </div>
@@ -2193,7 +2200,7 @@ ${badgeHtml}
       renderNoticeCard("tab-mab-content", {
         id: "mab-void-notice",
         title: "MAB ATTESTATION VOID / STALE",
-        message: `${voidMsg}<br/><button onclick="if(typeof openProfileMenu==='function'){openProfileMenu();}else{openMenu();setTimeout(()=>{const nav=document.querySelector('[data-target=pane-profile]');if(nav)nav.click();},150);}" type="button" class="mt-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[10px] uppercase py-2 px-3.5 rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"><svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg><span>Upload New Attestation PDF</span></button>`,
+        message: `${voidMsg}<br/><button onclick="if(typeof openProfileMenu==='function'){openProfileMenu('docs');}else{openMenu();setTimeout(()=>{const nav=document.querySelector('[data-target=pane-profile]');if(nav)nav.click();},150);}" type="button" class="mt-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[10px] uppercase py-2 px-3.5 rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"><svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg><span>Upload New Attestation PDF</span></button>`,
         type: "danger",
         dismissible: false
       });
@@ -2210,7 +2217,7 @@ ${badgeHtml}
           });
           if (confirmed) {
             if (typeof openProfileMenu === "function") {
-              openProfileMenu();
+              openProfileMenu('docs');
             } else if (typeof openMenu === "function") {
               openMenu();
               setTimeout(() => {
@@ -2350,7 +2357,7 @@ ${badgeHtml}
   <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
     Please upload your MAB E-Attestation PDF document in My Credentials to view company qualifications.
   </p>
-  <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+  <button onclick="openProfileMenu('docs')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
     Upload Attestation PDF
   </button>
 </div>
@@ -2395,7 +2402,7 @@ async function setupDocumentViewers() {
         qsBadgeBox.classList.add("cursor-pointer", "hover:bg-slate-200", "dark:hover:bg-slate-700", "hover:text-slate-800", "dark:hover:text-slate-200", "transition-all", "active:scale-[0.99]");
         qsBadgeBox.title = "Click to configure Qualification Slip in My Credentials";
         qsBadgeBox.onclick = () => {
-          if (typeof openProfileMenu === "function") openProfileMenu();
+          if (typeof openProfileMenu === "function") openProfileMenu('docs');
         };
       }
     }
@@ -3720,7 +3727,7 @@ function renderMyQrPass() {
   <p class="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed mb-4">
     Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to generate your personal digital flight pass.
   </p>
-  <button onclick="openProfileMenu()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
+  <button onclick="openProfileMenu('licence')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
     Configure Licence Source
   </button>
 </div>
