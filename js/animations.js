@@ -1,4 +1,4 @@
-// ./js/animations.js (1111_R402) - CertiFly Centralized Motion & Animation Engine
+// ./js/animations.js (1111_R403) - CertiFly Centralized Motion & Animation Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -687,11 +687,55 @@ export function animateProfileAccordion(contentEl, arrowEl, isExpanding) {
   }
 }
 
+
 /**
- * Pirate Flag Easter Egg Bouncy Spring Reveal
- * @param {HTMLElement} modalEl - #easter-egg-modal
- * @param {boolean} show - True to reveal, false to dismiss
+ * Smoothly animates accordion container height adjustment when inner tab content changes dynamically
+ * (e.g. switching between QR camera scanner and URL input tabs in Digital Licence accordion)
+ * @param {HTMLElement|string} target - Accordion content container or section ID (e.g. 'licence')
  */
+export function animateAccordionResize(target) {
+  const contentEl = typeof target === 'string'
+    ? (document.getElementById(`section-content-${target}`) || document.getElementById(target))
+    : target;
+
+  if (!contentEl || contentEl.classList.contains('hidden')) return;
+
+  // 1. Capture current rendered height before DOM layout shift
+  const startHeight = contentEl.offsetHeight || contentEl.scrollHeight;
+
+  // 2. Temporarily set height to 'auto' to measure true new unconstrained layout
+  contentEl.style.height = 'auto';
+  contentEl.style.overflow = 'hidden';
+  const targetHeight = contentEl.offsetHeight || contentEl.scrollHeight;
+
+  // 3. If height difference is negligible (< 4px), set height to auto & exit
+  if (Math.abs(startHeight - targetHeight) < 4) {
+    contentEl.style.height = 'auto';
+    contentEl.style.overflow = '';
+    return;
+  }
+
+  // 4. Reset to startHeight so Anime.js can perform smooth height transition
+  contentEl.style.height = `${startHeight}px`;
+
+  if (isAnimeAvailable()) {
+    runAnime({
+      targets: contentEl,
+      height: [startHeight, targetHeight],
+      duration: 280,
+      easing: 'easeOutCubic',
+      complete: () => {
+        contentEl.style.height = 'auto';
+        contentEl.style.overflow = '';
+      }
+    });
+  } else {
+    contentEl.style.height = 'auto';
+    contentEl.style.overflow = '';
+  }
+}
+
+
 export function animateEasterEggModal(modalEl, show = true) {
   if (!modalEl) return;
   const cardEl = modalEl.querySelector('.bg-white, .dark\\:bg-slate-900') || modalEl;
@@ -751,6 +795,10 @@ if (typeof window !== "undefined") {
     animateMenuDrawer,
     animateMenuStagger,
     animateProfileAccordion,
+    animateAccordionResize,
     animateEasterEggModal
   };
+}
+if (typeof window !== "undefined") {
+  window.animateAccordionResize = animateAccordionResize;
 }
