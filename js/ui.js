@@ -1,4 +1,4 @@
-// ./js/ui.js (1111_R431) - View Switching & UI Management
+// ./js/ui.js (1111_R432) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -777,7 +777,7 @@ export function switchResultTab(tabName = 'overview') {
   });
 }
 
-export function openProfileMenu() {
+export function openProfileMenu(targetSectionKey) {
   openMenu();
   if (typeof window.resetProfileQrMode === "function") {
     window.resetProfileQrMode();
@@ -785,6 +785,42 @@ export function openProfileMenu() {
   setTimeout(() => {
     const navBtn = document.querySelector('[data-target="pane-profile"]');
     if (navBtn) navBtn.click();
+
+    if (targetSectionKey) {
+      setTimeout(() => {
+        const targetContent = document.getElementById(`section-content-${targetSectionKey}`);
+
+        if (targetContent && targetContent.classList.contains('hidden')) {
+          toggleProfileAccordionSection(targetSectionKey);
+        } else if (targetContent) {
+          const allSections = ['licence', 'docs', 'passport'];
+          allSections.forEach(sec => {
+            if (sec !== targetSectionKey) {
+              const sibContent = document.getElementById(`section-content-${sec}`);
+              const sibArrow = document.getElementById(`arrow-${sec}`);
+              if (sibContent && !sibContent.classList.contains('hidden')) {
+                if (typeof animateProfileAccordion === 'function') {
+                  animateProfileAccordion(sibContent, sibArrow, false);
+                } else {
+                  sibContent.classList.add('hidden');
+                  if (sibArrow) sibArrow.style.transform = 'rotate(0deg)';
+                }
+              }
+            }
+          });
+        }
+
+        setTimeout(() => {
+          const targetCard = targetContent ? targetContent.closest('.accordion-card') : null;
+          const scrollContainer = document.getElementById('sheet-content');
+          if (targetCard && scrollContainer) {
+            const cardTop = targetCard.offsetTop - 12;
+            scrollContainer.scrollTo({ top: Math.max(0, cardTop), behavior: 'smooth' });
+          }
+        }, 150);
+
+      }, 200);
+    }
   }, 150);
 }
 
@@ -1173,6 +1209,27 @@ export function toggleProfileAccordionSection(sectionId) {
   if (!contentEl) return;
 
   const isExpanding = contentEl.classList.contains('hidden');
+
+  if (isExpanding) {
+    // Single-Open Accordion: Auto-collapse sibling accordions when expanding target
+    const allSections = ['licence', 'docs', 'passport'];
+    allSections.forEach(sec => {
+      if (sec !== sectionId) {
+        const sibContent = document.getElementById(`section-content-${sec}`);
+        const sibArrow = document.getElementById(`arrow-${sec}`);
+        if (sibContent && !sibContent.classList.contains('hidden')) {
+          if (typeof animateProfileAccordion === 'function') {
+            animateProfileAccordion(sibContent, sibArrow, false);
+          } else if (typeof window.CertiFlyAnimations?.animateProfileAccordion === 'function') {
+            window.CertiFlyAnimations.animateProfileAccordion(sibContent, sibArrow, false);
+          } else {
+            sibContent.classList.add('hidden');
+            if (sibArrow) sibArrow.style.transform = 'rotate(0deg)';
+          }
+        }
+      }
+    });
+  }
 
   if (typeof animateProfileAccordion === 'function') {
     animateProfileAccordion(contentEl, arrowEl, isExpanding);
