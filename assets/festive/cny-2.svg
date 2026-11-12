@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <style>
+      .outline { stroke: #2D3816; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+      .thin-outline { stroke: #2D3816; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+  </defs>
+
+  <!-- Ears (Behind Head) -->
+  <!-- Left Ear -->
+  <g transform="translate(26, 36) rotate(-25)">
+    <path d="M -12 0 C -14 -14, 14 -14, 12 0 C 12 8, -12 8, -12 0 Z" fill="#FFFDF7" class="outline"/>
+    <path d="M -7 -1 C -8 -9, 8 -9, 7 -1 C 7 4, -7 4, -7 -1 Z" fill="#F24B38" class="thin-outline"/>
+  </g>
+  <!-- Right Ear -->
+  <g transform="translate(102, 36) rotate(25)">
+    <path d="M -12 0 C -14 -14, 14 -14, 12 0 C 12 8, -12 8, -12 0 Z" fill="#FFFDF7" class="outline"/>
+    <path d="M -7 -1 C -8 -9, 8 -9, 7 -1 C 7 4, -7 4, -7 -1 Z" fill="#F24B38" class="thin-outline"/>
+  </g>
+
+  <!-- Fluffy White Mane / Beard Base -->
+  <path d="M 32 92 
+           C 22 92, 18 82, 23 73 
+           C 16 66, 18 54, 26 50 
+           C 25 36, 38 24, 64 24 
+           C 90 24, 103 36, 102 50 
+           C 110 54, 112 66, 105 73 
+           C 110 82, 106 92, 96 92 
+           C 95 102, 84 107, 75 103 
+           C 71 110, 57 110, 53 103 
+           C 44 107, 33 102, 32 92 Z" 
+        fill="#FFFDF7" class="outline"/>
+
+  <!-- Red & Gold Forehead / Face Dome -->
+  <path d="M 31 66 
+           C 29 44, 42 29, 64 29 
+           C 86 29, 99 44, 97 66 
+           C 96 80, 86 89, 64 89 
+           C 42 89, 32 80, 31 66 Z" 
+        fill="#F24B38" class="outline"/>
+
+  <!-- Gold Decorative Forehead Bands -->
+  <path d="M 35 52 Q 64 38 93 52" fill="none" stroke="#F8C630" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M 41 42 Q 64 31 87 42" fill="none" stroke="#F8C630" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Forehead Mirror / Yin-Yang Style Emblem -->
+  <circle cx="64" cy="43" r="8.5" fill="#F8C630" class="thin-outline"/>
+  <circle cx="64" cy="43" r="4.5" fill="#FFFDF7" class="thin-outline"/>
+  <circle cx="64" cy="43" r="1.8" fill="#52B788"/>
+
+  <!-- Central Horn -->
+  <path d="M 58 29 C 58 21, 61 13, 64 11 C 67 13, 70 21, 70 29 Z" fill="#F8C630" class="outline"/>
+  <path d="M 60 23 Q 64 21 68 23" fill="none" class="thin-outline"/>
+  <path d="M 61.5 18 Q 64 16.5 66.5 18" fill="none" class="thin-outline"/>
+
+  <!-- Horn Pom-Pom -->
+  <circle cx="64" cy="11" r="4.5" fill="#F24B38" class="thin-outline"/>
+
+  <!-- Cheek Fur Tufts -->
+  <path d="M 27 72 C 21 74, 21 83, 29 84 C 29 90, 37 92, 41 87" fill="#FFFDF7" class="outline"/>
+  <path d="M 101 72 C 107 74, 107 83, 99 84 C 99 90, 91 92, 87 87" fill="#FFFDF7" class="outline"/>
+
+  <!-- Cute Mouth & Snout Area -->
+  <path d="M 42 78 C 42 70, 86 70, 86 78 C 88 92, 78 99, 64 99 C 50 99, 40 92, 42 78 Z" fill="#FFFDF7" class="outline"/>
+  
+  <!-- Inner Open Happy Mouth -->
+  <path d="M 52 84 Q 64 82 76 84 C 76 93, 52 93, 52 84 Z" fill="#D93829" class="thin-outline"/>
+  <!-- Cute Tongue -->
+  <path d="M 58 89.5 Q 64 86.5 70 89.5 C 68 92.5, 60 92.5, 58 89.5 Z" fill="#FF8598"/>
+  <!-- Upper Lip / Teeth Trim -->
+  <path d="M 48 82 Q 56 86 64 81 Q 72 86 80 82" fill="none" class="outline"/>
+
+  <!-- Cute Green Nose -->
+  <path d="M 59 73 C 59 70, 69 70, 69 73 C 69 76.5, 65.5 78.5, 64 78.5 C 62.5 78.5, 59 76.5, 59 73 Z" fill="#52B788" class="thin-outline"/>
+  <ellipse cx="62.5" cy="72.5" rx="1.8" ry="1" fill="#A8E6CF"/>
+
+  <!-- Big Kawaii Eyes -->
+  <!-- Left Eye -->
+  <circle cx="47" cy="64" r="6.5" fill="#2D3816"/>
+  <circle cx="45" cy="62" r="2.3" fill="#FFFFFF"/>
+  <circle cx="49" cy="65.5" r="1.1" fill="#FFFFFF"/>
+
+  <!-- Right Eye -->
+  <circle cx="81" cy="64" r="6.5" fill="#2D3816"/>
+  <circle cx="79" cy="62" r="2.3" fill="#FFFFFF"/>
+  <circle cx="83" cy="65.5" r="1.1" fill="#FFFFFF"/>
+
+  <!-- Fluffy White Eyebrows -->
+  <path d="M 36 57 C 38 51, 52 51, 55 56 C 51 58, 41 58, 36 57 Z" fill="#FFFDF7" class="thin-outline"/>
+  <path d="M 92 57 C 90 51, 76 51, 73 56 C 77 58, 87 58, 92 57 Z" fill="#FFFDF7" class="thin-outline"/>
+
+  <!-- Rosy Cheeks -->
+  <ellipse cx="38" cy="72" rx="4" ry="2.4" fill="#FF8598" opacity="0.85"/>
+  <ellipse cx="90" cy="72" rx="4" ry="2.4" fill="#FF8598" opacity="0.85"/>
+
+  <!-- Bottom Chin Beard Tuft -->
+  <path d="M 56 99 C 56 105, 61 108, 64 108 C 67 108, 72 105, 72 99" fill="#FFFDF7" class="outline"/>
+</svg>

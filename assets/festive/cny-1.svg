@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <!-- Soft shadow for depth -->
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="#2D2318" flood-opacity="0.15"/>
+    </filter>
+    <!-- Clip path for the envelope body so patterns stay strictly inside -->
+    <clipPath id="envelopeClip">
+      <rect x="28" y="16" width="72" height="96" rx="12" ry="12"/>
+    </clipPath>
+  </defs>
+
+  <!-- Main Envelope Group -->
+  <g filter="url(#softShadow)">
+    <!-- Envelope Base Body -->
+    <rect x="28" y="16" width="72" height="96" rx="12" ry="12" fill="#E63946" stroke="#2D2318" stroke-width="3.5"/>
+
+    <!-- Inner decorative elements clipped to envelope body -->
+    <g clip-path="url(#envelopeClip)">
+      <!-- Subtle darker red bottom shading -->
+      <path d="M 28 88 Q 64 96 100 88 L 100 112 L 28 112 Z" fill="#C92A37"/>
+      
+      <!-- Decorative gold corner arcs at bottom -->
+      <circle cx="28" cy="112" r="14" fill="none" stroke="#F4A261" stroke-width="2" opacity="0.6"/>
+      <circle cx="100" cy="112" r="14" fill="none" stroke="#F4A261" stroke-width="2" opacity="0.6"/>
+
+      <!-- Envelope Top Flap (curved) -->
+      <path d="M 26 26 Q 64 58 102 26 L 102 14 L 26 14 Z" fill="#F25C69" stroke="#2D2318" stroke-width="3.5" stroke-linejoin="round"/>
+      
+      <!-- Gold trim line along the flap -->
+      <path d="M 32 27 Q 64 53 96 27" fill="none" stroke="#FFD166" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+
+    <!-- Re-stroke outer border cleanly over clipped elements -->
+    <rect x="28" y="16" width="72" height="96" rx="12" ry="12" fill="none" stroke="#2D2318" stroke-width="3.5"/>
+
+    <!-- Central Gold Medallion Seal -->
+    <circle cx="64" cy="46" r="16" fill="#FFD166" stroke="#2D2318" stroke-width="3"/>
+    <circle cx="64" cy="46" r="11.5" fill="none" stroke="#E09F3E" stroke-width="1.5" stroke-dasharray="3 2"/>
+    
+    <!-- Stylized "Fu" / Prosperity Diamond Motif inside Gold Seal -->
+    <rect x="58.5" y="40.5" width="11" height="11" rx="2" transform="rotate(45 64 46)" fill="#E63946" stroke="#2D2318" stroke-width="2"/>
+    <circle cx="64" cy="46" r="2" fill="#FFD166"/>
+
+    <!-- Cute Kawaii Face on Lower Half of Angpow -->
+    <!-- Left Eye -->
+    <circle cx="49" cy="76" r="4.5" fill="#2D2318"/>
+    <circle cx="47.5" cy="74.5" r="1.6" fill="#FFFFFF"/>
+
+    <!-- Right Eye -->
+    <circle cx="79" cy="76" r="4.5" fill="#2D2318"/>
+    <circle cx="77.5" cy="74.5" r="1.6" fill="#FFFFFF"/>
+
+    <!-- Rosy Cheeks -->
+    <ellipse cx="42" cy="82" rx="4.5" ry="2.8" fill="#FF8FA3" opacity="0.85"/>
+    <ellipse cx="86" cy="82" rx="4.5" ry="2.8" fill="#FF8FA3" opacity="0.85"/>
+
+    <!-- Cute Happy Smile -->
+    <path d="M 59 79 Q 64 85 69 79" fill="none" stroke="#2D2318" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- Little Sparkles around the Angpow for extra cuteness -->
+    <path d="M 16 34 L 18 39 L 23 41 L 18 43 L 16 48 L 14 43 L 9 41 L 14 39 Z" fill="#FFD166" stroke="#2D2318" stroke-width="1.5" stroke-linejoin="round"/>
+    <circle cx="111" cy="64" r="3" fill="#FFD166" stroke="#2D2318" stroke-width="1.5"/>
+    <circle cx="18" cy="84" r="2.2" fill="#FF8FA3" stroke="#2D2318" stroke-width="1.2"/>
+  </g>
+</svg>
