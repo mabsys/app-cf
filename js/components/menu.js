@@ -89,7 +89,7 @@ export const menuHTML = `
         <div class="accordion-card bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 overflow-hidden shadow-xs">
           <button type="button" class="accordion-header w-full p-2.5 flex items-center justify-between text-left cursor-pointer" onclick="if(typeof toggleProfileAccordionSection === 'function') toggleProfileAccordionSection('licence');">
             <div class="flex items-center gap-2.5">
-              <div class="p-0.5 text-slate-300">
+              <div class="p-0.5 text-slate-600 dark:text-slate-300">
                 <svg class="w-4 h-4" fill="currentColor" stroke="none" viewBox="0 0 24 24" stroke-width="1"><path d="M14 13h5v-2h-5zm0-3h5V8h-5zm-9 6h8v-.55q0-1.125-1.1-1.787T9 13t-2.9.663T5 15.45zm5.413-4.587Q11 10.825 11 10t-.587-1.412T9 8t-1.412.588T7 10t.588 1.413T9 12t1.413-.587M4 20q-.825 0-1.412-.587T2 18V6q0-.825.588-1.412T4 4h16q.825 0 1.413.588T22 6v12q0 .825-.587 1.413T20 20z"></path></svg>
               </div>
               <span class="text-xs font-bold text-slate-800 dark:text-slate-100">Digital Licence</span>
@@ -166,7 +166,7 @@ export const menuHTML = `
         <div class="accordion-card bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 overflow-hidden shadow-xs">
           <button type="button" class="accordion-header w-full p-2.5 flex items-center justify-between text-left cursor-pointer" onclick="if(typeof toggleProfileAccordionSection === 'function') toggleProfileAccordionSection('docs');">
             <div class="flex items-center gap-2.5">
-              <div class="p-0.5 text-slate-300">
+              <div class="p-0.5 text-slate-600 dark:text-slate-300">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"></path></svg>
               </div>
               <span class="text-xs font-bold text-slate-800 dark:text-slate-100">Company Documents (PDF)</span>
@@ -210,7 +210,7 @@ export const menuHTML = `
         <div class="accordion-card bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 overflow-hidden shadow-xs">
           <button type="button" class="accordion-header w-full p-2.5 flex items-center justify-between text-left cursor-pointer" onclick="if(typeof toggleProfileAccordionSection === 'function') toggleProfileAccordionSection('passport');">
             <div class="flex items-center gap-2.5">
-              <div class="p-0.5 text-slate-300">
+              <div class="p-0.5 text-slate-600 dark:text-slate-300">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linejoin="round" d="M4 6H17C18.6569 6 20 7.34315 20 9V19C20 20.6569 18.6569 22 17 22H7C5.34315 22 4 20.6569 4 19V6ZM4 6V5"></path><circle cx="12" cy="13" r="3"></circle><path stroke-linejoin="round" d="M18 6.00002H5.07107C4.47953 6.00002 4 5.52049 4 4.92895C4 4.39594 4.39193 3.94403 4.91959 3.86865L15.7172 2.32614C16.922 2.15402 18 3.08894 18 4.30604V6.00002Z"></path><path d="M10 19H14"></path></svg>
               </div>
               <span class="text-xs font-bold text-slate-800 dark:text-slate-100">Passport Details</span>
