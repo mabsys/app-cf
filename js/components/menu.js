@@ -379,7 +379,7 @@ export const menuHTML = `
     <h3 class="text-sm font-black text-slate-800 dark:text-slate-100 mb-1">Ahoy, Crew!</h3>
     <p class="text-xs font-normal text-slate-600 dark:text-slate-300 leading-relaxed">Crafted 'n coded with heart, matey!</p>      <p class="text-xs font-normal text-slate-600 dark:text-slate-300 leading-relaxed mb-4 italic">- Captain MSZ</p>
 
-    <button type="button" onclick="if(typeof closeEasterEggModal === 'function') closeEasterEggModal();" class="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-600 active:scale-[0.98] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer animate-pulse">Now be off with Ye!</button>
+    <button type="button" onclick="if(typeof closeEasterEggModal === 'function') closeEasterEggModal();" class="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-600 dark:bg-white dark:hover:bg-slate-600 active:scale-[0.98] text-white dark:text-slate-900 text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer animate-pulse">Now be off with Ye!</button>
   </div>
 </div>
 `;
