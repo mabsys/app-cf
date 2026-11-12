@@ -1,0 +1,60 @@
+{
+  "version": "2026.1",
+  "updatedAt": "2026-11-12",
+  "events": [
+    {
+      "id": "hari_raya_2026",
+      "name": "Hari Raya Aidilfitri",
+      "startDate": "2026-03-20",
+      "endDate": "2026-03-24",
+      "themeColor": "#10b981",
+      "badgeText": "Selamat Hari Raya Aidilfitri!",
+      "icon": "crescent-star"
+    },
+    {
+      "id": "pilots_day_2026",
+      "name": "World Pilots' Day",
+      "startDate": "2026-04-25",
+      "endDate": "2026-04-27",
+      "themeColor": "#f59e0b",
+      "badgeText": "Happy World Pilots' Day, Captain!",
+      "icon": "aviator-wings"
+    },
+    {
+      "id": "merdeka_2026",
+      "name": "National Day (Hari Merdeka)",
+      "startDate": "2026-08-30",
+      "endDate": "2026-09-01",
+      "themeColor": "#3b82f6",
+      "badgeText": "Selamat Hari Merdeka!",
+      "icon": "flag-star"
+    },
+    {
+      "id": "cny_2027",
+      "name": "Chinese New Year",
+      "startDate": "2027-02-05",
+      "endDate": "2027-02-09",
+      "themeColor": "#ef4444",
+      "badgeText": "Gong Xi Fa Cai! Happy Chinese New Year!",
+      "icon": "lantern"
+    },
+    {
+      "id": "year_end_2026",
+      "name": "Year-End & New Year",
+      "startDate": "2026-12-24",
+      "endDate": "2027-01-02",
+      "themeColor": "#38bdf8",
+      "badgeText": "Happy Holidays & Happy New Year!",
+      "icon": "snow-sparkle"
+    },
+    {
+      "id": "hari_malaysia",
+      "name": "Hari Malaysia",
+      "startDate": "2026-09-15",
+      "endDate": "2026-09-17",
+      "themeColor": "#f59e0b",
+      "badgeText": "Selamat Hari Malaysia!",
+      "icon": "flag-star"
+    }
+  ]
+}
