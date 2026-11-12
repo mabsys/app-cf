@@ -340,7 +340,7 @@ export const menuHTML = `
       <div class="flex flex-col gap-3.5 pb-3">
         <!-- Brand Card with 14-Tap Trigger & Centered Tagline -->
         <div id="brand-card-about" class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs text-center flex flex-col items-center select-none" onclick="if(typeof handleBrandCardTap === 'function') handleBrandCardTap();">
-          <div class="h-24 w-24 bg-[url('/assets/icons/icon-192.png')] bg-cover bg-center bg-no-repeat"></div>
+          <div class="h-24 w-24 bg-[url('/app-cf/assets/icons/icon-192.png')] bg-cover bg-center bg-no-repeat"></div>
           <h4 class="text-sm font-bold text-slate-800 dark:text-slate-100 italic tracking-tight pt-2">CertiFly<span class="font-normal text-[7px]">™</span></h4>
           <p class="text-[10px] italic font-medium text-slate-500 dark:text-slate-400 mt-0.5 text-center">by pilot for pilot...</p>
           <span class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-0.5 rounded-full mt-1.5">Version 2.0</span>
