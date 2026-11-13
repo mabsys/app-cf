@@ -1,4 +1,4 @@
-// ./js/tools.js (1311_R434) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (1311_R435) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -240,6 +240,7 @@ export function selectEfbDate(isoVal) {
       today.setHours(0, 0, 0, 0);
       const selDate = new Date(isoVal);
       if (selDate < today) {
+        closeEfbDatePicker();
         showAlertModal('Expired Passport', 'Passport expiry date cannot be in the past.', 'error');
         return;
       }
