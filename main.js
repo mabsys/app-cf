@@ -1,4 +1,4 @@
-// ./main.js (1311_R420) - CertiFly Application Shell & Orchestrator
+// ./main.js (1311_R421) - CertiFly Application Shell & Orchestrator
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
@@ -912,10 +912,6 @@ async function handleProfileQrScanned(scannedUrl) {
   if (urlInput) urlInput.value = scannedUrl;
   updateProfileUrlBadge(scannedUrl);
 
-  const profile = getProfileData();
-  const attestationName = selectedAttestationFile ? selectedAttestationFile.name : (profile.attestationFileName || "");
-
-  saveProfileData({ url: scannedUrl, attestationFileName: attestationName });
   showToast("Licence QR scanned & captured!", "success");
 }
 
@@ -1374,7 +1370,15 @@ async function renderDashboardView() {
   showView("dashboard-view");
   const profile = getProfileData();
 
-  if (profile.cachedCaamResults || profile.cachedMabResults) {
+  const hasCaam = Boolean((profile.cachedCaamResults && profile.cachedCaamResults.pilotDetails) || (profile.url && isValidCaamUrl(profile.url)));
+  const hasMab = Boolean(profile.cachedMabResults || profile.attestationFileName || selectedAttestationFile);
+
+  if (!hasCaam || !hasMab) {
+    renderBlankDashboard();
+    return;
+  }
+
+  if (profile.cachedCaamResults && profile.cachedMabResults) {
     try {
       renderDashboardResults(profile.cachedCaamResults, profile.cachedMabResults);
     } catch (err) {
@@ -1426,7 +1430,7 @@ async function renderDashboardResults(caamResults, mabResults = null) {
   const hasValidCaam = caamResults && caamResults.pilotDetails && caamResults.pilotDetails.name && caamResults.pilotDetails.name !== "-";
   const hasValidMab = mabResults && (mabResults.pilotName || mabResults.lineCheck || (mabResults.drills && mabResults.drills.length > 0));
 
-  if (!hasValidCaam && !hasValidMab) {
+  if (!hasValidCaam || !hasValidMab) {
     renderBlankDashboard();
     return;
   }
