@@ -1,4 +1,4 @@
-// ./js/ui.js (1311_R435) - View Switching & UI Management
+// ./js/ui.js (1311_R436) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -599,6 +599,12 @@ export function updateNetworkStatus() {
   if (!isOnline) {
     setTopBanner("OFFLINE MODE", "offline", true, true);
     stopScanner();
+    const camTab = document.getElementById("camera-scan-tab");
+    if (camTab && !camTab.classList.contains("hidden")) {
+      if (typeof window.switchScanHubTab === "function") {
+        window.switchScanHubTab("qrpass");
+      }
+    }
   } else {
     setTopBanner("", "offline", false);
   }
@@ -621,7 +627,10 @@ export function updateNetworkStatus() {
   applyOnlineState("tab-camera-btn", isOnline, "Camera scanning requires an active internet connection");
   applyOnlineState("upload-qr-btn", isOnline, "Photo QR scanning requires an active internet connection");
   applyOnlineState("submit-url-btn", isOnline, "Licence verification requires an active internet connection");
+  applyOnlineState("camera-cycle-btn", isOnline, "Camera functions require an active internet connection");
+  applyOnlineState("torch-toggle-btn", isOnline, "Flashlight function requires an active internet connection");
   applyOnlineState("manual-url-input", isOnline, "Licence verification requires an active internet connection");
+  applyOnlineState("paste-url-btn", isOnline, "Licence verification requires an active internet connection");
 
   // 3. Dashboard & Compliance Results Controls
   applyOnlineState("open-original-btn", isOnline, "Viewing live licence requires an active internet connection");
@@ -630,7 +639,13 @@ export function updateNetworkStatus() {
 
   // 4. My Credentials Pane Controls (Menu Drawer)
   applyOnlineState("profile-mode-qr-btn", isOnline, "Camera scanning requires an active internet connection");
+  applyOnlineState("profile-mode-url-btn", isOnline, "URL paste requires an active internet connection");
   applyOnlineState("profile-upload-qr-btn", isOnline, "Photo QR scanning requires an active internet connection");
+  applyOnlineState("profile-cycle-btn", isOnline, "Camera functions require an active internet connection");
+  applyOnlineState("profile-torch-btn", isOnline, "Flashlight function requires an active internet connection");
+  applyOnlineState("profile-stop-qr-btn", isOnline, "Camera functions require an active internet connection");
+  applyOnlineState("profile-url-input", isOnline, "Licence verification requires an active internet connection");
+  applyOnlineState("profile-url-clear-btn", isOnline, "Licence verification requires an active internet connection");
 }
 
 export function showView(viewId, defaultTab = null) {
@@ -656,6 +671,18 @@ export function showView(viewId, defaultTab = null) {
     topbar.style.transform = "translateY(-100%)";
     topbar.style.opacity = "0";
   }
+
+  if (viewId === "scanner-view" && !navigator.onLine) {
+    stopScanner();
+    const camTab = document.getElementById("camera-scan-tab");
+    if (camTab && !camTab.classList.contains("hidden")) {
+      if (typeof window.switchScanHubTab === "function") {
+        window.switchScanHubTab("qrpass");
+      }
+    }
+  }
+
+  updateNetworkStatus();
 
   if (viewId === "tools-view") {
     if (typeof window.initToolsModule === "function") window.initToolsModule();
