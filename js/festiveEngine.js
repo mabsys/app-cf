@@ -1,13 +1,7 @@
-// ./js/festiveEngine.js (1111_R114) - CertiFly Hybrid Festive & Seasonal Overlay Engine
+// ./js/festiveEngine.js (1111_R115) - CertiFly Hybrid Festive & Seasonal Overlay Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
-/**
- * DEFAULT_FESTIVE_CONFIG
- * Offline baseline fallback containing ONLY FIRM GREGORIAN ANNUAL DATES.
- * Variable lunar-based events (Hari Raya, CNY, Deepavali, etc.) are fetched dynamically
- * from remote festive-config.json to prevent stale offline dates across calendar years.
- */
 export const DEFAULT_FESTIVE_CONFIG = {
   version: "2026.3",
   updatedAt: "2026-11-12",
@@ -80,18 +74,13 @@ export const DEFAULT_FESTIVE_CONFIG = {
 const STORAGE_KEY_ENABLED = 'certifly_festive_enabled';
 const STORAGE_KEY_CONFIG = 'certifly_festive_config';
 let cardObserver = null;
+let isHeroCardFlipped = false;
 
-/**
- * Check if Festive Overlays are enabled by the user (default: true)
- */
 export function isFestiveEnabled() {
   const val = localStorage.getItem(STORAGE_KEY_ENABLED);
   return val === null ? true : val === 'true';
 }
 
-/**
- * Enable or disable Festive Overlays in App Preferences
- */
 export function setFestiveEnabled(enabled) {
   localStorage.setItem(STORAGE_KEY_ENABLED, enabled ? 'true' : 'false');
   updateFestivePills();
@@ -102,9 +91,6 @@ export function setFestiveEnabled(enabled) {
   }
 }
 
-/**
- * Get current cached or fallback festive config
- */
 export function getFestiveConfig() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_CONFIG);
@@ -118,9 +104,6 @@ export function getFestiveConfig() {
   return DEFAULT_FESTIVE_CONFIG;
 }
 
-/**
- * Background Remote Sync for festive-config.json
- */
 export async function syncFestiveConfigRemote() {
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
     return getFestiveConfig();
@@ -156,9 +139,6 @@ export async function syncFestiveConfigRemote() {
   return getFestiveConfig();
 }
 
-/**
- * Evaluates current local date against active festive events
- */
 export function getActiveFestiveEvent(overrideDateStr = null) {
   const config = getFestiveConfig();
   if (!config || !Array.isArray(config.events)) return null;
@@ -172,9 +152,6 @@ export function getActiveFestiveEvent(overrideDateStr = null) {
   }) || null;
 }
 
-/**
- * Vector SVG Archetypes for Front-Face Card Corner Stickers (Offline Fallback)
- */
 function getFestiveStickerSvg(iconType, color) {
   switch (iconType) {
     case 'pilots-wings':
@@ -220,13 +197,9 @@ function getFestiveStickerSvg(iconType, color) {
   }
 }
 
-/**
- * Sets up a MutationObserver to watch for #overview-hero-card entering the DOM
- */
 function setupHeroCardObserver(overrideDateStr) {
   if (cardObserver) return;
   const targetContainer = document.getElementById('tab-overview-content') || document.body;
-  if (!targetContainer) return;
 
   cardObserver = new MutationObserver(() => {
     const heroCard = document.getElementById('overview-hero-card');
@@ -242,9 +215,34 @@ function setupHeroCardObserver(overrideDateStr) {
   cardObserver.observe(targetContainer, { childList: true, subtree: true });
 }
 
-/**
- * Mounts the Festive Corner Sticker directly inside the Front Face of #overview-hero-card
- */
+function bindHeroFlipVisibilityListener() {
+  const containerEl = document.getElementById('overview-hero-container');
+  if (!containerEl || containerEl.dataset.festiveFlipBound === 'true') return;
+  containerEl.dataset.festiveFlipBound = 'true';
+
+  containerEl.addEventListener('click', () => {
+    isHeroCardFlipped = !isHeroCardFlipped;
+    const sticker = document.getElementById('hero-festive-sticker');
+    if (!sticker) return;
+
+    if (isHeroCardFlipped) {
+      // Hide sticker immediately when flipping to Back Face
+      sticker.style.opacity = '0';
+      sticker.style.visibility = 'hidden';
+      sticker.style.pointerEvents = 'none';
+    } else {
+      // Reveal sticker when flipping back to Front Face
+      setTimeout(() => {
+        const curSticker = document.getElementById('hero-festive-sticker');
+        if (curSticker && !isHeroCardFlipped) {
+          curSticker.style.visibility = 'visible';
+          curSticker.style.opacity = '1';
+        }
+      }, 150);
+    }
+  });
+}
+
 export function mountFestiveOverlay(overrideDateStr = null) {
   unmountFestiveOverlay();
 
@@ -255,48 +253,49 @@ export function mountFestiveOverlay(overrideDateStr = null) {
 
   const heroCard = document.getElementById('overview-hero-card');
 
-  // If hero card is not in DOM yet (e.g. initial blank setup state), observe DOM until card enters
   if (!heroCard) {
     setupHeroCardObserver(overrideDateStr);
     return;
   }
 
-  // Disconnect any active observer once card is found
   if (cardObserver) {
     cardObserver.disconnect();
     cardObserver = null;
   }
 
-  // Target EXCLUSIVELY the Front Face container inside #overview-hero-card
   const frontFace = heroCard.firstElementChild;
   if (!frontFace) return;
 
   const sticker = document.createElement('div');
   sticker.id = 'hero-festive-sticker';
-  // Spills outside top (-top-3.5) and left (-left-3.5) card boundaries
-  // [backface-visibility:hidden] and [-webkit-backface-visibility:hidden] ensure complete backface hiding on 3D rotation
-  sticker.className = 'absolute -top-3.5 -left-3.5 z-30 pointer-events-none select-none overflow-visible transition-all duration-300 hover:scale-105 [backface-visibility:hidden] [-webkit-backface-visibility:hidden]';
+  sticker.className = 'absolute -top-3.5 -left-3.5 z-30 pointer-events-none select-none overflow-visible transition-opacity duration-200 hover:scale-105';
   sticker.style.backfaceVisibility = 'hidden';
   sticker.style.webkitBackfaceVisibility = 'hidden';
+
+  if (isHeroCardFlipped) {
+    sticker.style.opacity = '0';
+    sticker.style.visibility = 'hidden';
+  } else {
+    sticker.style.opacity = '1';
+    sticker.style.visibility = 'visible';
+  }
 
   const color = activeEvent.themeColor || '#10b981';
 
   sticker.innerHTML = `
-    <div class="relative w-14 h-14 overflow-visible flex items-center justify-center drop-shadow-lg [backface-visibility:hidden] [-webkit-backface-visibility:hidden]">
+    <div class="relative w-14 h-14 overflow-visible flex items-center justify-center drop-shadow-lg">
       ${
         activeEvent.stickerUrl
-          ? `<img src="${activeEvent.stickerUrl}" alt="${activeEvent.name}" class="w-full h-full object-contain overflow-visible drop-shadow-md pointer-events-none [backface-visibility:hidden] [-webkit-backface-visibility:hidden]" />`
+          ? `<img src="${activeEvent.stickerUrl}" alt="${activeEvent.name}" class="w-full h-full object-contain overflow-visible drop-shadow-md pointer-events-none" />`
           : getFestiveStickerSvg(activeEvent.icon, color)
       }
     </div>
   `;
 
   frontFace.appendChild(sticker);
+  bindHeroFlipVisibilityListener();
 }
 
-/**
- * Unmounts the festive corner sticker from the DOM
- */
 export function unmountFestiveOverlay() {
   if (cardObserver) {
     cardObserver.disconnect();
@@ -308,9 +307,6 @@ export function unmountFestiveOverlay() {
   }
 }
 
-/**
- * Sync App Preferences pill button selection (#festive-pill-enable / #festive-pill-disable)
- */
 export function updateFestivePills() {
   const enableBtn = document.getElementById('festive-pill-enable');
   const disableBtn = document.getElementById('festive-pill-disable');
@@ -331,9 +327,6 @@ export function updateFestivePills() {
   }
 }
 
-/**
- * Main Boot Initialization for Festive Engine
- */
 export async function initFestiveEngine() {
   updateFestivePills();
 
