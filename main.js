@@ -1,4 +1,4 @@
-// ./main.js (1111_R418) - CertiFly Application Shell & Orchestrator
+// ./main.js (1311_R419) - CertiFly Application Shell & Orchestrator
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
@@ -697,6 +697,7 @@ function initProfileUI() {
         }
       } catch (pdfStorageErr) {
         console.warn('Could not store PDF file to IndexedDB:', pdfStorageErr);
+        showToast('Failed to save PDF for offline viewing. Storage limit exceeded.', 'warning');
       }
 
       const passNoVal = passNoInput ? passNoInput.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '') : "";
@@ -3120,11 +3121,7 @@ function setupReverifyOnlineButton() {
 
   reverifyBtn.addEventListener("click", async () => {
     if (!navigator.onLine) {
-      if (typeof showProfileToast === "function") {
-        showProfileToast("Cannot re-verify offline. Connect to internet.");
-      } else {
-        alert("Cannot re-verify offline. Please connect to the internet.");
-      }
+      showToast("Cannot re-verify offline. Connect to internet.", "warning");
       return;
     }
 
@@ -3206,6 +3203,7 @@ function setupPinCardButton(caamResults) {
       localStorage.setItem("scan_history", JSON.stringify(scanHistory));
     } catch (err) {
       console.error("Failed to update pin state in scan history:", err);
+      showToast("Could not update pinned record", "warning");
     }
 
     updatePinButtonUI();
