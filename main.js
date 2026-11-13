@@ -1,4 +1,4 @@
-// ./main.js (1111_R414) - CertiFly Application Shell & Orchestrator
+// ./main.js (1111_R415) - CertiFly Application Shell & Orchestrator
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
@@ -1302,6 +1302,9 @@ async function renderBlankDashboard() {
 
   await setupDocumentViewers();
   showView("dashboard-view");
+  if (typeof window.mountFestiveOverlay === "function") {
+    window.mountFestiveOverlay();
+  }
 }
 
 async function renderDashboardView() {
@@ -2378,6 +2381,9 @@ ${badgeHtml}
 
   await setupDocumentViewers();
   showView("dashboard-view");
+  if (typeof window.mountFestiveOverlay === "function") {
+    window.mountFestiveOverlay();
+  }
 }
 
 async function setupDocumentViewers() {
