@@ -1,4 +1,4 @@
-// ./main.js (1311_R422) - CertiFly Application Shell & Orchestrator
+// ./main.js (1311_R423) - CertiFly Application Shell & Orchestrator
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
@@ -336,6 +336,7 @@ export function resetProfileQrMode() {
     window.CertiFlyAnimations.animateAccordionResize('licence');
   }
 
+  if (typeof updateNetworkStatus === 'function') updateNetworkStatus();
 }
 if (typeof window !== 'undefined') {
   window.resetProfileQrMode = resetProfileQrMode;
@@ -468,6 +469,8 @@ function initProfileUI() {
   const activateQrMode = async () => {
     if (!navigator.onLine) {
       showToast("Camera scanning requires an active internet connection.", "warning");
+      resetProfileQrMode();
+      if (typeof updateNetworkStatus === 'function') updateNetworkStatus();
       return;
     }
     if (profileQrScannerActive) return;
@@ -821,6 +824,7 @@ function initProfileUI() {
         pdfStatusText.innerText = "Stored Attestation PDF file";
       }
       showToast("Crew credentials saved successfully!", "success");
+      if (typeof updateNetworkStatus === "function") updateNetworkStatus();
       updateSaveProfileButtonLabel();
       closeMenu();
 
