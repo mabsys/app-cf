@@ -1,4 +1,4 @@
-// ./js/festiveEngine.js (1111_R111) - CertiFly Hybrid Festive & Seasonal Overlay Engine
+// ./js/festiveEngine.js (1111_R112) - CertiFly Hybrid Festive & Seasonal Overlay Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -239,15 +239,18 @@ export function mountFestiveOverlay(overrideDateStr = null) {
   const sticker = document.createElement('div');
   sticker.id = 'hero-festive-sticker';
   // Spills outside top (-top-3.5) and left (-left-3.5) card boundaries
-  sticker.className = 'absolute -top-3.5 -left-3.5 z-30 pointer-events-none select-none overflow-visible transition-transform duration-300 hover:scale-105';
+  // [backface-visibility:hidden] and [-webkit-backface-visibility:hidden] ensure complete backface hiding on 3D rotation
+  sticker.className = 'absolute -top-3.5 -left-3.5 z-30 pointer-events-none select-none overflow-visible transition-all duration-300 hover:scale-105 [backface-visibility:hidden] [-webkit-backface-visibility:hidden]';
+  sticker.style.backfaceVisibility = 'hidden';
+  sticker.style.webkitBackfaceVisibility = 'hidden';
 
   const color = activeEvent.themeColor || '#10b981';
 
   sticker.innerHTML = `
-    <div class="relative w-14 h-14 overflow-visible flex items-center justify-center drop-shadow-lg">
+    <div class="relative w-14 h-14 overflow-visible flex items-center justify-center drop-shadow-lg [backface-visibility:hidden] [-webkit-backface-visibility:hidden]">
       ${
         activeEvent.stickerUrl
-          ? `<img src="${activeEvent.stickerUrl}" alt="${activeEvent.name}" class="w-full h-full object-contain overflow-visible drop-shadow-md pointer-events-none" />`
+          ? `<img src="${activeEvent.stickerUrl}" alt="${activeEvent.name}" class="w-full h-full object-contain overflow-visible drop-shadow-md pointer-events-none [backface-visibility:hidden] [-webkit-backface-visibility:hidden]" />`
           : getFestiveStickerSvg(activeEvent.icon, color)
       }
     </div>
