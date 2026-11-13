@@ -1,8 +1,8 @@
 // ./js/scanner.js (1311_R426) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
-import { showToast } from './notifications.js';
 import { getProfileData, getScanHistory } from './storage.js';
 import { animateTabBounce, animateTabContentEntrance } from './animations.js';
+import { showToast } from './notifications.js';
 
 let qrScanner = null;
 let currentCameraDeviceId = null;
@@ -131,6 +131,14 @@ export function updateCameraCycleButtonLabel() {
 // ============================================================================
 
 export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemId = "qr-video") {
+  if (!navigator.onLine) {
+    if (typeof window.showToast === "function") {
+      window.showToast("Camera scanning requires an active internet connection.", "warning");
+    }
+    stopScanner();
+    if (onErrorCallback) onErrorCallback("Camera scanner unavailable offline.");
+    return;
+  }
   const errorMsg = document.getElementById("error-message");
   if (errorMsg) errorMsg.innerText = "";
 
@@ -354,6 +362,14 @@ export function switchScanHubTab(tabName) {
   let activeBtn = btnCamera;
 
   if (tabName === 'camera') {
+    if (!navigator.onLine) {
+      if (typeof window.showToast === "function") {
+        window.showToast("Camera scanning requires an active internet connection.", "warning");
+      }
+      stopScanner();
+      switchScanHubTab('qrpass');
+      return;
+    }
     activeBtn = btnCamera;
     if (tabCamera) {
       const wasHidden = tabCamera.classList.contains('hidden');
@@ -504,6 +520,12 @@ export async function handleClipboardPaste() {
 // ============================================================================
 
 export async function cycleCameraLens() {
+  if (!navigator.onLine) {
+    if (typeof window.showToast === "function") {
+      window.showToast("Camera functions require an active internet connection.", "warning");
+    }
+    return;
+  }
   const cycleBtn = document.getElementById("camera-cycle-btn");
   const cycleLabel = document.getElementById("camera-cycle-label");
   const targetEl = cycleLabel || cycleBtn;
@@ -583,6 +605,12 @@ export async function cycleCameraLens() {
 }
 
 export function toggleTorch() {
+  if (!navigator.onLine) {
+    if (typeof window.showToast === "function") {
+      window.showToast("Flashlight function requires an active internet connection.", "warning");
+    }
+    return;
+  }
   if (!qrScanner) return;
   torchActive = !torchActive;
   if (torchActive) {
