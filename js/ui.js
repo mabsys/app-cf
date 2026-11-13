@@ -1,4 +1,4 @@
-// ./js/ui.js (1311_R434) - View Switching & UI Management
+// ./js/ui.js (1311_R435) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -594,51 +594,43 @@ export function updateNetworkStatus() {
   if (isOnline) {
     offlineHistoryToastShown = false;
   }
-  const startScanBtn = document.getElementById("start-scan-btn");
-  const submitUrlBtn = document.getElementById("submit-url-btn");
-  const manualInput = document.getElementById("manual-url-input");
-  const openOriginalBtn = document.getElementById("open-original-btn");
-  const checkerBadge = document.getElementById("checker-status-badge");
 
+  // 1. Top Global Banner & Scanner Stop
   if (!isOnline) {
     setTopBanner("OFFLINE MODE", "offline", true, true);
+    stopScanner();
   } else {
     setTopBanner("", "offline", false);
   }
 
-  if (!isOnline) {
-    stopScanner();
-  }
-
-  if (checkerBadge) {
-    if (isOnline) {
-      checkerBadge.innerText = "Checker Active";
-      checkerBadge.className = "text-[10px] text-blue-600 bg-blue-50 dark:bg-blue-950/60 dark:text-blue-400 px-2 py-0.5 rounded-md font-bold uppercase transition-all duration-300 ease-in-out";
+  // Helper to apply disabled state, opacity, cursor, and tooltip
+  const applyOnlineState = (elementId, onlineAllowed, offlineTitle = "Requires internet connection") => {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    el.disabled = !onlineAllowed;
+    el.classList.toggle("opacity-50", !onlineAllowed);
+    el.classList.toggle("cursor-not-allowed", !onlineAllowed);
+    if (!onlineAllowed) {
+      el.setAttribute("title", offlineTitle);
     } else {
-      checkerBadge.innerText = "Cached View";
-      checkerBadge.className = "text-[10px] text-gray-50 bg-gray-500 px-2 py-0.5 rounded-md font-bold uppercase transition-all duration-300 ease-in-out";
+      el.removeAttribute("title");
     }
-  }
+  };
 
-  if (startScanBtn) {
-    startScanBtn.disabled = !isOnline;
-    startScanBtn.classList.toggle("opacity-50", !isOnline);
-    startScanBtn.classList.toggle("cursor-not-allowed", !isOnline);
-  }
+  // 2. Pilot Scan Hub Controls
+  applyOnlineState("tab-camera-btn", isOnline, "Camera scanning requires an active internet connection");
+  applyOnlineState("upload-qr-btn", isOnline, "Photo QR scanning requires an active internet connection");
+  applyOnlineState("submit-url-btn", isOnline, "Licence verification requires an active internet connection");
+  applyOnlineState("manual-url-input", isOnline, "Licence verification requires an active internet connection");
 
-  if (submitUrlBtn) {
-    submitUrlBtn.disabled = !isOnline;
-    submitUrlBtn.classList.toggle("opacity-50", !isOnline);
-    submitUrlBtn.classList.toggle("cursor-not-allowed", !isOnline);
-  }
+  // 3. Dashboard & Compliance Results Controls
+  applyOnlineState("open-original-btn", isOnline, "Viewing live licence requires an active internet connection");
+  applyOnlineState("res-open-original-btn", isOnline, "Viewing live licence requires an active internet connection");
+  applyOnlineState("btn-reverify-online", isOnline, "Re-verification requires an active internet connection");
 
-  if (manualInput) manualInput.disabled = !isOnline;
-
-  if (openOriginalBtn) {
-    openOriginalBtn.disabled = !isOnline;
-    openOriginalBtn.classList.toggle("opacity-50", !isOnline);
-    openOriginalBtn.classList.toggle("cursor-not-allowed", !isOnline);
-  }
+  // 4. My Credentials Pane Controls (Menu Drawer)
+  applyOnlineState("profile-mode-qr-btn", isOnline, "Camera scanning requires an active internet connection");
+  applyOnlineState("profile-upload-qr-btn", isOnline, "Photo QR scanning requires an active internet connection");
 }
 
 export function showView(viewId, defaultTab = null) {
@@ -785,6 +777,7 @@ export function switchResultTab(tabName = 'overview') {
 
 export function openProfileMenu(targetSectionKey) {
   openMenu();
+  updateNetworkStatus();
   if (typeof window.resetProfileQrMode === "function") {
     window.resetProfileQrMode();
   }
