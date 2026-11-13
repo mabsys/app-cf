@@ -1,4 +1,4 @@
-// ./main.js (1311_R421) - CertiFly Application Shell & Orchestrator
+// ./main.js (1311_R422) - CertiFly Application Shell & Orchestrator
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
@@ -114,7 +114,14 @@ function initScanHubUI() {
     else tabQrPassBtn.innerText = "My QR";
   }
 
-  if (tabCameraBtn) tabCameraBtn.addEventListener("click", () => switchScanHubTab("camera"));
+  if (tabCameraBtn) tabCameraBtn.addEventListener("click", () => {
+    if (!navigator.onLine) {
+      showToast("Camera scanning requires an active internet connection.", "warning");
+      switchScanHubTab("manual");
+      return;
+    }
+    switchScanHubTab("camera");
+  });
   if (tabQrPassBtn) tabQrPassBtn.addEventListener("click", () => {
     switchScanHubTab("qrpass");
     renderMyQrPass();
@@ -134,7 +141,13 @@ function initScanHubUI() {
   const qrFileInput = document.getElementById("qr-file-input");
 
   if (uploadQrBtn && qrFileInput) {
-    uploadQrBtn.addEventListener("click", () => qrFileInput.click());
+    uploadQrBtn.addEventListener("click", () => {
+      if (!navigator.onLine) {
+        showToast("Photo QR scanning requires an active internet connection.", "warning");
+        return;
+      }
+      qrFileInput.click();
+    });
     qrFileInput.addEventListener("change", async (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
@@ -422,7 +435,13 @@ function initProfileUI() {
   if (profileTorchBtn) profileTorchBtn.onclick = () => toggleTorch();
 
   if (profileUploadQrBtn && profileQrFileInput) {
-    profileUploadQrBtn.onclick = () => profileQrFileInput.click();
+    profileUploadQrBtn.onclick = () => {
+      if (!navigator.onLine) {
+        showToast("Photo QR scanning requires an active internet connection.", "warning");
+        return;
+      }
+      profileQrFileInput.click();
+    };
     profileQrFileInput.onchange = async (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
@@ -447,6 +466,10 @@ function initProfileUI() {
   }
 
   const activateQrMode = async () => {
+    if (!navigator.onLine) {
+      showToast("Camera scanning requires an active internet connection.", "warning");
+      return;
+    }
     if (profileQrScannerActive) return;
     if (qrBox && urlBox && modeQrBtn && modeUrlBtn) {
       if (typeof stopScanner === 'function') await stopScanner();
@@ -1029,6 +1052,10 @@ function initApp() {
 }
 
 function handleManualUrl() {
+  if (!navigator.onLine) {
+    showToast("Licence verification requires an active internet connection.", "warning");
+    return;
+  }
   const urlInput = document.getElementById("manual-url-input");
   const urlVal = urlInput ? urlInput.value.trim() : "";
   if (!urlVal || !isValidCaamUrl(urlVal)) {
@@ -1042,6 +1069,10 @@ function handleManualUrl() {
 }
 
 async function openOriginalLicense() {
+  if (!navigator.onLine) {
+    showToast("Viewing live licence page requires an active internet connection.", "warning");
+    return;
+  }
   const profile = typeof getProfileData === 'function' ? getProfileData() : {};
   let targetUrl = lastScannedUrl;
   if (!targetUrl && profile) {
