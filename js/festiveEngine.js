@@ -1,4 +1,4 @@
-// ./js/festiveEngine.js (1111_R112) - CertiFly Hybrid Festive & Seasonal Overlay Engine
+// ./js/festiveEngine.js (1111_R113) - CertiFly Hybrid Festive & Seasonal Overlay Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -27,8 +27,8 @@ export const DEFAULT_FESTIVE_CONFIG = {
     {
       id: "hari_raya",
       name: "Hari Raya Aidilfitri",
-      startDate: "2026-11-11",
-      endDate: "2026-11-13",
+      startDate: "2026-03-20",
+      endDate: "2026-03-24",
       themeColor: "#10b981",
       badgeText: "Selamat Hari Raya Aidilfitri!",
       icon: "crescent-star",
@@ -299,8 +299,10 @@ export async function initFestiveEngine() {
   updateFestivePills();
 
   if (isFestiveEnabled()) {
-    mountFestiveOverlay();
+    // 1. Sync remote config first so updated dates in festive-config.json are loaded
     await syncFestiveConfigRemote();
+    // 2. Mount overlay using fresh config
+    mountFestiveOverlay();
   }
 }
 
