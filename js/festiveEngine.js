@@ -27,8 +27,8 @@ export const DEFAULT_FESTIVE_CONFIG = {
     {
       id: "hari_raya",
       name: "Hari Raya Aidilfitri",
-      startDate: "2026-03-20",
-      endDate: "2026-03-24",
+      startDate: "2026-11-11",
+      endDate: "2026-11-13",
       themeColor: "#10b981",
       badgeText: "Selamat Hari Raya Aidilfitri!",
       icon: "crescent-star",
