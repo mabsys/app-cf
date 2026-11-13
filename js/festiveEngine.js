@@ -1,4 +1,4 @@
-// ./js/festiveEngine.js (1111_R113) - CertiFly Hybrid Festive & Seasonal Overlay Engine
+// ./js/festiveEngine.js (1111_R114) - CertiFly Hybrid Festive & Seasonal Overlay Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -79,6 +79,7 @@ export const DEFAULT_FESTIVE_CONFIG = {
 
 const STORAGE_KEY_ENABLED = 'certifly_festive_enabled';
 const STORAGE_KEY_CONFIG = 'certifly_festive_config';
+let cardObserver = null;
 
 /**
  * Check if Festive Overlays are enabled by the user (default: true)
@@ -220,6 +221,28 @@ function getFestiveStickerSvg(iconType, color) {
 }
 
 /**
+ * Sets up a MutationObserver to watch for #overview-hero-card entering the DOM
+ */
+function setupHeroCardObserver(overrideDateStr) {
+  if (cardObserver) return;
+  const targetContainer = document.getElementById('tab-overview-content') || document.body;
+  if (!targetContainer) return;
+
+  cardObserver = new MutationObserver(() => {
+    const heroCard = document.getElementById('overview-hero-card');
+    if (heroCard) {
+      if (cardObserver) {
+        cardObserver.disconnect();
+        cardObserver = null;
+      }
+      mountFestiveOverlay(overrideDateStr);
+    }
+  });
+
+  cardObserver.observe(targetContainer, { childList: true, subtree: true });
+}
+
+/**
  * Mounts the Festive Corner Sticker directly inside the Front Face of #overview-hero-card
  */
 export function mountFestiveOverlay(overrideDateStr = null) {
@@ -228,9 +251,21 @@ export function mountFestiveOverlay(overrideDateStr = null) {
   if (!isFestiveEnabled()) return;
 
   const activeEvent = getActiveFestiveEvent(overrideDateStr);
+  if (!activeEvent) return;
+
   const heroCard = document.getElementById('overview-hero-card');
 
-  if (!activeEvent || !heroCard) return;
+  // If hero card is not in DOM yet (e.g. initial blank setup state), observe DOM until card enters
+  if (!heroCard) {
+    setupHeroCardObserver(overrideDateStr);
+    return;
+  }
+
+  // Disconnect any active observer once card is found
+  if (cardObserver) {
+    cardObserver.disconnect();
+    cardObserver = null;
+  }
 
   // Target EXCLUSIVELY the Front Face container inside #overview-hero-card
   const frontFace = heroCard.firstElementChild;
@@ -263,6 +298,10 @@ export function mountFestiveOverlay(overrideDateStr = null) {
  * Unmounts the festive corner sticker from the DOM
  */
 export function unmountFestiveOverlay() {
+  if (cardObserver) {
+    cardObserver.disconnect();
+    cardObserver = null;
+  }
   const sticker = document.getElementById('hero-festive-sticker');
   if (sticker) {
     sticker.remove();
@@ -299,9 +338,7 @@ export async function initFestiveEngine() {
   updateFestivePills();
 
   if (isFestiveEnabled()) {
-    // 1. Sync remote config first so updated dates in festive-config.json are loaded
     await syncFestiveConfigRemote();
-    // 2. Mount overlay using fresh config
     mountFestiveOverlay();
   }
 }
