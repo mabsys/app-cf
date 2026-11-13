@@ -1,4 +1,4 @@
-// ./main.js (1311_R419) - CertiFly Application Shell & Orchestrator
+// ./main.js (1311_R420) - CertiFly Application Shell & Orchestrator
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
@@ -8,7 +8,7 @@ import { parseLicenseDOM } from './js/caamParser.js';
 import { parseAttestationText, validateAttestationContent, parseQualificationSlipText, validateQualificationSlipContent } from './js/parser.js';
 import { saveToHistory, renderHistoryList, getScanHistory, getProfileData, saveProfileData, clearProfileData, clearHistory, getThresholdDays, setThresholdDays, getHistoryLimit, setHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData, getAttestationPdf, setAttestationPdf, removeAttestationPdf, getAttestationData, setAttestationData, clearAttestationData, getQualificationSlipPdf, setQualificationSlipPdf, removeQualificationSlipPdf, getQualificationSlipData, setQualificationSlipData, clearQualificationSlipData, getThemeMode, setThemeMode, getTextSize, setTextSize, clearAllAppData } from './js/storage.js';
 import { startScanner, stopScanner, switchScanHubTab, renderRecentPilotsList, cycleCameraLens, toggleTorch, handleClipboardPaste } from './js/scanner.js';
-import { updateNetworkStatus, showScannerView, showLoading, showError, showView, initNavigationBars, closeMenu, applyThemeMode, applyTextSize, updateThresholdPills, updateHistoryLimitPills, updateFreshnessLimitPills, switchResultTab, openProfileMenu, openMenu, initToolsViewUI, dispatchActiveToolCalculation, switchActiveTool } from './js/ui.js';
+import { updateNetworkStatus, showScannerView, showLoading, showError, showView, initNavigationBars, closeMenu, applyThemeMode, applyTextSize, updateThresholdPills, updateHistoryLimitPills, updateFreshnessLimitPills, switchResultTab, openProfileMenu, openMenu, initToolsViewUI, dispatchActiveToolCalculation, switchActiveTool, toggleProfileAccordionSection } from './js/ui.js';
 import { initFestiveEngine, setFestiveEnabled } from './js/festiveEngine.js';
 
 function isSupervisoryQual(name) {
@@ -679,11 +679,36 @@ function initProfileUI() {
 
       if (!urlVal || !isValidCaamUrl(urlVal)) {
         await showAlertModal("Invalid Licence URL", "Please enter or scan a valid CAAM eCLIPSE URL.", "warning");
+        if (typeof toggleProfileAccordionSection === 'function') {
+          const licenceContent = document.getElementById("section-content-licence");
+          if (licenceContent && licenceContent.classList.contains("hidden")) {
+            toggleProfileAccordionSection("licence");
+          }
+        }
+        const urlInputEl = document.getElementById("profile-url-input");
+        if (urlInputEl) {
+          setTimeout(() => {
+            urlInputEl.focus();
+            urlInputEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 150);
+        }
         return;
       }
 
       if (!selectedAttestationFile && !currentProfile.attestationFileName) {
         await showAlertModal("Missing Attestation", "Please upload a valid MAB company attestation PDF file.", "warning");
+        if (typeof toggleProfileAccordionSection === 'function') {
+          const docsContent = document.getElementById("section-content-docs");
+          if (docsContent && docsContent.classList.contains("hidden")) {
+            toggleProfileAccordionSection("docs");
+          }
+        }
+        const pdfLabelEl = document.getElementById("profile-pdf-label") || document.getElementById("profile-pdf-file");
+        if (pdfLabelEl) {
+          setTimeout(() => {
+            pdfLabelEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 150);
+        }
         return;
       }
 
@@ -705,11 +730,36 @@ function initProfileUI() {
 
       if (passNoVal && !passExpVal) {
         await showAlertModal("Passport Expiry Required", "Please select your passport expiry date.", "warning");
+        if (typeof toggleProfileAccordionSection === 'function') {
+          const passContent = document.getElementById("section-content-passport");
+          if (passContent && passContent.classList.contains("hidden")) {
+            toggleProfileAccordionSection("passport");
+          }
+        }
+        const passTrigger = document.getElementById("btn-passport-expiry-trigger");
+        if (passTrigger) {
+          setTimeout(() => {
+            passTrigger.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 150);
+        }
         return;
       }
 
       if (passExpVal && !passNoVal) {
         await showAlertModal("Passport Number Required", "Please enter your passport number.", "warning");
+        if (typeof toggleProfileAccordionSection === 'function') {
+          const passContent = document.getElementById("section-content-passport");
+          if (passContent && passContent.classList.contains("hidden")) {
+            toggleProfileAccordionSection("passport");
+          }
+        }
+        const passInputEl = document.getElementById("profile-passport-no");
+        if (passInputEl) {
+          setTimeout(() => {
+            passInputEl.focus();
+            passInputEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 150);
+        }
         return;
       }
 
@@ -719,6 +769,18 @@ function initProfileUI() {
         const expD = new Date(passExpVal);
         if (expD < today) {
           await showAlertModal("Expired Passport", "Passport expiry date cannot be in the past.", "error");
+          if (typeof toggleProfileAccordionSection === 'function') {
+            const passContent = document.getElementById("section-content-passport");
+            if (passContent && passContent.classList.contains("hidden")) {
+              toggleProfileAccordionSection("passport");
+            }
+          }
+          const passTrigger = document.getElementById("btn-passport-expiry-trigger");
+          if (passTrigger) {
+            setTimeout(() => {
+              passTrigger.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 150);
+          }
           return;
         }
       }
