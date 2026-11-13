@@ -1,4 +1,4 @@
-// ./main.js (1111_R417) - CertiFly Application Shell & Orchestrator
+// ./main.js (1111_R418) - CertiFly Application Shell & Orchestrator
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
@@ -83,7 +83,6 @@ async function extractTextFromPdfFile(file) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  applyThemeMode();
   initToolsUI();
   initToolsModule();
   initApp();
@@ -1376,13 +1375,6 @@ async function renderDashboardResults(caamResults, mabResults = null) {
 
   if (overviewPane && initialOverviewTemplateHTML && !(overviewPane.querySelector("#overview-hero-card") || overviewPane.querySelector("#ov-caam-expiry"))) {
     overviewPane.innerHTML = initialOverviewTemplateHTML;
-  }
-  if (typeof applyThemeMode === "function") applyThemeMode();
-  renderNoticeCard("tab-overview-content", { id: "ov-reference-notice", title: "For Personal Reference Only:", message: "This digital summary MUST NOT be used for operational flight duty purposes.", type: "warning", dismissible: true });
-  const noticeEl = document.getElementById("ov-reference-notice");
-  if (noticeEl) {
-    noticeEl.classList.remove("border-slate-200", "border-slate-300", "border-slate-100");
-    noticeEl.classList.add("border-amber-200/80", "dark:border-amber-900/50", "dark:bg-amber-950/40");
   }
   if (caamPane && initialCaamTemplateHTML && !caamPane.querySelector("#pilot-name")) {
     caamPane.innerHTML = initialCaamTemplateHTML;
