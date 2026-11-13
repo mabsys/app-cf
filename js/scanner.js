@@ -1,5 +1,6 @@
-// ./js/scanner.js (1011_R425) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (1311_R426) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
+import { showToast } from './notifications.js';
 import { getProfileData, getScanHistory } from './storage.js';
 import { animateTabBounce, animateTabContentEntrance } from './animations.js';
 
@@ -494,6 +495,7 @@ export async function handleClipboardPaste() {
     }
   } catch (err) {
     console.warn("Clipboard permission denied:", err);
+    showToast("Clipboard permission denied by browser", "info");
   }
 }
 
