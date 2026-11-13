@@ -1,4 +1,4 @@
-// ./main.js (1111_R415) - CertiFly Application Shell & Orchestrator
+// ./main.js (1111_R416) - CertiFly Application Shell & Orchestrator
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
@@ -83,6 +83,7 @@ async function extractTextFromPdfFile(file) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  applyThemeMode();
   initToolsUI();
   initToolsModule();
   initApp();
