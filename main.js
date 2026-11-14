@@ -1,4 +1,4 @@
-// ./main.js (1311_R423) - CertiFly Application Shell & Orchestrator
+// ./main.js (1311_R424) - CertiFly Application Shell & Orchestrator
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
@@ -127,6 +127,11 @@ function initScanHubUI() {
     renderMyQrPass();
   });
   if (tabManualBtn) tabManualBtn.addEventListener("click", () => {
+    if (!navigator.onLine) {
+      showToast("Manual URL entry requires an active internet connection.", "warning");
+      if (typeof window.switchScanHubTab === "function") window.switchScanHubTab("qrpass");
+      return;
+    }
     switchScanHubTab("manual");
     setupTab3ManualLayout();
   });
@@ -373,6 +378,11 @@ function initProfileUI() {
   if (passNoInput) {
     passNoInput.value = profile.passportNo || "";
     passNoInput.oninput = () => {
+      if (!navigator.onLine) {
+        showToast("Passport details require an active internet connection.", "warning");
+        passNoInput.value = profile.passportNo || "";
+        return;
+      }
       passNoInput.value = passNoInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     };
   }
@@ -548,6 +558,11 @@ function initProfileUI() {
 
   if (pdfFileInput) {
     pdfFileInput.onchange = async (e) => {
+      if (!navigator.onLine) {
+        showToast("PDF upload requires an active internet connection.", "warning");
+        if (pdfFileInput) pdfFileInput.value = "";
+        return;
+      }
       selectedAttestationFile = null;
       selectedAttestationText = "";
 
@@ -618,6 +633,11 @@ function initProfileUI() {
 
   if (qsPdfFileInput) {
     qsPdfFileInput.onchange = async (e) => {
+      if (!navigator.onLine) {
+        showToast("PDF upload requires an active internet connection.", "warning");
+        if (qsPdfFileInput) qsPdfFileInput.value = "";
+        return;
+      }
       selectedQsFile = null;
       selectedQsText = "";
       selectedQsParsed = null;
