@@ -1,4 +1,4 @@
-// ./js/components/menu.js (1411_R443) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
+// ./js/components/menu.js (1411_R444) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
 
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
@@ -412,70 +412,301 @@ export const menuHTML = `
 `;
 
 // ==================================================================
-// 3D RUBIK'S CUBE ENGINE & EASTER EGG LIFECYCLE
+// OFFICIAL 3D THREE.JS RUBIK'S CUBE ENGINE & EASTER EGG LIFECYCLE
 // ==================================================================
 let brandTapCount = 0;
 let brandTapTimer = null;
 
 let cubeAnimId = null;
 let isCubeInitialized = false;
-let cubeCanvas = null;
-let cubeCtx = null;
-
-let rotX = -0.45;
-let rotY = 0.65;
-let targetRotX = -0.45;
-let targetRotY = 0.65;
+let scene = null;
+let camera = null;
+let renderer = null;
+let rubiksGroup = null;
+let cubelets = [];
+let isAnimatingTurn = false;
 
 let isDragging = false;
-let lastMouseX = 0;
-let lastMouseY = 0;
-let startTouchX = 0;
-let startTouchY = 0;
+let previousMousePosition = { x: 0, y: 0 };
+let targetRotation = { x: -0.45, y: 0.65 };
+let currentRotation = { x: -0.45, y: 0.65 };
 
-const CUBE_COLORS = ['#FFFFFF', '#FFD500', '#DC2626', '#FF5800', '#2563EB', '#16A34A'];
-let blocks = [];
-let animatingLayer = null;
+const CUBE_COLORS = {
+  right:  0xDC2626, // Red (+X)
+  left:   0xFF5800, // Orange (-X)
+  top:    0xFFFFFF, // White (+Y)
+  bottom: 0xFFD500, // Yellow (-Y)
+  front:  0x16A34A, // Green (+Z)
+  back:   0x2563EB, // Blue (-Z)
+  inner:  0x0F172A  // Dark Slate core
+};
 
-function initBlocks() {
-  blocks = [];
+function ensureThreeJS(callback) {
+  if (typeof THREE !== 'undefined') {
+    if (callback) callback();
+    return;
+  }
+  const script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+  script.onload = () => { if (callback) callback(); };
+  script.onerror = () => { console.warn('Could not load Three.js CDN'); };
+  document.head.appendChild(script);
+}
+
+function createCubeletMaterials(x, y, z) {
+  return [
+    new THREE.MeshLambertMaterial({ color: x === 1 ? CUBE_COLORS.right : CUBE_COLORS.inner }),
+    new THREE.MeshLambertMaterial({ color: x === -1 ? CUBE_COLORS.left : CUBE_COLORS.inner }),
+    new THREE.MeshLambertMaterial({ color: y === 1 ? CUBE_COLORS.top : CUBE_COLORS.inner }),
+    new THREE.MeshLambertMaterial({ color: y === -1 ? CUBE_COLORS.bottom : CUBE_COLORS.inner }),
+    new THREE.MeshLambertMaterial({ color: z === 1 ? CUBE_COLORS.front : CUBE_COLORS.inner }),
+    new THREE.MeshLambertMaterial({ color: z === -1 ? CUBE_COLORS.back : CUBE_COLORS.inner })
+  ];
+}
+
+function initThreeCubeScene() {
+  const container = document.getElementById('cube-game-container');
+  const canvas = document.getElementById('cube-canvas');
+  if (!container || !canvas || typeof THREE === 'undefined') return false;
+
+  const width = container.clientWidth || 300;
+  const height = container.clientHeight || 300;
+
+  scene = new THREE.Scene();
+
+  camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+  camera.position.set(0, 0, 9);
+
+  renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+  renderer.setSize(width, height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+  // Ambient & Directional Lights
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+  scene.add(ambientLight);
+
+  const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.85);
+  dirLight1.position.set(5, 10, 7);
+  scene.add(dirLight1);
+
+  const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.35);
+  dirLight2.position.set(-5, -5, -5);
+  scene.add(dirLight2);
+
+  rubiksGroup = new THREE.Group();
+  scene.add(rubiksGroup);
+
+  buildRubiksCube();
+  setupCubeControls(canvas);
+
+  return true;
+}
+
+function buildRubiksCube() {
+  if (!rubiksGroup) return;
+  while (rubiksGroup.children.length > 0) {
+    rubiksGroup.remove(rubiksGroup.children[0]);
+  }
+  cubelets = [];
+
+  const geometry = new THREE.BoxGeometry(0.94, 0.94, 0.94);
+  const edgesGeom = new THREE.EdgesGeometry(geometry);
+  const lineMat = new THREE.LineBasicMaterial({ color: 0x020617, linewidth: 2 });
+
+  const spacing = 1.0;
+
   for (let x = -1; x <= 1; x++) {
     for (let y = -1; y <= 1; y++) {
       for (let z = -1; z <= 1; z++) {
-        blocks.push({
-          x: x, y: y, z: z,
-          origX: x, origY: y, origZ: z,
-          colors: [
-            y === 1 ? 0 : -1,
-            y === -1 ? 1 : -1,
-            z === 1 ? 2 : -1,
-            z === -1 ? 3 : -1,
-            x === 1 ? 4 : -1,
-            x === -1 ? 5 : -1
-          ]
-        });
+        const materials = createCubeletMaterials(x, y, z);
+        const mesh = new THREE.Mesh(geometry, materials);
+        mesh.position.set(x * spacing, y * spacing, z * spacing);
+
+        const edges = new THREE.LineSegments(edgesGeom, lineMat);
+        mesh.add(edges);
+
+        mesh.userData = { initialPos: new THREE.Vector3(x * spacing, y * spacing, z * spacing), gridX: x, gridY: y, gridZ: z };
+        rubiksGroup.add(mesh);
+        cubelets.push(mesh);
       }
     }
   }
+
+  rubiksGroup.rotation.x = currentRotation.x;
+  rubiksGroup.rotation.y = currentRotation.y;
+}
+
+function rotateLayer(axis, layerIndex, angle, duration = 240, onComplete = null) {
+  if (isAnimatingTurn || !rubiksGroup) return;
+  isAnimatingTurn = true;
+
+  const pivot = new THREE.Group();
+  rubiksGroup.add(pivot);
+
+  const matchingCubelets = [];
+  cubelets.forEach(mesh => {
+    const worldPos = new THREE.Vector3();
+    mesh.getWorldPosition(worldPos);
+    rubiksGroup.worldToLocal(worldPos);
+    
+    const posVal = Math.round(worldPos[axis]);
+    if (posVal === layerIndex) {
+      matchingCubelets.push(mesh);
+    }
+  });
+
+  matchingCubelets.forEach(mesh => {
+    pivot.attach(mesh);
+  });
+
+  const startTime = performance.now();
+
+  function animateTurn(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1.0);
+    const easeProgress = progress * (2 - progress);
+
+    pivot.rotation[axis] = angle * easeProgress;
+
+    if (progress < 1.0) {
+      requestAnimationFrame(animateTurn);
+    } else {
+      pivot.rotation[axis] = angle;
+      pivot.updateMatrixWorld(true);
+
+      matchingCubelets.forEach(mesh => {
+        rubiksGroup.attach(mesh);
+      });
+
+      rubiksGroup.remove(pivot);
+      isAnimatingTurn = false;
+      if (onComplete) onComplete();
+    }
+  }
+
+  requestAnimationFrame(animateTurn);
+}
+
+function scrambleCube() {
+  if (isAnimatingTurn) return;
+  const axes = ['x', 'y', 'z'];
+  const indices = [-1, 0, 1];
+  const angles = [Math.PI / 2, -Math.PI / 2];
+  let movesCount = 0;
+  const totalMoves = 15;
+
+  function doMove() {
+    if (movesCount >= totalMoves) return;
+    movesCount++;
+    const ax = axes[Math.floor(Math.random() * axes.length)];
+    const idx = indices[Math.floor(Math.random() * indices.length)];
+    const ang = angles[Math.floor(Math.random() * angles.length)];
+    rotateLayer(ax, idx, ang, 120, doMove);
+  }
+
+  doMove();
+}
+
+function setupCubeControls(canvas) {
+  if (!canvas) return;
+  let startX = 0, startY = 0;
+
+  const onStart = (e) => {
+    isDragging = true;
+    const pt = e.touches ? e.touches[0] : e;
+    previousMousePosition = { x: pt.clientX, y: pt.clientY };
+    startX = pt.clientX;
+    startY = pt.clientY;
+  };
+
+  const onMove = (e) => {
+    if (!isDragging || !rubiksGroup) return;
+    const pt = e.touches ? e.touches[0] : e;
+    const deltaX = pt.clientX - previousMousePosition.x;
+    const deltaY = pt.clientY - previousMousePosition.y;
+
+    targetRotation.y += deltaX * 0.008;
+    targetRotation.x += deltaY * 0.008;
+    targetRotation.x = Math.max(-1.4, Math.min(1.4, targetRotation.x));
+
+    previousMousePosition = { x: pt.clientX, y: pt.clientY };
+  };
+
+  const onEnd = (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+    const pt = e.changedTouches ? e.changedTouches[0] : e;
+    if (!pt) return;
+    const totalDx = pt.clientX - startX;
+    const totalDy = pt.clientY - startY;
+
+    if (Math.abs(totalDx) > 30 || Math.abs(totalDy) > 30) {
+      if (Math.abs(totalDx) > Math.abs(totalDy)) {
+        const dir = totalDx > 0 ? Math.PI / 2 : -Math.PI / 2;
+        const layerIdx = totalDy < -10 ? 1 : (totalDy > 10 ? -1 : 0);
+        rotateLayer('y', layerIdx, dir);
+      } else {
+        const dir = totalDy > 0 ? Math.PI / 2 : -Math.PI / 2;
+        const layerIdx = totalDx < -10 ? -1 : (totalDx > 10 ? 1 : 0);
+        rotateLayer('x', layerIdx, dir);
+      }
+    }
+  };
+
+  canvas.addEventListener('mousedown', onStart);
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onEnd);
+
+  canvas.addEventListener('touchstart', onStart, { passive: true });
+  window.addEventListener('touchmove', onMove, { passive: true });
+  window.addEventListener('touchend', onEnd);
+
+  document.getElementById('cube-scramble-btn')?.addEventListener('click', scrambleCube);
+  document.getElementById('cube-reset-btn')?.addEventListener('click', () => {
+    if (!isAnimatingTurn) buildRubiksCube();
+  });
+}
+
+function renderCubeLoop() {
+  if (!renderer || !scene || !camera) return;
+
+  if (rubiksGroup) {
+    currentRotation.x += (targetRotation.x - currentRotation.x) * 0.1;
+    currentRotation.y += (targetRotation.y - currentRotation.y) * 0.1;
+    rubiksGroup.rotation.x = currentRotation.x;
+    rubiksGroup.rotation.y = currentRotation.y;
+  }
+
+  renderer.render(scene, camera);
+  cubeAnimId = requestAnimationFrame(renderCubeLoop);
 }
 
 export function launchCubeGame() {
   const container = document.getElementById('cube-game-container');
-  cubeCanvas = document.getElementById('cube-canvas');
-  if (!container || !cubeCanvas) return;
+  const canvas = document.getElementById('cube-canvas');
+  if (!container || !canvas) return;
 
-  cubeCtx = cubeCanvas.getContext('2d', { alpha: true });
-  resizeCubeCanvas();
+  ensureThreeJS(() => {
+    if (!isCubeInitialized) {
+      if (initThreeCubeScene()) {
+        isCubeInitialized = true;
+      }
+    }
 
-  if (!isCubeInitialized) {
-    initBlocks();
-    setupCubeEventListeners();
-    isCubeInitialized = true;
-  }
+    if (renderer && container) {
+      const width = container.clientWidth || 300;
+      const height = container.clientHeight || 300;
+      renderer.setSize(width, height);
+      if (camera) {
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+      }
+    }
 
-  if (!cubeAnimId) {
-    renderCubeLoop();
-  }
+    if (!cubeAnimId) {
+      renderCubeLoop();
+    }
+  });
 }
 
 export function dismissCubeGame() {
@@ -483,263 +714,6 @@ export function dismissCubeGame() {
     cancelAnimationFrame(cubeAnimId);
     cubeAnimId = null;
   }
-}
-
-function resizeCubeCanvas() {
-  if (!cubeCanvas || !cubeCanvas.parentNode) return;
-  const rect = cubeCanvas.parentNode.getBoundingClientRect();
-  const dpr = window.devicePixelRatio || 1;
-  cubeCanvas.width = Math.floor(rect.width * dpr);
-  cubeCanvas.height = Math.floor(rect.height * dpr);
-}
-
-function setupCubeEventListeners() {
-  if (!cubeCanvas) return;
-
-  window.addEventListener('resize', () => {
-    if (cubeCanvas && cubeCanvas.offsetParent !== null) resizeCubeCanvas();
-  });
-
-  const onStart = (e) => {
-    isDragging = true;
-    const pt = e.touches ? e.touches[0] : e;
-    lastMouseX = pt.clientX;
-    lastMouseY = pt.clientY;
-    startTouchX = pt.clientX;
-    startTouchY = pt.clientY;
-  };
-
-  const onMove = (e) => {
-    if (!isDragging) return;
-    const pt = e.touches ? e.touches[0] : e;
-    const dx = pt.clientX - lastMouseX;
-    const dy = pt.clientY - lastMouseY;
-    lastMouseX = pt.clientX;
-    lastMouseY = pt.clientY;
-
-    targetRotY += dx * 0.008;
-    targetRotX += dy * 0.008;
-    targetRotX = Math.max(-1.4, Math.min(1.4, targetRotX));
-  };
-
-  const onEnd = (e) => {
-    if (!isDragging) return;
-    isDragging = false;
-
-    const pt = e.changedTouches ? e.changedTouches[0] : e;
-    const totalDx = pt.clientX - startTouchX;
-    const totalDy = pt.clientY - startTouchY;
-
-    if (Math.abs(totalDx) > 25 || Math.abs(totalDy) > 25) {
-      if (Math.abs(totalDx) > Math.abs(totalDy)) {
-        const dir = totalDx > 0 ? Math.PI / 2 : -Math.PI / 2;
-        const layerIdx = totalDy < -10 ? 1 : (totalDy > 10 ? -1 : 0);
-        triggerLayerRotation('y', layerIdx, dir);
-      } else {
-        const dir = totalDy > 0 ? Math.PI / 2 : -Math.PI / 2;
-        const layerIdx = totalDx < -10 ? -1 : (totalDx > 10 ? 1 : 0);
-        triggerLayerRotation('x', layerIdx, dir);
-      }
-    }
-  };
-
-  cubeCanvas.addEventListener('mousedown', onStart);
-  window.addEventListener('mousemove', onMove);
-  window.addEventListener('mouseup', onEnd);
-
-  cubeCanvas.addEventListener('touchstart', onStart, { passive: true });
-  window.addEventListener('touchmove', onMove, { passive: true });
-  window.addEventListener('touchend', onEnd);
-
-  document.getElementById('cube-scramble-btn')?.addEventListener('click', scrambleCube);
-  document.getElementById('cube-reset-btn')?.addEventListener('click', () => {
-    initBlocks();
-  });
-}
-
-function scrambleCube() {
-  if (animatingLayer) return;
-  let count = 0;
-  const axes = ['x', 'y', 'z'];
-  const indices = [-1, 0, 1];
-  const dirs = [Math.PI / 2, -Math.PI / 2];
-
-  function doMove() {
-    if (count >= 15) return;
-    count++;
-    const ax = axes[Math.floor(Math.random() * axes.length)];
-    const idx = indices[Math.floor(Math.random() * indices.length)];
-    const dir = dirs[Math.floor(Math.random() * dirs.length)];
-    triggerLayerRotation(ax, idx, dir, doMove);
-  }
-  doMove();
-}
-
-function triggerLayerRotation(axis, index, targetAngle, onComplete) {
-  if (animatingLayer) return;
-  animatingLayer = { axis, index, angle: 0, targetAngle, speed: 0.25, onComplete };
-}
-
-function updateCubePhysics() {
-  rotX += (targetRotX - rotX) * 0.15;
-  rotY += (targetRotY - rotY) * 0.15;
-
-  if (animatingLayer) {
-    const step = (animatingLayer.targetAngle - animatingLayer.angle) * animatingLayer.speed;
-    if (Math.abs(animatingLayer.targetAngle - animatingLayer.angle) < 0.04) {
-      animatingLayer.angle = animatingLayer.targetAngle;
-      applyLayerRotation(animatingLayer.axis, animatingLayer.index, animatingLayer.targetAngle);
-      const cb = animatingLayer.onComplete;
-      animatingLayer = null;
-      if (cb) cb();
-    } else {
-      animatingLayer.angle += step;
-    }
-  }
-}
-
-function applyLayerRotation(axis, index, angle) {
-  const cos = Math.round(Math.cos(angle));
-  const sin = Math.round(Math.sin(angle));
-
-  blocks.forEach(b => {
-    if (b[axis] === index) {
-      let u, v;
-      if (axis === 'x') {
-        u = b.y; v = b.z;
-        b.y = u * cos - v * sin;
-        b.z = u * sin + v * cos;
-        const oldC = [...b.colors];
-        if (angle > 0) {
-          b.colors[2] = oldC[0]; b.colors[1] = oldC[2]; b.colors[3] = oldC[1]; b.colors[0] = oldC[3];
-        } else {
-          b.colors[0] = oldC[2]; b.colors[2] = oldC[1]; b.colors[1] = oldC[3]; b.colors[3] = oldC[0];
-        }
-      } else if (axis === 'y') {
-        u = b.x; v = b.z;
-        b.x = u * cos - v * sin;
-        b.z = u * sin + v * cos;
-        const oldC = [...b.colors];
-        if (angle > 0) {
-          b.colors[2] = oldC[4]; b.colors[5] = oldC[2]; b.colors[3] = oldC[5]; b.colors[4] = oldC[3];
-        } else {
-          b.colors[4] = oldC[2]; b.colors[2] = oldC[5]; b.colors[5] = oldC[3]; b.colors[3] = oldC[4];
-        }
-      } else if (axis === 'z') {
-        u = b.x; v = b.y;
-        b.x = u * cos - v * sin;
-        b.y = u * sin + v * cos;
-        const oldC = [...b.colors];
-        if (angle > 0) {
-          b.colors[0] = oldC[4]; b.colors[5] = oldC[0]; b.colors[1] = oldC[5]; b.colors[4] = oldC[1];
-        } else {
-          b.colors[4] = oldC[0]; b.colors[0] = oldC[5]; b.colors[5] = oldC[1]; b.colors[1] = oldC[4];
-        }
-      }
-    }
-  });
-}
-
-function renderCubeLoop() {
-  updateCubePhysics();
-  drawCubeScene();
-  cubeAnimId = requestAnimationFrame(renderCubeLoop);
-}
-
-function drawCubeScene() {
-  if (!cubeCtx || !cubeCanvas) return;
-  const w = cubeCanvas.width;
-  const h = cubeCanvas.height;
-  cubeCtx.clearRect(0, 0, w, h);
-
-  const cx = w / 2;
-  const cy = h / 2;
-  const scale = Math.min(w, h) / 7.2;
-
-  const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
-  const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
-
-  function project(px, py, pz) {
-    let x1 = px * cosY - pz * sinY;
-    let z1 = px * sinY + pz * cosY;
-    let y2 = py * cosX - z1 * sinX;
-    let z2 = py * sinX + z1 * cosX;
-
-    return {
-      x: cx + x1 * scale,
-      y: cy - y2 * scale,
-      z: z2
-    };
-  }
-
-  const facesToDraw = [];
-  const blockSize = 0.92;
-  const half = blockSize / 2;
-
-  blocks.forEach(b => {
-    let bx = b.x;
-    let by = b.y;
-    let bz = b.z;
-
-    if (animatingLayer && b[animatingLayer.axis] === animatingLayer.index) {
-      const a = animatingLayer.angle;
-      const cosA = Math.cos(a), sinA = Math.sin(a);
-      if (animatingLayer.axis === 'x') {
-        const ny = by * cosA - bz * sinA;
-        const nz = by * sinA + bz * cosA;
-        by = ny; bz = nz;
-      } else if (animatingLayer.axis === 'y') {
-        const nx = bx * cosA - bz * sinA;
-        const nz = bx * sinA + bz * cosA;
-        bx = nx; bz = nz;
-      } else if (animatingLayer.axis === 'z') {
-        const nx = bx * cosA - by * sinA;
-        const ny = bx * sinA + by * cosA;
-        bx = nx; by = ny;
-      }
-    }
-
-    const faceNormals = [
-      { n: [0, 1, 0], colIdx: b.colors[0], verts: [[-half, half, -half], [half, half, -half], [half, half, half], [-half, half, half]] },
-      { n: [0, -1, 0], colIdx: b.colors[1], verts: [[-half, -half, half], [half, -half, half], [half, -half, -half], [-half, -half, -half]] },
-      { n: [0, 0, 1], colIdx: b.colors[2], verts: [[-half, -half, half], [half, -half, half], [half, half, half], [-half, half, half]] },
-      { n: [0, 0, -1], colIdx: b.colors[3], verts: [[half, -half, -half], [-half, -half, -half], [-half, half, -half], [half, half, -half]] },
-      { n: [1, 0, 0], colIdx: b.colors[4], verts: [[half, -half, half], [half, -half, -half], [half, half, -half], [half, half, half]] },
-      { n: [-1, 0, 0], colIdx: b.colors[5], verts: [[-half, -half, -half], [-half, -half, half], [-half, half, half], [-half, half, -half]] }
-    ];
-
-    faceNormals.forEach(f => {
-      const pVerts = f.verts.map(v => project(bx + v[0], by + v[1], bz + v[2]));
-      const avgZ = (pVerts[0].z + pVerts[1].z + pVerts[2].z + pVerts[3].z) / 4;
-
-      const pCenter = project(bx + f.n[0]*0.5, by + f.n[1]*0.5, bz + f.n[2]*0.5);
-      const pBase = project(bx, by, bz);
-
-      if (pCenter.z > pBase.z) {
-        facesToDraw.push({
-          verts: pVerts,
-          avgZ: avgZ,
-          color: f.colIdx >= 0 ? CUBE_COLORS[f.colIdx] : '#1E293B'
-        });
-      }
-    });
-  });
-
-  facesToDraw.sort((a, b) => a.avgZ - b.avgZ);
-
-  facesToDraw.forEach(f => {
-    cubeCtx.beginPath();
-    cubeCtx.moveTo(f.verts[0].x, f.verts[0].y);
-    for (let i = 1; i < 4; i++) cubeCtx.lineTo(f.verts[i].x, f.verts[i].y);
-    cubeCtx.closePath();
-
-    cubeCtx.fillStyle = f.color;
-    cubeCtx.fill();
-
-    cubeCtx.strokeStyle = '#0F172A';
-    cubeCtx.lineWidth = Math.max(1.5, scale * 0.04);
-    cubeCtx.stroke();
-  });
 }
 
 export function handleBrandCardTap() {
