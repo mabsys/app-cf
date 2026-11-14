@@ -1,4 +1,6 @@
-// ./js/components/menu.js (1411_R445) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
+// ./js/components/menu.js (1411_R446) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
+
+import Cube from '../vendor/cube.js';
 
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
@@ -378,8 +380,7 @@ export const menuHTML = `
   <!-- Header Bar -->
   <div class="w-full max-w-md flex items-center justify-between pt-2 px-2 shrink-0">
     <div class="flex items-center gap-2">
-      <span class="text-xs font-black tracking-widest text-blue-400 uppercase">Have a break!</span>
-      
+      <span class="text-xs font-black tracking-widest text-blue-400 uppercase">CertiFly™ Break Deck</span>
     </div>
     <button id="close-cube-modal-btn" type="button" onclick="if(typeof closeEasterEggModal === 'function') closeEasterEggModal();" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm font-bold transition-all active:scale-95 cursor-pointer">
       ✕
@@ -412,7 +413,7 @@ export function launchCubeGame() {
   const container = document.getElementById('cube-game-container');
   if (!container) return;
 
-  const CubeClass = window.Cube || (window.ERNO && window.ERNO.Cube);
+  const CubeClass = (typeof Cube !== "undefined" ? Cube : null) || window.Cube || (window.ERNO && window.ERNO.Cube);
 
   if (!cubeGameInstance && CubeClass) {
     try {
