@@ -1,7 +1,7 @@
-// ./main.js (1411_R425) - CertiFly Application Shell & Orchestrator
+// ./main.js (1411_R427) - CertiFly Application Shell & Orchestrator
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
-import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
+import { runAnime, animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
 import { initToolsModule, filterRecurrentCourses, calculatePpcWindows, calculateCourseExpiry, calculateMedicalWindow, calculateFdpAndDiscretion, getMaxAllowableFdp, setSectorCount, getSectorCount, runToolCalculation, setToolsTab, getToolsState, switchToolCategory, setStandbyLocation, openRecurrentCourseModal, closeRecurrentCourseModal, selectRecurrentCourse, resetToolInputs, renderToolsOutputCard, formatDateDDMMMYYYY, openEfbDatePicker, closeEfbDatePicker, selectEfbDate, setEfbDatePreset, changeEfbMonth } from './js/tools.js';
 import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
@@ -1372,7 +1372,7 @@ export function startWelcomeTextAnimation() {
     "欢迎！",
     "நல்வரவு!",
     "Selamat Datai!",
-    "Kopisanangan!"
+    "Salam Sejahtera!"
   ];
 
   let index = 0;
@@ -1381,46 +1381,70 @@ export function startWelcomeTextAnimation() {
     const targetEl = document.getElementById("welcome-text-anim");
     if (!targetEl) return;
 
-    if (typeof anime !== "undefined") {
-      anime({
-        targets: targetEl,
-        opacity: [1, 0],
-        translateY: [0, -8],
-        scale: [1, 0.95],
-        duration: 350,
-        easing: "easeInQuad",
-        complete: () => {
+    // Primary: Anime.js execution via CertiFly runAnime helper
+    const animOut = runAnime({
+      targets: targetEl,
+      opacity: [1, 0],
+      translateY: [0, -8],
+      scale: [1, 0.95],
+      duration: 350,
+      easing: "easeInQuad",
+      complete: () => {
+        index = (index + 1) % greetings.length;
+        targetEl.textContent = greetings[index];
+
+        const animIn = runAnime({
+          targets: targetEl,
+          opacity: [0, 1],
+          translateY: [8, 0],
+          scale: [0.95, 1],
+          duration: 450,
+          easing: "easeOutBack",
+          complete: () => {
+            welcomeAnimTimer = setTimeout(cycle, 2200);
+          }
+        });
+
+        if (!animIn) {
+          welcomeAnimTimer = setTimeout(cycle, 2200);
+        }
+      }
+    });
+
+    // Fallback if Anime.js is unavailable
+    if (!animOut) {
+      if (typeof targetEl.animate === 'function') {
+        const fadeOut = targetEl.animate([
+          { opacity: 1, transform: 'translateY(0px) scale(1)' },
+          { opacity: 0, transform: 'translateY(-8px) scale(0.95)' }
+        ], { duration: 320, easing: 'cubic-bezier(0.4, 0, 1, 1)' });
+
+        fadeOut.onfinish = () => {
           index = (index + 1) % greetings.length;
           targetEl.textContent = greetings[index];
+          const fadeIn = targetEl.animate([
+            { opacity: 0, transform: 'translateY(8px) scale(0.95)' },
+            { opacity: 1, transform: 'translateY(0px) scale(1)' }
+          ], { duration: 420, easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' });
 
-          anime({
-            targets: targetEl,
-            opacity: [0, 1],
-            translateY: [8, 0],
-            scale: [0.95, 1],
-            duration: 450,
-            easing: "easeOutBack",
-            complete: () => {
-              welcomeAnimTimer = setTimeout(cycle, 2200);
-            }
-          });
-        }
-      });
-    } else {
-      index = (index + 1) % greetings.length;
-      targetEl.textContent = greetings[index];
-      welcomeAnimTimer = setTimeout(cycle, 2200);
+          fadeIn.onfinish = () => {
+            welcomeAnimTimer = setTimeout(cycle, 2200);
+          };
+        };
+      } else {
+        index = (index + 1) % greetings.length;
+        targetEl.textContent = greetings[index];
+        welcomeAnimTimer = setTimeout(cycle, 2200);
+      }
     }
   }
 
-  welcomeAnimTimer = setTimeout(cycle, 2200);
+  welcomeAnimTimer = setTimeout(cycle, 2000);
 }
 
 if (typeof window !== "undefined") {
   window.startWelcomeTextAnimation = startWelcomeTextAnimation;
-}
-
-async function renderBlankDashboard() {
+}async function renderBlankDashboard() {
   saveDashboardTemplates();
   const dashboardView = document.getElementById("dashboard-view");
   if (!dashboardView) return;
