@@ -1,2392 +1,767 @@
-<!-- ./index.html (1411_R448) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+// ./js/components/menu.js (1411_R447) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
 
-<!DOCTYPE html>
-<html lang="en">
+export const menuHTML = `
+<!-- DIMMED BACKDROP OVERLAY -->
+<div id="bottom-sheet-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden opacity-0 transition-opacity duration-300"></div>
 
-<head>
-    <!----------------------------------------------
-// CertiFly - Digital Licence Checker          //
-// Version: 2.0 (PWA), Release: (10.2026)      //
-// Developed by: Capt. Mohd Sallehuddin Zaidy //
------------------------------------------------>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#172554">
-    <title>CertiFly™</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/icon-192.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
-    <!-- UNCOMMENT THIS BLOCK ONCE DEV IS COMPLETE
-<script>
-if ('serviceWorker' in navigator) {
-window.addEventListener('load', () => {
-navigator.serviceWorker.register('sw.js')
-.then((reg) => console.log('CertiFly Service Worker registered successfully:', reg.scope))
-.catch((err) => console.error('Service Worker registration failed:', err));
-});
+<!-- FLOATING MENU CONTAINER -->
+<div id="bottom-sheet-menu" class="fixed bottom-3 left-2.5 right-2.5 z-50 bg-white dark:bg-slate-900 rounded-3xl shadow-md transform translate-y-[120%] transition-transform duration-300 ease-out max-w-md mx-auto border border-slate-100 dark:border-slate-800 flex flex-col hidden h-[82vh] max-h-[85vh] touch-none overflow-hidden">
+  
+  <!-- Interactive Drag Handle / Grabber -->
+  <div id="sheet-drag-handle" class="w-full py-3 cursor-grab active:cursor-grabbing flex items-center justify-center shrink-0 select-none">
+    <div class="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full"></div>
+  </div>
+
+  <!-- CONTAINER CONTENT AREA -->
+  <div id="sheet-content" class="relative w-full flex-1 overflow-y-auto overflow-x-hidden pb-6 px-3">
+
+    <!-- PANE 1: MAIN CATEGORIES -->
+    <div id="pane-main" class="w-full transition-opacity duration-300 ease-in-out opacity-100 pointer-events-auto">
+      <div class="flex flex-col gap-2.5 px-1">
+        <!-- Category 0: My Profile -->
+        <button class="nav-item-btn w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 active:scale-[0.98] transition-all cursor-pointer" data-target="pane-profile">
+          <div class="flex items-center gap-3.5">
+            <div class="p-2.5 bg-slate-200/80 dark:bg-slate-700/60 text-slate-700 dark:text-slate-200 rounded-xl">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>
+            </div>
+            <div class="text-left">
+              <div class="text-xs font-bold text-slate-800 dark:text-slate-100">My Credentials</div>
+              <div class="text-[10px] text-slate-400">Licence, Attestation, Qualification Slip & Passport</div>
+            </div>
+          </div>
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+
+        <!-- Category 1: App Preferences -->
+        <button class="nav-item-btn w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 active:scale-[0.98] transition-all cursor-pointer" data-target="pane-settings">
+          <div class="flex items-center gap-3.5">
+            <div class="p-2.5 bg-slate-200/80 dark:bg-slate-700/60 text-slate-700 dark:text-slate-200 rounded-xl">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.27 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527a1.125 1.125 0 01-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            </div>
+            <div class="text-left">
+              <div class="text-xs font-bold text-slate-800 dark:text-slate-100">App Preferences</div>
+              <div class="text-[10px] text-slate-400">App theme, font scaling &amp; alerts</div>
+            </div>
+          </div>
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+
+        <!-- Category 2: Data & Storage -->
+        <button class="nav-item-btn w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 active:scale-[0.98] transition-all cursor-pointer" data-target="pane-storage">
+          <div class="flex items-center gap-3.5">
+            <div class="p-2.5 bg-slate-200/80 dark:bg-slate-700/60 text-slate-700 dark:text-slate-200 rounded-xl">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 5.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125"></path></svg>
+            </div>
+            <div class="text-left">
+              <div class="text-xs font-bold text-slate-800 dark:text-slate-100">Data &amp; Storage</div>
+              <div class="text-[10px] text-slate-400">Manage scan history & attestation limits, app cache</div>
+            </div>
+          </div>
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+
+        <!-- Category 3: About & Support -->
+        <button class="nav-item-btn w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 active:scale-[0.98] transition-all cursor-pointer" data-target="pane-about">
+          <div class="flex items-center gap-3.5">
+            <div class="p-2.5 bg-slate-200/80 dark:bg-slate-700/60 text-slate-700 dark:text-slate-200 rounded-xl">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"></path></svg>
+            </div>
+            <div class="text-left">
+              <div class="text-xs font-bold text-slate-800 dark:text-slate-100">About &amp; Support</div>
+              <div class="text-[10px] text-slate-400">About, Licence Renewal Guide, Feedback</div>
+            </div>
+          </div>
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- SUB-PANE 0: MY PROFILE (COLLAPSIBLE ACCORDIONS) -->
+    <div id="pane-profile" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out px-3 py-1 translate-x-full opacity-0 pointer-events-none hidden">
+      <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1 cursor-pointer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
+      </button>
+      
+      <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-3.5 px-1 tracking-normal">My Credentials</h3>
+
+      <div class="flex flex-col gap-2.5">
+        <!-- ACCORDION 1: DIGITAL LICENCE SOURCE (DEFAULT EXPANDED) -->
+        <div class="accordion-card bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 overflow-hidden shadow-xs">
+          <button type="button" class="accordion-header w-full p-2.5 flex items-center justify-between text-left cursor-pointer" onclick="if(typeof toggleProfileAccordionSection === 'function') toggleProfileAccordionSection('licence');">
+            <div class="flex items-center gap-2.5">
+              <div class="p-0.5 text-slate-600 dark:text-slate-300">
+                <svg class="w-4 h-4" fill="currentColor" stroke="none" viewBox="0 0 24 24" stroke-width="1"><path d="M14 13h5v-2h-5zm0-3h5V8h-5zm-9 6h8v-.55q0-1.125-1.1-1.787T9 13t-2.9.663T5 15.45zm5.413-4.587Q11 10.825 11 10t-.587-1.412T9 8t-1.412.588T7 10t.588 1.413T9 12t1.413-.587M4 20q-.825 0-1.412-.587T2 18V6q0-.825.588-1.412T4 4h16q.825 0 1.413.588T22 6v12q0 .825-.587 1.413T20 20z"></path></svg>
+              </div>
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-100">Digital Licence</span>
+            </div>
+            <svg id="arrow-licence" class="w-4 h-4 text-slate-400 transition-transform duration-300 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="transform: rotate(0deg);"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+
+          <div id="section-content-licence" class="p-3.5 pt-0 border-t border-slate-200/60 dark:border-slate-700/50 hidden" style="height: 0px; opacity: 0;">
+            <label class="text-[10px] font-extrabold text-slate-400 uppercase block my-2.5">Digital Licence Source</label>
+
+            <div class="grid grid-cols-2 gap-2 mb-3">
+              <button id="profile-mode-qr-btn" type="button" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z"></path></svg>
+                Scan Licence QR
+              </button>
+
+              <button id="profile-mode-url-btn" type="button" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"></path></svg>
+                Paste URL
+              </button>
+            </div>
+
+            <div id="profile-source-container" class="w-full">
+              <div id="profile-qr-box" class="flex flex-col gap-2 hidden">
+                <div id="profile-qr-reader-container" class="w-full overflow-hidden rounded-2xl bg-slate-900 aspect-square flex items-center justify-center relative shadow-inner">
+                  <video id="profile-qr-video" class="w-full h-full object-cover" playsinline="" webkit-playsinline="" muted="" disablepictureinpicture="" style="transform: none;"></video>
+                  <div id="profile-qr-reticle" class="absolute w-44 h-44 border-2 border-dashed border-white/80 rounded-2xl pointer-events-none transition-all shadow-[0_0_0_9999px_rgba(15,23,42,0.45)]"></div>
+                  <div class="absolute bottom-4 inset-x-0 flex justify-center pointer-events-none z-10">
+                    <span id="profile-qr-guidance-pill" class="text-[10px] font-bold text-white bg-black/75 px-3.5 py-1.5 rounded-2xl backdrop-blur-md uppercase tracking-wider shadow-sm text-center border border-white/10 leading-tight flex flex-col items-center gap-0.5"><span>Place QR code within scan area</span><span class="text-[9px] text-slate-300 font-medium normal-case tracking-normal">Avoid glare &amp; shadows</span></span>
+                  </div>
+                </div>
+
+                <div id="profile-scanner-controls" class="flex-col gap-2 mt-1 hidden">
+                  <button id="profile-stop-qr-btn" type="button" class="w-full bg-slate-900 hover:bg-slate-950 text-white font-bold py-2.5 px-3 rounded-xl transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer hidden">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z"></path></svg>
+                    Stop Scanner
+                  </button>
+
+                  <div class="grid grid-cols-2 gap-2">
+                    <button id="profile-cycle-btn" type="button" class="py-2 px-3 bg-slate-200/80 dark:bg-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-bold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"></path></svg>
+                      Switch Lens
+                    </button>
+
+                    <button id="profile-upload-qr-btn" type="button" class="py-2 px-3 bg-slate-200/80 dark:bg-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-bold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
+                      Scan Photo
+                    </button>
+                  </div>
+
+                  <button id="profile-torch-btn" type="button" class="w-full py-2 px-3 bg-slate-200/80 dark:bg-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-bold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"></path></svg>
+                    Flashlight
+                  </button>
+
+                  <input type="file" id="profile-qr-file-input" accept="image/*" class="hidden">
+                </div>
+              </div>
+
+              <div id="profile-url-box" class="flex flex-col gap-2">
+                <div class="relative w-full">
+                  <input type="url" id="profile-url-input" placeholder="https://eclipse.caam.gov.my/ELICENSING/..." class="w-full p-2.5 pr-8 rounded-xl border text-xs font-semibold focus:outline-none transition-all bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100">
+                  <button id="profile-url-clear-btn" type="button" class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer hidden" title="Clear URL">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                  </button>
+                </div>
+                <p class="text-[9px] text-slate-400">Scan or paste your official eCLIPSE QR or URL</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACCORDION 2: COMPANY FLIGHT DOCUMENTS (PDF) (SIDE-BY-SIDE GRID) -->
+        <div class="accordion-card bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 overflow-hidden shadow-xs">
+          <button type="button" class="accordion-header w-full p-2.5 flex items-center justify-between text-left cursor-pointer" onclick="if(typeof toggleProfileAccordionSection === 'function') toggleProfileAccordionSection('docs');">
+            <div class="flex items-center gap-2.5">
+              <div class="p-0.5 text-slate-600 dark:text-slate-300">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"></path></svg>
+              </div>
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-100">Company Documents (PDF)</span>
+            </div>
+            <svg id="arrow-docs" class="w-4 h-4 text-slate-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="transform: rotate(0deg);"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+
+          <div id="section-content-docs" class="p-3.5 pt-0 border-t border-slate-200/60 dark:border-slate-700/50 hidden" style="height: 0px; opacity: 0;">
+            <div class="grid grid-cols-2 gap-2 my-2.5">
+              <!-- Left Col: Attestation PDF -->
+              <div class="flex flex-col gap-1.5 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                <label class="text-[9px] font-extrabold text-slate-400 uppercase truncate">Company Attestation</label>
+                <label for="profile-pdf-file" class="cursor-pointer bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 flex items-center justify-between text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:border-blue-500 transition-colors">
+                  <span id="profile-pdf-label" class="truncate">Select PDF...</span>
+                  <svg class="w-3.5 h-3.5 text-blue-600 shrink-0 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"></path></svg>
+                </label>
+                <input type="file" id="profile-pdf-file" accept=".pdf" class="hidden">
+                <div id="profile-pdf-badge" class="text-[9px] text-emerald-600 font-extrabold flex items-center gap-1 hidden">
+                  <span id="profile-pdf-status-text">Attestation PDF saved</span>
+                </div>
+              </div>
+
+              <!-- Right Col: Qualification Slip PDF -->
+              <div class="flex flex-col gap-1.5 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                <label class="text-[9px] font-extrabold text-slate-400 uppercase truncate">Qualification Slip</label>
+                <label for="profile-qs-pdf-file" class="cursor-pointer bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 flex items-center justify-between text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:border-blue-500 transition-colors">
+                  <span id="profile-qs-pdf-label" class="truncate">Select PDF...</span>
+                  <svg class="w-3.5 h-3.5 text-blue-600 shrink-0 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"></path></svg>
+                </label>
+                <input type="file" id="profile-qs-pdf-file" accept=".pdf" class="hidden">
+                <div id="profile-qs-pdf-badge" class="hidden text-[9px] text-emerald-600 font-extrabold flex items-center gap-1">
+                  <span id="profile-qs-pdf-status-text">QS PDF saved</span>
+                </div>
+              </div>
+            </div>
+            <p class="text-[9px] text-slate-400">Upload your MAB Attestation and Qualification Slip PDFs</p>
+          </div>
+        </div>
+
+        <!-- ACCORDION 3: PASSPORT CLEARANCE DETAILS -->
+        <div class="accordion-card bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/60 overflow-hidden shadow-xs">
+          <button type="button" class="accordion-header w-full p-2.5 flex items-center justify-between text-left cursor-pointer" onclick="if(typeof toggleProfileAccordionSection === 'function') toggleProfileAccordionSection('passport');">
+            <div class="flex items-center gap-2.5">
+              <div class="p-0.5 text-slate-600 dark:text-slate-300">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linejoin="round" d="M4 6H17C18.6569 6 20 7.34315 20 9V19C20 20.6569 18.6569 22 17 22H7C5.34315 22 4 20.6569 4 19V6ZM4 6V5"></path><circle cx="12" cy="13" r="3"></circle><path stroke-linejoin="round" d="M18 6.00002H5.07107C4.47953 6.00002 4 5.52049 4 4.92895C4 4.39594 4.39193 3.94403 4.91959 3.86865L15.7172 2.32614C16.922 2.15402 18 3.08894 18 4.30604V6.00002Z"></path><path d="M10 19H14"></path></svg>
+              </div>
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-100">Passport Details</span>
+            </div>
+            <svg id="arrow-passport" class="w-4 h-4 text-slate-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="transform: rotate(0deg);"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+
+          <div id="section-content-passport" class="p-3.5 pt-0 border-t border-slate-200/60 dark:border-slate-700/50 hidden" style="height: 0px; opacity: 0;">
+            <div class="grid grid-cols-2 gap-2.5 my-2.5">
+              <div>
+                <span class="text-[9px] text-slate-400 font-semibold block mb-1">Passport Number</span>
+                <input type="text" id="profile-passport-no" maxlength="12" placeholder="e.g. A12345678" class="w-full p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-100 focus:outline-none uppercase tracking-wider transition-all">
+              </div>
+
+              <div>
+                <span class="text-[9px] text-slate-400 font-semibold block mb-1">Expiry Date</span>
+                <button type="button" id="btn-passport-expiry-trigger" class="efb-date-trigger w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl p-2.5 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="openEfbDatePicker('profile-passport-expiry', 'PASSPORT EXPIRY DATE')">
+                  <span id="profile-passport-expiry-display" class="font-sans text-slate-700 dark:text-slate-300">Select Expiry</span>
+                  <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </button>
+                <input type="hidden" id="profile-passport-expiry" value="">
+              </div>
+            </div>
+            <p class="text-[9px] text-slate-400">Enter your passport number and expiry</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons (Solid Colored) -->
+      <div class="px-1 flex flex-col gap-2 pt-3 py-3">
+        <button id="profile-save-btn" type="button" class="w-full p-3.5 bg-slate-600 hover:bg-slate-700 active:scale-[0.98] text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">Save Credentials</button>
+
+        <button id="profile-clear-btn" type="button" class="w-full p-3 bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
+          Clear Credentials
+        </button>
+      </div>
+    </div>
+
+    <!-- SUB-PANE 1: APP PREFERENCES -->
+    <div id="pane-settings" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out px-3 py-1 translate-x-full opacity-0 pointer-events-none hidden">
+      <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1 cursor-pointer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
+      </button>
+
+      <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-3.5 px-1 tracking-normal">App Display &amp; Preferences</h3>
+
+      <div class="flex flex-col gap-3.5">
+        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
+          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Appearance Theme</label>
+          <div class="grid grid-cols-3 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
+            <button id="theme-pill-light" type="button" class="theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold">Light</button>
+            <button id="theme-pill-dark" type="button" class="theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all bg-blue-600 text-white shadow-xs font-extrabold">Dark</button>
+            <button id="theme-pill-system" type="button" class="theme-pill-btn py-2 px-2 text-xs rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold">System</button>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
+          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Text Font Scaling</label>
+          <div class="grid grid-cols-3 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
+            <button id="text-pill-std" type="button" class="text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center bg-blue-600 text-white shadow-xs font-extrabold"><span class="text-[10px] font-bold">A</span></button>
+            <button id="text-pill-lg" type="button" class="text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold"><span class="text-xs font-bold">A</span></button>
+            <button id="text-pill-xl" type="button" class="text-pill-btn py-2 px-2 rounded-lg transition-all flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold"><span class="text-sm font-extrabold">A</span></button>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
+          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Expiry Warning Threshold</label>
+          <div class="grid grid-cols-3 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
+            <button id="threshold-pill-30" type="button" class="threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold">30 Days</button>
+            <button id="threshold-pill-60" type="button" class="threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold">60 Days</button>
+            <button id="threshold-pill-90" type="button" class="threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all bg-blue-600 text-white shadow-xs font-extrabold">90 Days</button>
+          </div>
+          <p class="text-[9px] text-slate-400 pt-1">Set minimum days before expiry threshold </p>
+        </div>
+
+        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
+          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Event Overlays</label>
+          <div class="grid grid-cols-2 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
+            <button id="festive-pill-enable" type="button" class="festive-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow-xs cursor-pointer">Enabled</button>
+            <button id="festive-pill-disable" type="button" class="festive-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer">Disabled</button>
+          </div>
+          <p class="text-[9px] text-slate-400 pt-1">Festive or event overlay in Dashboard (experimental)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUB-PANE 2: DATA & STORAGE -->
+    <div id="pane-storage" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out px-3 py-1 translate-x-full opacity-0 pointer-events-none hidden">
+      <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1 cursor-pointer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
+      </button>
+
+      <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-3.5 px-1 tracking-normal">Data &amp; Storage Management</h3>
+
+      <div class="flex flex-col gap-3.5">
+        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
+          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Scan History Storage Limit</label>
+          <div class="grid grid-cols-3 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
+            <button id="history-limit-10" type="button" class="history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all bg-blue-600 text-white shadow-xs font-extrabold">10 Items</button>
+            <button id="history-limit-20" type="button" class="history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold">20 Items</button>
+            <button id="history-limit-30" type="button" class="history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold">30 Items</button>
+          </div>
+          <p class="text-[9px] text-slate-400 pt-1">Set the local scan history item limit</p>
+        </div>
+
+        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
+          <label class="text-[10px] font-extrabold text-slate-400 uppercase block mb-2">Attestation Freshness Limit (MAB PDF)</label>
+          <div class="grid grid-cols-2 gap-1 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
+            <button id="freshness-limit-14" type="button" class="freshness-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent">14 Days</button>
+            <button id="freshness-limit-30" type="button" class="freshness-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all bg-blue-600 text-white shadow-xs font-extrabold">30 Days (Default)</button>
+          </div>
+          <p class="text-[9px] text-slate-400 pt-1">Set Attestation PDF recency limit for the Dashboard</p>
+        </div>
+
+        <!-- Data Action Buttons (Solid Colored) -->
+        <div class="px-1 flex flex-col gap-2.5 pt-1 pb-3">
+          <button id="storage-clear-history-btn" type="button" class="w-full p-3.5 text-xs font-bold text-white bg-slate-600 hover:bg-slate-700 active:scale-[0.98] rounded-xl transition-all shadow-xs flex items-center justify-center cursor-pointer">Clear Recent Scan History</button>
+          <button id="storage-reset-all-btn" type="button" class="w-full p-3.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 active:scale-[0.98] rounded-xl transition-all shadow-xs flex items-center justify-center cursor-pointer">Reset All Application Data</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUB-PANE 3: ABOUT CERTIFLY -->
+    <div id="pane-about" class="sub-pane absolute top-0 left-0 w-full transition-all duration-300 ease-in-out px-3 py-1 translate-x-full opacity-0 pointer-events-none hidden">
+      <button class="back-btn flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-3 px-1 cursor-pointer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg> Back
+      </button>
+
+      <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-3.5 px-1 tracking-normal">About &amp; Support</h3>
+
+      <div class="flex flex-col gap-3.5 pb-3">
+        <!-- Brand Card with 14-Tap Trigger & Centered Tagline -->
+        <div id="brand-card-about" class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs text-center flex flex-col items-center select-none" onclick="if(typeof handleBrandCardTap === 'function') handleBrandCardTap();">
+          <div class="h-24 w-24 bg-[url('/app-cf/assets/icons/icon-192.png')] bg-cover bg-center bg-no-repeat"></div>
+          <h4 class="text-sm font-bold text-slate-800 dark:text-slate-100 italic tracking-tight pt-2">CertiFly<span class="font-normal text-[7px]">™</span></h4>
+          <p class="text-[10px] italic font-medium text-slate-500 dark:text-slate-400 mt-0.5 text-center">by pilot for pilot...</p>
+          <span class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-0.5 rounded-full mt-1.5">Version 2.0</span>
+        </div>
+
+        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs flex flex-col gap-2">
+          <a href="./assets/user_guide.pdf" target="_blank" class="w-full p-2.5 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.967 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18c-2.305 0-4.408.867-6 2.292m0-14.25v14.25"></path></svg>
+            <span>CertiFly User Guide</span>
+          </a>
+
+        <a href="./assets/eclipse_guide.pdf" target="_blank" class="w-full p-2.5 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.967 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18c-2.305 0-4.408.867-6 2.292m0-14.25v14.25"></path></svg>
+            <span>Licence Renewal Guide</span>
+          </a>
+    
+          <a href="https://forms.gle/oA2XSDomzGF7ioUT8" target="_blank" class="w-full p-2.5 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"></path></svg>
+            <span>Send App Feedback</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- EASTER EGG MODAL DRAWER -->
+<div id="easter-egg-modal" class="fixed inset-0 z-[60] bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-between p-4 transition-all duration-300 opacity-0 hidden select-none">
+  
+  <!-- Header Bar -->
+  <div class="w-full max-w-md flex items-center justify-between pt-2 px-2 shrink-0">
+    <div class="flex items-center gap-2">
+      <span class="text-xs font-black tracking-widest text-blue-400 uppercase">CertiFly™ Break Deck</span>
+      <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-900/60 text-blue-300 border border-blue-700/50">Flappy Pilot</span>
+    </div>
+    <button id="close-flappy-modal-btn" type="button" onclick="if(typeof closeEasterEggModal === 'function') closeEasterEggModal();" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm font-bold transition-all active:scale-95 cursor-pointer">
+      ✕
+    </button>
+  </div>
+
+  <!-- Game Canvas Viewport Container -->
+  <div class="w-full max-w-md aspect-square relative flex items-center justify-center my-auto p-2">
+    <div id="flappy-game-container" class="w-full h-full rounded-3xl overflow-hidden border border-slate-800/80 shadow-2xl bg-slate-900 relative flex items-center justify-center">
+      <canvas id="flappy-canvas" class="w-full h-full object-contain cursor-pointer"></canvas>
+    </div>
+  </div>
+
+  <!-- Bottom Info & Control Hint with Caption -->
+  <div class="text-center pb-2 shrink-0 flex flex-col items-center gap-1.5 select-none">
+    <p class="text-[11px] font-medium text-slate-400">Tap screen or press Spacebar to flap &amp; dodge storm clouds</p>
+    <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1">Made with <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="#f51348" class="inline-block align-middle mx-0.5"><title fill="#f51348">heart-fill</title><path fill="#f51348" d="M16.696 3C14.652 3 12.887 4.197 12 5.943C11.113 4.197 9.348 3 7.304 3C4.374 3 2 5.457 2 8.481s1.817 5.796 4.165 8.073S12 21 12 21s3.374-2.133 5.835-4.446C20.46 14.088 22 11.514 22 8.481S19.626 3 16.696 3"/></svg> by Captain MSZ</p>
+  </div>
+</div>
+`;
+
+// ==================================================================
+// FLAPPY PILOT 2D CANVAS GAME ENGINE & EASTER EGG LIFECYCLE
+// ==================================================================
+let brandTapCount = 0;
+let brandTapTimer = null;
+
+let flappyAnimId = null;
+let flappyCanvas = null;
+let flappyCtx = null;
+let gameState = 'START'; // 'START', 'PLAYING', 'GAMEOVER'
+
+let bird = { x: 80, y: 150, vy: 0, gravity: 0.38, lift: -6.5, radius: 12 };
+let pipes = [];
+let score = 0;
+let highScore = 0;
+let frameCount = 0;
+let particles = [];
+
+try {
+  highScore = parseInt(localStorage.getItem('certifly_flappy_high_score') || '0', 10);
+} catch (e) {
+  highScore = 0;
 }
-</script> -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: "class"
-        };
-    </script>
-    <script src="js/vendor/qr-scanner.umd.min.js"></script>
-    <script src="js/vendor/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <style>
-        .no-scrollbar::-webkit-scrollbar { display: none !important; }
-        .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
-        
-        .tools-subtab-strip {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          overflow-x: auto;
-          overflow-y: hidden;
-          -webkit-overflow-scrolling: touch;
-          touch-action: pan-x;
-          scroll-behavior: smooth;
-          user-select: none;
-          cursor: grab;
-        }
-        .tools-subtab-strip:active {
-          cursor: grabbing;
-        }
-    </style>
-    <style>
-        .perspective-1000 { perspective: 1000px; -webkit-perspective: 1000px; }
-        .transform-style-3d { transform-style: preserve-3d; -webkit-transform-style: preserve-3d; }
-        .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-        .rotate-y-180 { transform: rotateY(180deg); -webkit-transform: rotateY(180deg); }
-        .card-3d-inner { transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
-        .card-3d-inner.is-flipped { transform: rotateY(180deg); -webkit-transform: rotateY(180deg); }
-    </style>
-</head>
 
-<body class="bg-slate-50 dark:bg-slate-950 min-h-screen font-sans text-slate-800 dark:text-slate-200 flex flex-col justify-between">
-
-    <!-- Floating Top Overlay Alert -->
-    <div class="max-w-md mx-auto w-full p-4 flex flex-col min-h-screen">
-
-        <!-- Header -->
-        <header id="topbar" class="text-center py-3 relative">
-            <h1 onclick="showScannerView()" class="text-3xl font-extrabold text-blue-950 dark:text-white tracking-tight italic flex items-center justify-center gap-1 leading-none cursor-pointer">
-                <span class="relative">
-                    CertiFly<span class="align-super text-[6px] font-bold absolute -top-0.5 -right-1.5 dark:text-white">™</span>
-                </span>
-                <svg class="h-[1.15em] w-auto fill-current text-blue-950 dark:text-white" viewBox="0 0 98 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-                    <path id="path22" d="M10.144,35.354L9.8,36.674C9.8,36.674 14.131,36.602 15.877,36.602C19.875,36.598 22.309,36.964 22.577,39.398C22.814,41.038 22.053,42.614 21.614,44.162C21.191,45.664 20.807,47.105 20.39,48.588C19.95,50.152 19.476,51.531 18.64,52.587C17.688,53.785 16.472,54.58 15.227,54.884C13.512,55.303 6.502,55.055 4.55,55.055C4.331,55.605 4.2,56.245 4.024,56.84C9.708,57.13 15.186,56.748 21.003,56.925C22.889,56.983 24.762,57.183 26.427,56.84C28.966,56.321 30.801,54.574 31.59,52.245C32.371,49.951 33.078,47.278 33.779,44.844C34.163,43.51 34.409,42.25 35.003,41.185C35.57,40.169 36.318,39.378 37.278,38.631C39.04,37.266 41.91,36.117 44.63,37.441C45.971,38.092 46.75,39.176 46.731,41.185C46.715,42.914 46.134,44.337 45.681,45.949C44.325,50.762 43.13,54.852 41.83,59.564C41.403,61.11 41.074,62.768 40.518,64.074C39.439,66.61 37.064,68.684 33.955,69.179C31.349,69.593 28.385,69.265 25.64,69.265L0.613,69.265C0.613,69.265 0.186,70.495 0,71.137C10.984,71.292 22.305,71.22 32.992,71.22C35.903,71.22 38.599,71.298 41.131,71.051C48.391,70.344 54.817,68.307 60.12,65.435C68.938,60.661 75.866,53.998 80.948,45.44C83.874,40.509 88.767,36.753 96.812,36.753C97.043,36.141 97.16,35.875 97.35,35.354L10.144,35.354L10.144,35.354Z" style="fill-rule:nonzero;" />
-                    <path id="path90" d="M97.674,34.461C91.512,34.598 86.903,31.955 86.462,26.379C86.372,25.254 86.47,24.202 86.374,23.231C86.071,20.148 85.407,17.72 84.36,15.317C80.344,6.093 72.42,1.014 59.683,0L20.128,0C20.052,0.692 19.743,1.157 19.69,1.872L45.243,1.872C48.033,1.872 51.129,1.493 53.469,2.127C54.98,2.536 56.823,3.895 56.707,6.55C56.648,7.912 56.012,9.361 55.568,10.891C54.344,15.126 53.293,19.321 52.069,23.57C51.272,26.331 50.706,29.272 49.005,31.313C47.464,33.164 44.67,34.974 41.304,34.036C40.08,33.694 39.313,33.263 38.768,32.42C37.447,30.385 38.661,27.255 39.293,25.017C39.638,23.789 40.016,22.65 40.341,21.527C40.654,20.448 41.19,19.152 41.216,17.869C41.261,15.895 40.004,14.878 38.768,14.464C37.3,13.977 35.183,14.21 33.253,14.21C27.62,14.21 21.544,14.14 16.101,14.295C15.985,14.89 15.76,15.38 15.664,15.997C20.565,15.997 28.44,15.382 28.44,19.401C28.452,20.339 28.113,21.388 27.827,22.378C27.306,24.191 26.76,25.985 26.253,27.825C25.996,28.758 25.82,29.719 25.466,30.548C24.534,32.732 23.549,34.461 19.952,34.461L10.372,34.461L10.143,35.354L97.349,35.354C97.484,34.956 97.558,34.761 97.674,34.461" style="fill-rule:nonzero;" />
-                </svg>
-            </h1>
-            <p class="text-[7.5px] font-semibold text-slate-500 dark:text-slate-200 mt-0.5 uppercase tracking-[2px]">Compliance Checker</p>
-        </header>
-
-        <!-- Main Body -->
-        <main class="flex-grow flex flex-col justify-start my-2 px-3 max-w-md mx-auto w-full">
-
-            <!-- DASHBOARD VIEW -->
-            <div id="dashboard-view" class="app-view hidden flex flex-col gap-4">
-
-                <!-- 2. SEGMENTED 3-PILL TAB CONTROLLER -->
-                <div class="bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl grid grid-cols-3 gap-1 text-center shadow-xs select-none">
-                    <button id="res-tab-btn-overview" onclick="switchResultTab('overview')" type="button" class="res-tab-btn py-2.5 px-1 rounded-xl text-xs font-bold transition-colors bg-blue-600 text-white shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
-                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-                        </svg>
-                        <span class="inline-block">Overview</span>
-                    </button>
-                    <button id="res-tab-btn-caam" onclick="switchResultTab('caam')" type="button" class="res-tab-btn py-2.5 px-1 rounded-xl text-xs font-bold transition-colors text-slate-600 dark:text-slate-300 hover:text-slate-900 flex items-center justify-center gap-1.5 cursor-pointer">
-                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                        </svg>
-                        <span class="inline-block">CAAM</span>
-                    </button>
-                    <button id="res-tab-btn-mab" onclick="switchResultTab('mab')" type="button" class="res-tab-btn py-2.5 px-1 rounded-xl text-xs font-bold transition-colors text-slate-600 dark:text-slate-300 hover:text-slate-900 flex items-center justify-center gap-1.5 cursor-pointer">
-                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-                        </svg>
-                        <span class="inline-block">MAB</span>
-                    </button>
-                </div>
-
-
-
-                <!-- TAB 1: OVERVIEW SUMMARY VIEW -->
-                <div id="tab-overview-content" class="res-tab-content flex flex-col gap-3.5">
-
-                    <!-- 1. HERO LEGALITY RINGS CARD (3D FLIP CONTAINER) -->
-                    <div id="overview-hero-container" class="[perspective:1000px] cursor-pointer group select-none touch-manipulation active:scale-[0.995] transition-transform duration-100">
-                        <div id="overview-hero-card" class="relative w-full rounded-3xl [transform-style:preserve-3d] [will-change:transform]">
-
-                            <!-- FRONT FACE -->
-                            <div class="relative bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-200 dark:border-slate-800 flex flex-col gap-3 [backface-visibility:hidden]">
-                                <div class="absolute top-3.5 right-4 text-blue-500/70 dark:text-blue-400/70 hover:text-blue-600 transition-colors pointer-events-none">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M12 18h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-
-                                <div class="text-center border-b border-slate-100 dark:border-slate-800/80 pb-2 pr-4">
-                                    <span id="overview-greeting" class="text-base font-bold text-slate-900 dark:text-white">Good Morning</span>
-                                </div>
-
-                                <div class="flex items-stretch justify-between gap-4">
-                                    <div class="flex flex-col items-center shrink-0 gap-2">
-                                        <div class="relative w-24 h-24 flex items-center justify-center">
-                                            <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
-                                                <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
-                                                <circle id="ring-mab" cx="50" cy="50" r="42" fill="none" stroke="#1D4ED8" stroke-width="7" stroke-dasharray="263.89" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
-                                                <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
-                                                <circle id="ring-caam" cx="50" cy="50" r="30" fill="none" stroke="#3B82F6" stroke-width="7" stroke-dasharray="188.50" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
-                                            </svg>
-                                            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-                                                <span id="ov-ring-percent" class="text-xs font-black text-slate-900 dark:text-slate-100 tracking-tight block leading-none">100+</span>
-                                                <span id="ov-ring-unit" class="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mt-0.5">DAYS</span>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center gap-2.5 text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                                            <span class="flex items-center gap-1"><span id="legend-dot-caam" class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>CAAM</span>
-                                            <span class="flex items-center gap-1"><span id="legend-dot-mab" class="w-1.5 h-1.5 rounded-full bg-blue-700"></span>MAB</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex-1 flex flex-col justify-between min-w-0">
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Status:</span>
-                                            <span id="ov-ring-label" class="px-2.5 py-0.5 rounded-md text-xs font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">OPERATIONAL</span>
-                                        </div>
-                                        <div id="ov-ring-bottleneck" class="flex-1 my-1.5 text-[10px] font-bold p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 flex items-start gap-1.5 leading-snug break-words">
-                                            <span id="ov-bottleneck-led" class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] shrink-0 mt-0.5"></span>
-                                            <span id="ov-bottleneck-text" class="break-words">All Items Valid</span>
-                                        </div>
-                                        <div class="pt-1.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[9px] text-slate-400">
-                                            <span class="leading-snug">Last Synced: <strong id="overview-scan-timestamp" class="text-slate-800 dark:text-slate-200 font-extrabold">--:--</strong></span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- BACK FACE -->
-                            <div class="absolute inset-0 w-full h-full bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4 [backface-visibility:hidden] [transform:rotateY(180deg)]">
-                                <div class="flex flex-col items-center shrink-0 gap-2">
-                                    <div class="relative w-24 h-24 flex items-center justify-center">
-                                        <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
-                                            <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
-                                            <circle id="ring-mab-back" cx="50" cy="50" r="42" fill="none" stroke="#1D4ED8" stroke-width="7" stroke-dasharray="263.89" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
-                                            <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" class="text-slate-100 dark:text-slate-800" stroke-width="7" />
-                                            <circle id="ring-caam-back" cx="50" cy="50" r="30" fill="none" stroke="#3B82F6" stroke-width="7" stroke-dasharray="188.50" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
-                                        </svg>
-                                        <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-                                            <span id="ov-ring-percent-back" class="text-xs font-black text-slate-900 dark:text-slate-100 tracking-tight block leading-none">100+</span>
-                                            <span id="ov-ring-unit-back" class="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mt-0.5">DAYS</span>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-2.5 text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                                        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>CAAM</span>
-                                        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-700"></span>MAB</span>
-                                    </div>
-                                </div>
-
-                                <div class="flex-1 flex flex-col justify-between h-full min-w-0 pr-1">
-                                    <div>
-                                        <h3 class="text-sm font-extrabold text-slate-900 dark:text-white tracking-wide border-b border-slate-100 dark:border-slate-800 pb-1 mb-1.5">Overview</h3>
-                                        <p class="text-[9.5px] leading-tight text-slate-600 dark:text-slate-300 font-medium">This card is a Quick Summary of your flight duty eligibility and items that may require your immediate action.</p>
-                                    </div>
-                                    <div class="space-y-1.5 text-[9.5px]">
-                                        <div>
-                                            <strong class="font-bold text-slate-900 dark:text-slate-100 block">Rings</strong>
-                                            <p class="leading-tight text-slate-500 dark:text-slate-400 font-normal">Item with the next immediate expiry from each group validities.</p>
-                                        </div>
-                                        <div>
-                                            <strong class="font-bold text-slate-900 dark:text-slate-100 block">Number</strong>
-                                            <p class="leading-tight text-slate-500 dark:text-slate-400 font-normal">The least number of remaining days from both rings.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <!-- 2. BENTO GRID: CAAM STATUTORY & FLEET CURRENCY TILES (2x2) -->
-                    <div class="grid grid-cols-2 gap-2.5">
-                        <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">LICENCE VALIDITY</span>
-                            </div>
-                            <div class="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
-                                <div id="ov-caam-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
-                            </div>
-                            <div>
-                                <div id="ov-caam-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 uppercase truncate">--</div>
-                                <div id="ov-caam-days" class="text-[9px] font-bold text-slate-400 mt-0.5">--</div>
-                            </div>
-                        </div>
-
-                        <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Class 1 Medical</span>
-                            </div>
-                            <div class="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
-                                <div id="ov-medical-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
-                            </div>
-                            <div>
-                                <div id="ov-medical-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 uppercase truncate">--</div>
-                                <div id="ov-medical-days" class="text-[9px] font-bold text-slate-400 mt-0.5">--</div>
-                            </div>
-                        </div>
-
-                        <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">LPC / IR VALIDITY</span>
-                            </div>
-                            <div class="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
-                                <div id="ov-type-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
-                            </div>
-                            <div>
-                                <div id="ov-type-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 uppercase truncate">--</div>
-                                <div id="ov-type-days" class="text-[9px] font-bold text-slate-400 mt-0.5">--</div>
-                            </div>
-                        </div>
-
-                        <div onclick="switchResultTab('mab')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">MAB Line Check</span>
-                            </div>
-                            <div class="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
-                                <div id="ov-linecheck-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
-                            </div>
-                            <div>
-                                <div id="ov-linecheck-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 uppercase truncate">--</div>
-                                <div id="ov-linecheck-route" class="text-[9px] font-bold text-slate-400 mt-0.5 truncate">Route: --</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 3. LVO RECENCY BENTO BOX (1x1 FULL WIDTH) -->
-                    <div onclick="switchResultTab('mab')" class="cursor-pointer bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col gap-2.5 hover:border-blue-500 transition-all">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">LVO Recency</span>
-                            <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400">View Details &rarr;</span>
-                        </div>
-                        <div class="relative w-full pt-1 pb-3">
-                            <div class="relative w-full h-3 rounded-full overflow-hidden shadow-inner border border-slate-200/60 dark:border-slate-800/80" style="background: linear-gradient(to right, #10B981 0%, #10B981 83.3%, #F59E0B 83.3%, #F59E0B 91.7%, #EF4444 91.7%, #EF4444 100%);"></div>
-                            <div id="ov-lvo-marker" class="absolute top-3 w-3 h-3 bg-slate-900 dark:bg-white transition-all duration-500 shadow-md -translate-x-1/2 z-10" style="left: 0%; clip-path: polygon(0% 0%, 100% 0%, 100% 55%, 50% 100%, 0% 55%);"></div>
-                            <div class="relative w-full flex justify-between text-[7.5px] font-black text-slate-400 dark:text-slate-500 select-none mt-2.5">
-                                <span>180D</span>
-                                <span class="absolute left-1/2 -translate-x-1/2">90D</span>
-                                <span>0D</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400 pt-0.5 mt-0.5 border-t border-slate-100 dark:border-slate-800/80">
-                            <span>Prev. Date: <strong id="ov-lvo-checkdate" class="text-[10px] text-slate-900 dark:text-slate-100 font-extrabold">--</strong></span>
-                            <strong id="ov-lvo-days-text" class="text-[9px] font-bold text-slate-400 truncate">-- Days Remaining</strong>
-                        </div>
-                    </div>
-
-                    <!-- 4. MANDATORY RECURRENTS & DRILLS (HEALTH PROFILE HISTOGRAM) -->
-                    <div id="drills-histogram-card" onclick="switchResultTab('mab')" class="cursor-pointer bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col gap-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Mandatory Recurrents & Drills</span>
-                            <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 cursor-pointer" onclick="switchResultTab('mab')">View All &rarr;</span>
-                        </div>
-                        <div class="flex gap-2 items-stretch h-28 pt-1">
-                            <div class="w-5 shrink-0 flex flex-col justify-between text-[8px] font-black text-slate-400 dark:text-slate-500 select-none py-0.5 text-right">
-                                <span>1Y</span>
-                                <span>6M</span>
-                                <span>0D</span>
-                            </div>
-                            <div class="flex-1 relative h-full flex items-end justify-between gap-1.5 px-1 bg-slate-50/50 dark:bg-slate-950/40 rounded-xl p-1.5 border border-slate-100/80 dark:border-slate-800/60 overflow-hidden">
-                                <div class="absolute left-0 right-0 top-1.5 border-b border-dashed border-slate-200 dark:border-slate-800/80 pointer-events-none"></div>
-                                <div class="absolute left-0 right-0 top-[50%] border-b border-dashed border-slate-200 dark:border-slate-800/80 pointer-events-none"></div>
-                                <div class="absolute left-0 right-0 bottom-0 border-b border-slate-200 dark:border-slate-700 pointer-events-none"></div>
-
-                                <div id="vbar-col-actype" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
-                                    <div id="vbar-drill-actype" class="w-full max-w-[14px] bg-teal-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
-                                </div>
-                                <div id="vbar-col-door" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
-                                    <div id="vbar-drill-door" class="w-full max-w-[14px] bg-cyan-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
-                                </div>
-                                <div id="vbar-col-wet" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
-                                    <div id="vbar-drill-wet" class="w-full max-w-[14px] bg-blue-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
-                                </div>
-                                <div id="vbar-col-fire" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
-                                    <div id="vbar-drill-fire" class="w-full max-w-[14px] bg-violet-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
-                                </div>
-                                <div id="vbar-col-crm" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
-                                    <div id="vbar-drill-crm" class="w-full max-w-[14px] bg-purple-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
-                                </div>
-                                <div id="vbar-col-sms" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
-                                    <div id="vbar-drill-sms" class="w-full max-w-[14px] bg-fuchsia-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
-                                </div>
-                                <div id="vbar-col-dg" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
-                                    <div id="vbar-drill-dg" class="w-full max-w-[14px] bg-pink-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
-                                </div>
-                                <div id="vbar-col-avsec" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
-                                    <div id="vbar-drill-avsec" class="w-full max-w-[14px] bg-indigo-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
-                                </div>
-                                <div id="vbar-col-supervisory" class="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
-                                    <div id="vbar-drill-supervisory" class="w-full max-w-[14px] bg-blue-500 rounded-t-sm transition-all duration-500" style="height: 100%;"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="drills-legend-grid" class="grid grid-cols-3 gap-y-1.5 gap-x-2 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 text-[9px] font-bold text-slate-600 dark:text-slate-300">
-                            <div id="legend-drill-actype" class="flex items-center gap-1.5 truncate"><span id="dot-legend-actype" class="w-2 h-2 rounded-full bg-teal-500 shrink-0"></span><span id="txt-legend-actype" class="truncate">B737</span></div>
-                            <div id="legend-drill-door" class="flex items-center gap-1.5 truncate"><span id="dot-legend-door" class="w-2 h-2 rounded-full bg-cyan-500 shrink-0"></span><span class="truncate">Door Drill</span></div>
-                            <div id="legend-drill-wet" class="flex items-center gap-1.5 truncate"><span id="dot-legend-wet" class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span><span class="truncate">Wet Drill</span></div>
-                            <div id="legend-drill-fire" class="flex items-center gap-1.5 truncate"><span id="dot-legend-fire" class="w-2 h-2 rounded-full bg-violet-500 shrink-0"></span><span class="truncate">Fire Drill</span></div>
-                            <div id="legend-drill-crm" class="flex items-center gap-1.5 truncate"><span id="dot-legend-crm" class="w-2 h-2 rounded-full bg-purple-500 shrink-0"></span><span class="truncate">CRM</span></div>
-                            <div id="legend-drill-sms" class="flex items-center gap-1.5 truncate"><span id="dot-legend-sms" class="w-2 h-2 rounded-full bg-fuchsia-500 shrink-0"></span><span class="truncate">SMS</span></div>
-                            <div id="legend-drill-dg" class="flex items-center gap-1.5 truncate"><span id="dot-legend-dg" class="w-2 h-2 rounded-full bg-pink-500 shrink-0"></span><span class="truncate">DG-7</span></div>
-                            <div id="legend-drill-avsec" class="flex items-center gap-1.5 truncate"><span id="dot-legend-avsec" class="w-2 h-2 rounded-full bg-indigo-500 shrink-0"></span><span class="truncate">AVSEC</span></div>
-                            <div id="legend-drill-supervisory" class="flex items-center gap-1.5 truncate"><span id="dot-legend-supervisory" class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span><span class="truncate">DFE / FI</span></div>
-                        </div>
-                    </div>
-
-                    <!-- 4. GROUP 1: NON-EXPIRY & PASSPORT FOOTER BENTO (2x1) -->
-                    <div class="grid grid-cols-2 gap-2.5">
-                        <div onclick="openMenu(); setTimeout(() => { const nav = document.querySelector('[data-target=pane-profile]'); if(nav) nav.click(); }, 150);" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
-                            <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">PASSPORT VALIDITY</span>
-                            <div class="relative w-full pt-0.5 pb-2">
-                                <div class="relative w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
-                                    <div class="absolute top-0 bottom-0 left-[49.4%] w-0.5 bg-rose-400/40 dark:bg-rose-500/40 z-0"></div>
-                                    <div id="ov-passport-bar" class="h-full bg-indigo-500 rounded-full transition-all duration-500 relative z-10" style="width: 100%;"></div>
-                                </div>
-                                <div class="relative w-full flex justify-between text-[7.5px] font-black text-slate-400 dark:text-slate-500 select-none mt-1">
-                                    <span>0D</span><span class="absolute left-[49.4%] -translate-x-1/2 text-rose-500/80 dark:text-rose-400/80">6M</span><span>1Y</span>
-                                </div>
-                            </div>
-                            <div>
-                                <div id="ov-passport-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 uppercase truncate">--</div>
-                                <div id="ov-passport-no" class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 truncate">--</div>
-                                <div id="ov-passport-days" class="text-[9px] font-bold text-slate-400 mt-0.5">--</div>
-                            </div>
-                        </div>
-
-                        <div onclick="switchResultTab('caam')" class="cursor-pointer bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 transition-all flex flex-col justify-between gap-1.5">
-                            <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">ELP VALIDITY</span>
-                            <div class="relative w-full pt-0.5 pb-2">
-                                <div class="relative w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
-                                    <div id="ov-elp-bar" class="h-full bg-purple-500 rounded-full transition-all duration-500 relative z-10" style="width: 100%;"></div>
-                                </div>
-                                <div id="ov-elp-scale" class="relative w-full flex justify-between text-[7.5px] font-black text-slate-400 dark:text-slate-500 select-none mt-1">
-                                    <span>0Y</span><span>1Y</span><span>2Y</span><span>3Y</span><span>4Y</span><span>5Y</span><span>6Y</span>
-                                </div>
-                            </div>
-                            <div>
-                                <div id="ov-elp-expiry" class="text-xs font-black text-slate-900 dark:text-slate-100 uppercase truncate">--</div>
-                                <div id="ov-elp-level" class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 truncate">Level --</div>
-                                <div id="ov-elp-years" class="text-[9px] font-bold text-slate-400 mt-0.5">--</div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- TAB 2: CAAM DIGITAL LICENCE VIEW -->
-                <div id="tab-caam-content" class="res-tab-content hidden flex flex-col gap-4">
-                    <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
-                        <div class="border-b-2 border-slate-200 dark:border-slate-800 pb-2 flex justify-between items-center">
-                            <span class="text-slate-500 text-[11px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
-                                <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-                                </svg>
-                                Crew Profile
-                            </span>
-                        </div>
-                        <div class="flex flex-col gap-2.5">
-                            <div>
-                                <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block">Full Name</span>
-                                <span id="pilot-name" class="font-extrabold text-slate-900 dark:text-slate-100 text-base">-</span>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block">Licence Type</span>
-                                    <span id="licence-type" class="font-bold text-slate-800 dark:text-slate-200 text-sm">-</span>
-                                </div>
-                                <div>
-                                    <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block">Licence Number</span>
-                                    <span id="licence-number" class="font-bold text-slate-800 dark:text-slate-200 text-sm">-</span>
-                                </div>
-                            </div>
-                            <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-                                <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block mb-1">Special / Other Medical Limitations</span>
-                                <div id="dash-medical-limit" class="text-xs font-semibold text-slate-800 dark:text-slate-200 whitespace-pre-line leading-relaxed">NIL</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
-                        <div class="border-b-2 border-slate-200 dark:border-slate-800 pb-2 flex justify-between items-center">
-                            <span class="text-slate-500 text-[11px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
-                                <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                                </svg>
-                                VALIDITIES & CERTIFICATIONS
-                            </span>
-                        </div>
-                        <div id="qualifications-list" class="flex flex-col"></div>
-                    </div>
-
-                    <button id="open-original-btn" type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-3.5 rounded-2xl transition duration-150 text-xs uppercase tracking-wider shadow-md flex items-center justify-center gap-2 cursor-pointer">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                        </svg>
-                        <span>View Official Licence</span>
-                    </button>
-                </div>
-
-                <!-- TAB 3: MAB COMPANY ATTESTATION VIEW -->
-                <div id="tab-mab-content" class="res-tab-content hidden flex flex-col gap-4">
-
-
-                    <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
-                        <div class="border-b-2 border-slate-200 dark:border-slate-800 pb-2 flex justify-between items-center">
-                            <span class="text-slate-500 text-[11px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
-                                <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                                </svg>
-                                MAB E-ATTESTATION CREDENTIALS
-                            </span>
-                            <span id="mab-doc-ref" class="hidden text-[9px] font-bold text-slate-400"></span>
-                        </div>
-
-                        <div class="flex flex-col gap-2.5">
-                            <div>
-                                <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block">Pilot Name</span>
-                                <span id="mab-pilot-name" class="font-extrabold text-slate-900 dark:text-slate-100 text-base">-</span>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block">Staff No</span>
-                                    <span id="mab-staff-no" class="font-bold text-slate-800 dark:text-slate-200 text-sm">-</span>
-                                </div>
-                                <div>
-                                    <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block">Designation / Fleet</span>
-                                    <span id="mab-designation" class="font-bold text-slate-800 dark:text-slate-200 uppercase text-sm">-</span>
-                                </div>
-                            </div>
-                            <div class="border-t border-slate-100 dark:border-slate-800/80 pt-2 flex justify-between items-center text-[9px] text-slate-400">
-                                <span>Published: <strong id="mab-published-date" class="text-slate-700 dark:text-slate-300 font-bold">-</strong></span>
-                                <span id="mab-freshness-tag" class="text-emerald-600 dark:text-emerald-400 font-extrabold uppercase">-</span>
-                            </div>
-                            <div id="mab-qs-badge-container" class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                                <div id="mab-qs-badge" class="px-3 py-1.5 rounded-xl text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-between">
-                                    <span id="mab-qs-status-text">Qualification Slip: Not Configured</span>
-                                    <span id="mab-qs-cert-no" class="text-[9px] font-semibold text-slate-400">CERT -</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col gap-3">
-                        <div id="mab-linecheck-box" class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-md flex flex-col gap-3">
-                            <div class="border-b-2 border-slate-200 dark:border-slate-800 pb-2">
-                                <span class="text-slate-500 text-[11px] uppercase tracking-wide font-extrabold flex items-center gap-1.5">
-                                    <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-                                    </svg>
-                                    LINE CHECK
-                                </span>
-                            </div>
-                            <div class="flex items-center justify-between gap-4 pt-1">
-                                <div class="shrink-0 flex items-center justify-center">
-                                    <div class="px-3 py-3 rounded-xl dark:bg-blue-950/70 uppercase shadow-xs flex flex-col items-center leading-none min-w-[70px] border border-slate-300 dark:border-blue-900">
-                                        <span class="text-slate-500 dark:text-blue-300 font-normal text-[12px] tracking-wide">FLEET</span>
-                                        <span id="mab-linecheck-title" class="text-slate-500 dark:text-blue-300 font-black text-[20px] mt-0.5">B738</span>
-                                    </div>
-                                </div>
-                                <div class="flex-1 flex flex-col">
-                                    <div class="flex flex-col place-items-stretch justify-evenly">
-                                        <div class="flex flex-row gap-2 items-center justify-between w-full">
-                                            <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wide font-semibold">Check Date</span>
-                                            <strong id="mab-linecheck-date" class="text-slate-800 dark:text-slate-200 font-bold text-xs uppercase tracking-wide self-auto">13 OCT 2025</strong>
-                                        </div>
-                                        <div class="flex flex-row gap-2 items-center justify-between w-full">
-                                            <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wide font-semibold">EXPIRY DATE</span>
-                                            <strong id="mab-linecheck-expiry" class="text-slate-900 dark:text-slate-100 font-bold text-xs uppercase tracking-wide self-auto">31 OCT 2026</strong>
-                                        </div>
-                                        <div class="flex flex-row gap-2 items-center justify-between w-full">
-                                            <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">ROUTE</span>
-                                            <strong id="mab-linecheck-route" class="text-slate-800 dark:text-slate-200 font-bold text-xs uppercase tracking-wider">KUL/BKI/KUL</strong>
-                                        </div>
-                                        <div class="flex flex-row gap-2 items-center justify-between w-full">
-                                            <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wide font-semibold">LICENCE No</span>
-                                            <strong id="mab-linecheck-licence" class="text-slate-800 dark:text-slate-200 font-bold text-xs self-auto">A3115</strong>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="mab-lvo-box" class="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-md flex flex-col gap-4">
-                            <div class="border-b-2 border-slate-200 dark:border-slate-800 pb-2">
-                                <span class="text-slate-500 text-[11px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
-                                    <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
-                                    </svg>
-                                    LVO AUTOLAND
-                                </span>
-                            </div>
-                            <div class="flex items-center justify-between gap-4 pt-1">
-                                <div class="shrink-0 flex items-center justify-center">
-                                    <div class="px-3 py-2 rounded-xl dark:bg-blue-950/70 uppercase shadow-xs flex flex-col items-center leading-none min-w-[70px] border border-slate-300 dark:border-blue-900">
-                                        <span id="mab-lvo-airport" class="text-slate-500 dark:text-blue-300 font-bold text-[18px] tracking-wide">VIDP</span>
-                                        <span id="mab-lvo-runway" class="text-slate-500 dark:text-blue-300 font-extrabold text-[32px] mt-0.5">28</span>
-                                        <span class="text-slate-500 dark:text-blue-300 font-bold text-[12px] mt-0.5">CAT <span id="mab-lvo-cat">III</span></span>
-                                    </div>
-                                </div>
-                                <div class="flex-1 flex flex-col">
-                                    <div class="flex flex-col place-items-stretch justify-evenly">
-                                        <div class="flex flex-row gap-2 items-center justify-between w-full">
-                                            <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wide font-semibold">Check Date</span>
-                                            <strong id="mab-lvo-date" class="text-slate-800 dark:text-slate-200 font-bold text-xs uppercase tracking-wide self-auto">-</strong>
-                                        </div>
-                                        <div class="flex flex-row gap-2 items-center justify-between w-full">
-                                            <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wide font-semibold">Type</span>
-                                            <strong id="mab-lvo-badge" class="text-slate-900 dark:text-slate-100 font-bold text-xs uppercase tracking-wide self-auto">-</strong>
-                                        </div>
-                                        <div class="flex flex-row gap-2 items-center justify-between w-full">
-                                            <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider font-semibold">Sim</span>
-                                            <strong id="mab-lvo-sim" class="text-slate-800 dark:text-slate-200 font-bold text-xs uppercase tracking-wide">-</strong>
-                                        </div>
-                                        <div class="flex flex-row gap-2 items-center justify-between w-full">
-                                            <span class="text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wide font-semibold">DFE No</span>
-                                            <strong id="mab-lvo-dfe" class="text-slate-800 dark:text-slate-200 font-bold text-xs self-auto">-</strong>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
-                            <div class="border-b-2 border-slate-200 dark:border-slate-800 pb-2">
-                                <span class="text-slate-500 text-[11px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
-                                    <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                                    </svg>
-                                    SAFETY DRILLS & RECURRENT TRAINING
-                                </span>
-                            </div>
-                            <div id="mab-drills-list" class="flex flex-col"></div>
-                        </div>
-
-                        <div id="mab-doc-actions-container" class="flex flex-col gap-2.5 pt-2 pb-4">
-                            <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block px-1">Official Document Access</span>
-                            <button id="mab-view-attestation-btn" type="button" class="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]">
-                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                                </svg>
-                                <span>View Company Attestation PDF</span>
-                            </button>
-                            <button id="mab-view-qs-btn" type="button" class="w-full h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-extrabold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-not-allowed border border-slate-200 dark:border-slate-700/60" disabled>
-                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                <span>View Qualification Slip (QS)</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- LOADING VIEW -->
-            <div id="loading-view" class="app-view hidden flex flex-col items-center justify-center p-8 gap-4 min-h-[50vh]">
-                <div class="relative flex items-center justify-center">
-                    <div class="w-16 h-16 border-4 border-blue-200 dark:border-blue-900 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin [animation-duration:500ms] [animation-timing-function:linear]" style="animation-duration: 500ms; animation-timing-function: linear;"></div>
-                    <div class="absolute inset-0 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                        <svg class="w-8 h-8" viewBox="0 0 24 24">
-                            <title>confirm-circle-filled</title>
-                            <defs>
-                                <mask id="SVGCa0448Wh">
-                                    <g stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
-                                        <path fill="#fff" fill-opacity="0" stroke="#fff" stroke-dasharray="60" d="M3 12c0 -4.97 4.03 -9 9 -9c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9Z">
-                                            <animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="60;0" />
-                                            <animate fill="freeze" attributeName="fill-opacity" begin="0.6s" dur="0.4s" to="1" />
-                                        </path>
-                                        <path fill="none" stroke="#000" stroke-dasharray="14" stroke-dashoffset="14" d="M8 12l3 3l5 -5">
-                                            <animate fill="freeze" attributeName="stroke-dashoffset" begin="1.1s" dur="0.2s" to="0" />
-                                        </path>
-                                    </g>
-                                </mask>
-                            </defs>
-                            <path fill="currentColor" d="M0 0h24v24H0z" mask="url(#SVGCa0448Wh)" />
-                        </svg>
-                    </div>
-                </div>
-                <p id="loading-text" class="text-xs font-bold tracking-wide text-slate-700 dark:text-slate-300 uppercase text-center max-w-xs leading-relaxed">Fetching pilot credentials...</p>
-            </div>
-
-            <!-- TARGETED UPDATE 2: RESULT VIEW (Single-Licence Inspection Sheet) -->
-            <div id="result-view" class="app-view hidden flex flex-col gap-4">
-
-
-                <div id="res-status-card" class="bg-emerald-400 dark:bg-emerald-400/90 rounded-3xl p-5 shadow-md flex flex-col items-center justify-center text-center gap-1.5">
-                    <span id="res-status-label" class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800">Master Compliance Status</span>
-                    <h3 id="res-header" class="text-xs font-black text-white uppercase tracking-wide">Licence Valid</h3>
-                    <div id="res-overall-status-badge" class="status-badge font-black uppercase rounded-full px-6 py-3 text-white inline-block text-sm tracking-wider bg-emerald-900/50">CLEARED FOR DUTY</div>
-                    <p id="res-scan-timestamp" class="text-[10px] text-white uppercase font-semibold mt-1">Last Checked: --:--</p>
-                </div>
-
-                <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
-                    <div class="border-b-2 border-slate-200 dark:border-slate-800 pb-2 flex justify-between items-center">
-                        <span class="text-slate-500 text-[11px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-                            </svg>
-                            Crew Profile
-                        </span>
-                    </div>
-                    <div class="flex flex-col gap-2.5">
-                        <div>
-                            <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block">Full Name</span>
-                            <span id="res-pilot-name" class="font-extrabold text-slate-900 dark:text-slate-100 text-base">-</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block">Licence Type</span>
-                                <span id="res-licence-type" class="font-bold text-slate-800 dark:text-slate-200 text-sm">-</span>
-                            </div>
-                            <div>
-                                <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block">Licence Number</span>
-                                <span id="res-licence-number" class="font-bold text-slate-800 dark:text-slate-200 text-sm">-</span>
-                            </div>
-                        </div>
-                        <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-                            <span class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold block mb-1">Special / Other Medical Limitations</span>
-                            <div id="res-medical-limit" class="text-xs font-semibold text-slate-800 dark:text-slate-200 whitespace-pre-line leading-relaxed">NIL</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
-                    <div class="border-b border-slate-100 dark:border-slate-800 pb-2 flex justify-between items-center">
-                        <span class="text-slate-500 text-[10px] uppercase tracking-wider font-extrabold flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                            </svg>
-                            Validities & Certifications
-                        </span>
-                    </div>
-                    <div id="res-qualifications-list" class="flex flex-col"></div>
-                </div>
-
-                <div id="res-actions-footer" class="flex flex-col gap-2 pt-1">
-                    <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl px-5 py-4 border border-slate-100 dark:border-slate-800 flex flex-col">
-                        <div class="flex flex-col items-center pb-3">
-                            <span class="text-xs font-black uppercase tracking-wider text-rose-600 text-center animate-pulse">Mandatory</span>
-                            <span class="text-[10px] font-bold uppercase tracking-normal text-slate-500 dark:text-slate-300 text-center">Cross-check with official licence page below</span>
-                        </div>
-                        <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-3.5 px-4 rounded-2xl transition duration-150 text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer" type="button" id="res-open-original-btn">
-                            <span>View Licence Page</span>
-                            <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                                <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm4.28 10.28a.75.75 0 000-1.06l-3-3a.75.75 0 10-1.06 1.06l1.72 1.72H8.25a.75.75 0 000 1.5h5.69l-1.72 1.72a.75.75 0 101.06 1.06l3-3Z" clip-rule="evenodd"></path>
-                            </svg>
-                        </button>
-                        <div class="grid grid-cols-2 gap-2 pt-3 pb-1">
-                            <button id="btn-reverify-online" type="button" class="py-2.5 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer">
-                                <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"></path>
-                                </svg>
-                                <span>Re-Verify</span>
-                            </button>
-                            <button id="btn-toggle-pin" type="button" class="py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer">
-                                <svg class="w-4 h-4 text-orange-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"></path>
-                                </svg>
-                                <span>Bookmark</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- STANDALONE HISTORY VIEW (#history-view) -->
-            <div id="history-view" class="app-view hidden flex flex-col gap-4">
-                <div id="history-directory" class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-4 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
-                    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
-                        <div class="flex items-center gap-2">
-                            <h2 class="text-[18px] font-bold text-slate-800 dark:text-slate-100 tracking-normal px-2">Recent</h2>
-                            <button id="history-retention-tag" type="button" class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 px-2 py-0.5 rounded-full transition-all cursor-pointer border border-blue-200 dark:border-blue-800/60" title="Tap to toggle history retention limit">10 Scans</button>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <button id="btn-history-manage" type="button" class="py-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer">
-                                Manage
-                            </button>
-
-                        </div>
-                    </div>
-
-                    <div class="relative flex items-center">
-                        <input type="text" id="history-search-input" placeholder="Search Pilot Name, CAAM #, Rating..." class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs font-medium">
-                        <svg class="w-4 h-4 text-slate-400 absolute left-2.5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                        </svg>
-                    </div>
-
-                    <div class="grid grid-cols-4 gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-center text-[10px] font-bold">
-                        <button id="filter-all-btn" type="button" class="py-1.5 px-1 rounded-lg bg-blue-600 text-white shadow-xs transition-all">
-                            All <br>(<span id="count-all">0</span>)
-                        </button>
-                        <button id="filter-valid-btn" type="button" class="py-1.5 px-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all">
-                            Valid <br>(<span id="count-valid">0</span>)
-                        </button>
-                        <button id="filter-expiring-btn" type="button" class="py-1.5 px-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all">
-                            Expiring <br>(<span id="count-expiring">0</span>)
-                        </button>
-                        <button id="filter-expired-btn" type="button" class="py-1.5 px-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all">
-                            Expired <br>(<span id="count-expired">0</span>)
-                        </button>
-                    </div>
-
-                    <div id="history-list" class="flex flex-col">
-                        <div class="text-[11px] text-slate-400 italic py-3 text-center">No recent verified crew yet.</div>
-                    </div>
-
-                    <div id="history-bulk-action-bar" class="hidden sticky bottom-16 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-md flex items-center justify-between gap-2 my-2 transition-all">
-                        <button id="btn-bulk-select-all" type="button" class="py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 shrink-0">
-                            <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                            </svg>
-                            <span id="btn-bulk-select-all-text">Select All</span>
-                        </button>
-                        <div class="flex items-center gap-1">
-                            <span id="bulk-selected-count" class="px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-extrabold text-[11px]">0 selected</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <button id="btn-bulk-bookmark" type="button" class="p-2 rounded-xl bg-orange-100 dark:bg-orange-950/60 hover:bg-orange-200 dark:hover:bg-orange-900/80 text-orange-600 dark:text-orange-400 font-bold transition-all cursor-pointer active:scale-95" title="Bookmark Selected">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" />
-                                </svg>
-                            </button>
-                            <button id="btn-bulk-delete" type="button" class="p-2 rounded-xl bg-red-100 dark:bg-red-950/60 hover:bg-red-200 dark:hover:bg-red-900/80 text-red-600 dark:text-red-400 font-bold transition-all cursor-pointer active:scale-95" title="Delete Selected">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SCANNER VIEW (PILOT SCAN HUB) -->
-            <div id="scanner-view" class="app-view hidden flex flex-col gap-4">
-                <div class="bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl grid grid-cols-3 gap-1 text-center shadow-xs select-none">
-                    <button id="tab-camera-btn" type="button" class="py-2.5 px-1 rounded-xl text-xs font-bold transition-colors bg-blue-600 text-white shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
-                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
-                        </svg>
-                        <span class="inline-block">Camera</span>
-                    </button>
-                    <button id="tab-qrpass-btn" type="button" class="py-2.5 px-1 rounded-xl text-xs font-bold transition-colors text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 flex items-center justify-center gap-1.5 cursor-pointer">
-                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c0 .621.504 1.125 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z" />
-                        </svg>
-                        <span class="inline-block">My QR</span>
-                    </button>
-                    <button id="tab-manual-btn" type="button" class="py-2.5 px-1 rounded-xl text-xs font-bold transition-colors text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 flex items-center justify-center gap-1.5 cursor-pointer">
-                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-                        </svg>
-                        <span class="inline-block">Manual</span>
-                    </button>
-                </div>
-
-                <!-- TAB 1: CAMERA SCANNER -->
-                <div id="camera-scan-tab" class="flex flex-col gap-4">
-                    <div id="qr-reader-container" class="w-full overflow-hidden rounded-2xl bg-slate-900 aspect-square flex items-center justify-center relative shadow-inner">
-                        <video id="qr-video" class="w-full h-full object-cover" playsinline webkit-playsinline muted></video>
-                        <div id="qr-reticle" class="absolute w-44 h-44 border-2 border-dashed border-white/80 rounded-2xl pointer-events-none transition-all shadow-[0_0_0_9999px_rgba(15,23,42,0.45)]"></div>
-                        <div class="absolute bottom-4 inset-x-0 flex justify-center pointer-events-none z-10">
-                            <span id="qr-guidance-pill" class="text-[10px] font-bold text-white bg-black/75 px-3.5 py-1.5 rounded-2xl backdrop-blur-md uppercase tracking-wider shadow-sm text-center border border-white/10 leading-tight flex flex-col items-center gap-0.5">
-                                <span>Place QR code within scan area</span>
-                                <span class="text-[9px] text-slate-300 font-medium normal-case tracking-normal">Avoid glare & shadows</span>
-                            </span>
-                        </div>
-                        <div id="scanner-paused-overlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex-col items-center justify-center gap-2 text-center p-4 cursor-pointer z-20">
-                            <div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white mb-1">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
-                                </svg>
-                            </div>
-                            <span class="text-xs font-bold text-white">Scanner Paused</span>
-                            <span class="text-[10px] text-slate-300">Tap to resume camera</span>
-                        </div>
-                    </div>
-                    <div id="error-message" class="text-xs text-red-600 bg-red-50 dark:bg-red-950/40 p-3.5 rounded-xl font-semibold text-center empty:hidden border border-red-100 dark:border-red-900/50"></div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <button id="camera-cycle-btn" type="button" class="bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold py-3 px-3 rounded-2xl text-xs transition duration-150 flex items-center justify-center gap-2 border border-slate-200/80 dark:border-slate-800 shadow-sm cursor-pointer">
-                            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                            </svg>
-                            <span>Switch Lens</span>
-                        </button>
-                        <button id="upload-qr-btn" type="button" class="bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold py-3 px-3 rounded-2xl text-xs transition duration-150 flex items-center justify-center gap-2 border border-slate-200/80 dark:border-slate-800 shadow-sm cursor-pointer">
-                            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                            </svg>
-                            <span>Scan Photo</span>
-                        </button>
-                        <input type="file" id="qr-file-input" accept="image/*" class="hidden" />
-                    </div>
-                    <button id="torch-toggle-btn" type="button" class="hidden w-full bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold py-3 px-3 rounded-2xl text-xs transition duration-150 flex items-center justify-center gap-2 border border-slate-200/80 dark:border-slate-800 shadow-sm cursor-pointer">
-                        <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-                        </svg>
-                        <span>Toggle Flashlight</span>
-                    </button>
-                </div>
-
-                <!-- TAB 2: MY QR PASS -->
-                <div id="my-qr-pass-tab" class="hidden flex flex-col gap-4">
-                    <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-6 border border-slate-100 dark:border-slate-800 text-center flex flex-col items-center gap-4">
-                        <div class="p-4 bg-white rounded-2xl shadow-inner border border-slate-100 max-w-[240px] w-full aspect-square flex items-center justify-center mx-auto">
-                            <canvas id="pass-qr-canvas" class="w-full h-full object-contain"></canvas>
-                        </div>
-                        <div class="flex flex-col items-center">
-                            <span id="pass-pilot-name" class="font-black text-slate-900 dark:text-slate-100 text-base uppercase">-</span>
-                            <span id="pass-licence-no" class="text-xs font-extrabold text-slate-500 dark:text-slate-400 mt-0.5">-</span>
-                        </div>
-                        <div class="w-full border-t border-slate-100 dark:border-slate-800/80 pt-3 flex justify-between items-center text-[10px] text-slate-400 uppercase font-bold">
-                            <span>Last Fetched:</span>
-                            <span id="pass-freshness-tag" class="text-blue-600 dark:text-blue-400">Cached</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB 3: MANUAL ENTRY -->
-                <div id="manual-entry-tab" class="hidden flex flex-col gap-4">
-                    <div class="bg-white dark:bg-slate-900 shadow-md rounded-3xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
-                        <span class="text-slate-500 text-[10px] font-extrabold uppercase tracking-wider block">Input eCLIPSE Licence URL</span>
-                        <div class="relative flex items-center">
-                            <div class="flex flex-col items-center w-full gap-2">
-                                <input type="url" id="manual-url-input" placeholder="https://eclipse.caam.gov.my/ELICENSING.." class="w-full pl-3 pr-20 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs font-medium block w-full">
-                                <div id="manual-url-badge" class="hidden text-[10px] text-emerald-600 font-extrabold flex items-center gap-1 mt-0.5">
-                                    <span id="manual-url-status-text">Valid CAAM Licence URL captured</span>
-                                </div>
-                            </div>
-                            <button id="paste-url-btn" type="button" class="absolute right-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold px-3 py-1.5 rounded-xl text-[10px] uppercase transition-all flex items-center gap-1 cursor-pointer">
-                                Paste
-                            </button>
-                        </div>
-                        <button id="submit-url-btn" type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-3.5 rounded-2xl transition duration-150 text-xs uppercase tracking-wider shadow-md cursor-pointer">
-                            Verify Manual URL
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TOOLS VIEW (FLIGHT DECK COMPLIANCE TOOLS) -->
-            <div id="tools-view" class="app-view hidden flex flex-col gap-3.5 w-full max-w-md mx-auto select-none">
-
-                <!-- TIER 1: CATEGORY SEGMENTED CONTROL (Primary Category Filter) -->
-                <nav class="bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl shadow-xs select-none">
-                    <div class="grid grid-cols-2 gap-1" role="tablist" aria-label="Tool Categories">
-
-                        <!-- Category A: Qualifications & Validity (Date-Centric) -->
-                        <button id="cat-tab-qualifications" type="button" role="tab" aria-selected="true" aria-controls="cat-pane-qualifications" class="cat-tab-btn active py-2.5 px-3 rounded-xl text-xs font-bold transition-colors text-center flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-xs cursor-pointer" onclick="switchToolCategory('qualifications')">
-                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                            </svg>
-                            <span class="inline-block">Date</span>
-                        </button>
-
-                        <!-- Category B: Duty & Rest (Time-Centric) -->
-                        <button id="cat-tab-dutyrest" type="button" role="tab" aria-selected="false" aria-controls="cat-pane-dutyrest" class="cat-tab-btn py-2.5 px-3 rounded-xl text-xs font-bold transition-colors text-center flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchToolCategory('dutyrest')">
-                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span class="inline-block">Time</span>
-                        </button>
-
-                    </div>
-                </nav>
-
-                <!-- =============================================================== -->
-                <!-- CATEGORY A PANE: QUALIFICATIONS & VALIDITY (Date-Centric)        -->
-                <!-- =============================================================== -->
-                <div id="cat-pane-qualifications" class="category-pane space-y-3.5" role="tabpanel" aria-labelledby="cat-tab-qualifications">
-
-                    <!-- Tier 2 Sub-Tab Pill Strip (Category A) -->
-                    <div class="relative">
-                        <div id="subtab-strip-cat-a" class="tools-subtab-strip flex items-center gap-2 overflow-x-auto py-1 px-0.5 no-scrollbar scroll-smooth">
-                            <button id="pill-tool-medical" type="button" class="subtab-pill active flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-blue-500/40 bg-blue-500/20 text-blue-400 dark:text-blue-300 cursor-pointer" onclick="switchActiveTool('tool-card-medical')">Medical Expiry</button>
-                            <button id="pill-tool-ppc" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-card-ppc')">LPC / OPC Currency</button>
-                            <button id="pill-tool-recurrent" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-card-recurrent')">Recurrent Training</button>
-                            <button id="pill-tool-recency" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-card-recency')">Landing Recency</button>
-                        </div>
-
-                        <!-- Carousel Page Dots -->
-                        <div id="page-dots-cat-a" class="flex justify-center items-center gap-1.5 mt-1.5">
-                            <span class="page-dot active w-5 h-1.5 rounded-full bg-blue-500 transition-all duration-300"></span>
-                            <span class="page-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 transition-all duration-300"></span>
-                            <span class="page-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 transition-all duration-300"></span>
-                            <span class="page-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 transition-all duration-300"></span>
-                        </div>
-                    </div>
-
-                    <!-- Active Tool Input Card Wrapper (Category A) -->
-                    <div id="card-wrapper-cat-a" class="w-full px-1 py-0.5">
-
-                        <!-- TOOL CARD: MEDICAL CLASS 1 / 2 -->
-                        <div id="tool-card-medical" class="tool-card active tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
-                            <div id="card-3d-inner-medical" class="card-3d-inner w-full h-full relative transform-style-3d">
-
-                                <!-- FRONT FACE: INPUT CARD (SLOTS 1-4) -->
-                                <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-md select-none">
-                                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
-                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Medical Expiry</span>
-                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-medical')"> ↺ Reset</button>
-                                    </div>
-
-                                    <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
-                                        <!-- Medical Row 1: Pilot Date of Birth (DOB Trigger) -->
-                                        <div>
-                                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Date of Birth</label>
-                                            <button type="button" id="btn-med-dob-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="openEfbDatePicker('input-med-dob', 'DATE OF BIRTH')">
-                                                <span id="input-med-dob-display" class="font-sans">SELECT DOB</span>
-                                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                                </svg>
-                                            </button>
-                                            <input type="hidden" id="input-med-dob" value="">
-                                        </div>
-
-                                        <!-- Medical Row 2: Examination Date & Current Expiry Anchor Date -->
-                                        <div class="grid grid-cols-2 gap-2.5">
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Examination Date</label>
-                                                <button type="button" id="btn-med-exam-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="openEfbDatePicker('input-med-exam-date', 'MEDICAL EXAM DATE')">
-                                                    <span id="input-med-exam-date-display" class="font-sans">SELECT DATE</span>
-                                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                                    </svg>
-                                                </button>
-                                                <input type="hidden" id="input-med-exam-date" value="">
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Current Expiry Date</label>
-                                                <button type="button" id="btn-med-current-expiry-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="openEfbDatePicker('input-med-current-expiry', 'CURRENT EXPIRY DATE')">
-                                                    <span id="input-med-current-expiry-display" class="font-sans">SELECT EXPIRY</span>
-                                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                                    </svg>
-                                                </button>
-                                                <input type="hidden" id="input-med-current-expiry" value="">
-                                            </div>
-                                        </div>
-
-                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Calculates medical renewal expiry and dame re-exam window based on CAAM CAD 1 Personnel Licensing and OM-A 5.1.4 regulations.</p>
-                                    </div>
-
-                                    <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
-                                        <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('medical')">Check</button>
-                                    </div>
-                                </div>
-
-                                <!-- BACK FACE: OUTPUT CARD (SLOTS 1-4) -->
-                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-start">
-                                    <div id="output-slot-1-hero-medical" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
-                                        <div class="flex items-center justify-between pb-1 shrink-0">
-                                            <span id="output-hero-title-medical" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">NEW MEDICAL EXPIRY</span>
-                                            <button type="button" class="text-xs font-semibold text-white hover:text-slate-200 transition-colors cursor-pointer" onclick="flipCardBackToInput('medical')">↺ Edit</button>
-                                        </div>
-                                        <p id="output-hero-subtitle-medical" class="text-2xl font-black text-white tracking-tight leading-none mt-1">31 OCT 2026</p>
-                                    </div>
-
-                                    <div id="output-slot-2-clock-medical" class="p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                                        <div>
-                                            <span id="output-clock-label-medical" class="block text-[10px] font-bold text-slate-500 dark:text-slate-100 uppercase tracking-wider">45-DAYS RENEWAL WINDOW</span>
-                                            <span id="output-clock-value-medical" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-500 font-sans">--:--</span>
-                                        </div>
-                                    </div>
-
-                                    <div id="output-slot-3-grid-medical" class="px-3.5 py-2 bg-white dark:bg-slate-900/50 grid grid-cols-1 gap-3">
-                                        <div class="flex items-start justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40 gap-2">
-                                            <span id="grid-label-1-medical" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">AGE AT EXAM</span>
-                                            <span id="grid-value-1-medical" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                        <div class="flex items-start justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40 gap-2">
-                                            <span id="grid-label-2-medical" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">VALIDITY DURATION</span>
-                                            <span id="grid-value-2-medical" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                        <div class="flex items-start justify-between text-xs py-1 gap-2">
-                                            <span id="grid-label-3-medical" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">CREW LIMITATION</span>
-                                            <span id="grid-value-3-medical" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- IN-CARD AUDIT OVERLAY CONTAINER -->
-                                    <div id="audit-overlay-medical" class="absolute inset-0 z-30 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-3.5 flex flex-col justify-between hidden shadow-md border border-slate-200 dark:border-slate-700/60">
-                                        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/60 pb-2 shrink-0">
-                                            <div class="flex items-center gap-1.5">
-                                                <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                </svg>
-                                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200">CALCULATION AUDIT & NOTES</span>
-                                            </div>
-                                            <button type="button" class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 text-xs font-bold cursor-pointer" onclick="closeAuditOverlay('medical')">✕</button>
-                                        </div>
-                                        <div id="audit-overlay-content-medical" class="flex-1 my-2 overflow-y-auto space-y-2 no-scrollbar text-xs text-slate-700 dark:text-slate-300">
-                                        </div>
-                                        <div class="pt-2 border-t border-slate-200 dark:border-slate-700/60 shrink-0 flex justify-end">
-                                            <button type="button" class="py-1 px-3 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs font-semibold cursor-pointer" onclick="closeAuditOverlay('medical')">Done</button>
-                                        </div>
-                                    </div>
-
-                                    <div id="output-slot-4-audit-medical" class="px-3.5 pb-3.5 pt-2 bg-white dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-                                        <div class="flex items-start gap-1.5 flex-1 min-w-0">
-                                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0 mt-0.5">AUDIT:</span>
-                                            <p id="output-audit-text-medical" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1 PEL Section 1.2.5.2 & OM-A 5.1.4.4.</p>
-                                        </div>
-                                        <button type="button" id="btn-audit-notes-trigger-medical" class="shrink-0 hidden inline-flex items-center gap-1 py-1 px-2.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-600 dark:text-blue-400 text-[10px] font-bold cursor-pointer transition-colors" onclick="openAuditOverlay('medical')"><svg class="w-3 h-3 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg><span>Notes</span></button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- TOOL CARD: LPC / OPC CURRENCY -->
-                        <div id="tool-card-ppc" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
-                            <div id="card-3d-inner-ppc" class="card-3d-inner w-full h-full relative transform-style-3d">
-                                <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-md select-none">
-                                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
-                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">LPC / OPC Currency</span>
-                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-ppc')"> ↺ Reset</button>
-                                    </div>
-
-                                    <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
-                                        <div>
-                                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">PPC / LPC Conduct Date</label>
-                                            <button type="button" id="btn-ppc-conduct-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbDatePicker('input-ppc-conduct-date', 'PPC / LPC CONDUCT DATE')">
-                                                <span id="input-ppc-conduct-date-display" class="font-sans">SELECT DATE</span>
-                                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                                </svg>
-                                            </button>
-                                            <input type="hidden" id="input-ppc-conduct-date" value="">
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Current Expiry Date</label>
-                                            <button type="button" id="btn-ppc-expiry-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbDatePicker('input-ppc-expiry-date', 'CURRENT EXPIRY DATE')">
-                                                <span id="input-ppc-expiry-date-display" class="font-sans">SELECT DATE</span>
-                                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                                </svg>
-                                            </button>
-                                            <input type="hidden" id="input-ppc-expiry-date" value="">
-                                        </div>
-
-                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Evaluates 3-month lookback revalidation window and validity preservation rules for PPC / LPC under CAAM CAD 6.9.4.4 and OM-A 5.1.4.6.</p>
-                                    </div>
-
-                                    <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
-                                        <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('ppc')">Check</button>
-                                    </div>
-                                </div>
-
-                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-start">
-                                    <div id="output-slot-1-hero-ppc" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
-                                        <div class="flex items-center justify-between pb-1 shrink-0">
-                                            <span id="output-hero-title-ppc" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">NEW PPC / LPC EXPIRY</span>
-                                            <button type="button" class="text-xs font-semibold text-white hover:text-slate-200 transition-colors cursor-pointer" onclick="flipCardBackToInput('ppc')">↺ Edit</button>
-                                        </div>
-                                        <p id="output-hero-subtitle-ppc" class="text-2xl font-black text-white tracking-tight leading-none mt-1">31 JUL 2027</p>
-                                    </div>
-
-                                    <div id="output-slot-2-clock-ppc" class="p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                                        <div>
-                                            <span id="output-clock-label-ppc" class="block text-[10px] font-bold text-slate-500 dark:text-slate-100 uppercase tracking-wider">NEXT OPC WINDOW (4–8 MONTHS)</span>
-                                            <span id="output-clock-value-ppc" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-500 font-sans">--:--</span>
-                                        </div>
-                                    </div>
-
-                                    <div id="output-slot-3-grid-ppc" class="px-3.5 py-2 bg-white dark:bg-slate-900/50 grid grid-cols-1 gap-3">
-                                        <div class="flex items-start justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40 gap-2">
-                                            <span id="grid-label-1-ppc" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">REVALIDATION RULE</span>
-                                            <span id="grid-value-1-ppc" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                        <div class="flex items-start justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40 gap-2">
-                                            <span id="grid-label-2-ppc" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">NEXT OPC TARGET</span>
-                                            <span id="grid-value-2-ppc" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                        <div class="flex items-start justify-between text-xs py-1 gap-2">
-                                            <span id="grid-label-3-ppc" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">OPERATING STATUS</span>
-                                            <span id="grid-value-3-ppc" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- IN-CARD AUDIT OVERLAY CONTAINER -->
-                                    <div id="audit-overlay-ppc" class="absolute inset-0 z-30 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-3.5 flex flex-col justify-between hidden shadow-md border border-slate-200 dark:border-slate-700/60">
-                                        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/60 pb-2 shrink-0">
-                                            <div class="flex items-center gap-1.5">
-                                                <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                </svg>
-                                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200">CALCULATION AUDIT & NOTES</span>
-                                            </div>
-                                            <button type="button" class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 text-xs font-bold cursor-pointer" onclick="closeAuditOverlay('ppc')">✕</button>
-                                        </div>
-                                        <div id="audit-overlay-content-ppc" class="flex-1 my-2 overflow-y-auto space-y-2 no-scrollbar text-xs text-slate-700 dark:text-slate-300">
-                                        </div>
-                                        <div class="pt-2 border-t border-slate-200 dark:border-slate-700/60 shrink-0 flex justify-end">
-                                            <button type="button" class="py-1 px-3 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs font-semibold cursor-pointer" onclick="closeAuditOverlay('ppc')">Done</button>
-                                        </div>
-                                    </div>
-
-                                    <div id="output-slot-4-audit-ppc" class="px-3.5 pb-3.5 pt-2 bg-white dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-                                        <div class="flex items-start gap-1.5 flex-1 min-w-0">
-                                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0 mt-0.5">AUDIT:</span>
-                                            <p id="output-audit-text-ppc" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 6.9.4.4, CAD 1 PEL 2.1.5.10 & OM-A 5.1.4.6.</p>
-                                        </div>
-                                        <button type="button" id="btn-audit-notes-trigger-ppc" class="shrink-0 hidden inline-flex items-center gap-1 py-1 px-2.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-600 dark:text-blue-400 text-[10px] font-bold cursor-pointer transition-colors" onclick="openAuditOverlay('ppc')"><svg class="w-3 h-3 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg><span>Notes</span></button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- TOOL CARD: RECURRENT TRAINING -->
-                        <div id="tool-card-recurrent" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
-                            <div id="card-3d-inner-recurrent" class="card-3d-inner w-full h-full relative transform-style-3d">
-                                <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-md select-none">
-                                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
-                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Recurrent Training</span>
-                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-recurrent')"> ↺ Reset</button>
-                                    </div>
-
-                                    <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
-                                        <div>
-                                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Qualification Course</label>
-                                            <button type="button" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openRecurrentCourseModal()">
-                                                <span id="recurrent-selected-course-label">Line Check (LC)</span>
-                                                <span class="text-blue-600 dark:text-blue-400 text-xs font-semibold">Change ➔</span>
-                                            </button>
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Completion Date</label>
-                                            <button type="button" id="btn-recurrent-conduct-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbDatePicker('input-recurrent-conduct-date', 'COMPLETION DATE')">
-                                                <span id="input-recurrent-conduct-date-display" class="font-sans">SELECT DATE</span>
-                                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                                </svg>
-                                            </button>
-                                            <input type="hidden" id="input-recurrent-conduct-date" value="">
-                                        </div>
-
-                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Tracks validity and lookback renewal windows across all recurrent training modules under OM-D Chapter 2 standards.</p>
-                                    </div>
-
-                                    <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
-                                        <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('recurrent')">Check</button>
-                                    </div>
-                                </div>
-
-                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-start">
-                                    <div id="output-slot-1-hero-recurrent" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
-                                        <div class="flex items-center justify-between pb-1 shrink-0">
-                                            <span id="output-hero-title-recurrent" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">RECURRENT EXPIRY DATE</span>
-                                            <button type="button" class="text-xs font-semibold text-white hover:text-slate-200 transition-colors cursor-pointer" onclick="flipCardBackToInput('recurrent')">↺ Edit</button>
-                                        </div>
-                                        <p id="output-hero-subtitle-recurrent" class="text-2xl font-black text-white tracking-tight leading-none mt-1">31 DEC 2026</p>
-                                    </div>
-
-                                    <div id="output-slot-2-clock-recurrent" class="p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                                        <div>
-                                            <span id="output-clock-label-recurrent" class="block text-[10px] font-bold text-slate-500 dark:text-slate-100 uppercase tracking-wider">Qualification Module:</span>
-                                            <span id="output-clock-value-recurrent" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-500 font-sans">LINE CHECK (LC)</span>
-                                        </div>
-                                    </div>
-
-                                    <div id="output-slot-3-grid-recurrent" class="px-3.5 py-2 bg-white dark:bg-slate-900/50 grid grid-cols-1 gap-3">
-                                        <div class="flex items-start justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40 gap-2">
-                                            <span id="grid-label-1-recurrent" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">COMPLETION DATE</span>
-                                            <span id="grid-value-1-recurrent" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                        <div class="flex items-start justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40 gap-2">
-                                            <span id="grid-label-2-recurrent" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">MODULE CATEGORY</span>
-                                            <span id="grid-value-2-recurrent" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                        <div class="flex items-start justify-between text-xs py-1 gap-2">
-                                            <span id="grid-label-3-recurrent" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">RENEWAL RULE</span>
-                                            <span id="grid-value-3-recurrent" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- IN-CARD AUDIT OVERLAY CONTAINER -->
-                                    <div id="audit-overlay-recurrent" class="absolute inset-0 z-30 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-3.5 flex flex-col justify-between hidden shadow-md border border-slate-200 dark:border-slate-700/60">
-                                        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/60 pb-2 shrink-0">
-                                            <div class="flex items-center gap-1.5">
-                                                <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                </svg>
-                                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200">CALCULATION AUDIT & NOTES</span>
-                                            </div>
-                                            <button type="button" class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 text-xs font-bold cursor-pointer" onclick="closeAuditOverlay('recurrent')">✕</button>
-                                        </div>
-                                        <div id="audit-overlay-content-recurrent" class="flex-1 my-2 overflow-y-auto space-y-2 no-scrollbar text-xs text-slate-700 dark:text-slate-300">
-                                        </div>
-                                        <div class="pt-2 border-t border-slate-200 dark:border-slate-700/60 shrink-0 flex justify-end">
-                                            <button type="button" class="py-1 px-3 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs font-semibold cursor-pointer" onclick="closeAuditOverlay('recurrent')">Done</button>
-                                        </div>
-                                    </div>
-
-                                    <div id="output-slot-4-audit-recurrent" class="px-3.5 pb-3.5 pt-2 bg-white dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-                                        <div class="flex items-start gap-1.5 flex-1 min-w-0">
-                                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0 mt-0.5">AUDIT:</span>
-                                            <p id="output-audit-text-recurrent" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 6.9.4 & OM-D Chapter 2 Recurrent Standards.</p>
-                                        </div>
-                                        <button type="button" id="btn-audit-notes-trigger-recurrent" class="shrink-0 hidden inline-flex items-center gap-1 py-1 px-2.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-600 dark:text-blue-400 text-[10px] font-bold cursor-pointer transition-colors" onclick="openAuditOverlay('recurrent')"><svg class="w-3 h-3 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg><span>Notes</span></button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- TOOL CARD: LANDING RECENCY (90-DAY) -->
-                        <div id="tool-card-recency" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
-                            <div id="card-3d-inner-recency" class="card-3d-inner w-full h-full relative transform-style-3d">
-                                <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-md select-none">
-                                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
-                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Landing Recency (90-Day)</span>
-                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-recency')"> ↺ Reset</button>
-                                    </div>
-
-                                    <div class="flex-1 my-3 overflow-y-auto space-y-1 no-scrollbar">
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5">Capacity</label>
-                                                <button type="button" id="btn-recency-capacity-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-recency-capacity', 'PILOT CAPACITY', [{value:'PIC', label:'Captain (PIC)'}, {value:'FO', label:'First Officer (FO)'}])">
-                                                    <span id="btn-recency-capacity-display">PIC (Captain)</span>
-                                                    <span class="text-slate-400 text-[10px]">▼</span>
-                                                </button>
-                                                <input type="hidden" id="input-recency-capacity" value="PIC">
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5">Proposed Flight Date</label>
-                                                <button type="button" id="btn-recency-flight-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbDatePicker('input-recency-flight-date', 'PROPOSED FLIGHT DATE')">
-                                                    <span id="input-recency-flight-date-display" class="font-sans">SELECT DATE</span>
-                                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                                    </svg>
-                                                </button>
-                                                <input type="hidden" id="input-recency-flight-date" value="">
-                                            </div>
-                                        </div>
-
-                                        <div class="grid grid-cols-3 gap-1.5 pt-0.5">
-                                            <div>
-                                                <button type="button" id="btn-recency-l1-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-lg py-2 px-1 text-[11px] font-bold text-slate-800 dark:text-slate-100 text-center cursor-pointer" onclick="openEfbDatePicker('input-recency-l1-date', 'LANDING #1 DATE')">
-                                                    <span id="input-recency-l1-date-display">Landing 1</span>
-                                                </button>
-                                                <input type="hidden" id="input-recency-l1-date" value="">
-                                            </div>
-
-                                            <div>
-                                                <button type="button" id="btn-recency-l2-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-lg py-2 px-1 text-[11px] font-bold text-slate-800 dark:text-slate-100 text-center cursor-pointer" onclick="openEfbDatePicker('input-recency-l2-date', 'LANDING #2 DATE')">
-                                                    <span id="input-recency-l2-date-display">Landing 2</span>
-                                                </button>
-                                                <input type="hidden" id="input-recency-l2-date" value="">
-                                            </div>
-
-                                            <div>
-                                                <button type="button" id="btn-recency-l3-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-lg py-2 px-1 text-[11px] font-bold text-slate-800 dark:text-slate-100 text-center cursor-pointer" onclick="openEfbDatePicker('input-recency-l3-date', 'LANDING #3 DATE')">
-                                                    <span id="input-recency-l3-date-display">Landing 3</span>
-                                                </button>
-                                                <input type="hidden" id="input-recency-l3-date" value="">
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-0.5 uppercase tracking-wider pt-1">Operation Type</label>
-                                            <div class="grid grid-cols-2 gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-                                                <button type="button" id="btn-recency-single-fleet" class="py-1 px-2 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-700 shadow-sm transition-all cursor-pointer text-center" onclick="setRecencyMultiVariant(false)">Single Fleet</button>
-                                                <button type="button" id="btn-recency-multi-variant" class="py-1 px-2 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all cursor-pointer text-center" onclick="setRecencyMultiVariant(true)">Multi-Variant (MFF)</button>
-                                            </div>
-                                            <input type="hidden" id="input-recency-multivariant" value="false">
-                                        </div>
-
-                                        <div id="wrapper-recency-variant-date" class="hidden">
-                                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5">2nd Variant Last Landing Date</label>
-                                            <button type="button" id="btn-recency-variant-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbDatePicker('input-recency-variant-date', '2ND VARIANT LAST LANDING')">
-                                                <span id="input-recency-variant-date-display" class="font-sans">SELECT DATE</span>
-                                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                                </svg>
-                                            </button>
-                                            <input type="hidden" id="input-recency-variant-date" value="">
-                                        </div>
-
-                                        <p id="text-recency-footnote" class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Verifies 90-day statutory (CAD 6) & 45-day Captain currency (OM-A) plus MFF variant rules.</p>
-                                    </div>
-
-                                    <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
-                                        <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('recency')">Check</button>
-                                    </div>
-                                </div>
-
-                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-start">
-                                    <div id="output-slot-1-hero-recency" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
-                                        <div class="flex items-center justify-between pb-1 shrink-0">
-                                            <span id="output-hero-title-recency" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">LANDING RECENCY STATUS</span>
-                                            <button type="button" class="text-xs font-semibold text-white hover:text-slate-200 transition-colors cursor-pointer" onclick="flipCardBackToInput('recency')">↺ Edit</button>
-                                        </div>
-                                        <p id="output-hero-subtitle-recency" class="text-2xl font-black text-white tracking-tight leading-none mt-1">3 / 3 LANDINGS MET</p>
-                                    </div>
-
-                                    <div id="output-slot-2-clock-recency" class="p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                                        <div>
-                                            <span id="output-clock-label-recency" class="block text-[10px] font-bold text-slate-500 dark:text-slate-100 uppercase tracking-wider">Next Required Landing Cutoff (45d/90d)</span>
-                                            <span id="output-clock-value-recency" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-500 font-sans">90-Day Rolling Window</span>
-                                        </div>
-                                    </div>
-
-                                    <div id="output-slot-3-grid-recency" class="px-3.5 py-2 bg-white dark:bg-slate-900/50 grid grid-cols-1 gap-3">
-                                        <div class="flex items-start justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40 gap-2">
-                                            <span id="grid-label-1-recency" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">90-DAY LANDINGS</span>
-                                            <span id="grid-value-1-recency" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                        <div class="flex items-start justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40 gap-2">
-                                            <span id="grid-label-2-recency" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">LAST PF LANDING</span>
-                                            <span id="grid-value-2-recency" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                        <div class="flex items-start justify-between text-xs py-1 gap-2">
-                                            <span id="grid-label-3-recency" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">VARIANT STATUS</span>
-                                            <span id="grid-value-3-recency" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- IN-CARD AUDIT OVERLAY CONTAINER -->
-                                    <div id="audit-overlay-recency" class="absolute inset-0 z-30 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-3.5 flex flex-col justify-between hidden shadow-md border border-slate-200 dark:border-slate-700/60">
-                                        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/60 pb-2 shrink-0">
-                                            <div class="flex items-center gap-1.5">
-                                                <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                </svg>
-                                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200">CALCULATION AUDIT & NOTES</span>
-                                            </div>
-                                            <button type="button" class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 text-xs font-bold cursor-pointer" onclick="closeAuditOverlay('recency')">✕</button>
-                                        </div>
-                                        <div id="audit-overlay-content-recency" class="flex-1 my-2 overflow-y-auto space-y-2 no-scrollbar text-xs text-slate-700 dark:text-slate-300">
-                                        </div>
-                                        <div class="pt-2 border-t border-slate-200 dark:border-slate-700/60 shrink-0 flex justify-end">
-                                            <button type="button" class="py-1 px-3 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs font-semibold cursor-pointer" onclick="closeAuditOverlay('recency')">Done</button>
-                                        </div>
-                                    </div>
-
-                                    <div id="output-slot-4-audit-recency" class="px-3.5 pb-3.5 pt-2 bg-white dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-                                        <div class="flex items-start gap-1.5 flex-1 min-w-0">
-                                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0 mt-0.5">AUDIT:</span>
-                                            <p id="output-audit-text-recency" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 6 Part 1 & OM-A 5.3.4.</p>
-                                        </div>
-                                        <button type="button" id="btn-audit-notes-trigger-recency" class="shrink-0 hidden inline-flex items-center gap-1 py-1 px-2.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-600 dark:text-blue-400 text-[10px] font-bold cursor-pointer transition-colors" onclick="openAuditOverlay('recency')"><svg class="w-3 h-3 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg><span>Notes</span></button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- =============================================================== -->
-                <!-- CATEGORY B PANE: DUTY & REST LIMITS (Time-Centric)             -->
-                <!-- =============================================================== -->
-                <div id="cat-pane-dutyrest" class="category-pane hidden space-y-3.5" role="tabpanel" aria-labelledby="cat-tab-dutyrest">
-
-                    <!-- Tier 2 Sub-Tab Pill Strip (Category B) -->
-                    <div class="relative">
-                        <div id="subtab-strip-cat-b" class="tools-subtab-strip flex items-center gap-2 overflow-x-auto py-1 px-0.5 no-scrollbar scroll-smooth">
-                            <button id="pill-tool-standby" type="button" class="subtab-pill active flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-blue-500/40 bg-blue-500/20 text-blue-400 dark:text-blue-300 cursor-pointer" onclick="switchActiveTool('tool-card-standby')">Standby Call-Out</button>
-                            <button id="pill-tool-maxfdp" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-card-maxfdp')">Max Allowable FDP</button>
-                            <button id="pill-tool-preflight" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-card-preflight')">Pre-Flight Rest</button>
-                            <button id="pill-tool-cumulative" type="button" class="subtab-pill flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer" onclick="switchActiveTool('tool-card-cumulative')">Cumulative Hours</button>
-                        </div>
-
-                        <!-- Carousel Page Dots -->
-                        <div id="page-dots-cat-b" class="flex justify-center items-center gap-1.5 mt-1.5">
-                            <span class="page-dot active w-5 h-1.5 rounded-full bg-blue-500 transition-all duration-300"></span>
-                            <span class="page-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 transition-all duration-300"></span>
-                            <span class="page-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 transition-all duration-300"></span>
-                            <span class="page-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 transition-all duration-300"></span>
-                        </div>
-                    </div>
-
-                    <!-- Active Tool Input Card Wrapper (Category B) -->
-                    <div id="card-wrapper-cat-b" class="w-full px-1 py-0.5">
-
-                        <!-- TOOL CARD: STANDBY CALL-OUT -->
-                        <div id="tool-card-standby" class="tool-card active tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
-                            <div id="card-3d-inner-standby" class="card-3d-inner w-full h-full relative transform-style-3d">
-                                <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-md select-none">
-                                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
-                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Standby Call-Out</span>
-                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-standby')"> ↺ Reset</button>
-                                    </div>
-
-                                    <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
-                                        <div>
-                                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Standby Location</label>
-                                            <div class="grid grid-cols-2 gap-2">
-                                                <button type="button" id="btn-stby-loc-home" class="py-2 px-3 rounded-xl text-xs font-semibold bg-blue-600 text-white shadow-xs cursor-pointer" onclick="setStandbyLocation('HOME')">Home Standby</button>
-                                                <button type="button" id="btn-stby-loc-airport" class="py-2 px-3 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 cursor-pointer" onclick="setStandbyLocation('AIRPORT')">Airport Standby</button>
-                                            </div>
-                                        </div>
-
-                                        <input type="hidden" id="input-standby-location" value="HOME">
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <div class="flex items-center justify-between mb-1">
-                                                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">Standby Start Time</label>
-                                                    <span class="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-tight">LOCAL (MYT)</span>
-                                                </div>
-                                                <button type="button" id="btn-standby-start-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-standby-start-time', 'STANDBY START TIME (LOCAL MYT)')">
-                                                    <span id="btn-standby-start-display">06:00</span>
-                                                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                    </svg>
-                                                </button>
-                                                <input type="hidden" id="input-standby-start-time" value="06:00">
-                                            </div>
-
-                                            <div>
-                                                <div class="flex items-center justify-between mb-1">
-                                                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400">Call-Out / Report Time</label>
-                                                    <span class="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-tight">LOCAL (MYT)</span>
-                                                </div>
-                                                <button type="button" id="btn-standby-report-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-standby-report-time', 'CALL-OUT REPORT TIME (LOCAL MYT)')">
-                                                    <span id="btn-standby-report-display">12:00</span>
-                                                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                    </svg>
-                                                </button>
-                                                <input type="hidden" id="input-standby-report-time" value="12:00">
-                                            </div>
-                                        </div>
-
-                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Calculates net FDP deductions for Case A & B call-outs (CAD 1901 Sec 2.11). All times in <strong class="text-slate-700 dark:text-slate-300 font-semibold">Local Time (KUL / MYT, UTC+8)</strong>.</p>
-                                    </div>
-
-                                    <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
-                                        <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('standby')">Check</button>
-                                    </div>
-                                </div>
-
-                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-start">
-                                    <div id="output-slot-1-hero-standby" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
-                                        <div class="flex items-center justify-between pb-1 shrink-0">
-                                            <span id="output-hero-title-standby" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">NET PERMISSIBLE FDP</span>
-                                            <button type="button" class="text-xs font-semibold text-white hover:text-slate-200 transition-colors cursor-pointer" onclick="flipCardBackToInput('standby')">↺ Edit</button>
-                                        </div>
-                                        <p id="output-hero-subtitle-standby" class="text-2xl font-black text-white tracking-tight leading-none mt-1">13:00 HOURS</p>
-                                    </div>
-
-                                    <div id="output-slot-2-clock-standby" class="p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                                        <div>
-                                            <span id="output-clock-label-standby" class="block text-[10px] font-bold text-slate-500 dark:text-slate-100 uppercase tracking-wider">Latest On-Chocks Cutoff:</span>
-                                            <span id="output-clock-value-standby" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-500 font-sans">14:00 UTC</span>
-                                        </div>
-                                    </div>
-
-                                    <div id="output-slot-3-grid-standby" class="px-3.5 py-2 bg-white dark:bg-slate-900/50 grid grid-cols-1 gap-3">
-                                        <div class="flex items-start justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40 gap-2">
-                                            <span id="grid-label-1-standby" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">STANDBY DURATION</span>
-                                            <span id="grid-value-1-standby" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                        <div class="flex items-start justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40 gap-2">
-                                            <span id="grid-label-2-standby" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">FDP DEDUCTION</span>
-                                            <span id="grid-value-2-standby" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                        <div class="flex items-start justify-between text-xs py-1 gap-2">
-                                            <span id="grid-label-3-standby" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">CASE RATIONALE</span>
-                                            <span id="grid-value-3-standby" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- IN-CARD AUDIT OVERLAY CONTAINER -->
-                                    <div id="audit-overlay-standby" class="absolute inset-0 z-30 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-3.5 flex flex-col justify-between hidden shadow-md border border-slate-200 dark:border-slate-700/60">
-                                        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/60 pb-2 shrink-0">
-                                            <div class="flex items-center gap-1.5">
-                                                <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                </svg>
-                                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200">CALCULATION AUDIT & NOTES</span>
-                                            </div>
-                                            <button type="button" class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 text-xs font-bold cursor-pointer" onclick="closeAuditOverlay('standby')">✕</button>
-                                        </div>
-                                        <div id="audit-overlay-content-standby" class="flex-1 my-2 overflow-y-auto space-y-2 no-scrollbar text-xs text-slate-700 dark:text-slate-300">
-                                        </div>
-                                        <div class="pt-2 border-t border-slate-200 dark:border-slate-700/60 shrink-0 flex justify-end">
-                                            <button type="button" class="py-1 px-3 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs font-semibold cursor-pointer" onclick="closeAuditOverlay('standby')">Done</button>
-                                        </div>
-                                    </div>
-
-                                    <div id="output-slot-4-audit-standby" class="px-3.5 pb-3.5 pt-2 bg-white dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-                                        <div class="flex items-start gap-1.5 flex-1 min-w-0">
-                                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0 mt-0.5">AUDIT:</span>
-                                            <p id="output-audit-text-standby" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Section 2.11 Standby FDP Adjustments.</p>
-                                        </div>
-                                        <button type="button" id="btn-audit-notes-trigger-standby" class="shrink-0 hidden inline-flex items-center gap-1 py-1 px-2.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-600 dark:text-blue-400 text-[10px] font-bold cursor-pointer transition-colors" onclick="openAuditOverlay('standby')"><svg class="w-3 h-3 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg><span>Notes</span></button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- TOOL CARD: MAX ALLOWABLE FDP -->
-                        <div id="tool-card-maxfdp" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
-                            <div id="card-3d-inner-max-fdp" class="card-3d-inner w-full h-full relative transform-style-3d">
-                                <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-md select-none">
-                                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
-                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Max Allowable FDP</span>
-                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-maxfdp')"> ↺ Reset</button>
-                                    </div>
-
-                                    <div class="flex-1 my-2 overflow-y-auto space-y-2 no-scrollbar">
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 flex justify-between items-center">
-                                                    <span>Report Time</span>
-                                                    <span class="text-[9px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider">LOCAL (MYT)</span>
-                                                </label>
-                                                <button type="button" id="btn-maxfdp-report-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-maxfdp-report-time', 'REPORT TIME (LOCAL MYT)')">
-                                                    <span id="btn-maxfdp-report-display">06:00</span>
-                                                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                    </svg>
-                                                </button>
-                                                <input type="hidden" id="input-maxfdp-report-time" value="06:00">
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Sectors Planned</label>
-                                                <button type="button" id="btn-maxfdp-sectors-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbNumberPicker('input-maxfdp-sectors', 'SECTORS PLANNED', 1, 8)">
-                                                    <span id="btn-maxfdp-sectors-display">2 Sectors</span>
-                                                    <span class="text-slate-400 text-[10px]">#</span>
-                                                </button>
-                                                <input type="hidden" id="input-maxfdp-sectors" value="2">
-                                            </div>
-                                        </div>
-
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Acclimatisation</label>
-                                                <button type="button" id="btn-maxfdp-acclim-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-maxfdp-acclimatised', 'ACCLIMATISATION STATE', [{value:'true', label:'Acclimatised'}, {value:'false', label:'Unacclimatised'}])">
-                                                    <span id="btn-maxfdp-acclim-display">Acclimatised</span>
-                                                    <span class="text-slate-400 text-[10px]">▼</span>
-                                                </button>
-                                                <input type="hidden" id="input-maxfdp-acclimatised" value="true">
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">In-Flight Relief</label>
-                                                <button type="button" id="btn-maxfdp-relief-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-maxfdp-relief', 'IN-FLIGHT RELIEF', [{value:'NONE', label:'None (Unaugmented)'}, {value:'CLASS_1_BUNK', label:'Class 1 Bunk'}, {value:'CLASS_2_SEAT', label:'Class 2 Seat'}])">
-                                                    <span id="btn-maxfdp-relief-display">None</span>
-                                                    <span class="text-slate-400 text-[10px]">▼</span>
-                                                </button>
-                                                <input type="hidden" id="input-maxfdp-relief" value="NONE">
-                                            </div>
-                                        </div>
-
-                                        <!-- FLIGHT MODIFIERS SECONDARY TRIGGER BUTTON -->
-                                        <button type="button" id="btn-maxfdp-advanced-trigger" class="w-full py-2 px-3 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 bg-slate-50/50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 text-xs font-semibold flex items-center justify-between cursor-pointer transition-all" onclick="openMaxFdpModifiersModal()">
-                                            <div class="flex items-center gap-1.5">
-                                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
-                                                </svg>
-                                                <span>Flight Modifiers</span>
-                                            </div>
-                                            <span id="badge-maxfdp-advanced-status" class="text-[10px] text-slate-400 font-medium">Standard</span>
-                                        </button>
-                                    </div>
-
-                                    <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
-                                        <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('max-fdp')">Check</button>
-                                    </div>
-                                </div>
-
-                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-start">
-                                    <div id="output-slot-1-hero-maxfdp" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
-                                        <div class="flex items-center justify-between pb-1 shrink-0">
-                                            <span id="output-hero-title-maxfdp" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">MAX ALLOWABLE FDP</span>
-                                            <button type="button" class="text-xs font-semibold text-white hover:text-slate-200 transition-colors cursor-pointer" onclick="flipCardBackToInput('maxfdp')">↺ Edit</button>
-                                        </div>
-                                        <p id="output-hero-subtitle-maxfdp" class="text-2xl font-black text-white tracking-tight leading-none mt-1">13:00 HOURS</p>
-                                    </div>
-
-                                    <div id="output-slot-2-clock-maxfdp" class="p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                                        <div>
-                                            <span id="output-clock-label-maxfdp" class="block text-[10px] font-bold text-slate-500 dark:text-slate-100 uppercase tracking-wider">On-Chocks Cutoff Time:</span>
-                                            <span id="output-clock-value-maxfdp" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-500 font-sans">13:15 UTC</span>
-                                        </div>
-                                    </div>
-
-                                    <div id="output-slot-3-grid-maxfdp" class="px-3.5 py-2 bg-white dark:bg-slate-900/50 grid grid-cols-1 gap-3">
-                                        <div class="flex items-start justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40 gap-2">
-                                            <span id="grid-label-1-maxfdp" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">BASE ALLOWABLE FDP</span>
-                                            <span id="grid-value-1-maxfdp" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                        <div class="flex items-start justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40 gap-2">
-                                            <span id="grid-label-2-maxfdp" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">EXTENSIONS CREDIT</span>
-                                            <span id="grid-value-2-maxfdp" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                        <div class="flex items-start justify-between text-xs py-1 gap-2">
-                                            <span id="grid-label-3-maxfdp" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">MAX DISCRETION CAP</span>
-                                            <span id="grid-value-3-maxfdp" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- IN-CARD AUDIT OVERLAY CONTAINER -->
-                                    <div id="audit-overlay-maxfdp" class="absolute inset-0 z-30 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-3.5 flex flex-col justify-between hidden shadow-md border border-slate-200 dark:border-slate-700/60">
-                                        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/60 pb-2 shrink-0">
-                                            <div class="flex items-center gap-1.5">
-                                                <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                </svg>
-                                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200">CALCULATION AUDIT & NOTES</span>
-                                            </div>
-                                            <button type="button" class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 text-xs font-bold cursor-pointer" onclick="closeAuditOverlay('maxfdp')">✕</button>
-                                        </div>
-                                        <div id="audit-overlay-content-maxfdp" class="flex-1 my-2 overflow-y-auto space-y-2 no-scrollbar text-xs text-slate-700 dark:text-slate-300">
-                                        </div>
-                                        <div class="pt-2 border-t border-slate-200 dark:border-slate-700/60 shrink-0 flex justify-end">
-                                            <button type="button" class="py-1 px-3 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs font-semibold cursor-pointer" onclick="closeAuditOverlay('maxfdp')">Done</button>
-                                        </div>
-                                    </div>
-
-                                    <div id="output-slot-4-audit-maxfdp" class="px-3.5 pb-3.5 pt-2 bg-white dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-                                        <div class="flex items-start gap-1.5 flex-1 min-w-0">
-                                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0 mt-0.5">AUDIT:</span>
-                                            <p id="output-audit-text-maxfdp" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Table A/B & OM-A Section 7.5.</p>
-                                        </div>
-                                        <button type="button" id="btn-audit-notes-trigger-maxfdp" class="shrink-0 hidden inline-flex items-center gap-1 py-1 px-2.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-600 dark:text-blue-400 text-[10px] font-bold cursor-pointer transition-colors" onclick="openAuditOverlay('maxfdp')"><svg class="w-3 h-3 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg><span>Notes</span></button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- TOOL CARD: PRE-FLIGHT REST -->
-                        <div id="tool-card-preflight" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
-                            <div id="card-3d-inner-pre-flight-rest" class="card-3d-inner w-full h-full relative transform-style-3d">
-                                <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-md select-none">
-                                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
-                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Pre-Flight Rest</span>
-                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-preflight')"> ↺ Reset</button>
-                                    </div>
-
-                                    <div class="flex-1 my-2 overflow-y-auto space-y-2.5 no-scrollbar">
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Preceding Duty</label>
-                                                <button type="button" id="btn-preflight-duty-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbNumberPicker('input-preflight-duty-hours', 'PRECEDING DUTY HOURS', 0, 24)">
-                                                    <span id="btn-preflight-duty-display">10 Hours</span>
-                                                    <span class="text-slate-400 text-[10px]">#</span>
-                                                </button>
-                                                <input type="hidden" id="input-preflight-duty-hours" value="10">
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Duty Location</label>
-                                                <button type="button" id="btn-preflight-loc-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-preflight-location', 'DUTY LOCATION', [{value:'HOME', label:'Home Base (KUL)'}, {value:'OUTSTATION', label:'Outstation'}])">
-                                                    <span id="btn-preflight-loc-display">Home Base (KUL)</span>
-                                                    <span class="text-slate-400 text-[10px]">▼</span>
-                                                </button>
-                                                <input type="hidden" id="input-preflight-location" value="HOME">
-                                            </div>
-                                        </div>
-
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Duty End Time</label>
-                                                <button type="button" id="btn-preflight-duty-end-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-preflight-duty-end-time', 'PRECEDING DUTY END TIME (LOCAL MYT)')">
-                                                    <span id="btn-preflight-duty-end-display">18:00 MYT</span>
-                                                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                    </svg>
-                                                </button>
-                                                <input type="hidden" id="input-preflight-duty-end-time" value="18:00">
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Hotel Travel Time</label>
-                                                <button type="button" id="btn-preflight-travel-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-preflight-travel-time', 'ONE-WAY HOTEL TRAVEL TIME', [{value:'30', label:'30 Mins'}, {value:'45', label:'45 Mins'}, {value:'60', label:'60 Mins'}, {value:'90', label:'90 Mins'}])">
-                                                    <span id="btn-preflight-travel-display">30 Mins</span>
-                                                    <span class="text-slate-400 text-[10px]">▼</span>
-                                                </button>
-                                                <input type="hidden" id="input-preflight-travel-time" value="30">
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Discretion Rest Reduction</label>
-                                            <button type="button" id="btn-preflight-discretion-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-preflight-discretion-reduction', 'DISCRETION REST REDUCTION', [{value:'0', label:'None (0h)'}, {value:'0.5', label:'0.5 Hours'}, {value:'1', label:'1.0 Hour'}])">
-                                                <span id="btn-preflight-discretion-display">None (0h)</span>
-                                                <span class="text-slate-400 text-[10px]">▼</span>
-                                            </button>
-                                            <input type="hidden" id="input-preflight-discretion-reduction" value="0">
-                                        </div>
-
-                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-0.5">Calculates mandatory minimum rest periods, earliest available report timestamp, and outstation additions under CAAM CAD 1901 Section 2.14 and OM-A 7.5.12.</p>
-                                    </div>
-
-                                    <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
-                                        <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('pre-flight-rest')">Check</button>
-                                    </div>
-                                </div>
-
-                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-start">
-                                    <div id="output-slot-1-hero-preflight" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
-                                        <div class="flex items-center justify-between pb-1 shrink-0">
-                                            <span id="output-hero-title-preflight" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">PRE-FLIGHT MINIMUM REST</span>
-                                            <button type="button" class="text-xs font-semibold text-white hover:text-slate-200 transition-colors cursor-pointer" onclick="flipCardBackToInput('preflight')">↺ Edit</button>
-                                        </div>
-                                        <p id="output-hero-subtitle-preflight" class="text-2xl font-black text-white tracking-tight leading-none mt-1">12:00 HOURS</p>
-                                    </div>
-
-                                    <div id="output-slot-2-clock-preflight" class="p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                                        <div>
-                                            <span id="output-clock-label-preflight" class="block text-[10px] font-bold text-slate-500 dark:text-slate-100 uppercase tracking-wider">Earliest Reporting Time:</span>
-                                            <span id="output-clock-value-preflight" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-500 font-sans">06:00 UTC / 14:00 MYT</span>
-                                        </div>
-                                    </div>
-
-                                    <div id="output-slot-3-grid-preflight" class="px-3.5 py-2 bg-white dark:bg-slate-900/50 grid grid-cols-1 gap-3">
-                                        <div class="flex items-start justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40 gap-2">
-                                            <span id="grid-label-1-preflight" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">PRECEDING DUTY</span>
-                                            <span id="grid-value-1-preflight" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                        <div class="flex items-start justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40 gap-2">
-                                            <span id="grid-label-2-preflight" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">TRAVEL ADDITION</span>
-                                            <span id="grid-value-2-preflight" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                        <div class="flex items-start justify-between text-xs py-1 gap-2">
-                                            <span id="grid-label-3-preflight" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">REST REDUCTION</span>
-                                            <span id="grid-value-3-preflight" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                    </div>
-
-                                    <div id="audit-overlay-preflight" class="absolute inset-0 z-30 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-3.5 flex flex-col justify-between hidden shadow-md border border-slate-200 dark:border-slate-700/60">
-                                        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/60 pb-2 shrink-0">
-                                            <div class="flex items-center gap-1.5">
-                                                <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                </svg>
-                                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200">CALCULATION AUDIT & NOTES</span>
-                                            </div>
-                                            <button type="button" class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 text-xs font-bold cursor-pointer" onclick="closeAuditOverlay('preflight')">✕</button>
-                                        </div>
-                                        <div id="audit-overlay-content-preflight" class="flex-1 my-2 overflow-y-auto space-y-2 no-scrollbar text-xs text-slate-700 dark:text-slate-300">
-                                        </div>
-                                        <div class="pt-2 border-t border-slate-200 dark:border-slate-700/60 shrink-0 flex justify-end">
-                                            <button type="button" class="py-1 px-3 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs font-semibold cursor-pointer" onclick="closeAuditOverlay('preflight')">Done</button>
-                                        </div>
-                                    </div>
-
-                                    <div id="output-slot-4-audit-preflight" class="px-3.5 pb-3.5 pt-2 bg-white dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-                                        <div class="flex items-start gap-1.5 flex-1 min-w-0">
-                                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0 mt-0.5">AUDIT:</span>
-                                            <p id="output-audit-text-preflight" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Section 2.14 & OM-A Section 7.5.12.</p>
-                                        </div>
-                                        <button type="button" id="btn-audit-notes-trigger-preflight" class="shrink-0 hidden inline-flex items-center gap-1 py-1 px-2.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-600 dark:text-blue-400 text-[10px] font-bold cursor-pointer transition-colors" onclick="openAuditOverlay('preflight')"><svg class="w-3 h-3 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg><span>Notes</span></button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- TOOL CARD: CUMULATIVE HOURS -->
-                        <div id="tool-card-cumulative" class="tool-card hidden tool-card-3d-wrapper relative w-full h-[350px] perspective-1000">
-                            <div id="card-3d-inner-cumulative" class="card-3d-inner w-full h-full relative transform-style-3d">
-                                <div class="card-front absolute inset-0 w-full h-full backface-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-md select-none">
-                                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
-                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Cumulative Hours</span>
-                                        <button type="button" class="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors cursor-pointer" onclick="resetToolInputs('tool-card-cumulative')"> ↺ Reset</button>
-                                    </div>
-
-                                    <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar">
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">7-Day Duty</label>
-                                                <button type="button" id="btn-cum-7d-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-cum-duty-7d', '7-DAY DUTY HOURS')">
-                                                    <span id="btn-cum-7d-display">55:00</span>
-                                                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                    </svg>
-                                                </button>
-                                                <input type="hidden" id="input-cum-duty-7d" value="55:00">
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">14-Day Duty</label>
-                                                <button type="button" id="btn-cum-14d-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-cum-duty-14d', '14-DAY DUTY HOURS')">
-                                                    <span id="btn-cum-14d-display">95:00</span>
-                                                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                    </svg>
-                                                </button>
-                                                <input type="hidden" id="input-cum-duty-14d" value="95:00">
-                                            </div>
-                                        </div>
-
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">28-Day Duty</label>
-                                                <button type="button" id="btn-cum-28d-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-cum-duty-28d', '28-DAY DUTY HOURS')">
-                                                    <span id="btn-cum-28d-display">190:00</span>
-                                                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                    </svg>
-                                                </button>
-                                                <input type="hidden" id="input-cum-duty-28d" value="190:00">
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">28-Day Flight</label>
-                                                <button type="button" id="btn-cum-flt28d-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbTimePicker('input-cum-flight-28d', '28-DAY FLIGHT HOURS')">
-                                                    <span id="btn-cum-flt28d-display">100:00</span>
-                                                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                    </svg>
-                                                </button>
-                                                <input type="hidden" id="input-cum-flight-28d" value="100:00">
-                                            </div>
-                                        </div>
-
-                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Monitors rolling 7-day, 14-day, 28-day, and annual flight and duty limits against CAAM CAD 1901 regulations.</p>
-                                    </div>
-
-                                    <div class="shrink-0 pt-2 border-t border-slate-100 dark:border-slate-800">
-                                        <button type="button" class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-[0.98] cursor-pointer text-center" onclick="executeAndFlipCard('cumulative')">Check</button>
-                                    </div>
-                                </div>
-
-                                <div class="card-back absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md select-none flex flex-col justify-start">
-                                    <div id="output-slot-1-hero-cumulative" class="p-4 bg-emerald-500 text-white transition-colors duration-300 rounded-t-2xl">
-                                        <div class="flex items-center justify-between pb-1 shrink-0">
-                                            <span id="output-hero-title-cumulative" class="text-[12px] font-extrabold uppercase tracking-wide text-white/80 mt-2 block">7-DAY CUMULATIVE DUTY</span>
-                                            <button type="button" class="text-xs font-semibold text-white hover:text-slate-200 transition-colors cursor-pointer" onclick="flipCardBackToInput('cumulative')">↺ Edit</button>
-                                        </div>
-                                        <p id="output-hero-subtitle-cumulative" class="text-2xl font-black text-white tracking-tight leading-none mt-1">32:15 / 55:00</p>
-                                    </div>
-
-                                    <div id="output-slot-2-clock-cumulative" class="p-3.5 bg-emerald-100 dark:bg-emerald-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                                        <div>
-                                            <span id="output-clock-label-cumulative" class="block text-[10px] font-bold text-slate-500 dark:text-slate-100 uppercase tracking-wider">7-Day Rolling Duty Budget:</span>
-                                            <span id="output-clock-value-cumulative" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-500 font-sans">22:45 Hours Margin Remaining</span>
-                                        </div>
-                                    </div>
-
-                                    <div id="output-slot-3-grid-cumulative" class="px-3.5 py-2 bg-white dark:bg-slate-900/50 grid grid-cols-1 gap-3">
-                                        <div class="flex items-start justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40 gap-2">
-                                            <span id="grid-label-1-cumulative" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">14-DAY DUTY (CAP 95H)</span>
-                                            <span id="grid-value-1-cumulative" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                        <div class="flex items-start justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-700/40 gap-2">
-                                            <span id="grid-label-2-cumulative" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">28-DAY DUTY (CAP 190H)</span>
-                                            <span id="grid-value-2-cumulative" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                        <div class="flex items-start justify-between text-xs py-1 gap-2">
-                                            <span id="grid-label-3-cumulative" class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider shrink-0">28-DAY FLIGHT (CAP 100H)</span>
-                                            <span id="grid-value-3-cumulative" class="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans text-right whitespace-pre-line">--</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- IN-CARD AUDIT OVERLAY CONTAINER -->
-                                    <div id="audit-overlay-cumulative" class="absolute inset-0 z-30 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-3.5 flex flex-col justify-between hidden shadow-md border border-slate-200 dark:border-slate-700/60">
-                                        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/60 pb-2 shrink-0">
-                                            <div class="flex items-center gap-1.5">
-                                                <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                </svg>
-                                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200">CALCULATION AUDIT & NOTES</span>
-                                            </div>
-                                            <button type="button" class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 text-xs font-bold cursor-pointer" onclick="closeAuditOverlay('cumulative')">✕</button>
-                                        </div>
-                                        <div id="audit-overlay-content-cumulative" class="flex-1 my-2 overflow-y-auto space-y-2 no-scrollbar text-xs text-slate-700 dark:text-slate-300">
-                                        </div>
-                                        <div class="pt-2 border-t border-slate-200 dark:border-slate-700/60 shrink-0 flex justify-end">
-                                            <button type="button" class="py-1 px-3 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs font-semibold cursor-pointer" onclick="closeAuditOverlay('cumulative')">Done</button>
-                                        </div>
-                                    </div>
-
-                                    <div id="output-slot-4-audit-cumulative" class="px-3.5 pb-3.5 pt-2 bg-white dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-                                        <div class="flex items-start gap-1.5 flex-1 min-w-0">
-                                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0 mt-0.5">AUDIT:</span>
-                                            <p id="output-audit-text-cumulative" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-snug">Grounded in CAAM CAD 1901 Rolling Flight & Duty Time Caps.</p>
-                                        </div>
-                                        <button type="button" id="btn-audit-notes-trigger-cumulative" class="shrink-0 hidden inline-flex items-center gap-1 py-1 px-2.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-600 dark:text-blue-400 text-[10px] font-bold cursor-pointer transition-colors" onclick="openAuditOverlay('cumulative')"><svg class="w-3 h-3 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg><span>Notes</span></button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <!-- Footer -->
-        <footer class="text-center pt-6 pb-20 text-[9px] text-slate-500 dark:text-slate-400 mt-auto uppercase tracking-widest font-semibold">
-            &copy; 2026 CertiFly • v2.0 (beta)
-        </footer>
-
-    </div> <!-- /max-w-md mx-auto wrapper -->
-
-    <!-- ================================================================= -->
-    <!-- MODAL OVERLAYS & DRAWERS                                          -->
-    <!-- ================================================================= -->
-
-    <!-- RECURRENT COURSE SELECTOR MODAL -->
-    <div id="recurrent-course-modal" class="fixed inset-0 z-[70] hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 select-none" onclick="if(event.target === this) closeRecurrentCourseModal()">
-        <div class="w-11/12 max-w-[340px] mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-h-[75vh] my-auto flex flex-col overflow-hidden shadow-md">
-            <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-900/90">
-                <div>
-                    <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">QUALIFICATION SELECTOR</span>
-                    <h3 class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase">Select Qualification Module</h3>
-                </div>
-            </div>
-
-            <div class="p-3.5 overflow-y-auto space-y-4 flex-1 text-xs text-slate-700 dark:text-slate-300 no-scrollbar">
-
-                <!-- GROUP 1: ANNUAL (12 CALENDAR MONTHS) -->
-                <div class="recurrent-group-block space-y-2">
-                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
-                        <span class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest">ANNUAL (12 CALENDAR MONTHS)</span>
-                        <span class="text-[9px] font-bold text-blue-600 dark:text-blue-400">6 Modules</span>
-                    </div>
-                    <div class="grid grid-cols-1 gap-1.5">
-                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('LINE_CHECK', 'Line Check (LC)', 'Annual (12 Calendar Months)')">
-                            <span class="font-bold text-slate-800 dark:text-slate-100">Line Check (LC)</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30">12m</span>
-                        </button>
-
-                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('SEP_AIRCRAFT_TYPE', 'SEP Type', 'Annual (12 Calendar Months)')">
-                            <span class="font-bold text-slate-800 dark:text-slate-100">SEP Type</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30">12m</span>
-                        </button>
-
-                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('DOOR_DRILL', 'Door Drill', 'Annual (12 Calendar Months)')">
-                            <span class="font-bold text-slate-800 dark:text-slate-100">Door Drill</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30">12m</span>
-                        </button>
-
-                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('CRM', 'CRM', 'Annual (12 Calendar Months)')">
-                            <span class="font-bold text-slate-800 dark:text-slate-100">CRM</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30">12m</span>
-                        </button>
-
-                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('AVSEC', 'AVSEC', 'Annual (12 Calendar Months)')">
-                            <span class="font-bold text-slate-800 dark:text-slate-100">AVSEC</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30">12m</span>
-                        </button>
-
-                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('ROUTE_AERODROME_COMPETENCE', 'Route & Aerodrome', 'Annual (12 Calendar Months)')">
-                            <span class="font-bold text-slate-800 dark:text-slate-100">Route &amp; Aerodrome</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30">12m</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- GROUP 2: BI-ANNUAL (24 CALENDAR MONTHS) -->
-                <div class="recurrent-group-block space-y-2">
-                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
-                        <span class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest">BI-ANNUAL (24 CALENDAR MONTHS)</span>
-                        <span class="text-[9px] font-bold text-purple-600 dark:text-purple-400">1 Module</span>
-                    </div>
-                    <div class="grid grid-cols-1 gap-1.5">
-                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-purple-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-purple-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('DGR_FUNCTION_7', 'DGR (Function 7)', 'Bi-Annual (24 Calendar Months)')">
-                            <span class="font-bold text-slate-800 dark:text-slate-100">DGR (Function 7)</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/30">24m</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- GROUP 3: TRIENNIAL (36 CALENDAR MONTHS) -->
-                <div class="recurrent-group-block space-y-2">
-                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
-                        <span class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest">TRIENNIAL (36 CALENDAR MONTHS)</span>
-                        <span class="text-[9px] font-bold text-amber-600 dark:text-amber-400">3 Modules</span>
-                    </div>
-                    <div class="grid grid-cols-1 gap-1.5">
-                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-amber-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('FIRE_SMOKE_DRILL', 'Fire Drill', 'Triennial (36 Calendar Months)')">
-                            <span class="font-bold text-slate-800 dark:text-slate-100">Fire Drill</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">36m</span>
-                        </button>
-
-                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-amber-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('SMS', 'SMS', 'Triennial (36 Calendar Months)')">
-                            <span class="font-bold text-slate-800 dark:text-slate-100">SMS</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">36m</span>
-                        </button>
-
-                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-amber-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('WET_DITCHING_DRILL', 'Dinghy / Wet Drill', 'Triennial (36 Calendar Months)')">
-                            <span class="font-bold text-slate-800 dark:text-slate-100">Dinghy / Wet Drill</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">36m</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- GROUP 4: SEMI-ANNUAL (180-DAY ROLLING) -->
-                <div class="recurrent-group-block space-y-2">
-                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
-                        <span class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest">SEMI-ANNUAL (180-DAY ROLLING)</span>
-                        <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">1 Module</span>
-                    </div>
-                    <div class="grid grid-cols-1 gap-1.5">
-                        <button type="button" class="recurrent-item-card w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-emerald-500/10 text-left transition-all flex items-center justify-between cursor-pointer" onclick="selectRecurrentCourse('LVO_AUTOLAND', 'LVO / Autoland', 'Semi-Annual (180-Day Rolling)')">
-                            <span class="font-bold text-slate-800 dark:text-slate-100">LVO / Autoland</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30">180d</span>
-                        </button>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="p-2.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 flex items-center justify-end">
-                <button type="button" class="py-1.5 px-4 rounded-xl text-xs font-bold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 transition-all cursor-pointer" onclick="closeRecurrentCourseModal()">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- EFB DATE PICKER MODAL -->
-    <div id="efb-date-picker-modal" class="fixed inset-0 z-[70] hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 select-none" onclick="if(event.target === this) closeEfbDatePicker()">
-        <div class="w-11/12 max-w-[320px] mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md my-auto flex flex-col overflow-hidden">
-            <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/90">
-                <div>
-                    <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">EFB DATE PICKER</span>
-                    <h3 id="efb-date-picker-title" class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase">SELECT DATE</h3>
-                </div>
-            </div>
-
-            <div class="p-2.5 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/40 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-                <button type="button" class="py-1 px-2.5 rounded-lg text-[10px] font-bold bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30 hover:bg-blue-500/20 transition-all shrink-0 cursor-pointer" onclick="setEfbDatePreset('today')">Today</button>
-                <button type="button" class="py-1 px-2.5 rounded-lg text-[10px] font-bold bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition-all shrink-0 cursor-pointer" onclick="setEfbDatePreset('eom')">End of Month</button>
-                <button type="button" class="py-1 px-2.5 rounded-lg text-[10px] font-bold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-300 transition-all shrink-0 cursor-pointer" onclick="setEfbDatePreset('+1y')">+1 Year</button>
-                <button type="button" class="py-1 px-2.5 rounded-lg text-[10px] font-bold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-300 transition-all shrink-0 cursor-pointer" onclick="setEfbDatePreset('-1y')">-1 Year</button>
-            </div>
-
-            <div class="p-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
-                <button type="button" class="py-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold transition-all cursor-pointer" onclick="changeEfbMonth(-1)">◄ Prev</button>
-                <button type="button" id="efb-calendar-month-label" class="py-1 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold transition-all cursor-pointer select-none text-center" onclick="openEfbYearSelectModal()">OCTOBER 2026</button>
-                <button type="button" class="py-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold transition-all cursor-pointer" onclick="changeEfbMonth(1)">Next ►</button>
-            </div>
-
-            <div class="p-3">
-                <div class="grid grid-cols-7 gap-1 text-center text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase mb-2">
-                    <span>MO</span><span>TU</span><span>WE</span><span>TH</span><span>FR</span><span>SA</span><span>SU</span>
-                </div>
-                <div id="efb-calendar-days-grid" class="grid grid-cols-7 gap-1 text-center text-xs font-bold"></div>
-            </div>
-
-            <div class="p-2.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 flex items-center justify-end">
-                <button type="button" class="py-1.5 px-4 rounded-xl text-xs font-bold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 transition-all cursor-pointer" onclick="closeEfbDatePicker()">Cancel</button>
-            </div>
-        </div>
-    </div>
-    <script src="js/vendor/anime.min.js"></script>
-    <script type="module" src="js/animations.js"></script>
-    <script type="module" src="js/festiveEngine.js"></script>
-    <script type="module" src="main.js"></script>
-
-    <!-- CUSTOM EFB TIME PICKER MODAL -->
-    <div id="efb-time-picker-modal" class="fixed inset-0 z-[70] hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 select-none" onclick="if(event.target === this) closeEfbTimePicker()">
-        <div class="w-11/12 max-w-[320px] mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md flex flex-col overflow-hidden">
-            <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/90">
-                <div>
-                    <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">EFB TIME PICKER</span>
-                    <h3 id="efb-time-picker-title" class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase">SELECT TIME</h3>
-                </div>
-                <button type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 text-xs font-bold cursor-pointer" onclick="closeEfbTimePicker()">✕</button>
-            </div>
-
-            <div class="p-4 space-y-4">
-                <div class="flex items-center justify-center gap-3">
-                    <div class="flex flex-col items-center">
-                        <span class="text-[9px] font-bold text-slate-400 mb-1">HOURS</span>
-                        <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
-                            <button type="button" class="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-sm shadow-xs active:scale-95 cursor-pointer" onclick="stepEfbTimeHour(-1)">-</button>
-                            <span id="efb-time-val-hh" class="w-10 text-center font-bold text-base text-blue-600 dark:text-blue-400">08</span>
-                            <button type="button" class="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-sm shadow-xs active:scale-95 cursor-pointer" onclick="stepEfbTimeHour(1)">+</button>
-                        </div>
-                    </div>
-                    <span class="text-xl font-bold text-slate-400 pt-3">:</span>
-                    <div class="flex flex-col items-center">
-                        <span class="text-[9px] font-bold text-slate-400 mb-1">MINUTES</span>
-                        <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
-                            <button type="button" class="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-sm shadow-xs active:scale-95 cursor-pointer" onclick="stepEfbTimeMin(-5)">-</button>
-                            <span id="efb-time-val-mm" class="w-10 text-center font-bold text-base text-blue-600 dark:text-blue-400">00</span>
-                            <button type="button" class="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-sm shadow-xs active:scale-95 cursor-pointer" onclick="stepEfbTimeMin(5)">+</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="efb-time-presets-grid" class="grid grid-cols-4 gap-1.5 pt-1">
-                    <button type="button" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer" onclick="setEfbTimePreset('03:00')">03:00</button>
-                    <button type="button" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer" onclick="setEfbTimePreset('06:00')">06:00</button>
-                    <button type="button" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer" onclick="setEfbTimePreset('12:00')">12:00</button>
-                    <button type="button" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer" onclick="setEfbTimePreset('16:00')">16:00</button>
-                </div>
-            </div>
-
-            <div class="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex justify-end gap-2">
-                <button type="button" class="py-1.5 px-3 rounded-xl text-xs font-semibold text-slate-500 cursor-pointer" onclick="closeEfbTimePicker()">Cancel</button>
-                <button type="button" class="py-1.5 px-4 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-xs cursor-pointer" onclick="confirmEfbTimePicker()">Confirm Time</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- CUSTOM EFB SELECT OPTION MODAL -->
-    <div id="efb-select-option-modal" class="fixed inset-0 z-[70] hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 select-none" onclick="if(event.target === this) closeEfbSelectModal()">
-        <div class="w-11/12 max-w-[340px] mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-h-[75vh] flex flex-col overflow-hidden shadow-md">
-            <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/90">
-                <div>
-                    <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">EFB OPTION SELECTOR</span>
-                    <h3 id="efb-select-title" class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase">CHOOSE OPTION</h3>
-                </div>
-                <button type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 text-xs font-bold cursor-pointer" onclick="closeEfbSelectModal()">✕</button>
-            </div>
-
-            <div id="efb-select-options-list" class="p-3 overflow-y-auto space-y-2 flex-1">
-                <!-- Dynamic Option Cards -->
-            </div>
-        </div>
-    </div>
-
-    <!-- CUSTOM EFB NUMBER STEPPER MODAL -->
-    <div id="efb-number-picker-modal" class="fixed inset-0 z-[70] hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 select-none" onclick="if(event.target === this) closeEfbNumberPicker()">
-        <div class="w-11/12 max-w-[300px] mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md flex flex-col overflow-hidden">
-            <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/90">
-                <div>
-                    <span class="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">EFB NUMBER STEPPER</span>
-                    <h3 id="efb-number-title" class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase">SET VALUE</h3>
-                </div>
-                <button type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 text-xs font-bold cursor-pointer" onclick="closeEfbNumberPicker()">✕</button>
-            </div>
-
-            <div class="p-4 flex flex-col items-center justify-center space-y-3">
-                <div class="flex items-center gap-3 bg-slate-100 dark:bg-slate-800 p-2 rounded-2xl border border-slate-200 dark:border-slate-700">
-                    <button type="button" class="w-10 h-10 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-lg shadow-xs active:scale-95 cursor-pointer" onclick="stepEfbNumberVal(-1)">-</button>
-                    <span id="efb-number-display-val" class="w-14 text-center font-bold text-xl text-blue-600 dark:text-blue-400">2</span>
-                    <button type="button" class="w-10 h-10 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-lg shadow-xs active:scale-95 cursor-pointer" onclick="stepEfbNumberVal(1)">+</button>
-                </div>
-            </div>
-
-            <div class="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex justify-end gap-2">
-                <button type="button" class="py-1.5 px-3 rounded-xl text-xs font-semibold text-slate-500 cursor-pointer" onclick="closeEfbNumberPicker()">Cancel</button>
-                <button type="button" class="py-1.5 px-4 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-xs cursor-pointer" onclick="confirmEfbNumberPicker()">Set Value</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        if (/[?&]debug=1/.test(location.search)) {
-            var s = document.createElement('script');
-            s.src = 'https://cdn.jsdelivr.net/npm/eruda';
-            s.onload = function() {
-                eruda.init();
-            };
-            document.head.appendChild(s);
-        }
-    </script>
-
-    <!-- EFB MAX FDP FLIGHT MODIFIERS MODAL -->
-    <!-- EFB MAX FDP FLIGHT MODIFIERS MODAL -->
-    <div id="efb-maxfdp-modifiers-modal" class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md hidden select-none" onclick="if(event.target === this) closeMaxFdpModifiersModal()">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-sm p-4 shadow-md flex flex-col justify-between max-h-[85vh] overflow-hidden">
-            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
-                <div class="flex items-center gap-2">
-                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
-                    </svg>
-                    <span class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Flight Modifiers</span>
-                </div>
-                <button type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold cursor-pointer" onclick="closeMaxFdpModifiersModal()">✕</button>
-            </div>
-
-            <div class="flex-1 my-3 overflow-y-auto space-y-3 no-scrollbar text-xs">
-                <!-- 1. LONGEST SECTOR DURATION -->
-                <div>
-                    <label class="block font-medium text-slate-500 dark:text-slate-400 mb-1">Longest Sector Duration</label>
-                    <button type="button" id="btn-modal-maxfdp-longest-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer transition-all" onclick="toggleModifierAccordion('modal-maxfdp-longest-sector')">
-                        <span id="btn-modal-maxfdp-longest-display">Standard Sector (&lt; 7h)</span>
-                        <span id="arrow-modal-maxfdp-longest-sector" class="text-slate-400 text-[10px] transition-transform duration-200">▼</span>
-                    </button>
-                    <input type="hidden" id="modal-maxfdp-longest-sector" value="0">
-
-                    <div id="accordion-modal-maxfdp-longest-sector" class="hidden mt-1.5 p-1.5 space-y-1 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 transition-all">
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-longest-sector" data-value="0" data-label="Standard Sector (&lt; 7h)" onclick="selectModifierInlineOption('modal-maxfdp-longest-sector', '0', 'Standard Sector (&lt; 7h)')">
-                            <span>Standard Sector (&lt; 7h)</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-longest-sector" data-value="8" data-label="Long Sector (&gt; 7h to 9h)" onclick="selectModifierInlineOption('modal-maxfdp-longest-sector', '8', 'Long Sector (&gt; 7h to 9h)')">
-                            <span>Long Sector (&gt; 7h to 9h)</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-longest-sector" data-value="10" data-label="Extended Sector (&gt; 9h to 11h)" onclick="selectModifierInlineOption('modal-maxfdp-longest-sector', '10', 'Extended Sector (&gt; 9h to 11h)')">
-                            <span>Extended Sector (&gt; 9h to 11h)</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-longest-sector" data-value="12" data-label="Ultra Long Sector (&gt; 11h)" onclick="selectModifierInlineOption('modal-maxfdp-longest-sector', '12', 'Ultra Long Sector (&gt; 11h)')">
-                            <span>Ultra Long Sector (&gt; 11h)</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 2. SPLIT DUTY GROUND REST -->
-                <div>
-                    <label class="block font-medium text-slate-500 dark:text-slate-400 mb-1">Split Duty Ground Rest</label>
-                    <button type="button" id="btn-modal-maxfdp-split-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer transition-all" onclick="toggleModifierAccordion('modal-maxfdp-split-rest')">
-                        <span id="btn-modal-maxfdp-split-display">None (0h)</span>
-                        <span id="arrow-modal-maxfdp-split-rest" class="text-slate-400 text-[10px] transition-transform duration-200">▼</span>
-                    </button>
-                    <input type="hidden" id="modal-maxfdp-split-rest" value="0">
-
-                    <div id="accordion-modal-maxfdp-split-rest" class="hidden mt-1.5 p-1.5 space-y-1 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 transition-all">
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-split-rest" data-value="0" data-label="None (0h)" onclick="selectModifierInlineOption('modal-maxfdp-split-rest', '0', 'None (0h)')">
-                            <span>None (0h)</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-split-rest" data-value="3.5" data-label="3.5 Hours Ground Rest" onclick="selectModifierInlineOption('modal-maxfdp-split-rest', '3.5', '3.5 Hours Ground Rest')">
-                            <span>3.5 Hours Ground Rest</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-split-rest" data-value="4" data-label="4.0 Hours Ground Rest" onclick="selectModifierInlineOption('modal-maxfdp-split-rest', '4', '4.0 Hours Ground Rest')">
-                            <span>4.0 Hours Ground Rest</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-split-rest" data-value="5" data-label="5.0 Hours Ground Rest" onclick="selectModifierInlineOption('modal-maxfdp-split-rest', '5', '5.0 Hours Ground Rest')">
-                            <span>5.0 Hours Ground Rest</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-split-rest" data-value="6" data-label="6.0+ Hours Ground Rest" onclick="selectModifierInlineOption('modal-maxfdp-split-rest', '6', '6.0+ Hours Ground Rest')">
-                            <span>6.0+ Hours Ground Rest</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 3. IN-FLIGHT REST TAKEN -->
-                <div>
-                    <label class="block font-medium text-slate-500 dark:text-slate-400 mb-1">In-Flight Rest Taken (Hours)</label>
-                    <button type="button" id="btn-modal-maxfdp-inflight-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer transition-all" onclick="toggleModifierAccordion('modal-maxfdp-inflight-rest')">
-                        <span id="btn-modal-maxfdp-inflight-display">0.0 Hours</span>
-                        <span id="arrow-modal-maxfdp-inflight-rest" class="text-slate-400 text-[10px] transition-transform duration-200">▼</span>
-                    </button>
-                    <input type="hidden" id="modal-maxfdp-inflight-rest" value="0">
-
-                    <div id="accordion-modal-maxfdp-inflight-rest" class="hidden mt-1.5 p-1.5 space-y-1 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 transition-all">
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-inflight-rest" data-value="0" data-label="0.0 Hours" onclick="selectModifierInlineOption('modal-maxfdp-inflight-rest', '0', '0.0 Hours')">
-                            <span>0.0 Hours</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-inflight-rest" data-value="3" data-label="3.0 Hours Rest" onclick="selectModifierInlineOption('modal-maxfdp-inflight-rest', '3', '3.0 Hours Rest')">
-                            <span>3.0 Hours Rest</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-inflight-rest" data-value="3.5" data-label="3.5 Hours Rest" onclick="selectModifierInlineOption('modal-maxfdp-inflight-rest', '3.5', '3.5 Hours Rest')">
-                            <span>3.5 Hours Rest</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-inflight-rest" data-value="4" data-label="4.0 Hours Rest" onclick="selectModifierInlineOption('modal-maxfdp-inflight-rest', '4', '4.0 Hours Rest')">
-                            <span>4.0 Hours Rest</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-inflight-rest" data-value="4.5" data-label="4.5 Hours Rest" onclick="selectModifierInlineOption('modal-maxfdp-inflight-rest', '4.5', '4.5 Hours Rest')">
-                            <span>4.5 Hours Rest</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-inflight-rest" data-value="5" data-label="5.0 Hours Rest" onclick="selectModifierInlineOption('modal-maxfdp-inflight-rest', '5', '5.0 Hours Rest')">
-                            <span>5.0 Hours Rest</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-inflight-rest" data-value="5.5" data-label="5.5 Hours Rest" onclick="selectModifierInlineOption('modal-maxfdp-inflight-rest', '5.5', '5.5 Hours Rest')">
-                            <span>5.5 Hours Rest</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-inflight-rest" data-value="6" data-label="6.0 Hours Rest" onclick="selectModifierInlineOption('modal-maxfdp-inflight-rest', '6', '6.0 Hours Rest')">
-                            <span>6.0 Hours Rest</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 4. FLIGHT CREW COMPLEMENT -->
-                <div>
-                    <label class="block font-medium text-slate-500 dark:text-slate-400 mb-1">Flight Crew Complement</label>
-                    <button type="button" id="btn-modal-maxfdp-crew-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer transition-all" onclick="toggleModifierAccordion('modal-maxfdp-crew-count')">
-                        <span id="btn-modal-maxfdp-crew-display">2 Pilots (Standard Crew)</span>
-                        <span id="arrow-modal-maxfdp-crew-count" class="text-slate-400 text-[10px] transition-transform duration-200">▼</span>
-                    </button>
-                    <input type="hidden" id="modal-maxfdp-crew-count" value="2">
-
-                    <div id="accordion-modal-maxfdp-crew-count" class="hidden mt-1.5 p-1.5 space-y-1 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 transition-all">
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-crew-count" data-value="2" data-label="2 Pilots (Standard Crew)" onclick="selectModifierInlineOption('modal-maxfdp-crew-count', '2', '2 Pilots (Standard Crew)')">
-                            <span>2 Pilots (Standard Crew)</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-crew-count" data-value="3" data-label="3 Pilots (Augmented Crew)" onclick="selectModifierInlineOption('modal-maxfdp-crew-count', '3', '3 Pilots (Augmented Crew)')">
-                            <span>3 Pilots (Augmented Crew)</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-crew-count" data-value="4" data-label="4 Pilots (Double Crew)" onclick="selectModifierInlineOption('modal-maxfdp-crew-count', '4', '4 Pilots (Double Crew)')">
-                            <span>4 Pilots (Double Crew)</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 5. PRECEDING REST -->
-                <div>
-                    <label class="block font-medium text-slate-500 dark:text-slate-400 mb-1">Preceding Rest (Unacclimatised Only)</label>
-                    <button type="button" id="btn-modal-maxfdp-preceding-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer transition-all" onclick="toggleModifierAccordion('modal-maxfdp-preceding-rest')">
-                        <span id="btn-modal-maxfdp-preceding-display">Up to 18h OR Over 30h</span>
-                        <span id="arrow-modal-maxfdp-preceding-rest" class="text-slate-400 text-[10px] transition-transform duration-200">▼</span>
-                    </button>
-                    <input type="hidden" id="modal-maxfdp-preceding-rest" value="UP_TO_18_OR_OVER_30">
-
-                    <div id="accordion-modal-maxfdp-preceding-rest" class="hidden mt-1.5 p-1.5 space-y-1 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 transition-all">
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-preceding-rest" data-value="UP_TO_18_OR_OVER_30" data-label="Up to 18h OR Over 30h" onclick="selectModifierInlineOption('modal-maxfdp-preceding-rest', 'UP_TO_18_OR_OVER_30', 'Up to 18h OR Over 30h')">
-                            <span>Up to 18h OR Over 30h</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                        <button type="button" class="modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600" data-param="modal-maxfdp-preceding-rest" data-value="BETWEEN_18_AND_30" data-label="Between 18h and 30h" onclick="selectModifierInlineOption('modal-maxfdp-preceding-rest', 'BETWEEN_18_AND_30', 'Between 18h and 30h')">
-                            <span>Between 18h and 30h</span>
-                            <span class="badge-selected text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hidden">SELECTED</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex gap-2 shrink-0">
-                <button type="button" class="w-1/2 py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-center" onclick="closeMaxFdpModifiersModal()">Cancel</button>
-                <button type="button" class="w-1/2 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md cursor-pointer text-center" onclick="confirmMaxFdpModifiers()">Save Modifiers</button>
-            </div>
-        </div>
-    </div>
-
-
-</body>
-
-</html>
+function resetFlappyGame() {
+  bird.y = (flappyCanvas ? flappyCanvas.height / 2 : 150);
+  bird.vy = 0;
+  pipes = [];
+  particles = [];
+  score = 0;
+  frameCount = 0;
+  gameState = 'START';
+}
+
+function flap() {
+  if (gameState === 'START') {
+    gameState = 'PLAYING';
+    bird.vy = bird.lift;
+    createParticles(bird.x, bird.y, 8);
+  } else if (gameState === 'PLAYING') {
+    bird.vy = bird.lift;
+    createParticles(bird.x - 10, bird.y, 6);
+  } else if (gameState === 'GAMEOVER') {
+    resetFlappyGame();
+    gameState = 'PLAYING';
+    bird.vy = bird.lift;
+  }
+}
+
+function createParticles(x, y, count) {
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: x,
+      y: y + (Math.random() * 8 - 4),
+      vx: -2 - Math.random() * 3,
+      vy: Math.random() * 2 - 1,
+      size: 3 + Math.random() * 3,
+      alpha: 1,
+      color: Math.random() > 0.4 ? '#38BDF8' : '#F97316'
+    });
+  }
+}
+
+function updateFlappy() {
+  if (gameState !== 'PLAYING') return;
+
+  frameCount++;
+  bird.vy += bird.gravity;
+  bird.y += bird.vy;
+
+  // Update particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    let p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.alpha -= 0.04;
+    if (p.alpha <= 0) particles.splice(i, 1);
+  }
+
+  // Spawn obstacles (Storm Cloud Pylons)
+  if (frameCount % 90 === 0) {
+    const gap = 120;
+    const minHeight = 40;
+    const maxHeight = flappyCanvas.height - gap - minHeight;
+    const topHeight = Math.floor(Math.random() * (maxHeight - minHeight + 1)) + minHeight;
+
+    pipes.push({
+      x: flappyCanvas.width,
+      top: topHeight,
+      bottom: flappyCanvas.height - topHeight - gap,
+      width: 44,
+      passed: false
+    });
+  }
+
+  // Move & Collide Pipes
+  for (let i = pipes.length - 1; i >= 0; i--) {
+    let p = pipes[i];
+    p.x -= 2.2;
+
+    // Score increment
+    if (!p.passed && p.x + p.width < bird.x) {
+      p.passed = true;
+      score++;
+      if (score > highScore) {
+        highScore = score;
+        try { localStorage.setItem('certifly_flappy_high_score', highScore.toString()); } catch (e) {}
+      }
+    }
+
+    # Collision detection
+    if (
+      bird.x + bird.radius > p.x &&
+      bird.x - bird.radius < p.x + p.width &&
+      (bird.y - bird.radius < p.top || bird.y + bird.radius > flappyCanvas.height - p.bottom)
+    ) {
+      triggerGameOver();
+    }
+
+    if (p.x + p.width < 0) {
+      pipes.splice(i, 1);
+    }
+  }
+
+  # Ceiling & Floor Bounds
+  if (bird.y + bird.radius >= flappyCanvas.height - 15) {
+    bird.y = flappyCanvas.height - 15 - bird.radius;
+    triggerGameOver();
+  }
+  if (bird.y - bird.radius <= 0) {
+    bird.y = bird.radius;
+    bird.vy = 0;
+  }
+}
+
+function triggerGameOver() {
+  gameState = 'GAMEOVER';
+  createParticles(bird.x, bird.y, 20);
+}
+
+function drawFlappy() {
+  if (!flappyCtx || !flappyCanvas) return;
+  const w = flappyCanvas.width;
+  const h = flappyCanvas.height;
+
+  # Background (Twilight Sky Gradient)
+  const bgGrad = flappyCtx.createLinearGradient(0, 0, 0, h);
+  bgGrad.addColorStop(0, '#0F172A');
+  bgGrad.addColorStop(0.6, '#1E293B');
+  bgGrad.addColorStop(1, '#0F172A');
+  flappyCtx.fillStyle = bgGrad;
+  flappyCtx.fillRect(0, 0, w, h);
+
+  # Stars / Cloud Particles in Background
+  flappyCtx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+  for (let i = 0; i < 15; i++) {
+    const sx = (i * 27 + frameCount * 0.3) % w;
+    const sy = (i * 19) % (h * 0.7);
+    flappyCtx.fillRect(sx, sy, 2, 2);
+  }
+
+  # Draw Particles (Exhaust trail)
+  particles.forEach(p => {
+    flappyCtx.save();
+    flappyCtx.globalAlpha = Math.max(0, p.alpha);
+    flappyCtx.fillStyle = p.color;
+    flappyCtx.beginPath();
+    flappyCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    flappyCtx.fill();
+    flappyCtx.restore();
+  });
+
+  # Draw Obstacles (Storm Pylons)
+  pipes.forEach(p => {
+    # Top Pipe / Cloud Pylon
+    const pGrad = flappyCtx.createLinearGradient(p.x, 0, p.x + p.width, 0);
+    pGrad.addColorStop(0, '#1E3A8A');
+    pGrad.addColorStop(0.5, '#3B82F6');
+    pGrad.addColorStop(1, '#1D4ED8');
+
+    flappyCtx.fillStyle = pGrad;
+    flappyCtx.fillRect(p.x, 0, p.width, p.top);
+    flappyCtx.fillRect(p.x, h - p.bottom, p.width, p.bottom);
+
+    # Caps
+    flappyCtx.fillStyle = '#60A5FA';
+    flappyCtx.fillRect(p.x - 3, p.top - 12, p.width + 6, 12);
+    flappyCtx.fillRect(p.x - 3, h - p.bottom, p.width + 6, 12);
+  });
+
+  # Draw Ground Line
+  flappyCtx.fillStyle = '#334155';
+  flappyCtx.fillRect(0, h - 15, w, 15);
+  flappyCtx.fillStyle = '#38BDF8';
+  flappyCtx.fillRect(0, h - 15, w, 2);
+
+  # Draw Aircraft (Jet)
+  flappyCtx.save();
+  flappyCtx.translate(bird.x, bird.y);
+
+  let angle = Math.min(Math.max(bird.vy * 0.07, -0.4), 0.6);
+  flappyCtx.rotate(angle);
+
+  # Wings
+  flappyCtx.fillStyle = '#64748B';
+  flappyCtx.beginPath();
+  flappyCtx.moveTo(-6, -2);
+  flappyCtx.lineTo(-14, -10);
+  flappyCtx.lineTo(-2, -2);
+  flappyCtx.closePath();
+  flappyCtx.fill();
+
+  # Main Jet Body
+  flappyCtx.fillStyle = '#F8FAFC';
+  flappyCtx.beginPath();
+  flappyCtx.ellipse(0, 0, 15, 8, 0, 0, Math.PI * 2);
+  flappyCtx.fill();
+
+  # Cockpit Canopy
+  flappyCtx.fillStyle = '#38BDF8';
+  flappyCtx.beginPath();
+  flappyCtx.ellipse(4, -3, 6, 4, 0, 0, Math.PI * 2);
+  flappyCtx.fill();
+
+  # Red Tail Fin
+  flappyCtx.fillStyle = '#EF4444';
+  flappyCtx.beginPath();
+  flappyCtx.moveTo(-10, 0);
+  flappyCtx.lineTo(-16, -11);
+  flappyCtx.lineTo(-6, -3);
+  flappyCtx.closePath();
+  flappyCtx.fill();
+
+  flappyCtx.restore();
+
+  # UI Overlay: Score
+  flappyCtx.fillStyle = '#FFFFFF';
+  flappyCtx.font = 'bold 20px sans-serif';
+  flappyCtx.textAlign = 'center';
+
+  if (gameState === 'PLAYING') {
+    flappyCtx.fillText(score.toString(), w / 2, 36);
+  } else if (gameState === 'START') {
+    flappyCtx.fillStyle = '#38BDF8';
+    flappyCtx.font = 'black 22px sans-serif';
+    flappyCtx.fillText('FLAPPY PILOT', w / 2, h / 2 - 35);
+
+    flappyCtx.fillStyle = '#F8FAFC';
+    flappyCtx.font = '12px sans-serif';
+    flappyCtx.fillText('Tap Screen or Press Space to Take Off', w / 2, h / 2 + 10);
+
+    if (highScore > 0) {
+      flappyCtx.fillStyle = '#94A3B8';
+      flappyCtx.font = '11px sans-serif';
+      flappyCtx.fillText('BEST SCORE: ' + highScore, w / 2, h / 2 + 40);
+    }
+  } else if (gameState === 'GAMEOVER') {
+    flappyCtx.fillStyle = '#EF4444';
+    flappyCtx.font = 'black 22px sans-serif';
+    flappyCtx.fillText('MAYDAY! MAYDAY!', w / 2, h / 2 - 40);
+
+    flappyCtx.fillStyle = '#F8FAFC';
+    flappyCtx.font = 'bold 15px sans-serif';
+    flappyCtx.fillText('SCORE: ' + score, w / 2, h / 2 - 10);
+
+    flappyCtx.fillStyle = '#38BDF8';
+    flappyCtx.font = '12px sans-serif';
+    flappyCtx.fillText('BEST FLIGHT: ' + highScore, w / 2, h / 2 + 15);
+
+    flappyCtx.fillStyle = '#F1F5F9';
+    flappyCtx.font = 'bold 12px sans-serif';
+    flappyCtx.fillText('Tap to Fly Again', w / 2, h / 2 + 50);
+  }
+}
+
+function renderFlappyLoop() {
+  updateFlappy();
+  drawFlappy();
+  flappyAnimId = requestAnimationFrame(renderFlappyLoop);
+}
+
+function handleFlappyInput(e) {
+  if (e.type === 'keydown' && e.code !== 'Space') return;
+  if (e.type === 'keydown') e.preventDefault();
+  flap();
+}
+
+export function launchFlappyGame() {
+  const container = document.getElementById('flappy-game-container');
+  flappyCanvas = document.getElementById('flappy-canvas');
+  if (!container || !flappyCanvas) return;
+
+  flappyCtx = flappyCanvas.getContext('2d');
+  
+  const rect = container.getBoundingClientRect();
+  flappyCanvas.width = Math.floor(rect.width || 300);
+  flappyCanvas.height = Math.floor(rect.height || 300);
+
+  resetFlappyGame();
+
+  flappyCanvas.removeEventListener('click', handleFlappyInput);
+  flappyCanvas.addEventListener('click', handleFlappyInput);
+
+  window.removeEventListener('keydown', handleFlappyInput);
+  window.addEventListener('keydown', handleFlappyInput);
+
+  if (!flappyAnimId) {
+    renderFlappyLoop();
+  }
+}
+
+export function dismissFlappyGame() {
+  if (flappyAnimId) {
+    cancelAnimationFrame(flappyAnimId);
+    flappyAnimId = null;
+  }
+  window.removeEventListener('keydown', handleFlappyInput);
+}
+
+export function handleBrandCardTap() {
+  brandTapCount++;
+  if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+    navigator.vibrate(20);
+  }
+  
+  if (brandTapCount >= 14) {
+    brandTapCount = 0;
+    openEasterEggModal();
+  } else {
+    clearTimeout(brandTapTimer);
+    brandTapTimer = setTimeout(() => {
+      brandTapCount = 0;
+    }, 2000);
+  }
+}
+
+export function openEasterEggModal() {
+  const modal = document.getElementById('easter-egg-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  requestAnimationFrame(() => {
+    modal.classList.remove('opacity-0');
+  });
+  launchFlappyGame();
+}
+
+export function closeEasterEggModal() {
+  const modal = document.getElementById('easter-egg-modal');
+  if (modal) {
+    modal.classList.add('opacity-0');
+    setTimeout(() => {
+      modal.classList.add('hidden');
+    }, 300);
+  }
+  dismissFlappyGame();
+}
+
+if (typeof window !== 'undefined') {
+  window.handleBrandCardTap = handleBrandCardTap;
+  window.openEasterEggModal = openEasterEggModal;
+  window.closeEasterEggModal = closeEasterEggModal;
+  window.launchFlappyGame = launchFlappyGame;
+  window.dismissFlappyGame = dismissFlappyGame;
+}
