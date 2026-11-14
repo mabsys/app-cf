@@ -1,4 +1,4 @@
-// ./js/components/menu.js (1411_R444) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
+// ./js/components/menu.js (1411_R445) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
 
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
@@ -378,341 +378,59 @@ export const menuHTML = `
   <!-- Header Bar -->
   <div class="w-full max-w-md flex items-center justify-between pt-2 px-2 shrink-0">
     <div class="flex items-center gap-2">
-      <span class="text-xs font-black tracking-widest text-blue-400 uppercase">CertiFly™ Break Deck</span>
-      <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-900/60 text-blue-300 border border-blue-700/50">3D Rubik's Cube</span>
+      <span class="text-xs font-black tracking-widest text-blue-400 uppercase">Have a break!</span>
+      
     </div>
     <button id="close-cube-modal-btn" type="button" onclick="if(typeof closeEasterEggModal === 'function') closeEasterEggModal();" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm font-bold transition-all active:scale-95 cursor-pointer">
       ✕
     </button>
   </div>
 
-  <!-- 3D WebGL Canvas Viewport Container -->
+  <!-- 3D WebGL Canvas Container -->
   <div class="w-full max-w-md aspect-square relative flex items-center justify-center my-auto p-2">
     <div id="cube-game-container" class="w-full h-full rounded-3xl overflow-hidden border border-slate-800/80 shadow-2xl bg-slate-900/50 relative flex items-center justify-center">
-      <canvas id="cube-canvas" class="w-full h-full object-contain cursor-grab active:cursor-grabbing"></canvas>
-      <!-- Action Controls Overlay -->
-      <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-auto">
-        <button id="cube-scramble-btn" type="button" class="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-white text-[10px] font-bold border border-slate-700/60 backdrop-blur-md transition-all active:scale-95 cursor-pointer flex items-center gap-1 shadow-md">
-          <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"></path></svg>
-          Scramble
-        </button>
-        <button id="cube-reset-btn" type="button" class="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 text-[10px] font-bold border border-slate-700/60 backdrop-blur-md transition-all active:scale-95 cursor-pointer shadow-md">
-          Reset Solved
-        </button>
-      </div>
+      <!-- Official Cube canvas mounts dynamically here -->
     </div>
   </div>
 
   <!-- Bottom Info & Control Hint with Caption -->
   <div class="text-center pb-2 shrink-0 flex flex-col items-center gap-1.5 select-none">
-    <p class="text-[11px] font-medium text-slate-400">Swipe to rotate layers • Drag background to orbit camera</p>
+    <p class="text-[11px] font-medium text-slate-400">Swipe layers to rotate • Drag background to orbit camera</p>
     <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1">Made with <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="#f51348" class="inline-block align-middle mx-0.5"><title fill="#f51348">heart-fill</title><path fill="#f51348" d="M16.696 3C14.652 3 12.887 4.197 12 5.943C11.113 4.197 9.348 3 7.304 3C4.374 3 2 5.457 2 8.481s1.817 5.796 4.165 8.073S12 21 12 21s3.374-2.133 5.835-4.446C20.46 14.088 22 11.514 22 8.481S19.626 3 16.696 3"/></svg> by Captain MSZ</p>
   </div>
 </div>
 `;
 
 // ==================================================================
-// OFFICIAL 3D THREE.JS RUBIK'S CUBE ENGINE & EASTER EGG LIFECYCLE
+// OFFICIAL BORIS ŠEHOVAC THE-CUBE ENGINE & EASTER EGG LIFECYCLE
 // ==================================================================
 let brandTapCount = 0;
 let brandTapTimer = null;
-
-let cubeAnimId = null;
-let isCubeInitialized = false;
-let scene = null;
-let camera = null;
-let renderer = null;
-let rubiksGroup = null;
-let cubelets = [];
-let isAnimatingTurn = false;
-
-let isDragging = false;
-let previousMousePosition = { x: 0, y: 0 };
-let targetRotation = { x: -0.45, y: 0.65 };
-let currentRotation = { x: -0.45, y: 0.65 };
-
-const CUBE_COLORS = {
-  right:  0xDC2626, // Red (+X)
-  left:   0xFF5800, // Orange (-X)
-  top:    0xFFFFFF, // White (+Y)
-  bottom: 0xFFD500, // Yellow (-Y)
-  front:  0x16A34A, // Green (+Z)
-  back:   0x2563EB, // Blue (-Z)
-  inner:  0x0F172A  // Dark Slate core
-};
-
-function ensureThreeJS(callback) {
-  if (typeof THREE !== 'undefined') {
-    if (callback) callback();
-    return;
-  }
-  const script = document.createElement('script');
-  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-  script.onload = () => { if (callback) callback(); };
-  script.onerror = () => { console.warn('Could not load Three.js CDN'); };
-  document.head.appendChild(script);
-}
-
-function createCubeletMaterials(x, y, z) {
-  return [
-    new THREE.MeshLambertMaterial({ color: x === 1 ? CUBE_COLORS.right : CUBE_COLORS.inner }),
-    new THREE.MeshLambertMaterial({ color: x === -1 ? CUBE_COLORS.left : CUBE_COLORS.inner }),
-    new THREE.MeshLambertMaterial({ color: y === 1 ? CUBE_COLORS.top : CUBE_COLORS.inner }),
-    new THREE.MeshLambertMaterial({ color: y === -1 ? CUBE_COLORS.bottom : CUBE_COLORS.inner }),
-    new THREE.MeshLambertMaterial({ color: z === 1 ? CUBE_COLORS.front : CUBE_COLORS.inner }),
-    new THREE.MeshLambertMaterial({ color: z === -1 ? CUBE_COLORS.back : CUBE_COLORS.inner })
-  ];
-}
-
-function initThreeCubeScene() {
-  const container = document.getElementById('cube-game-container');
-  const canvas = document.getElementById('cube-canvas');
-  if (!container || !canvas || typeof THREE === 'undefined') return false;
-
-  const width = container.clientWidth || 300;
-  const height = container.clientHeight || 300;
-
-  scene = new THREE.Scene();
-
-  camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-  camera.position.set(0, 0, 9);
-
-  renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-  renderer.setSize(width, height);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-
-  // Ambient & Directional Lights
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-  scene.add(ambientLight);
-
-  const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.85);
-  dirLight1.position.set(5, 10, 7);
-  scene.add(dirLight1);
-
-  const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.35);
-  dirLight2.position.set(-5, -5, -5);
-  scene.add(dirLight2);
-
-  rubiksGroup = new THREE.Group();
-  scene.add(rubiksGroup);
-
-  buildRubiksCube();
-  setupCubeControls(canvas);
-
-  return true;
-}
-
-function buildRubiksCube() {
-  if (!rubiksGroup) return;
-  while (rubiksGroup.children.length > 0) {
-    rubiksGroup.remove(rubiksGroup.children[0]);
-  }
-  cubelets = [];
-
-  const geometry = new THREE.BoxGeometry(0.94, 0.94, 0.94);
-  const edgesGeom = new THREE.EdgesGeometry(geometry);
-  const lineMat = new THREE.LineBasicMaterial({ color: 0x020617, linewidth: 2 });
-
-  const spacing = 1.0;
-
-  for (let x = -1; x <= 1; x++) {
-    for (let y = -1; y <= 1; y++) {
-      for (let z = -1; z <= 1; z++) {
-        const materials = createCubeletMaterials(x, y, z);
-        const mesh = new THREE.Mesh(geometry, materials);
-        mesh.position.set(x * spacing, y * spacing, z * spacing);
-
-        const edges = new THREE.LineSegments(edgesGeom, lineMat);
-        mesh.add(edges);
-
-        mesh.userData = { initialPos: new THREE.Vector3(x * spacing, y * spacing, z * spacing), gridX: x, gridY: y, gridZ: z };
-        rubiksGroup.add(mesh);
-        cubelets.push(mesh);
-      }
-    }
-  }
-
-  rubiksGroup.rotation.x = currentRotation.x;
-  rubiksGroup.rotation.y = currentRotation.y;
-}
-
-function rotateLayer(axis, layerIndex, angle, duration = 240, onComplete = null) {
-  if (isAnimatingTurn || !rubiksGroup) return;
-  isAnimatingTurn = true;
-
-  const pivot = new THREE.Group();
-  rubiksGroup.add(pivot);
-
-  const matchingCubelets = [];
-  cubelets.forEach(mesh => {
-    const worldPos = new THREE.Vector3();
-    mesh.getWorldPosition(worldPos);
-    rubiksGroup.worldToLocal(worldPos);
-    
-    const posVal = Math.round(worldPos[axis]);
-    if (posVal === layerIndex) {
-      matchingCubelets.push(mesh);
-    }
-  });
-
-  matchingCubelets.forEach(mesh => {
-    pivot.attach(mesh);
-  });
-
-  const startTime = performance.now();
-
-  function animateTurn(now) {
-    const elapsed = now - startTime;
-    const progress = Math.min(elapsed / duration, 1.0);
-    const easeProgress = progress * (2 - progress);
-
-    pivot.rotation[axis] = angle * easeProgress;
-
-    if (progress < 1.0) {
-      requestAnimationFrame(animateTurn);
-    } else {
-      pivot.rotation[axis] = angle;
-      pivot.updateMatrixWorld(true);
-
-      matchingCubelets.forEach(mesh => {
-        rubiksGroup.attach(mesh);
-      });
-
-      rubiksGroup.remove(pivot);
-      isAnimatingTurn = false;
-      if (onComplete) onComplete();
-    }
-  }
-
-  requestAnimationFrame(animateTurn);
-}
-
-function scrambleCube() {
-  if (isAnimatingTurn) return;
-  const axes = ['x', 'y', 'z'];
-  const indices = [-1, 0, 1];
-  const angles = [Math.PI / 2, -Math.PI / 2];
-  let movesCount = 0;
-  const totalMoves = 15;
-
-  function doMove() {
-    if (movesCount >= totalMoves) return;
-    movesCount++;
-    const ax = axes[Math.floor(Math.random() * axes.length)];
-    const idx = indices[Math.floor(Math.random() * indices.length)];
-    const ang = angles[Math.floor(Math.random() * angles.length)];
-    rotateLayer(ax, idx, ang, 120, doMove);
-  }
-
-  doMove();
-}
-
-function setupCubeControls(canvas) {
-  if (!canvas) return;
-  let startX = 0, startY = 0;
-
-  const onStart = (e) => {
-    isDragging = true;
-    const pt = e.touches ? e.touches[0] : e;
-    previousMousePosition = { x: pt.clientX, y: pt.clientY };
-    startX = pt.clientX;
-    startY = pt.clientY;
-  };
-
-  const onMove = (e) => {
-    if (!isDragging || !rubiksGroup) return;
-    const pt = e.touches ? e.touches[0] : e;
-    const deltaX = pt.clientX - previousMousePosition.x;
-    const deltaY = pt.clientY - previousMousePosition.y;
-
-    targetRotation.y += deltaX * 0.008;
-    targetRotation.x += deltaY * 0.008;
-    targetRotation.x = Math.max(-1.4, Math.min(1.4, targetRotation.x));
-
-    previousMousePosition = { x: pt.clientX, y: pt.clientY };
-  };
-
-  const onEnd = (e) => {
-    if (!isDragging) return;
-    isDragging = false;
-    const pt = e.changedTouches ? e.changedTouches[0] : e;
-    if (!pt) return;
-    const totalDx = pt.clientX - startX;
-    const totalDy = pt.clientY - startY;
-
-    if (Math.abs(totalDx) > 30 || Math.abs(totalDy) > 30) {
-      if (Math.abs(totalDx) > Math.abs(totalDy)) {
-        const dir = totalDx > 0 ? Math.PI / 2 : -Math.PI / 2;
-        const layerIdx = totalDy < -10 ? 1 : (totalDy > 10 ? -1 : 0);
-        rotateLayer('y', layerIdx, dir);
-      } else {
-        const dir = totalDy > 0 ? Math.PI / 2 : -Math.PI / 2;
-        const layerIdx = totalDx < -10 ? -1 : (totalDx > 10 ? 1 : 0);
-        rotateLayer('x', layerIdx, dir);
-      }
-    }
-  };
-
-  canvas.addEventListener('mousedown', onStart);
-  window.addEventListener('mousemove', onMove);
-  window.addEventListener('mouseup', onEnd);
-
-  canvas.addEventListener('touchstart', onStart, { passive: true });
-  window.addEventListener('touchmove', onMove, { passive: true });
-  window.addEventListener('touchend', onEnd);
-
-  document.getElementById('cube-scramble-btn')?.addEventListener('click', scrambleCube);
-  document.getElementById('cube-reset-btn')?.addEventListener('click', () => {
-    if (!isAnimatingTurn) buildRubiksCube();
-  });
-}
-
-function renderCubeLoop() {
-  if (!renderer || !scene || !camera) return;
-
-  if (rubiksGroup) {
-    currentRotation.x += (targetRotation.x - currentRotation.x) * 0.1;
-    currentRotation.y += (targetRotation.y - currentRotation.y) * 0.1;
-    rubiksGroup.rotation.x = currentRotation.x;
-    rubiksGroup.rotation.y = currentRotation.y;
-  }
-
-  renderer.render(scene, camera);
-  cubeAnimId = requestAnimationFrame(renderCubeLoop);
-}
+let cubeGameInstance = null;
 
 export function launchCubeGame() {
   const container = document.getElementById('cube-game-container');
-  const canvas = document.getElementById('cube-canvas');
-  if (!container || !canvas) return;
+  if (!container) return;
 
-  ensureThreeJS(() => {
-    if (!isCubeInitialized) {
-      if (initThreeCubeScene()) {
-        isCubeInitialized = true;
-      }
-    }
+  const CubeClass = window.Cube || (window.ERNO && window.ERNO.Cube);
 
-    if (renderer && container) {
-      const width = container.clientWidth || 300;
-      const height = container.clientHeight || 300;
-      renderer.setSize(width, height);
-      if (camera) {
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
-      }
+  if (!cubeGameInstance && CubeClass) {
+    try {
+      cubeGameInstance = new CubeClass(container, {
+        game: true,
+        scramble: true
+      });
+    } catch (err) {
+      console.warn('Failed to initialize official Cube instance:', err);
     }
-
-    if (!cubeAnimId) {
-      renderCubeLoop();
-    }
-  });
+  } else if (cubeGameInstance && typeof cubeGameInstance.resume === 'function') {
+    cubeGameInstance.resume();
+  }
 }
 
 export function dismissCubeGame() {
-  if (cubeAnimId) {
-    cancelAnimationFrame(cubeAnimId);
-    cubeAnimId = null;
+  if (cubeGameInstance && typeof cubeGameInstance.pause === 'function') {
+    cubeGameInstance.pause();
   }
 }
 
