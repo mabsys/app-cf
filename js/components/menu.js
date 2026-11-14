@@ -1,4 +1,5 @@
-// ./js/components/menu.js (1411_R448) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
+
+// ./js/components/menu.js (1111_R449) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
 
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
@@ -26,7 +27,7 @@ export const menuHTML = `
             </div>
             <div class="text-left">
               <div class="text-xs font-bold text-slate-800 dark:text-slate-100">My Credentials</div>
-              <div class="text-[10px] text-slate-400">Licence, Attestation, Q.Slip & Passport</div>
+              <div class="text-[10px] text-slate-400">Licence, Attestation, Qualification Slip & Passport</div>
             </div>
           </div>
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
@@ -54,7 +55,7 @@ export const menuHTML = `
             </div>
             <div class="text-left">
               <div class="text-xs font-bold text-slate-800 dark:text-slate-100">Data &amp; Storage</div>
-              <div class="text-[10px] text-slate-400">Manage scan history & attestation limits</div>
+              <div class="text-[10px] text-slate-400">Manage scan history & attestation limits, app cache</div>
             </div>
           </div>
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
@@ -378,7 +379,8 @@ export const menuHTML = `
   <!-- Header Bar -->
   <div class="w-full max-w-md flex items-center justify-between pt-2 px-2 shrink-0">
     <div class="flex items-center gap-2">
-      <span class="text-base font-black tracking-wider text-blue-400">Take a break!</span>
+      <span class="text-xs font-black tracking-widest text-blue-400 uppercase">CertiFly™ Break Deck</span>
+      <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-900/60 text-blue-300 border border-blue-700/50">Flappy Pilot</span>
     </div>
     <button id="close-flappy-modal-btn" type="button" onclick="if(typeof closeEasterEggModal === 'function') closeEasterEggModal();" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm font-bold transition-all active:scale-95 cursor-pointer">
       ✕
@@ -572,22 +574,94 @@ function drawFlappy() {
     flappyCtx.restore();
   });
 
-  // Draw Obstacles (Storm Pylons)
-  pipes.forEach(p => {
-    // Top Pipe / Cloud Pylon
-    const pGrad = flappyCtx.createLinearGradient(p.x, 0, p.x + p.width, 0);
-    pGrad.addColorStop(0, '#1E3A8A');
-    pGrad.addColorStop(0.5, '#3B82F6');
-    pGrad.addColorStop(1, '#1D4ED8');
+  // Draw Obstacles (Top Storm Clouds & Bottom Radar Antenna Towers)
+  pipes.forEach((p, idx) => {
+    // ----------------------------------------------------
+    // TOP OBSTACLE: Storm Cloud Mass (Hanging from sky)
+    // ----------------------------------------------------
+    const cloudGrad = flappyCtx.createLinearGradient(p.x, 0, p.x + p.width, p.top);
+    cloudGrad.addColorStop(0, '#0F172A');
+    cloudGrad.addColorStop(0.7, '#1E293B');
+    cloudGrad.addColorStop(1, '#334155');
 
-    flappyCtx.fillStyle = pGrad;
-    flappyCtx.fillRect(p.x, 0, p.width, p.top);
-    flappyCtx.fillRect(p.x, h - p.bottom, p.width, p.bottom);
+    flappyCtx.fillStyle = cloudGrad;
+    flappyCtx.fillRect(p.x + 4, 0, p.width - 8, p.top);
 
-    // Caps
-    flappyCtx.fillStyle = '#60A5FA';
-    flappyCtx.fillRect(p.x - 3, p.top - 12, p.width + 6, 12);
-    flappyCtx.fillRect(p.x - 3, h - p.bottom, p.width + 6, 12);
+    // Puffy Cloud Formations at the cloud base
+    flappyCtx.fillStyle = '#334155';
+    flappyCtx.beginPath();
+    flappyCtx.arc(p.x + 6, p.top - 6, 16, 0, Math.PI * 2);
+    flappyCtx.arc(p.x + p.width / 2, p.top - 2, 20, 0, Math.PI * 2);
+    flappyCtx.arc(p.x + p.width - 6, p.top - 6, 16, 0, Math.PI * 2);
+    flappyCtx.fill();
+
+    flappyCtx.fillStyle = '#475569';
+    flappyCtx.beginPath();
+    flappyCtx.arc(p.x + 10, p.top - 12, 12, 0, Math.PI * 2);
+    flappyCtx.arc(p.x + p.width - 10, p.top - 12, 12, 0, Math.PI * 2);
+    flappyCtx.fill();
+
+    // Occasional Lightning Flash Effect inside storm cloud
+    if ((frameCount + idx * 37) % 50 < 8) {
+      flappyCtx.strokeStyle = '#38BDF8';
+      flappyCtx.lineWidth = 2;
+      flappyCtx.beginPath();
+      flappyCtx.moveTo(p.x + p.width / 2, p.top - 32);
+      flappyCtx.lineTo(p.x + p.width / 2 - 6, p.top - 18);
+      flappyCtx.lineTo(p.x + p.width / 2 + 4, p.top - 12);
+      flappyCtx.lineTo(p.x + p.width / 2 - 2, p.top - 2);
+      flappyCtx.stroke();
+    }
+
+    // ----------------------------------------------------
+    // BOTTOM OBSTACLE: Radar Antenna Tower (Rising from ground)
+    // ----------------------------------------------------
+    const towerY = h - p.bottom;
+    const towerW = p.width;
+
+    // Steel Lattice Legs
+    flappyCtx.strokeStyle = '#475569';
+    flappyCtx.lineWidth = 3;
+    flappyCtx.beginPath();
+    flappyCtx.moveTo(p.x + 8, towerY);
+    flappyCtx.lineTo(p.x + 2, h);
+    flappyCtx.moveTo(p.x + towerW - 8, towerY);
+    flappyCtx.lineTo(p.x + towerW - 2, h);
+    flappyCtx.stroke();
+
+    // Cross Bracing Lattice
+    flappyCtx.strokeStyle = '#334155';
+    flappyCtx.lineWidth = 1.5;
+    const numCrosses = Math.max(2, Math.floor(p.bottom / 25));
+    const stepY = p.bottom / numCrosses;
+    for (let c = 0; c < numCrosses; c++) {
+      const cy1 = towerY + c * stepY;
+      const cy2 = towerY + (c + 1) * stepY;
+      flappyCtx.beginPath();
+      flappyCtx.moveTo(p.x + 6, cy1);
+      flappyCtx.lineTo(p.x + towerW - 6, cy2);
+      flappyCtx.moveTo(p.x + towerW - 6, cy1);
+      flappyCtx.lineTo(p.x + 6, cy2);
+      flappyCtx.stroke();
+    }
+
+    // Radar Platform at Tower Top
+    flappyCtx.fillStyle = '#64748B';
+    flappyCtx.fillRect(p.x + 2, towerY, towerW - 4, 8);
+
+    // Red Aviation Warning Beacon (Blinking)
+    const isBeaconOn = Math.floor(frameCount / 18) % 2 === 0;
+    flappyCtx.fillStyle = isBeaconOn ? '#EF4444' : '#7F1D1D';
+    flappyCtx.beginPath();
+    flappyCtx.arc(p.x + towerW / 2, towerY - 4, 4, 0, Math.PI * 2);
+    flappyCtx.fill();
+
+    if (isBeaconOn) {
+      flappyCtx.fillStyle = 'rgba(239, 68, 68, 0.4)';
+      flappyCtx.beginPath();
+      flappyCtx.arc(p.x + towerW / 2, towerY - 4, 9, 0, Math.PI * 2);
+      flappyCtx.fill();
+    }
   });
 
   // Draw Ground Line
@@ -666,7 +740,7 @@ function drawFlappy() {
     flappyCtx.fillText('SCORE: ' + score, w / 2, h / 2 - 10);
 
     flappyCtx.fillStyle = '#38BDF8';
-    flappyCtx.font = 'bold 12px sans-serif';
+    flappyCtx.font = '12px sans-serif';
     flappyCtx.fillText('BEST FLIGHT: ' + highScore, w / 2, h / 2 + 15);
 
     flappyCtx.fillStyle = '#F1F5F9';
