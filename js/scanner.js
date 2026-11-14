@@ -1,8 +1,8 @@
-// ./js/scanner.js (1311_R426) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (1311_R428) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 
+import { showToast } from './notifications.js';
 import { getProfileData, getScanHistory } from './storage.js';
 import { animateTabBounce, animateTabContentEntrance } from './animations.js';
-import { showToast } from './notifications.js';
 
 let qrScanner = null;
 let currentCameraDeviceId = null;
@@ -361,6 +361,20 @@ export function switchScanHubTab(tabName) {
 
   let activeBtn = btnCamera;
 
+  if (tabName === 'camera' || tabName === 'manual') {
+    if (!navigator.onLine) {
+      if (typeof window.showToast === "function") {
+        const msg = tabName === 'camera'
+          ? "Camera scanning requires an active internet connection."
+          : "Manual URL entry requires an active internet connection.";
+        window.showToast(msg, "warning");
+      }
+      stopScanner();
+      switchScanHubTab('qrpass');
+      return;
+    }
+  }
+
   if (tabName === 'camera') {
     if (!navigator.onLine) {
       if (typeof window.showToast === "function") {
@@ -397,7 +411,11 @@ export function switchScanHubTab(tabName) {
     }
     if (btnQrPass) btnQrPass.className = activeBtnClass;
     stopScanner();
-    renderMyQrPass();
+    if (typeof window.renderMyQrPass === 'function') {
+      window.renderMyQrPass();
+    } else {
+      renderMyQrPass();
+    }
   } else if (tabName === 'manual') {
     activeBtn = btnManual;
     if (tabManual) {
@@ -420,43 +438,9 @@ export function switchScanHubTab(tabName) {
 // ============================================================================
 
 export function renderMyQrPass() {
-  const profile = getProfileData();
-  const canvas = document.getElementById("pass-qr-canvas");
-  const pilotNameEl = document.getElementById("pass-pilot-name");
-  const licenceNoEl = document.getElementById("pass-licence-no");
-  const badgeEl = document.getElementById("pass-eligibility-badge");
-  const freshnessTag = document.getElementById("pass-freshness-tag");
-
-  if (pilotNameEl) pilotNameEl.innerText = profile.name || "-";
-  if (licenceNoEl) {
-    const lType = profile.licenceType || "-";
-    const lNo = profile.licenceNo || "-";
-    licenceNoEl.innerText = `${lType} • ${lNo}`;
+  if (typeof window.renderMyQrPass === 'function' && window.renderMyQrPass !== renderMyQrPass) {
+    window.renderMyQrPass();
   }
-
-  const isEligible = profile.dutyStatus ? profile.dutyStatus === 'ELIGIBLE' : true;
-  if (badgeEl) {
-    if (isEligible) {
-      badgeEl.innerText = "ELIGIBLE FOR FLIGHT DUTY";
-      badgeEl.className = "mt-3 px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300";
-    } else {
-      badgeEl.innerText = "LAPSED / INELIGIBLE";
-      badgeEl.className = "mt-3 px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300";
-    }
-  }
-
-  if (freshnessTag) {
-    freshnessTag.innerText = profile.lastVerified ? `Verified ${profile.lastVerified}` : "Cached Offline";
-  }
-
-  if (canvas && window.QrScanner) {
-    const qrContent = profile.url || "https://eclipse.caam.gov.my";
-    try {
-      window.QrScanner.hasCamera();
-    } catch (e) {}
-  }
-
-  requestWakeLock();
 }
 
 // ============================================================================
