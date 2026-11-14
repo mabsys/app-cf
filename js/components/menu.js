@@ -378,9 +378,9 @@ export const menuHTML = `
   
   <!-- Header Bar -->
   <div class="w-full max-w-md flex items-center justify-between pt-2 px-2 shrink-0">
-    <div class="flex items-center gap-2">
-      <span class="text-xs font-black tracking-widest text-blue-400 uppercase">CertiFly™ Break Deck</span>
-      <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-900/60 text-blue-300 border border-blue-700/50">Flappy Pilot</span>
+    <div class="flex flex-col items-center w-full gap-1">
+      <span class="text-base font-black tracking-wide text-blue-400 uppercase">Flappy Pilot Challenge</span>
+      <span class="text-[12px] font-bold px-2.5 py-0.5 rounded-full bg-blue-900/60 text-blue-300 border border-blue-700/50">See how good you are?</span>
     </div>
     <button id="close-flappy-modal-btn" type="button" onclick="if(typeof closeEasterEggModal === 'function') closeEasterEggModal();" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm font-bold transition-all active:scale-95 cursor-pointer">
       ✕
@@ -396,8 +396,8 @@ export const menuHTML = `
 
   <!-- Bottom Info & Control Hint with Caption -->
   <div class="text-center pb-2 shrink-0 flex flex-col items-center gap-1.5 select-none">
-    <p class="text-[11px] font-medium text-slate-400">Tap screen or press Spacebar to flap &amp; dodge storm clouds</p>
-    <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1">Made with <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="#f51348" class="inline-block align-middle mx-0.5"><title fill="#f51348">heart-fill</title><path fill="#f51348" d="M16.696 3C14.652 3 12.887 4.197 12 5.943C11.113 4.197 9.348 3 7.304 3C4.374 3 2 5.457 2 8.481s1.817 5.796 4.165 8.073S12 21 12 21s3.374-2.133 5.835-4.446C20.46 14.088 22 11.514 22 8.481S19.626 3 16.696 3"/></svg> by Captain MSZ</p>
+    <p class="text-[11px] font-medium text-slate-400">Tap screen to flap &amp; dodge storm clouds</p>
+    <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1">CertiFly™ was made with <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="#f51348" class="inline-block align-middle mx-0.5"><title fill="#f51348">heart-fill</title><path fill="#f51348" d="M16.696 3C14.652 3 12.887 4.197 12 5.943C11.113 4.197 9.348 3 7.304 3C4.374 3 2 5.457 2 8.481s1.817 5.796 4.165 8.073S12 21 12 21s3.374-2.133 5.835-4.446C20.46 14.088 22 11.514 22 8.481S19.626 3 16.696 3"/></svg> by Captain MSZ</p>
   </div>
 </div>
 `;
