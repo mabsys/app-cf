@@ -26,7 +26,7 @@ export const menuHTML = `
             </div>
             <div class="text-left">
               <div class="text-xs font-bold text-slate-800 dark:text-slate-100">My Credentials</div>
-              <div class="text-[10px] text-slate-400">Manage licence, company docs &amp; passport</div>
+              <div class="text-[10px] text-slate-400">Licence, Attestation, Qualification Slip & Passport</div>
             </div>
           </div>
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
@@ -54,7 +54,7 @@ export const menuHTML = `
             </div>
             <div class="text-left">
               <div class="text-xs font-bold text-slate-800 dark:text-slate-100">Data &amp; Storage</div>
-              <div class="text-[10px] text-slate-400">Manage scan history limits &amp; app cache</div>
+              <div class="text-[10px] text-slate-400">Manage scan history & attestation limits, app cache</div>
             </div>
           </div>
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
@@ -68,7 +68,7 @@ export const menuHTML = `
             </div>
             <div class="text-left">
               <div class="text-xs font-bold text-slate-800 dark:text-slate-100">About &amp; Support</div>
-              <div class="text-[10px] text-slate-400">App version, user manual </div>
+              <div class="text-[10px] text-slate-400">About, Licence Renewal Guide, Feedback</div>
             </div>
           </div>
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
@@ -156,7 +156,7 @@ export const menuHTML = `
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
                   </button>
                 </div>
-                <p class="text-[9px] text-slate-400">Scan or paste your official eCLIPSE QR or URL.</p>
+                <p class="text-[9px] text-slate-400">Scan or paste your official eCLIPSE QR or URL</p>
               </div>
             </div>
           </div>
@@ -185,7 +185,7 @@ export const menuHTML = `
                 </label>
                 <input type="file" id="profile-pdf-file" accept=".pdf" class="hidden">
                 <div id="profile-pdf-badge" class="text-[9px] text-emerald-600 font-extrabold flex items-center gap-1 hidden">
-                  <span id="profile-pdf-status-text">Stored Attestation PDF file</span>
+                  <span id="profile-pdf-status-text">Attestation PDF saved</span>
                 </div>
               </div>
 
@@ -198,11 +198,11 @@ export const menuHTML = `
                 </label>
                 <input type="file" id="profile-qs-pdf-file" accept=".pdf" class="hidden">
                 <div id="profile-qs-pdf-badge" class="hidden text-[9px] text-emerald-600 font-extrabold flex items-center gap-1">
-                  <span id="profile-qs-pdf-status-text">✓ Valid QS</span>
+                  <span id="profile-qs-pdf-status-text">QS PDF saved</span>
                 </div>
               </div>
             </div>
-            <p class="text-[9px] text-slate-400">Upload your MAB Attestation and Qualification Slip PDFs.</p>
+            <p class="text-[9px] text-slate-400">Upload your MAB Attestation and Qualification Slip PDFs</p>
           </div>
         </div>
 
@@ -234,7 +234,7 @@ export const menuHTML = `
                 <input type="hidden" id="profile-passport-expiry" value="">
               </div>
             </div>
-            <p class="text-[9px] text-slate-400">Enter your passport number and expiry.</p>
+            <p class="text-[9px] text-slate-400">Enter your passport number and expiry</p>
           </div>
         </div>
       </div>
@@ -283,6 +283,7 @@ export const menuHTML = `
             <button id="threshold-pill-60" type="button" class="threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold">60 Days</button>
             <button id="threshold-pill-90" type="button" class="threshold-pill-btn py-2 px-2 text-xs rounded-lg transition-all bg-blue-600 text-white shadow-xs font-extrabold">90 Days</button>
           </div>
+          <p class="text-[9px] text-slate-400 pt-1">Set minimum days before expiry threshold </p>
         </div>
 
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
@@ -291,6 +292,7 @@ export const menuHTML = `
             <button id="festive-pill-enable" type="button" class="festive-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow-xs cursor-pointer">Enabled</button>
             <button id="festive-pill-disable" type="button" class="festive-pill-btn py-2 px-2 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer">Disabled</button>
           </div>
+          <p class="text-[9px] text-slate-400 pt-1">Festive or event overlay in Dashboard (experimental)</p>
         </div>
       </div>
     </div>
@@ -311,6 +313,7 @@ export const menuHTML = `
             <button id="history-limit-20" type="button" class="history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold">20 Items</button>
             <button id="history-limit-30" type="button" class="history-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold">30 Items</button>
           </div>
+          <p class="text-[9px] text-slate-400 pt-1">Set the local scan history item limit</p>
         </div>
 
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs">
@@ -319,6 +322,7 @@ export const menuHTML = `
             <button id="freshness-limit-14" type="button" class="freshness-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 font-bold bg-transparent">14 Days</button>
             <button id="freshness-limit-30" type="button" class="freshness-limit-pill-btn py-2 px-2 text-xs rounded-lg transition-all bg-blue-600 text-white shadow-xs font-extrabold">30 Days (Default)</button>
           </div>
+          <p class="text-[9px] text-slate-400 pt-1">Set Attestation PDF recency limit for the Dashboard</p>
         </div>
 
         <!-- Data Action Buttons (Solid Colored) -->
