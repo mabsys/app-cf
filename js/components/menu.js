@@ -1,4 +1,4 @@
-// ./js/components/menu.js (1111_R442) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
+// ./js/components/menu.js (1411_R443) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
 
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
@@ -611,7 +611,7 @@ function applyLayerRotation(axis, index, angle) {
         b.z = u * sin + v * cos;
         const oldC = [...b.colors];
         if (angle > 0) {
-          b.colors[0] = oldC[3]; b.colors[3] = oldC[1]; b.colors[1] = oldC[2]; b.colors[2] = oldC[0];
+          b.colors[2] = oldC[0]; b.colors[1] = oldC[2]; b.colors[3] = oldC[1]; b.colors[0] = oldC[3];
         } else {
           b.colors[0] = oldC[2]; b.colors[2] = oldC[1]; b.colors[1] = oldC[3]; b.colors[3] = oldC[0];
         }
@@ -621,9 +621,9 @@ function applyLayerRotation(axis, index, angle) {
         b.z = u * sin + v * cos;
         const oldC = [...b.colors];
         if (angle > 0) {
-          b.colors[4] = oldC[2]; b.colors[2] = oldC[5]; b.colors[5] = oldC[3]; b.colors[3] = oldC[4];
+          b.colors[2] = oldC[4]; b.colors[5] = oldC[2]; b.colors[3] = oldC[5]; b.colors[4] = oldC[3];
         } else {
-          b.colors[4] = oldC[3]; b.colors[3] = oldC[5]; b.colors[5] = oldC[2]; b.colors[2] = oldC[4];
+          b.colors[4] = oldC[2]; b.colors[2] = oldC[5]; b.colors[5] = oldC[3]; b.colors[3] = oldC[4];
         }
       } else if (axis === 'z') {
         u = b.x; v = b.y;
@@ -631,9 +631,9 @@ function applyLayerRotation(axis, index, angle) {
         b.y = u * sin + v * cos;
         const oldC = [...b.colors];
         if (angle > 0) {
-          b.colors[4] = oldC[0]; b.colors[0] = oldC[5]; b.colors[5] = oldC[1]; b.colors[1] = oldC[4];
+          b.colors[0] = oldC[4]; b.colors[5] = oldC[0]; b.colors[1] = oldC[5]; b.colors[4] = oldC[1];
         } else {
-          b.colors[4] = oldC[1]; b.colors[1] = oldC[5]; b.colors[5] = oldC[0]; b.colors[0] = oldC[4];
+          b.colors[4] = oldC[0]; b.colors[0] = oldC[5]; b.colors[5] = oldC[1]; b.colors[1] = oldC[4];
         }
       }
     }
