@@ -1,4 +1,4 @@
-// ./js/components/menu.js (1411_R447) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
+// ./js/components/menu.js (1411_R448) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
 
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
@@ -511,7 +511,7 @@ function updateFlappy() {
       }
     }
 
-    # Collision detection
+    // Collision detection
     if (
       bird.x + bird.radius > p.x &&
       bird.x - bird.radius < p.x + p.width &&
@@ -525,7 +525,7 @@ function updateFlappy() {
     }
   }
 
-  # Ceiling & Floor Bounds
+  // Ceiling & Floor Bounds
   if (bird.y + bird.radius >= flappyCanvas.height - 15) {
     bird.y = flappyCanvas.height - 15 - bird.radius;
     triggerGameOver();
@@ -546,7 +546,7 @@ function drawFlappy() {
   const w = flappyCanvas.width;
   const h = flappyCanvas.height;
 
-  # Background (Twilight Sky Gradient)
+  // Background (Twilight Sky Gradient)
   const bgGrad = flappyCtx.createLinearGradient(0, 0, 0, h);
   bgGrad.addColorStop(0, '#0F172A');
   bgGrad.addColorStop(0.6, '#1E293B');
@@ -554,7 +554,7 @@ function drawFlappy() {
   flappyCtx.fillStyle = bgGrad;
   flappyCtx.fillRect(0, 0, w, h);
 
-  # Stars / Cloud Particles in Background
+  // Stars / Cloud Particles in Background
   flappyCtx.fillStyle = 'rgba(255, 255, 255, 0.15)';
   for (let i = 0; i < 15; i++) {
     const sx = (i * 27 + frameCount * 0.3) % w;
@@ -562,7 +562,7 @@ function drawFlappy() {
     flappyCtx.fillRect(sx, sy, 2, 2);
   }
 
-  # Draw Particles (Exhaust trail)
+  // Draw Particles (Exhaust trail)
   particles.forEach(p => {
     flappyCtx.save();
     flappyCtx.globalAlpha = Math.max(0, p.alpha);
@@ -573,9 +573,9 @@ function drawFlappy() {
     flappyCtx.restore();
   });
 
-  # Draw Obstacles (Storm Pylons)
+  // Draw Obstacles (Storm Pylons)
   pipes.forEach(p => {
-    # Top Pipe / Cloud Pylon
+    // Top Pipe / Cloud Pylon
     const pGrad = flappyCtx.createLinearGradient(p.x, 0, p.x + p.width, 0);
     pGrad.addColorStop(0, '#1E3A8A');
     pGrad.addColorStop(0.5, '#3B82F6');
@@ -585,26 +585,26 @@ function drawFlappy() {
     flappyCtx.fillRect(p.x, 0, p.width, p.top);
     flappyCtx.fillRect(p.x, h - p.bottom, p.width, p.bottom);
 
-    # Caps
+    // Caps
     flappyCtx.fillStyle = '#60A5FA';
     flappyCtx.fillRect(p.x - 3, p.top - 12, p.width + 6, 12);
     flappyCtx.fillRect(p.x - 3, h - p.bottom, p.width + 6, 12);
   });
 
-  # Draw Ground Line
+  // Draw Ground Line
   flappyCtx.fillStyle = '#334155';
   flappyCtx.fillRect(0, h - 15, w, 15);
   flappyCtx.fillStyle = '#38BDF8';
   flappyCtx.fillRect(0, h - 15, w, 2);
 
-  # Draw Aircraft (Jet)
+  // Draw Aircraft (Jet)
   flappyCtx.save();
   flappyCtx.translate(bird.x, bird.y);
 
   let angle = Math.min(Math.max(bird.vy * 0.07, -0.4), 0.6);
   flappyCtx.rotate(angle);
 
-  # Wings
+  // Wings
   flappyCtx.fillStyle = '#64748B';
   flappyCtx.beginPath();
   flappyCtx.moveTo(-6, -2);
@@ -613,19 +613,19 @@ function drawFlappy() {
   flappyCtx.closePath();
   flappyCtx.fill();
 
-  # Main Jet Body
+  // Main Jet Body
   flappyCtx.fillStyle = '#F8FAFC';
   flappyCtx.beginPath();
   flappyCtx.ellipse(0, 0, 15, 8, 0, 0, Math.PI * 2);
   flappyCtx.fill();
 
-  # Cockpit Canopy
+  // Cockpit Canopy
   flappyCtx.fillStyle = '#38BDF8';
   flappyCtx.beginPath();
   flappyCtx.ellipse(4, -3, 6, 4, 0, 0, Math.PI * 2);
   flappyCtx.fill();
 
-  # Red Tail Fin
+  // Red Tail Fin
   flappyCtx.fillStyle = '#EF4444';
   flappyCtx.beginPath();
   flappyCtx.moveTo(-10, 0);
@@ -636,7 +636,7 @@ function drawFlappy() {
 
   flappyCtx.restore();
 
-  # UI Overlay: Score
+  // UI Overlay: Score
   flappyCtx.fillStyle = '#FFFFFF';
   flappyCtx.font = 'bold 20px sans-serif';
   flappyCtx.textAlign = 'center';
