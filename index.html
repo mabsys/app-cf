@@ -1,4 +1,4 @@
-<!-- ./index.html (0911_R422) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+<!-- ./index.html (1411_R443) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -1705,12 +1705,12 @@ navigator.serviceWorker.register('sw.js')
                                             </div>
 
                                             <div>
-                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Discretion Rest Reduction</label>
-                                                <button type="button" id="btn-preflight-discretion-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-preflight-discretion-reduction', 'DISCRETION REST REDUCTION', [{value:'0', label:'None (0h)'}, {value:'0.5', label:'0.5 Hours'}, {value:'1', label:'1.0 Hour'}])">
-                                                    <span id="btn-preflight-discretion-display">None (0h)</span>
+                                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Duty Location</label>
+                                                <button type="button" id="btn-preflight-loc-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-preflight-location', 'DUTY LOCATION', [{value:'HOME', label:'Home Base (KUL)'}, {value:'OUTSTATION', label:'Outstation'}])">
+                                                    <span id="btn-preflight-loc-display">Home Base (KUL)</span>
                                                     <span class="text-slate-400 text-[10px]">▼</span>
                                                 </button>
-                                                <input type="hidden" id="input-preflight-discretion-reduction" value="0">
+                                                <input type="hidden" id="input-preflight-location" value="HOME">
                                             </div>
                                         </div>
 
@@ -1737,12 +1737,12 @@ navigator.serviceWorker.register('sw.js')
                                         </div>
 
                                         <div>
-                                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Duty Location</label>
-                                            <button type="button" id="btn-preflight-loc-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-preflight-location', 'DUTY LOCATION', [{value:'HOME', label:'Home Base (KUL)'}, {value:'OUTSTATION', label:'Outstation Layover'}])">
-                                                <span id="btn-preflight-loc-display">Home Base (KUL)</span>
+                                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Discretion Rest Reduction</label>
+                                            <button type="button" id="btn-preflight-discretion-trigger" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbSelectModal('input-preflight-discretion-reduction', 'DISCRETION REST REDUCTION', [{value:'0', label:'None (0h)'}, {value:'0.5', label:'0.5 Hours'}, {value:'1', label:'1.0 Hour'}])">
+                                                <span id="btn-preflight-discretion-display">None (0h)</span>
                                                 <span class="text-slate-400 text-[10px]">▼</span>
                                             </button>
-                                            <input type="hidden" id="input-preflight-location" value="HOME">
+                                            <input type="hidden" id="input-preflight-discretion-reduction" value="0">
                                         </div>
 
                                         <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-0.5">Calculates mandatory minimum rest periods, earliest available report timestamp, and outstation additions under CAAM CAD 1901 Section 2.14 and OM-A 7.5.12.</p>
