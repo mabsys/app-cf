@@ -1,4 +1,4 @@
-// ./js/components/menu.js (1111_R439) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
+// ./js/components/menu.js (1111_R442) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
 
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
@@ -373,26 +373,374 @@ export const menuHTML = `
 </div>
 
 <!-- EASTER EGG MODAL DRAWER -->
-<div id="easter-egg-modal" class="fixed inset-0 z-[60] bg-black/75 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-300 opacity-0 hidden">
-  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-xs w-full shadow-2xl flex flex-col items-center text-center relative animate-fade-in">
-    <!-- Pirate Flag SVG Logo -->
-    <div class="w-full text-white rounded-2xl flex items-center justify-center mb-3 ">
-      <svg xmlns="http://www.w3.org/2000/svg" width="5em" height="5em" viewBox="8 8 16 16" class=""><title>pirate-flag</title><g fill="none"><path fill="" d="M2 7a1 1 0 0 1 1-1h26a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"></path><path fill="currentColor" d="M11.707 10.707A1 1 0 1 0 10 10a1 1 0 1 0 .707 1.707l1.116 1.116a.25.25 0 0 0 .354 0l.646-.646a.25.25 0 0 0 0-.354zm0 10.482a1 1 0 1 1-1.707.707a1 1 0 1 1 .707-1.707l1.116-1.116a.25.25 0 0 1 .354 0l.646.647a.25.25 0 0 1 0 .353zM19.897 10c0 .276.111.526.292.707l-1.116 1.116a.25.25 0 0 0 0 .354l.647.646a.25.25 0 0 0 .353 0l1.116-1.116A1 1 0 1 0 21.896 10a1 1 0 1 0-2 0m.292 11.19a1 1 0 1 0 1.707.707a1 1 0 1 0-.707-1.708l-1.116-1.116a.25.25 0 0 0-.353 0l-.647.647a.25.25 0 0 0 0 .353zM19.75 15c0-1.933-1.679-3.5-3.75-3.5s-3.75 1.567-3.75 3.5c0 .442.088.864.248 1.253l-.274.41a1.5 1.5 0 0 0 .934 2.3l.342.073v.714a.75.75 0 0 0 1.5 0v-.5h.25v.5a.75.75 0 0 0 1.5 0v-.5H17v.5a.75.75 0 0 0 1.5 0v-.714l.342-.074a1.5 1.5 0 0 0 .934-2.298l-.274-.41c.16-.39.248-.812.248-1.254m-4.82 1.582c-.48.482-1.184.558-1.57.172c-.323-.323-.27-1.3.074-1.645c.343-.343 1.396-.369 1.668-.097c.386.386.31 1.09-.172 1.57m3.7.172c-.387.386-1.09.31-1.571-.172c-.481-.48-.558-1.184-.172-1.57c.272-.272 1.325-.246 1.668.097c.344.344.397 1.322.074 1.645m-2.847.126a.25.25 0 0 1 .434 0l.57.996a.25.25 0 0 1-.218.374H15.43a.25.25 0 0 1-.217-.374z" class="text-slate-800 dark:text-white"></path></g></svg>
+<div id="easter-egg-modal" class="fixed inset-0 z-[60] bg-slate-950/90 backdrop-blur-xl flex flex-col items-center justify-between p-4 transition-all duration-300 opacity-0 hidden">
+  
+  <!-- Header Bar -->
+  <div class="w-full max-w-md flex items-center justify-between pt-2 px-2 shrink-0">
+    <div class="flex items-center gap-2">
+      <span class="text-xs font-black tracking-widest text-blue-400 uppercase">CertiFly™ Break Deck</span>
+      <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-900/60 text-blue-300 border border-blue-700/50">3D Rubik's Cube</span>
     </div>
-    
-    <h3 class="text-sm font-black text-slate-800 dark:text-slate-100 mb-1">Ahoy, Crew!</h3>
-    <p class="text-xs font-normal text-slate-600 dark:text-slate-300 leading-relaxed">Crafted 'n coded with heart, matey!</p>      <p class="text-xs font-normal text-slate-600 dark:text-slate-300 leading-relaxed mb-4 italic">- Captain MSZ</p>
+    <button id="close-cube-modal-btn" type="button" onclick="if(typeof closeEasterEggModal === 'function') closeEasterEggModal();" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm font-bold transition-all active:scale-95 cursor-pointer">
+      ✕
+    </button>
+  </div>
 
-    <button type="button" onclick="if(typeof closeEasterEggModal === 'function') closeEasterEggModal();" class="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-600 dark:bg-white dark:hover:bg-slate-600 active:scale-[0.98] text-white dark:text-slate-900 text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer animate-pulse">Now be off with Ye!</button>
+  <!-- 3D WebGL Canvas Viewport Container -->
+  <div class="w-full max-w-md aspect-square relative flex items-center justify-center my-auto p-2">
+    <div id="cube-game-container" class="w-full h-full rounded-3xl overflow-hidden border border-slate-800/80 shadow-2xl bg-slate-900/50 relative flex items-center justify-center">
+      <canvas id="cube-canvas" class="w-full h-full object-contain cursor-grab active:cursor-grabbing"></canvas>
+      <!-- Action Controls Overlay -->
+      <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-auto">
+        <button id="cube-scramble-btn" type="button" class="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-white text-[10px] font-bold border border-slate-700/60 backdrop-blur-md transition-all active:scale-95 cursor-pointer flex items-center gap-1 shadow-md">
+          <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"></path></svg>
+          Scramble
+        </button>
+        <button id="cube-reset-btn" type="button" class="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 text-[10px] font-bold border border-slate-700/60 backdrop-blur-md transition-all active:scale-95 cursor-pointer shadow-md">
+          Reset Solved
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Info & Control Hint with Caption -->
+  <div class="text-center pb-2 shrink-0 flex flex-col items-center gap-1.5 select-none">
+    <p class="text-[11px] font-medium text-slate-400">Swipe to rotate layers • Drag background to orbit camera</p>
+    <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1">Made with <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="#f51348" class="inline-block align-middle mx-0.5"><title fill="#f51348">heart-fill</title><path fill="#f51348" d="M16.696 3C14.652 3 12.887 4.197 12 5.943C11.113 4.197 9.348 3 7.304 3C4.374 3 2 5.457 2 8.481s1.817 5.796 4.165 8.073S12 21 12 21s3.374-2.133 5.835-4.446C20.46 14.088 22 11.514 22 8.481S19.626 3 16.696 3"/></svg> by Captain MSZ</p>
   </div>
 </div>
 `;
 
 // ==================================================================
-// EASTER EGG HANDLERS
+// 3D RUBIK'S CUBE ENGINE & EASTER EGG LIFECYCLE
 // ==================================================================
 let brandTapCount = 0;
 let brandTapTimer = null;
+
+let cubeAnimId = null;
+let isCubeInitialized = false;
+let cubeCanvas = null;
+let cubeCtx = null;
+
+let rotX = -0.45;
+let rotY = 0.65;
+let targetRotX = -0.45;
+let targetRotY = 0.65;
+
+let isDragging = false;
+let lastMouseX = 0;
+let lastMouseY = 0;
+let startTouchX = 0;
+let startTouchY = 0;
+
+const CUBE_COLORS = ['#FFFFFF', '#FFD500', '#DC2626', '#FF5800', '#2563EB', '#16A34A'];
+let blocks = [];
+let animatingLayer = null;
+
+function initBlocks() {
+  blocks = [];
+  for (let x = -1; x <= 1; x++) {
+    for (let y = -1; y <= 1; y++) {
+      for (let z = -1; z <= 1; z++) {
+        blocks.push({
+          x: x, y: y, z: z,
+          origX: x, origY: y, origZ: z,
+          colors: [
+            y === 1 ? 0 : -1,
+            y === -1 ? 1 : -1,
+            z === 1 ? 2 : -1,
+            z === -1 ? 3 : -1,
+            x === 1 ? 4 : -1,
+            x === -1 ? 5 : -1
+          ]
+        });
+      }
+    }
+  }
+}
+
+export function launchCubeGame() {
+  const container = document.getElementById('cube-game-container');
+  cubeCanvas = document.getElementById('cube-canvas');
+  if (!container || !cubeCanvas) return;
+
+  cubeCtx = cubeCanvas.getContext('2d', { alpha: true });
+  resizeCubeCanvas();
+
+  if (!isCubeInitialized) {
+    initBlocks();
+    setupCubeEventListeners();
+    isCubeInitialized = true;
+  }
+
+  if (!cubeAnimId) {
+    renderCubeLoop();
+  }
+}
+
+export function dismissCubeGame() {
+  if (cubeAnimId) {
+    cancelAnimationFrame(cubeAnimId);
+    cubeAnimId = null;
+  }
+}
+
+function resizeCubeCanvas() {
+  if (!cubeCanvas || !cubeCanvas.parentNode) return;
+  const rect = cubeCanvas.parentNode.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  cubeCanvas.width = Math.floor(rect.width * dpr);
+  cubeCanvas.height = Math.floor(rect.height * dpr);
+}
+
+function setupCubeEventListeners() {
+  if (!cubeCanvas) return;
+
+  window.addEventListener('resize', () => {
+    if (cubeCanvas && cubeCanvas.offsetParent !== null) resizeCubeCanvas();
+  });
+
+  const onStart = (e) => {
+    isDragging = true;
+    const pt = e.touches ? e.touches[0] : e;
+    lastMouseX = pt.clientX;
+    lastMouseY = pt.clientY;
+    startTouchX = pt.clientX;
+    startTouchY = pt.clientY;
+  };
+
+  const onMove = (e) => {
+    if (!isDragging) return;
+    const pt = e.touches ? e.touches[0] : e;
+    const dx = pt.clientX - lastMouseX;
+    const dy = pt.clientY - lastMouseY;
+    lastMouseX = pt.clientX;
+    lastMouseY = pt.clientY;
+
+    targetRotY += dx * 0.008;
+    targetRotX += dy * 0.008;
+    targetRotX = Math.max(-1.4, Math.min(1.4, targetRotX));
+  };
+
+  const onEnd = (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+
+    const pt = e.changedTouches ? e.changedTouches[0] : e;
+    const totalDx = pt.clientX - startTouchX;
+    const totalDy = pt.clientY - startTouchY;
+
+    if (Math.abs(totalDx) > 25 || Math.abs(totalDy) > 25) {
+      if (Math.abs(totalDx) > Math.abs(totalDy)) {
+        const dir = totalDx > 0 ? Math.PI / 2 : -Math.PI / 2;
+        const layerIdx = totalDy < -10 ? 1 : (totalDy > 10 ? -1 : 0);
+        triggerLayerRotation('y', layerIdx, dir);
+      } else {
+        const dir = totalDy > 0 ? Math.PI / 2 : -Math.PI / 2;
+        const layerIdx = totalDx < -10 ? -1 : (totalDx > 10 ? 1 : 0);
+        triggerLayerRotation('x', layerIdx, dir);
+      }
+    }
+  };
+
+  cubeCanvas.addEventListener('mousedown', onStart);
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onEnd);
+
+  cubeCanvas.addEventListener('touchstart', onStart, { passive: true });
+  window.addEventListener('touchmove', onMove, { passive: true });
+  window.addEventListener('touchend', onEnd);
+
+  document.getElementById('cube-scramble-btn')?.addEventListener('click', scrambleCube);
+  document.getElementById('cube-reset-btn')?.addEventListener('click', () => {
+    initBlocks();
+  });
+}
+
+function scrambleCube() {
+  if (animatingLayer) return;
+  let count = 0;
+  const axes = ['x', 'y', 'z'];
+  const indices = [-1, 0, 1];
+  const dirs = [Math.PI / 2, -Math.PI / 2];
+
+  function doMove() {
+    if (count >= 15) return;
+    count++;
+    const ax = axes[Math.floor(Math.random() * axes.length)];
+    const idx = indices[Math.floor(Math.random() * indices.length)];
+    const dir = dirs[Math.floor(Math.random() * dirs.length)];
+    triggerLayerRotation(ax, idx, dir, doMove);
+  }
+  doMove();
+}
+
+function triggerLayerRotation(axis, index, targetAngle, onComplete) {
+  if (animatingLayer) return;
+  animatingLayer = { axis, index, angle: 0, targetAngle, speed: 0.25, onComplete };
+}
+
+function updateCubePhysics() {
+  rotX += (targetRotX - rotX) * 0.15;
+  rotY += (targetRotY - rotY) * 0.15;
+
+  if (animatingLayer) {
+    const step = (animatingLayer.targetAngle - animatingLayer.angle) * animatingLayer.speed;
+    if (Math.abs(animatingLayer.targetAngle - animatingLayer.angle) < 0.04) {
+      animatingLayer.angle = animatingLayer.targetAngle;
+      applyLayerRotation(animatingLayer.axis, animatingLayer.index, animatingLayer.targetAngle);
+      const cb = animatingLayer.onComplete;
+      animatingLayer = null;
+      if (cb) cb();
+    } else {
+      animatingLayer.angle += step;
+    }
+  }
+}
+
+function applyLayerRotation(axis, index, angle) {
+  const cos = Math.round(Math.cos(angle));
+  const sin = Math.round(Math.sin(angle));
+
+  blocks.forEach(b => {
+    if (b[axis] === index) {
+      let u, v;
+      if (axis === 'x') {
+        u = b.y; v = b.z;
+        b.y = u * cos - v * sin;
+        b.z = u * sin + v * cos;
+        const oldC = [...b.colors];
+        if (angle > 0) {
+          b.colors[0] = oldC[3]; b.colors[3] = oldC[1]; b.colors[1] = oldC[2]; b.colors[2] = oldC[0];
+        } else {
+          b.colors[0] = oldC[2]; b.colors[2] = oldC[1]; b.colors[1] = oldC[3]; b.colors[3] = oldC[0];
+        }
+      } else if (axis === 'y') {
+        u = b.x; v = b.z;
+        b.x = u * cos - v * sin;
+        b.z = u * sin + v * cos;
+        const oldC = [...b.colors];
+        if (angle > 0) {
+          b.colors[4] = oldC[2]; b.colors[2] = oldC[5]; b.colors[5] = oldC[3]; b.colors[3] = oldC[4];
+        } else {
+          b.colors[4] = oldC[3]; b.colors[3] = oldC[5]; b.colors[5] = oldC[2]; b.colors[2] = oldC[4];
+        }
+      } else if (axis === 'z') {
+        u = b.x; v = b.y;
+        b.x = u * cos - v * sin;
+        b.y = u * sin + v * cos;
+        const oldC = [...b.colors];
+        if (angle > 0) {
+          b.colors[4] = oldC[0]; b.colors[0] = oldC[5]; b.colors[5] = oldC[1]; b.colors[1] = oldC[4];
+        } else {
+          b.colors[4] = oldC[1]; b.colors[1] = oldC[5]; b.colors[5] = oldC[0]; b.colors[0] = oldC[4];
+        }
+      }
+    }
+  });
+}
+
+function renderCubeLoop() {
+  updateCubePhysics();
+  drawCubeScene();
+  cubeAnimId = requestAnimationFrame(renderCubeLoop);
+}
+
+function drawCubeScene() {
+  if (!cubeCtx || !cubeCanvas) return;
+  const w = cubeCanvas.width;
+  const h = cubeCanvas.height;
+  cubeCtx.clearRect(0, 0, w, h);
+
+  const cx = w / 2;
+  const cy = h / 2;
+  const scale = Math.min(w, h) / 7.2;
+
+  const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+  const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+
+  function project(px, py, pz) {
+    let x1 = px * cosY - pz * sinY;
+    let z1 = px * sinY + pz * cosY;
+    let y2 = py * cosX - z1 * sinX;
+    let z2 = py * sinX + z1 * cosX;
+
+    return {
+      x: cx + x1 * scale,
+      y: cy - y2 * scale,
+      z: z2
+    };
+  }
+
+  const facesToDraw = [];
+  const blockSize = 0.92;
+  const half = blockSize / 2;
+
+  blocks.forEach(b => {
+    let bx = b.x;
+    let by = b.y;
+    let bz = b.z;
+
+    if (animatingLayer && b[animatingLayer.axis] === animatingLayer.index) {
+      const a = animatingLayer.angle;
+      const cosA = Math.cos(a), sinA = Math.sin(a);
+      if (animatingLayer.axis === 'x') {
+        const ny = by * cosA - bz * sinA;
+        const nz = by * sinA + bz * cosA;
+        by = ny; bz = nz;
+      } else if (animatingLayer.axis === 'y') {
+        const nx = bx * cosA - bz * sinA;
+        const nz = bx * sinA + bz * cosA;
+        bx = nx; bz = nz;
+      } else if (animatingLayer.axis === 'z') {
+        const nx = bx * cosA - by * sinA;
+        const ny = bx * sinA + by * cosA;
+        bx = nx; by = ny;
+      }
+    }
+
+    const faceNormals = [
+      { n: [0, 1, 0], colIdx: b.colors[0], verts: [[-half, half, -half], [half, half, -half], [half, half, half], [-half, half, half]] },
+      { n: [0, -1, 0], colIdx: b.colors[1], verts: [[-half, -half, half], [half, -half, half], [half, -half, -half], [-half, -half, -half]] },
+      { n: [0, 0, 1], colIdx: b.colors[2], verts: [[-half, -half, half], [half, -half, half], [half, half, half], [-half, half, half]] },
+      { n: [0, 0, -1], colIdx: b.colors[3], verts: [[half, -half, -half], [-half, -half, -half], [-half, half, -half], [half, half, -half]] },
+      { n: [1, 0, 0], colIdx: b.colors[4], verts: [[half, -half, half], [half, -half, -half], [half, half, -half], [half, half, half]] },
+      { n: [-1, 0, 0], colIdx: b.colors[5], verts: [[-half, -half, -half], [-half, -half, half], [-half, half, half], [-half, half, -half]] }
+    ];
+
+    faceNormals.forEach(f => {
+      const pVerts = f.verts.map(v => project(bx + v[0], by + v[1], bz + v[2]));
+      const avgZ = (pVerts[0].z + pVerts[1].z + pVerts[2].z + pVerts[3].z) / 4;
+
+      const pCenter = project(bx + f.n[0]*0.5, by + f.n[1]*0.5, bz + f.n[2]*0.5);
+      const pBase = project(bx, by, bz);
+
+      if (pCenter.z > pBase.z) {
+        facesToDraw.push({
+          verts: pVerts,
+          avgZ: avgZ,
+          color: f.colIdx >= 0 ? CUBE_COLORS[f.colIdx] : '#1E293B'
+        });
+      }
+    });
+  });
+
+  facesToDraw.sort((a, b) => a.avgZ - b.avgZ);
+
+  facesToDraw.forEach(f => {
+    cubeCtx.beginPath();
+    cubeCtx.moveTo(f.verts[0].x, f.verts[0].y);
+    for (let i = 1; i < 4; i++) cubeCtx.lineTo(f.verts[i].x, f.verts[i].y);
+    cubeCtx.closePath();
+
+    cubeCtx.fillStyle = f.color;
+    cubeCtx.fill();
+
+    cubeCtx.strokeStyle = '#0F172A';
+    cubeCtx.lineWidth = Math.max(1.5, scale * 0.04);
+    cubeCtx.stroke();
+  });
+}
 
 export function handleBrandCardTap() {
   brandTapCount++;
@@ -418,20 +766,24 @@ export function openEasterEggModal() {
   requestAnimationFrame(() => {
     modal.classList.remove('opacity-0');
   });
+  launchCubeGame();
 }
 
 export function closeEasterEggModal() {
   const modal = document.getElementById('easter-egg-modal');
-  if (!modal) return;
-  modal.classList.add('opacity-0');
-  setTimeout(() => {
-    modal.classList.add('hidden');
-  }, 300);
+  if (modal) {
+    modal.classList.add('opacity-0');
+    setTimeout(() => {
+      modal.classList.add('hidden');
+    }, 300);
+  }
+  dismissCubeGame();
 }
 
-// Global window exposure for inline onclick handlers
 if (typeof window !== 'undefined') {
   window.handleBrandCardTap = handleBrandCardTap;
   window.openEasterEggModal = openEasterEggModal;
   window.closeEasterEggModal = closeEasterEggModal;
+  window.launchCubeGame = launchCubeGame;
+  window.dismissCubeGame = dismissCubeGame;
 }
