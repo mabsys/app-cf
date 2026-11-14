@@ -1,4 +1,4 @@
-// ./main.js (1411_R426) - CertiFly Application Shell & Orchestrator
+// ./main.js (1411_R428) - CertiFly Application Shell & Orchestrator
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
@@ -1356,6 +1356,7 @@ function saveDashboardTemplates() {
 }
 
 let welcomeAnimTimer = null;
+let currentWelcomeCycleId = 0;
 
 export function startWelcomeTextAnimation() {
   const el = document.getElementById("welcome-text-anim");
@@ -1365,6 +1366,14 @@ export function startWelcomeTextAnimation() {
     clearTimeout(welcomeAnimTimer);
     welcomeAnimTimer = null;
   }
+  currentWelcomeCycleId++;
+  const cycleId = currentWelcomeCycleId;
+
+  if (typeof el.getAnimations === 'function') {
+    try {
+      el.getAnimations().forEach(anim => anim.cancel());
+    } catch (e) {}
+  }
 
   const greetings = [
     "Welcome!",
@@ -1372,12 +1381,15 @@ export function startWelcomeTextAnimation() {
     "欢迎！",
     "நல்வரவு!",
     "Selamat Datai!",
-    "Salam Sejahtera!"
+    "Kopisanangan!",
+    "ਜੀ ਆਇਆਂ ਨੂੰ!"
   ];
 
   let index = 0;
 
   function animateTextChange(targetEl, newText, onComplete) {
+    if (!document.body.contains(targetEl) || cycleId !== currentWelcomeCycleId) return;
+
     if (typeof targetEl.animate === 'function') {
       try {
         const fadeOut = targetEl.animate([
@@ -1390,6 +1402,7 @@ export function startWelcomeTextAnimation() {
         });
 
         fadeOut.onfinish = () => {
+          if (!document.body.contains(targetEl) || cycleId !== currentWelcomeCycleId) return;
           targetEl.textContent = newText;
           const fadeIn = targetEl.animate([
             { opacity: 0, transform: 'translateY(8px) scale(0.95)' },
@@ -1401,6 +1414,7 @@ export function startWelcomeTextAnimation() {
           });
 
           fadeIn.onfinish = () => {
+            if (!document.body.contains(targetEl) || cycleId !== currentWelcomeCycleId) return;
             if (onComplete) onComplete();
           };
         };
@@ -1414,27 +1428,34 @@ export function startWelcomeTextAnimation() {
     targetEl.style.opacity = '0';
     targetEl.style.transform = 'translateY(-8px)';
     setTimeout(() => {
+      if (!document.body.contains(targetEl) || cycleId !== currentWelcomeCycleId) return;
       targetEl.textContent = newText;
       targetEl.style.transition = 'all 400ms cubic-bezier(0.175, 0.885, 0.32, 1.275)';
       targetEl.style.opacity = '1';
       targetEl.style.transform = 'translateY(0px)';
-      if (onComplete) setTimeout(onComplete, 400);
+      if (onComplete) {
+        setTimeout(() => {
+          if (cycleId === currentWelcomeCycleId) onComplete();
+        }, 400);
+      }
     }, 300);
   }
 
   function cycle() {
+    if (cycleId !== currentWelcomeCycleId) return;
     const targetEl = document.getElementById("welcome-text-anim");
-    if (!targetEl) return;
+    if (!targetEl || !document.body.contains(targetEl)) return;
 
     index = (index + 1) % greetings.length;
     animateTextChange(targetEl, greetings[index], () => {
-      welcomeAnimTimer = setTimeout(cycle, 2200);
+      if (cycleId === currentWelcomeCycleId && document.body.contains(targetEl)) {
+        welcomeAnimTimer = setTimeout(cycle, 2200);
+      }
     });
   }
 
   welcomeAnimTimer = setTimeout(cycle, 2000);
 }
-
 if (typeof window !== "undefined") {
   window.startWelcomeTextAnimation = startWelcomeTextAnimation;
 }async function renderBlankDashboard() {
@@ -1452,7 +1473,7 @@ if (typeof window !== "undefined") {
   <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center justify-center h-7 overflow-hidden">
     <span id="welcome-text-anim" class="inline-block transition-all">Welcome!</span>
   </h3>
-  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">Let’s get your personal dashboard up and running! Scan your digital licence QR and upload your latest e-attestation PDF in the Menu </p>
+  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">Let’s get your personal dashboard up and running!</p>
   <button onclick="openProfileMenu('licence')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
     Set Up Credentials
   </button>
