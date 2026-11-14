@@ -1,4 +1,4 @@
-// ./js/tools.js (1311_R435) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (1311_R436) - CertiFly Tools Module, Calculation Engines & EFB Modals
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -102,6 +102,12 @@ export function openEfbYearSelectModal() {
 }
 
 export function openEfbDatePicker(targetInputId, labelTitle = 'SELECT DATE') {
+  if (!navigator.onLine && targetInputId === 'profile-passport-expiry') {
+    if (typeof showToast === 'function') {
+      showToast('Passport details require an active internet connection.', 'warning');
+    }
+    return;
+  }
   efbDatePickerState.targetInputId = targetInputId;
   const inputEl = document.getElementById(targetInputId);
   const currentVal = inputEl ? inputEl.value : '';
