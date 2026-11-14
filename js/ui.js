@@ -1,4 +1,4 @@
-// ./js/ui.js (1311_R436) - View Switching & UI Management
+// ./js/ui.js (1311_R437) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -595,12 +595,13 @@ export function updateNetworkStatus() {
     offlineHistoryToastShown = false;
   }
 
-  // 1. Top Global Banner & Scanner Stop
+  // 1. Top Global Banner & Scanner Teardown
   if (!isOnline) {
     setTopBanner("OFFLINE MODE", "offline", true, true);
     stopScanner();
     const camTab = document.getElementById("camera-scan-tab");
-    if (camTab && !camTab.classList.contains("hidden")) {
+    const manualTab = document.getElementById("manual-entry-tab");
+    if ((camTab && !camTab.classList.contains("hidden")) || (manualTab && !manualTab.classList.contains("hidden"))) {
       if (typeof window.switchScanHubTab === "function") {
         window.switchScanHubTab("qrpass");
       }
@@ -609,22 +610,36 @@ export function updateNetworkStatus() {
     setTopBanner("", "offline", false);
   }
 
-  // Helper to apply disabled state, opacity, cursor, and tooltip
+  // Helper to apply disabled state, opacity, cursor, pointer-events, and tooltip
   const applyOnlineState = (elementId, onlineAllowed, offlineTitle = "Requires internet connection") => {
     const el = document.getElementById(elementId);
     if (!el) return;
     el.disabled = !onlineAllowed;
     el.classList.toggle("opacity-50", !onlineAllowed);
     el.classList.toggle("cursor-not-allowed", !onlineAllowed);
+    el.classList.toggle("pointer-events-none", !onlineAllowed);
     if (!onlineAllowed) {
       el.setAttribute("title", offlineTitle);
     } else {
       el.removeAttribute("title");
     }
+
+    const labelEl = document.querySelector(`label[for="${elementId}"]`);
+    if (labelEl) {
+      labelEl.classList.toggle("opacity-50", !onlineAllowed);
+      labelEl.classList.toggle("cursor-not-allowed", !onlineAllowed);
+      labelEl.classList.toggle("pointer-events-none", !onlineAllowed);
+      if (!onlineAllowed) {
+        labelEl.setAttribute("title", offlineTitle);
+      } else {
+        labelEl.removeAttribute("title");
+      }
+    }
   };
 
   // 2. Pilot Scan Hub Controls
   applyOnlineState("tab-camera-btn", isOnline, "Camera scanning requires an active internet connection");
+  applyOnlineState("tab-manual-btn", isOnline, "Manual URL entry requires an active internet connection");
   applyOnlineState("upload-qr-btn", isOnline, "Photo QR scanning requires an active internet connection");
   applyOnlineState("submit-url-btn", isOnline, "Licence verification requires an active internet connection");
   applyOnlineState("camera-cycle-btn", isOnline, "Camera functions require an active internet connection");
@@ -646,8 +661,16 @@ export function updateNetworkStatus() {
   applyOnlineState("profile-stop-qr-btn", isOnline, "Camera functions require an active internet connection");
   applyOnlineState("profile-url-input", isOnline, "Licence verification requires an active internet connection");
   applyOnlineState("profile-url-clear-btn", isOnline, "Licence verification requires an active internet connection");
-}
+  
+  // Company Documents (PDF) Accordion
+  applyOnlineState("profile-pdf-file", isOnline, "PDF upload requires an active internet connection");
+  applyOnlineState("profile-qs-pdf-file", isOnline, "PDF upload requires an active internet connection");
 
+  // Passport Details Accordion
+  applyOnlineState("profile-passport-no", isOnline, "Passport details require an active internet connection");
+  applyOnlineState("btn-passport-expiry-trigger", isOnline, "Passport details require an active internet connection");
+  applyOnlineState("profile-passport-expiry", isOnline);
+}
 export function showView(viewId, defaultTab = null) {
   if (viewId !== "history-view" && typeof window.exitHistoryManageMode === "function") {
     window.exitHistoryManageMode();
