@@ -1,4 +1,4 @@
-// ./main.js (1311_R424) - CertiFly Application Shell & Orchestrator
+// ./main.js (1411_R425) - CertiFly Application Shell & Orchestrator
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
@@ -1355,6 +1355,71 @@ function saveDashboardTemplates() {
   }
 }
 
+let welcomeAnimTimer = null;
+
+export function startWelcomeTextAnimation() {
+  const el = document.getElementById("welcome-text-anim");
+  if (!el) return;
+
+  if (welcomeAnimTimer) {
+    clearTimeout(welcomeAnimTimer);
+    welcomeAnimTimer = null;
+  }
+
+  const greetings = [
+    "Welcome!",
+    "Selamat Datang!",
+    "欢迎！",
+    "நல்வரவு!",
+    "Selamat Datai!",
+    "Kopisanangan!"
+  ];
+
+  let index = 0;
+
+  function cycle() {
+    const targetEl = document.getElementById("welcome-text-anim");
+    if (!targetEl) return;
+
+    if (typeof anime !== "undefined") {
+      anime({
+        targets: targetEl,
+        opacity: [1, 0],
+        translateY: [0, -8],
+        scale: [1, 0.95],
+        duration: 350,
+        easing: "easeInQuad",
+        complete: () => {
+          index = (index + 1) % greetings.length;
+          targetEl.textContent = greetings[index];
+
+          anime({
+            targets: targetEl,
+            opacity: [0, 1],
+            translateY: [8, 0],
+            scale: [0.95, 1],
+            duration: 450,
+            easing: "easeOutBack",
+            complete: () => {
+              welcomeAnimTimer = setTimeout(cycle, 2200);
+            }
+          });
+        }
+      });
+    } else {
+      index = (index + 1) % greetings.length;
+      targetEl.textContent = greetings[index];
+      welcomeAnimTimer = setTimeout(cycle, 2200);
+    }
+  }
+
+  welcomeAnimTimer = setTimeout(cycle, 2200);
+}
+
+if (typeof window !== "undefined") {
+  window.startWelcomeTextAnimation = startWelcomeTextAnimation;
+}
+
 async function renderBlankDashboard() {
   saveDashboardTemplates();
   const dashboardView = document.getElementById("dashboard-view");
@@ -1365,17 +1430,18 @@ async function renderBlankDashboard() {
     overviewPane.innerHTML = `
 <div class="p-6 text-center space-y-4 my-8">
   <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
-    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path stroke-dasharray="66" stroke-width="2" d="M12 3h7v18h-14v-18h7Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="66;0"></animate></path><path stroke-dasharray="14" stroke-dashoffset="14" d="M14.5 3.5v3h-5v-3"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.2s" to="0"></animate></path><path stroke-dasharray="12" stroke-dashoffset="12" stroke-width="2" d="M9 13l2 2l4 -4"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.9s" dur="0.2s" to="0"></animate></path></g></svg>
   </div>
-  <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No Duty Credentials Saved</h3>
-  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
-    Please set up your digital licence URL and company attestation PDF in My Credentials to activate your flight duty compliance dashboard.
-  </p>
+  <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center justify-center h-7 overflow-hidden">
+    <span id="welcome-text-anim" class="inline-block transition-all">Welcome!</span>
+  </h3>
+  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">Let’s get your personal dashboard up and running! Scan your digital licence QR and upload your latest e-attestation PDF in the Menu </p>
   <button onclick="openProfileMenu('licence')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
     Set Up Credentials
   </button>
 </div>
 `;
+    startWelcomeTextAnimation();
   }
 
   const caamPane = dashboardView.querySelector("#tab-caam-content") || document.getElementById("tab-caam-content");
