@@ -1,6 +1,4 @@
-// ./js/components/menu.js (1411_R446) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
-
-import Cube from '../vendor/cube.js';
+// ./js/components/menu.js (1411_R447) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
 
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
@@ -375,64 +373,351 @@ export const menuHTML = `
 </div>
 
 <!-- EASTER EGG MODAL DRAWER -->
-<div id="easter-egg-modal" class="fixed inset-0 z-[60] bg-slate-950/90 backdrop-blur-xl flex flex-col items-center justify-between p-4 transition-all duration-300 opacity-0 hidden">
+<div id="easter-egg-modal" class="fixed inset-0 z-[60] bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-between p-4 transition-all duration-300 opacity-0 hidden select-none">
   
   <!-- Header Bar -->
   <div class="w-full max-w-md flex items-center justify-between pt-2 px-2 shrink-0">
     <div class="flex items-center gap-2">
       <span class="text-xs font-black tracking-widest text-blue-400 uppercase">CertiFly™ Break Deck</span>
+      <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-900/60 text-blue-300 border border-blue-700/50">Flappy Pilot</span>
     </div>
-    <button id="close-cube-modal-btn" type="button" onclick="if(typeof closeEasterEggModal === 'function') closeEasterEggModal();" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm font-bold transition-all active:scale-95 cursor-pointer">
+    <button id="close-flappy-modal-btn" type="button" onclick="if(typeof closeEasterEggModal === 'function') closeEasterEggModal();" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm font-bold transition-all active:scale-95 cursor-pointer">
       ✕
     </button>
   </div>
 
-  <!-- 3D WebGL Canvas Container -->
+  <!-- Game Canvas Viewport Container -->
   <div class="w-full max-w-md aspect-square relative flex items-center justify-center my-auto p-2">
-    <div id="cube-game-container" class="w-full h-full rounded-3xl overflow-hidden border border-slate-800/80 shadow-2xl bg-slate-900/50 relative flex items-center justify-center">
-      <!-- Official Cube canvas mounts dynamically here -->
+    <div id="flappy-game-container" class="w-full h-full rounded-3xl overflow-hidden border border-slate-800/80 shadow-2xl bg-slate-900 relative flex items-center justify-center">
+      <canvas id="flappy-canvas" class="w-full h-full object-contain cursor-pointer"></canvas>
     </div>
   </div>
 
   <!-- Bottom Info & Control Hint with Caption -->
   <div class="text-center pb-2 shrink-0 flex flex-col items-center gap-1.5 select-none">
-    <p class="text-[11px] font-medium text-slate-400">Swipe layers to rotate • Drag background to orbit camera</p>
+    <p class="text-[11px] font-medium text-slate-400">Tap screen or press Spacebar to flap &amp; dodge storm clouds</p>
     <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1">Made with <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="#f51348" class="inline-block align-middle mx-0.5"><title fill="#f51348">heart-fill</title><path fill="#f51348" d="M16.696 3C14.652 3 12.887 4.197 12 5.943C11.113 4.197 9.348 3 7.304 3C4.374 3 2 5.457 2 8.481s1.817 5.796 4.165 8.073S12 21 12 21s3.374-2.133 5.835-4.446C20.46 14.088 22 11.514 22 8.481S19.626 3 16.696 3"/></svg> by Captain MSZ</p>
   </div>
 </div>
 `;
 
 // ==================================================================
-// OFFICIAL BORIS ŠEHOVAC THE-CUBE ENGINE & EASTER EGG LIFECYCLE
+// FLAPPY PILOT 2D CANVAS GAME ENGINE & EASTER EGG LIFECYCLE
 // ==================================================================
 let brandTapCount = 0;
 let brandTapTimer = null;
-let cubeGameInstance = null;
 
-export function launchCubeGame() {
-  const container = document.getElementById('cube-game-container');
-  if (!container) return;
+let flappyAnimId = null;
+let flappyCanvas = null;
+let flappyCtx = null;
+let gameState = 'START'; // 'START', 'PLAYING', 'GAMEOVER'
 
-  const CubeClass = (typeof Cube !== "undefined" ? Cube : null) || window.Cube || (window.ERNO && window.ERNO.Cube);
+let bird = { x: 80, y: 150, vy: 0, gravity: 0.38, lift: -6.5, radius: 12 };
+let pipes = [];
+let score = 0;
+let highScore = 0;
+let frameCount = 0;
+let particles = [];
 
-  if (!cubeGameInstance && CubeClass) {
-    try {
-      cubeGameInstance = new CubeClass(container, {
-        game: true,
-        scramble: true
-      });
-    } catch (err) {
-      console.warn('Failed to initialize official Cube instance:', err);
-    }
-  } else if (cubeGameInstance && typeof cubeGameInstance.resume === 'function') {
-    cubeGameInstance.resume();
+try {
+  highScore = parseInt(localStorage.getItem('certifly_flappy_high_score') || '0', 10);
+} catch (e) {
+  highScore = 0;
+}
+
+function resetFlappyGame() {
+  bird.y = (flappyCanvas ? flappyCanvas.height / 2 : 150);
+  bird.vy = 0;
+  pipes = [];
+  particles = [];
+  score = 0;
+  frameCount = 0;
+  gameState = 'START';
+}
+
+function flap() {
+  if (gameState === 'START') {
+    gameState = 'PLAYING';
+    bird.vy = bird.lift;
+    createParticles(bird.x, bird.y, 8);
+  } else if (gameState === 'PLAYING') {
+    bird.vy = bird.lift;
+    createParticles(bird.x - 10, bird.y, 6);
+  } else if (gameState === 'GAMEOVER') {
+    resetFlappyGame();
+    gameState = 'PLAYING';
+    bird.vy = bird.lift;
   }
 }
 
-export function dismissCubeGame() {
-  if (cubeGameInstance && typeof cubeGameInstance.pause === 'function') {
-    cubeGameInstance.pause();
+function createParticles(x, y, count) {
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: x,
+      y: y + (Math.random() * 8 - 4),
+      vx: -2 - Math.random() * 3,
+      vy: Math.random() * 2 - 1,
+      size: 3 + Math.random() * 3,
+      alpha: 1,
+      color: Math.random() > 0.4 ? '#38BDF8' : '#F97316'
+    });
   }
+}
+
+function updateFlappy() {
+  if (gameState !== 'PLAYING') return;
+
+  frameCount++;
+  bird.vy += bird.gravity;
+  bird.y += bird.vy;
+
+  // Update particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    let p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.alpha -= 0.04;
+    if (p.alpha <= 0) particles.splice(i, 1);
+  }
+
+  // Spawn obstacles (Storm Cloud Pylons)
+  if (frameCount % 90 === 0) {
+    const gap = 120;
+    const minHeight = 40;
+    const maxHeight = flappyCanvas.height - gap - minHeight;
+    const topHeight = Math.floor(Math.random() * (maxHeight - minHeight + 1)) + minHeight;
+
+    pipes.push({
+      x: flappyCanvas.width,
+      top: topHeight,
+      bottom: flappyCanvas.height - topHeight - gap,
+      width: 44,
+      passed: false
+    });
+  }
+
+  // Move & Collide Pipes
+  for (let i = pipes.length - 1; i >= 0; i--) {
+    let p = pipes[i];
+    p.x -= 2.2;
+
+    // Score increment
+    if (!p.passed && p.x + p.width < bird.x) {
+      p.passed = true;
+      score++;
+      if (score > highScore) {
+        highScore = score;
+        try { localStorage.setItem('certifly_flappy_high_score', highScore.toString()); } catch (e) {}
+      }
+    }
+
+    # Collision detection
+    if (
+      bird.x + bird.radius > p.x &&
+      bird.x - bird.radius < p.x + p.width &&
+      (bird.y - bird.radius < p.top || bird.y + bird.radius > flappyCanvas.height - p.bottom)
+    ) {
+      triggerGameOver();
+    }
+
+    if (p.x + p.width < 0) {
+      pipes.splice(i, 1);
+    }
+  }
+
+  # Ceiling & Floor Bounds
+  if (bird.y + bird.radius >= flappyCanvas.height - 15) {
+    bird.y = flappyCanvas.height - 15 - bird.radius;
+    triggerGameOver();
+  }
+  if (bird.y - bird.radius <= 0) {
+    bird.y = bird.radius;
+    bird.vy = 0;
+  }
+}
+
+function triggerGameOver() {
+  gameState = 'GAMEOVER';
+  createParticles(bird.x, bird.y, 20);
+}
+
+function drawFlappy() {
+  if (!flappyCtx || !flappyCanvas) return;
+  const w = flappyCanvas.width;
+  const h = flappyCanvas.height;
+
+  # Background (Twilight Sky Gradient)
+  const bgGrad = flappyCtx.createLinearGradient(0, 0, 0, h);
+  bgGrad.addColorStop(0, '#0F172A');
+  bgGrad.addColorStop(0.6, '#1E293B');
+  bgGrad.addColorStop(1, '#0F172A');
+  flappyCtx.fillStyle = bgGrad;
+  flappyCtx.fillRect(0, 0, w, h);
+
+  # Stars / Cloud Particles in Background
+  flappyCtx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+  for (let i = 0; i < 15; i++) {
+    const sx = (i * 27 + frameCount * 0.3) % w;
+    const sy = (i * 19) % (h * 0.7);
+    flappyCtx.fillRect(sx, sy, 2, 2);
+  }
+
+  # Draw Particles (Exhaust trail)
+  particles.forEach(p => {
+    flappyCtx.save();
+    flappyCtx.globalAlpha = Math.max(0, p.alpha);
+    flappyCtx.fillStyle = p.color;
+    flappyCtx.beginPath();
+    flappyCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    flappyCtx.fill();
+    flappyCtx.restore();
+  });
+
+  # Draw Obstacles (Storm Pylons)
+  pipes.forEach(p => {
+    # Top Pipe / Cloud Pylon
+    const pGrad = flappyCtx.createLinearGradient(p.x, 0, p.x + p.width, 0);
+    pGrad.addColorStop(0, '#1E3A8A');
+    pGrad.addColorStop(0.5, '#3B82F6');
+    pGrad.addColorStop(1, '#1D4ED8');
+
+    flappyCtx.fillStyle = pGrad;
+    flappyCtx.fillRect(p.x, 0, p.width, p.top);
+    flappyCtx.fillRect(p.x, h - p.bottom, p.width, p.bottom);
+
+    # Caps
+    flappyCtx.fillStyle = '#60A5FA';
+    flappyCtx.fillRect(p.x - 3, p.top - 12, p.width + 6, 12);
+    flappyCtx.fillRect(p.x - 3, h - p.bottom, p.width + 6, 12);
+  });
+
+  # Draw Ground Line
+  flappyCtx.fillStyle = '#334155';
+  flappyCtx.fillRect(0, h - 15, w, 15);
+  flappyCtx.fillStyle = '#38BDF8';
+  flappyCtx.fillRect(0, h - 15, w, 2);
+
+  # Draw Aircraft (Jet)
+  flappyCtx.save();
+  flappyCtx.translate(bird.x, bird.y);
+
+  let angle = Math.min(Math.max(bird.vy * 0.07, -0.4), 0.6);
+  flappyCtx.rotate(angle);
+
+  # Wings
+  flappyCtx.fillStyle = '#64748B';
+  flappyCtx.beginPath();
+  flappyCtx.moveTo(-6, -2);
+  flappyCtx.lineTo(-14, -10);
+  flappyCtx.lineTo(-2, -2);
+  flappyCtx.closePath();
+  flappyCtx.fill();
+
+  # Main Jet Body
+  flappyCtx.fillStyle = '#F8FAFC';
+  flappyCtx.beginPath();
+  flappyCtx.ellipse(0, 0, 15, 8, 0, 0, Math.PI * 2);
+  flappyCtx.fill();
+
+  # Cockpit Canopy
+  flappyCtx.fillStyle = '#38BDF8';
+  flappyCtx.beginPath();
+  flappyCtx.ellipse(4, -3, 6, 4, 0, 0, Math.PI * 2);
+  flappyCtx.fill();
+
+  # Red Tail Fin
+  flappyCtx.fillStyle = '#EF4444';
+  flappyCtx.beginPath();
+  flappyCtx.moveTo(-10, 0);
+  flappyCtx.lineTo(-16, -11);
+  flappyCtx.lineTo(-6, -3);
+  flappyCtx.closePath();
+  flappyCtx.fill();
+
+  flappyCtx.restore();
+
+  # UI Overlay: Score
+  flappyCtx.fillStyle = '#FFFFFF';
+  flappyCtx.font = 'bold 20px sans-serif';
+  flappyCtx.textAlign = 'center';
+
+  if (gameState === 'PLAYING') {
+    flappyCtx.fillText(score.toString(), w / 2, 36);
+  } else if (gameState === 'START') {
+    flappyCtx.fillStyle = '#38BDF8';
+    flappyCtx.font = 'black 22px sans-serif';
+    flappyCtx.fillText('FLAPPY PILOT', w / 2, h / 2 - 35);
+
+    flappyCtx.fillStyle = '#F8FAFC';
+    flappyCtx.font = '12px sans-serif';
+    flappyCtx.fillText('Tap Screen or Press Space to Take Off', w / 2, h / 2 + 10);
+
+    if (highScore > 0) {
+      flappyCtx.fillStyle = '#94A3B8';
+      flappyCtx.font = '11px sans-serif';
+      flappyCtx.fillText('BEST SCORE: ' + highScore, w / 2, h / 2 + 40);
+    }
+  } else if (gameState === 'GAMEOVER') {
+    flappyCtx.fillStyle = '#EF4444';
+    flappyCtx.font = 'black 22px sans-serif';
+    flappyCtx.fillText('MAYDAY! MAYDAY!', w / 2, h / 2 - 40);
+
+    flappyCtx.fillStyle = '#F8FAFC';
+    flappyCtx.font = 'bold 15px sans-serif';
+    flappyCtx.fillText('SCORE: ' + score, w / 2, h / 2 - 10);
+
+    flappyCtx.fillStyle = '#38BDF8';
+    flappyCtx.font = '12px sans-serif';
+    flappyCtx.fillText('BEST FLIGHT: ' + highScore, w / 2, h / 2 + 15);
+
+    flappyCtx.fillStyle = '#F1F5F9';
+    flappyCtx.font = 'bold 12px sans-serif';
+    flappyCtx.fillText('Tap to Fly Again', w / 2, h / 2 + 50);
+  }
+}
+
+function renderFlappyLoop() {
+  updateFlappy();
+  drawFlappy();
+  flappyAnimId = requestAnimationFrame(renderFlappyLoop);
+}
+
+function handleFlappyInput(e) {
+  if (e.type === 'keydown' && e.code !== 'Space') return;
+  if (e.type === 'keydown') e.preventDefault();
+  flap();
+}
+
+export function launchFlappyGame() {
+  const container = document.getElementById('flappy-game-container');
+  flappyCanvas = document.getElementById('flappy-canvas');
+  if (!container || !flappyCanvas) return;
+
+  flappyCtx = flappyCanvas.getContext('2d');
+  
+  const rect = container.getBoundingClientRect();
+  flappyCanvas.width = Math.floor(rect.width || 300);
+  flappyCanvas.height = Math.floor(rect.height || 300);
+
+  resetFlappyGame();
+
+  flappyCanvas.removeEventListener('click', handleFlappyInput);
+  flappyCanvas.addEventListener('click', handleFlappyInput);
+
+  window.removeEventListener('keydown', handleFlappyInput);
+  window.addEventListener('keydown', handleFlappyInput);
+
+  if (!flappyAnimId) {
+    renderFlappyLoop();
+  }
+}
+
+export function dismissFlappyGame() {
+  if (flappyAnimId) {
+    cancelAnimationFrame(flappyAnimId);
+    flappyAnimId = null;
+  }
+  window.removeEventListener('keydown', handleFlappyInput);
 }
 
 export function handleBrandCardTap() {
@@ -459,7 +744,7 @@ export function openEasterEggModal() {
   requestAnimationFrame(() => {
     modal.classList.remove('opacity-0');
   });
-  launchCubeGame();
+  launchFlappyGame();
 }
 
 export function closeEasterEggModal() {
@@ -470,13 +755,13 @@ export function closeEasterEggModal() {
       modal.classList.add('hidden');
     }, 300);
   }
-  dismissCubeGame();
+  dismissFlappyGame();
 }
 
 if (typeof window !== 'undefined') {
   window.handleBrandCardTap = handleBrandCardTap;
   window.openEasterEggModal = openEasterEggModal;
   window.closeEasterEggModal = closeEasterEggModal;
-  window.launchCubeGame = launchCubeGame;
-  window.dismissCubeGame = dismissCubeGame;
+  window.launchFlappyGame = launchFlappyGame;
+  window.dismissFlappyGame = dismissFlappyGame;
 }
