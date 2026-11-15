@@ -1,4 +1,4 @@
-// ./main.js (1511_R429) - CertiFly Application Shell & Orchestrator
+// ./main.js (1511_R431) - CertiFly Application Shell & Orchestrator
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
@@ -1466,7 +1466,7 @@ if (typeof window !== "undefined") {
   const overviewPane = dashboardView.querySelector("#tab-overview-content") || document.getElementById("tab-overview-content");
   if (overviewPane) {
     overviewPane.innerHTML = `
-<div class="p-6 text-center space-y-4 my-8">
+<div class="p-6 text-center space-y-4 my-4">
   <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path stroke-dasharray="66" stroke-width="2" d="M12 3h7v18h-14v-18h7Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="66;0"></animate></path><path stroke-dasharray="14" stroke-dashoffset="14" d="M14.5 3.5v3h-5v-3"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.2s" to="0"></animate></path><path stroke-dasharray="12" stroke-dashoffset="12" stroke-width="2" d="M9 13l2 2l4 -4"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.9s" dur="0.2s" to="0"></animate></path></g></svg>
   </div>
@@ -1485,7 +1485,7 @@ if (typeof window !== "undefined") {
   const caamPane = dashboardView.querySelector("#tab-caam-content") || document.getElementById("tab-caam-content");
   if (caamPane) {
     caamPane.innerHTML = `
-<div class="p-6 text-center space-y-4 my-8">
+<div class="p-6 text-center space-y-4 my-4">
   <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h2a2 2 0 012 2v1m-4 0h4"></path></svg>
   </div>
@@ -1503,7 +1503,7 @@ if (typeof window !== "undefined") {
   const mabPane = dashboardView.querySelector("#tab-mab-content") || document.getElementById("tab-mab-content");
   if (mabPane) {
     mabPane.innerHTML = `
-<div class="p-6 text-center space-y-4 my-8">
+<div class="p-6 text-center space-y-4 my-4">
   <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
   </div>
@@ -2407,7 +2407,7 @@ ${badgeHtml}
   } else {
     if (caamPane) {
       caamPane.innerHTML = `
-<div class="p-6 text-center space-y-4 my-8">
+<div class="p-6 text-center space-y-4 my-4">
   <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h2a2 2 0 012 2v1m-4 0h4"></path></svg>
   </div>
@@ -2588,7 +2588,7 @@ ${badgeHtml}
   } else {
     if (mabPane) {
       mabPane.innerHTML = `
-<div class="p-6 text-center space-y-4 my-8">
+<div class="p-6 text-center space-y-4 my-4">
   <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
   </div>
@@ -3958,14 +3958,14 @@ function renderMyQrPass() {
 
     if (!hasUrl && !profile.cachedQrDataUrl && !profile.cachedCaamResults) {
       tabContainer.innerHTML = `
-<div class="py-12 px-4 text-center flex flex-col items-center justify-center bg-slate-800/80 rounded-2xl border border-slate-700/80 shadow-lg my-4">
-  <div class="w-16 h-16 bg-slate-700/60 rounded-full flex items-center justify-center text-slate-400 mb-4 shadow-inner">
-    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 3l18 18"></path></svg>
+<div class="p-6 text-center space-y-4 my-8">
+  <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+    <svg class="h-12 w-12 shrink-0" fill="none" stroke="currentColor" stroke-width="0.1" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M13 21v-2h2v2zm-2-2v-5h2v5zm8-3v-4h2v4zm-2-4v-2h2v2zM5 14v-2h2v2zm-2-2v-2h2v2zm9-7V3h2v2zM4.5 7.5h3v-3h-3zM3 9V3h6v6zm1.5 10.5h3v-3h-3zM3 21v-6h6v6zM16.5 7.5h3v-3h-3zM15 9V3h6v6zm2 12v-3h-2v-2h4v3h2v2zm-4-7v-2h4v2zm-4 0v-2H7v-2h6v2h-2v2zm1-5V5h2v2h2v2zM5.25 6.75v-1.5h1.5v1.5zm0 12v-1.5h1.5v1.5zm12-12v-1.5h1.5v1.5z"></path>
+    </svg>
   </div>
-  <h3 class="text-base font-bold text-white mb-1">No Digital QR Pass Configured</h3>
-  <p class="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed mb-4">
-    Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to generate your personal digital flight pass.
-  </p>
+  <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1">No Digital QR Pass Configured</h3>
+  <p class="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed mb-4">Complete My Credentials setup to generate your backup QR code here</p>
   <button onclick="openProfileMenu('licence')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
     Configure Licence Source
   </button>
