@@ -1,13 +1,6 @@
-// ./js/festiveEngine.js (1411_R117) - CertiFly Hybrid Festive & Seasonal Overlay Engine
+// ./js/festiveEngine.js (1511_R119) - CertiFly Hybrid Festive & Seasonal Overlay Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
-
-// Test World Pilots' Day window.testFestiveEvent('pilots\_day');
-//Pass `null` or no arguments to remove the sticker:
-
-//```
-//window.testFestiveEvent();
-//```
 
 export const DEFAULT_FESTIVE_CONFIG = {
   version: "2026.3",
@@ -155,7 +148,7 @@ export function getActiveFestiveEvent(overrideDateStr = null) {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
-  const todayStr = ;
+  const todayStr = `${year}-${month}-${day}`;
 
   return config.events.find(evt => {
     if (!evt.startDate || !evt.endDate) return false;
