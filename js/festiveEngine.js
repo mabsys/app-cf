@@ -1,6 +1,13 @@
-// ./js/festiveEngine.js (1411_R116) - CertiFly Hybrid Festive & Seasonal Overlay Engine
+// ./js/festiveEngine.js (1411_R117) - CertiFly Hybrid Festive & Seasonal Overlay Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
+
+// Test World Pilots' Day window.testFestiveEvent('pilots\_day');
+//Pass `null` or no arguments to remove the sticker:
+
+//```
+//window.testFestiveEvent();
+//```
 
 export const DEFAULT_FESTIVE_CONFIG = {
   version: "2026.3",
@@ -331,6 +338,26 @@ export function updateFestivePills() {
   }
 }
 
+export function testFestiveEvent(target) {
+  if (!target) {
+    unmountFestiveOverlay();
+    console.log('[FestiveEngine] Cleared festive overlay.');
+    return;
+  }
+  const config = getFestiveConfig();
+  if (config && Array.isArray(config.events)) {
+    const found = config.events.find(e => e.id === target || e.id.includes(target));
+    if (found && found.startDate) {
+      console.log('[FestiveEngine] Triggering test event: ' + found.name + ' (' + found.id + ') on date ' + found.startDate);
+      mountFestiveOverlay(found.startDate);
+      return found;
+    }
+  }
+  // Otherwise treat target as date string (YYYY-MM-DD)
+  console.log('[FestiveEngine] Triggering date override: ' + target);
+  mountFestiveOverlay(target);
+}
+
 export async function initFestiveEngine() {
   updateFestivePills();
 
@@ -346,5 +373,6 @@ if (typeof window !== 'undefined') {
   window.initFestiveEngine = initFestiveEngine;
   window.mountFestiveOverlay = mountFestiveOverlay;
   window.unmountFestiveOverlay = unmountFestiveOverlay;
-  window.updateFestivePills = updateFestivePills;
+    window.updateFestivePills = updateFestivePills;
+  window.testFestiveEvent = testFestiveEvent;
 }
