@@ -1,4 +1,4 @@
-// ./main.js (1411_R428) - CertiFly Application Shell & Orchestrator
+// ./main.js (1511_R429) - CertiFly Application Shell & Orchestrator
 
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
@@ -1473,7 +1473,7 @@ if (typeof window !== "undefined") {
   <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center justify-center h-7 overflow-hidden">
     <span id="welcome-text-anim" class="inline-block transition-all">Welcome!</span>
   </h3>
-  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">Let’s get your personal dashboard up and running!</p>
+  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">Let’s get your personal dashboard up and running! Have your licence QR & attestation PDF file ready.</p>
   <button onclick="openProfileMenu('licence')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
     Set Up Credentials
   </button>
@@ -1491,7 +1491,7 @@ if (typeof window !== "undefined") {
   </div>
   <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No CAAM Digital Licence</h3>
   <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
-    Please set up your official CAAM eCLIPSE digital licence URL in My Credentials to view licence validities.
+    Scan the QR code on your physical licence card or paste its URL in My Credentials menu to continue.
   </p>
   <button onclick="openProfileMenu('licence')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
     Configure Licence Source
@@ -1509,7 +1509,7 @@ if (typeof window !== "undefined") {
   </div>
   <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No MAB Attestation PDF</h3>
   <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
-    Please upload your MAB E-Attestation PDF document in My Credentials to view company qualifications.
+    Upload your MAB E-Attestation PDF document in My Credentials to view company qualifications.
   </p>
   <button onclick="openProfileMenu('docs')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
     Upload Attestation PDF
