@@ -1,4 +1,4 @@
-// js/notifications.js (0511_R383) - CertiFly Unified Notification Engine
+// js/notifications.js (1511_R384) - CertiFly Unified Notification Engine
 
 /**
  * 1. FLOATING TOAST NOTIFICATIONS (Auto-Dismiss Feedback)
@@ -16,11 +16,11 @@ export function showToast(message, type = 'info', duration = 3000) {
   }
 
   const styles = {
-    success: 'bg-emerald-600 text-white border-emerald-500 shadow-lg',
-    error: 'bg-rose-600 text-white border-rose-500 shadow-lg',
-    warning: 'bg-amber-500 text-slate-950 font-black border-amber-400 shadow-lg',
-    info: 'bg-sky-500 text-white border-sky-400 shadow-lg',
-    offline: 'bg-amber-500 dark:bg-amber-400 text-slate-950 font-extrabold border-amber-300 dark:border-amber-200 shadow-xl'
+    success: 'bg-slate-800 text-emerald-400 border border-slate-800 shadow-md',
+    error: 'bg-slate-800 text-rose-400 border border-slate-800 shadow-md',
+    warning: 'bg-slate-800 text-amber-500 border border-slate-800 shadow-md',
+    info: 'bg-slate-800 text-sky-400 border border-slate-800 shadow-md',
+    offline: 'bg-slate-800 text-amber-400 border border-slate-800 shadow-md'
   };
 
   const icons = {
@@ -28,11 +28,11 @@ export function showToast(message, type = 'info', duration = 3000) {
     error: `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9.303 3.376c.866 1.5-.217 3.374-1.948 3.374H4.551c-1.73 0-2.813-1.874-1.948-3.374L10.051 3.378c.866-1.5 3.032-1.5 3.898 0l7.354 12.748zM12 15.75h.007v.008H12v-.008z" /></svg>`,
     warning: `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874-1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>`,
     info: `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
-    offline: `<svg class="w-4 h-4 shrink-0 text-slate-950" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9.303 3.376c.866 1.5-.217 3.374-1.948 3.374H4.551c-1.73 0-2.813-1.874-1.948-3.374L10.051 3.378c.866-1.5 3.032-1.5 3.898 0l7.354 12.748zM12 15.75h.007v.008H12v-.008z" /></svg>`
+    offline: `<svg class="w-4 h-4 shrink-0 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9.303 3.376c.866 1.5-.217 3.374-1.948 3.374H4.551c-1.73 0-2.813-1.874-1.948-3.374L10.051 3.378c.866-1.5 3.032-1.5 3.898 0l7.354 12.748zM12 15.75h.007v.008H12v-.008z" /></svg>`
   };
 
   const toast = document.createElement('div');
-  toast.className = `px-4 py-3 rounded-2xl shadow-xl text-xs font-bold tracking-normal flex items-center justify-between gap-3 pointer-events-auto transition-all duration-300 opacity-0 -translate-y-3 ${styles[type] || styles.info}`;
+  toast.className = `px-4 py-2 rounded-lg shadow-md text-xs font-bold tracking-normal flex items-center justify-between gap-2 pointer-events-auto transition-all duration-300 opacity-0 -translate-y-3 ${styles[type] || styles.info}`;
   toast.innerHTML = `
     <div class="flex items-center gap-2">
       ${icons[type] || icons.info}
@@ -210,15 +210,17 @@ export function showConfirmDialog({ title, message, confirmText = 'Confirm', can
     overlay.className = 'fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in';
 
     const isDanger = type === 'danger';
-    const btnBg = isDanger ? 'bg-rose-600 hover:bg-rose-700' : 'bg-blue-600 hover:bg-blue-700';
+    const confirmBtnClass = isDanger 
+      ? 'bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors cursor-pointer'
+      : 'bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors cursor-pointer';
 
     overlay.innerHTML = `
-      <div class="bg-white dark:bg-slate-300 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 max-w-xs w-full shadow-2xl flex flex-col gap-3 text-center">
-        <h3 class="text-sm font-bold text-slate-900 dark:text-slate-800 tracking-normal">${title}</h3>
-        <p class="text-xs text-slate-600 dark:text-slate-500 font-medium leading-relaxed">${message}</p>
+      <div class="w-full max-w-sm rounded-2xl bg-slate-800 dark:bg-slate-800 backdrop-blur-md border border-slate-800 dark:border-slate-800 shadow-2xl p-6 text-white dark:text-white flex flex-col gap-3 text-center">
+        <h3 class="text-sm font-bold tracking-normal">${title}</h3>
+        <p class="text-xs text-slate-300 dark:text-slate-300 font-medium leading-relaxed">${message}</p>
         <div class="grid ${showCancel ? 'grid-cols-2' : 'grid-cols-1'} gap-2 mt-2">
-          ${showCancel ? `<button id="dialog-cancel" type="button" class="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs uppercase hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer">${cancelText}</button>` : ''}
-          <button id="dialog-confirm" type="button" class="py-2.5 px-3 rounded-xl ${btnBg} text-white font-bold text-xs uppercase transition-all cursor-pointer">${confirmText}</button>
+          ${showCancel ? `<button id="dialog-cancel" type="button" class="bg-slate-600 hover:bg-slate-500 dark:bg-slate-800 dark:hover:bg-slate-700 text-white dark:text-slate-200 text-xs font-bold px-4 py-2.5 rounded-xl transition-colors cursor-pointer">${cancelText}</button>` : ''}
+          <button id="dialog-confirm" type="button" class="${confirmBtnClass}">${confirmText}</button>
         </div>
       </div>
     `;
