@@ -91,7 +91,7 @@ export const menuHTML = `
           <button type="button" class="accordion-header w-full p-2.5 flex items-center justify-between text-left cursor-pointer" onclick="if(typeof toggleProfileAccordionSection === 'function') toggleProfileAccordionSection('licence');">
             <div class="flex items-center gap-2.5">
               <div class="p-0.5 text-slate-600 dark:text-slate-300">
-                <svg class="w-4 h-4" fill="currentColor" stroke="none" viewBox="0 0 24 24" stroke-width="1"><path d="M14 13h5v-2h-5zm0-3h5V8h-5zm-9 6h8v-.55q0-1.125-1.1-1.787T9 13t-2.9.663T5 15.45zm5.413-4.587Q11 10.825 11 10t-.587-1.412T9 8t-1.412.588T7 10t.588 1.413T9 12t1.413-.587M4 20q-.825 0-1.412-.587T2 18V6q0-.825.588-1.412T4 4h16q.825 0 1.413.588T22 6v12q0 .825-.587 1.413T20 20z"></path></svg>
+                <svg class="w-4 h-4" fill="currentColor" stroke="none" viewBox="0 0 24 24" stroke-width="1"><path fill="currentColor" d="M14 13h5v-2h-5zm0-3h5V8h-5zm-9 6h8v-.55q0-1.125-1.1-1.787T9 13t-2.9.663T5 15.45zm5.413-4.587Q11 10.825 11 10t-.587-1.412T9 8t-1.412.588T7 10t.588 1.413T9 12t1.413-.587M4 20q-.825 0-1.412-.587T2 18V6q0-.825.588-1.412T4 4h16q.825 0 1.413.588T22 6v12q0 .825-.587 1.413T20 20zm0-2h16V6H4zm0 0V6z"></path></svg>
               </div>
               <span class="text-xs font-bold text-slate-800 dark:text-slate-100">Digital Licence</span>
             </div>
