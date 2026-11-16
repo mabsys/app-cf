@@ -1,4 +1,4 @@
-// ./js/ui.js (1411_R438) - View Switching & UI Management
+// ./js/ui.js (1611_R440) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -477,13 +477,16 @@ export function initNavigationBars() {
       const scannerView = document.getElementById("scanner-view");
       const isScannerActive = scannerView && !scannerView.classList.contains("hidden");
 
+      const statusBarCover = document.getElementById("status-bar-cover");
       if (isScannerActive) {
         topbar.style.transform = "translateY(-100%)";
         topbar.style.opacity = "0";
+        if (statusBarCover) statusBarCover.style.opacity = "0";
       } else {
         const topbarTranslate = -100 + (topbarProgress * 100);
         topbar.style.transform = `translateY(${topbarTranslate}%)`;
-        topbar.style.opacity = topbarProgress.toFixed(2);
+        topbar.style.opacity = topbarProgress > 0 ? "1" : "0";
+        if (statusBarCover) statusBarCover.style.opacity = topbarProgress > 0 ? "1" : "0";
       }
 
       const topBanner = document.getElementById("certifly-top-banner");
@@ -681,9 +684,13 @@ export function showView(viewId, defaultTab = null) {
   if (targetView) targetView.classList.remove("hidden");
 
   const topbar = document.getElementById("persistent-topbar");
-  if (topbar && viewId === "scanner-view") {
-    topbar.style.transform = "translateY(-100%)";
-    topbar.style.opacity = "0";
+  const statusBarCover = document.getElementById("status-bar-cover");
+  if (viewId === "scanner-view") {
+    if (topbar) {
+      topbar.style.transform = "translateY(-100%)";
+      topbar.style.opacity = "0";
+    }
+    if (statusBarCover) statusBarCover.style.opacity = "0";
   }
 
   if (viewId === "scanner-view" && !navigator.onLine) {
