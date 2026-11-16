@@ -1,4 +1,4 @@
-<!-- ./index.html (1611_R463) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
+<!-- ./index.html (1611_R461) - CertiFly PWA Application Shell & 3D 2-Faced Tools Layout -->
 
 <!DOCTYPE html>
 <html lang="en" class="overflow-x-hidden">
@@ -10,8 +10,9 @@
 // Developed by: Capt. Mohd Sallehuddin Zaidy //
 ----------------------------------------------->
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=contain">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
+
     <meta name="theme-color" content="#172554">
     <title>CertiFly™</title>
     <link rel="manifest" href="manifest.json">
@@ -65,36 +66,16 @@ navigator.serviceWorker.register('sw.js')
         .rotate-y-180 { transform: rotateY(180deg); -webkit-transform: rotateY(180deg); }
         .card-3d-inner { transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
         .card-3d-inner.is-flipped { transform: rotateY(180deg); -webkit-transform: rotateY(180deg); }
-        
-        #status-bar-shield {
-          height: env(safe-area-inset-top, 0px);
-        }
-        
-        #persistent-topbar::before {
-          content: "";
-          position: absolute;
-          top: -200px;
-          left: 0;
-          right: 0;
-          height: 200px;
-          background-color: #090d16; /* solid blue-950 */
-        }
-        .dark #persistent-topbar::before {
-          background-color: #0f172a; /* solid slate-900 */
-        }
     </style>
 </head>
 
 <body class="bg-slate-50 dark:bg-slate-950 min-h-[100dvh] font-sans text-slate-800 dark:text-slate-200 antialiased overflow-x-hidden">
 
-    <!-- Fixed Status Bar Top Shield -->
-    <div id="status-bar-shield" class="fixed top-0 left-0 right-0 z-40 bg-slate-50 dark:bg-slate-950 transition-colors duration-200 pointer-events-none"></div>
-
     <!-- Floating Top Overlay Alert -->
     <div class="max-w-md mx-auto w-full px-4 pt-2 pb-0 flex flex-col min-h-[100dvh]">
 
         <!-- Header -->
-        <header id="cf-header" class="text-center pb-3" style="padding-top: max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem));">
+        <header id="cf-header" class="text-center pb-3" style="padding-top: max(0.75rem, calc(env(safe-area-inset-top, 0px) + 2.0rem));">
             <h1 onclick="showScannerView()" class="text-3xl font-extrabold text-blue-950 dark:text-white tracking-tight italic flex items-center justify-center gap-1 leading-none cursor-pointer">
                 <span class="relative">
                     CertiFly<span class="align-super text-[6px] font-bold absolute -top-0.5 -right-1.5 dark:text-white">™</span>
