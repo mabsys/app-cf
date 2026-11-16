@@ -4,7 +4,7 @@ export const topbarHTML = `
 <!-- FIXED STATUS BAR COVER (Stays anchored at top:0, fills status bar area during slide-down) -->
 <div id="status-bar-cover"
      class="fixed top-0 left-0 right-0 z-50 bg-blue-950 dark:bg-slate-900 pointer-events-none transition-opacity duration-300 opacity-0"
-     style="height: max(1.25rem, env(safe-area-inset-top, 0px));"></div>
+     style="height: max(1.0rem, env(safe-area-inset-top, 0px));"></div>
 
 <!-- REDESIGNED MINI TOP BAR -->
 <div id="persistent-topbar"
