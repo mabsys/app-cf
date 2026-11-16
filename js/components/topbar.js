@@ -4,12 +4,12 @@ export const topbarHTML = `
 <!-- PERMANENT STATUS BAR SHIELD (Stays anchored at top:0, permanently covers native status bar blur zone) -->
 <div id="status-bar-cover"
      class="fixed top-0 left-0 right-0 z-[60] bg-blue-950 dark:bg-slate-900 pointer-events-none transition-colors duration-200"
-     style="height: max(1.0rem, env(safe-area-inset-top, 0px));"></div>
+     style="height: max(0.5rem, env(safe-area-inset-top, 0px));"></div>
 
 <!-- REDESIGNED MINI TOP BAR (Slides down from underneath the status bar shield) -->
 <div id="persistent-topbar"
      class="fixed left-0 right-0 h-12 bg-blue-950 dark:bg-slate-900 text-white border-b border-blue-900 dark:border-slate-800 shadow-lg z-50 transform -translate-y-full opacity-0 will-change-transform transition-all duration-300" 
-     style="top: max(1.0rem, env(safe-area-inset-top, 0px)); transform: translateZ(0); -webkit-transform: translateZ(0); will-change: transform; -webkit-font-smoothing: antialiased; backface-visibility: hidden; -webkit-backface-visibility: hidden;">
+     style="top: max(0.4rem, env(safe-area-inset-top, 0px)); transform: translateZ(0); -webkit-transform: translateZ(0); will-change: transform; -webkit-font-smoothing: antialiased; backface-visibility: hidden; -webkit-backface-visibility: hidden;">
   <div class="max-w-md mx-auto h-full flex items-center justify-between px-3">
 
     <!-- Left Group: Mini Home + Thin Vertical Separator + Left-Aligned Compact Logo -->
