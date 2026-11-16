@@ -1,9 +1,9 @@
-// js/components/topbar.js (1611_R172)- Persistent Mini Top Bar Component
+// js/components/topbar.js (1611_R173) - Persistent Mini Top Bar Component
 
 export const topbarHTML = `
 <!-- REDESIGNED MINI TOP BAR -->
 <div id="persistent-topbar"
-     class="fixed top-0 left-0 right-0 min-h-[3rem] bg-blue-950/95 dark:bg-slate-900/95 backdrop-blur-md text-white border-b border-blue-900 dark:border-slate-800 shadow-lg z-50 transform translate-y-0 opacity-100 will-change-transform transition-all duration-300" style="padding-top: max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)); transform: translateZ(0); -webkit-transform: translateZ(0); will-change: transform; -webkit-font-smoothing: antialiased; backface-visibility: hidden; -webkit-backface-visibility: hidden;">
+     class="fixed top-0 left-0 right-0 min-h-[3rem] bg-blue-950/95 dark:bg-slate-900/95 backdrop-blur-md text-white border-b border-blue-900 dark:border-slate-800 shadow-lg z-50 transform translate-y-0 opacity-100 will-change-transform transition-all duration-300 before:content-[''] before:absolute before:-top-[200px] before:left-0 before:right-0 before:h-[200px] before:bg-blue-950 dark:before:bg-slate-900" style="padding-top: max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)); transform: translateZ(0); -webkit-transform: translateZ(0); will-change: transform; -webkit-font-smoothing: antialiased; backface-visibility: hidden; -webkit-backface-visibility: hidden;">
   <div class="max-w-md mx-auto h-12 flex items-center justify-between px-3">
 
     <!-- Left Group: Mini Home + Thin Vertical Separator + Left-Aligned Compact Logo -->
