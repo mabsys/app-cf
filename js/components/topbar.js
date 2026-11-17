@@ -3,7 +3,7 @@
 export const topbarHTML = `
 <!-- PERMANENT STATUS BAR SHIELD (Stays anchored at top:0, permanently covers native status bar blur zone) -->
 <div id="status-bar-cover"
-     class="fixed top-0 left-0 right-0 z-[60] bg-blue-950/90 dark:bg-blue-950/90 pointer-events-none transition-colors duration-200"
+     class="fixed top-0 left-0 right-0 z-[60] bg-slate-900 dark:bg-slate-900 pointer-events-none transition-colors duration-200"
      style="height: max(0.9rem, env(safe-area-inset-top, 0px));"></div>
 
 <!-- REDESIGNED MINI TOP BAR (Slides down from underneath the status bar shield) -->
