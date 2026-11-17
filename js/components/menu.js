@@ -1,12 +1,11 @@
-
 // ./js/components/menu.js (1111_R449) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
 
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
-<div id="bottom-sheet-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden opacity-0 transition-opacity duration-300"></div>
+<div id="bottom-sheet-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-70 hidden opacity-0 transition-opacity duration-300"></div>
 
 <!-- FLOATING MENU CONTAINER -->
-<div id="bottom-sheet-menu" class="fixed bottom-3 left-2.5 right-2.5 z-50 bg-white dark:bg-slate-900 rounded-3xl shadow-md transform translate-y-[120%] transition-transform duration-300 ease-out max-w-md mx-auto border border-slate-100 dark:border-slate-800 flex flex-col hidden h-[82vh] max-h-[85vh] touch-none overflow-hidden">
+<div id="bottom-sheet-menu" class="fixed bottom-3 left-2.5 right-2.5 z-80 bg-white dark:bg-slate-900 rounded-3xl shadow-md transform translate-y-[120%] transition-transform duration-300 ease-out max-w-md mx-auto border border-slate-100 dark:border-slate-800 flex flex-col hidden h-[82vh] max-h-[85vh] touch-none overflow-hidden">
   
   <!-- Interactive Drag Handle / Grabber -->
   <div id="sheet-drag-handle" class="w-full py-3 cursor-grab active:cursor-grabbing flex items-center justify-center shrink-0 select-none">
