@@ -8,7 +8,7 @@ export const topbarHTML = `
 
 <!-- REDESIGNED MINI TOP BAR (Slides down from underneath the status bar shield) -->
 <div id="persistent-topbar"
-     class="fixed left-0 right-0 h-12 bg-slate-900 dark:bg-slate-900 text-white border-b border-blue-900 dark:border-blue-900 shadow-lg z-50 transform -translate-y-full opacity-0 will-change-transform transition-all duration-300" 
+     class="fixed left-0 right-0 h-12 bg-slate-900 dark:bg-slate-900 text-white border-b border-blue-900 dark:border-blue-950/60 shadow-lg z-50 transform -translate-y-full opacity-0 will-change-transform transition-all duration-300" 
      style="top: max(0.8rem, env(safe-area-inset-top, 0px)); transform: translateZ(0); -webkit-transform: translateZ(0); will-change: transform; -webkit-font-smoothing: antialiased; backface-visibility: hidden; -webkit-backface-visibility: hidden;">
   <div class="max-w-md mx-auto h-full flex items-center justify-between px-3">
 
