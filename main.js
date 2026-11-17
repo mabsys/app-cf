@@ -1473,7 +1473,7 @@ if (typeof window !== "undefined") {
   <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center justify-center h-7 overflow-hidden">
     <span id="welcome-text-anim" class="inline-block transition-all">Welcome!</span>
   </h3>
-  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">Let’s get your personal dashboard up and running! Have your licence QR & attestation PDF file ready.</p>
+  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">Let’s get your personal dashboard up and running!<br> Have your licence QR & attestation PDF file ready.</p>
   <button onclick="openProfileMenu('licence')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
     Set Up Credentials
   </button>
