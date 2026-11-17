@@ -9,7 +9,7 @@ export const topbarHTML = `
 <!-- REDESIGNED MINI TOP BAR (Slides down from underneath the status bar shield) -->
 <div id="persistent-topbar"
      class="fixed left-0 right-0 h-12 bg-blue-950 dark:bg-slate-900 text-white border-b border-blue-900 dark:border-slate-800 shadow-lg z-50 transform -translate-y-full opacity-0 will-change-transform transition-all duration-300" 
-     style="top: max(0.4rem, env(safe-area-inset-top, 0px)); transform: translateZ(0); -webkit-transform: translateZ(0); will-change: transform; -webkit-font-smoothing: antialiased; backface-visibility: hidden; -webkit-backface-visibility: hidden;">
+     style="top: max(0.8rem, env(safe-area-inset-top, 0px)); transform: translateZ(0); -webkit-transform: translateZ(0); will-change: transform; -webkit-font-smoothing: antialiased; backface-visibility: hidden; -webkit-backface-visibility: hidden;">
   <div class="max-w-md mx-auto h-full flex items-center justify-between px-3">
 
     <!-- Left Group: Mini Home + Thin Vertical Separator + Left-Aligned Compact Logo -->
