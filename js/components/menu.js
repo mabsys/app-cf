@@ -1,7 +1,5 @@
 // ./js/components/menu.js (1111_R449) - CertiFly Slide-over Menu Navigation & Sub-pane Drawer Engine
 
-import { openPdfViewerModal } from '../modals/pdfViewerModal.js';
-
 export const menuHTML = `
 <!-- DIMMED BACKDROP OVERLAY -->
 <div id="bottom-sheet-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-70 hidden opacity-0 transition-opacity duration-300"></div>
