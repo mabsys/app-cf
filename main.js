@@ -1,4 +1,4 @@
-// ./main.js (1811_R438) - CertiFly Application Shell & Orchestrator
+// ./main.js (1811_R439) - CertiFly Application Shell & Orchestrator
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -13,7 +13,7 @@ import { startScanner, stopScanner, switchScanHubTab, renderRecentPilotsList, cy
 import { updateNetworkStatus, showScannerView, showLoading, showError, showView, initNavigationBars, closeMenu, applyThemeMode, applyTextSize, updateThresholdPills, updateHistoryLimitPills, updateFreshnessLimitPills, switchResultTab, openProfileMenu, openMenu, initToolsViewUI, dispatchActiveToolCalculation, switchActiveTool, toggleProfileAccordionSection } from './js/ui.js';
 import { initFestiveEngine, setFestiveEnabled } from './js/festiveEngine.js';
 import { renderResults, setupResultViewScrollBanner, setLastScannedUrl, getLastScannedUrl } from './js/views/results.js';
-import { initProfileUI, resetProfileQrMode, updateSaveProfileButtonLabel, renderMyQrPass, handleProfileQrScanned, processAndCacheProfileData, getSelectedAttestationFile, getSelectedAttestationText, extractTextFromPdfFile } from './js/views/profile.js';
+import { initProfileUI, resetProfileQrMode, updateSaveProfileButtonLabel, renderMyQrPass, handleProfileQrScanned, processAndCacheProfileData, getSelectedAttestationFile, getSelectedAttestationText, extractTextFromPdfFile, isValidCaamUrl, applyUrlInputValidationStyle } from './js/views/profile.js';
 import { renderDashboardView, renderDashboardResults, saveDashboardTemplates, startWelcomeTextAnimation } from './js/views/dashboard.js';
 import { updateHistoryCounts, updateHistoryPillUI, updateBulkActionBarUI, initHistoryManageModeControls, setupHistorySwipeListeners, customRenderHistoryList, setupReverifyOnlineButton, setupPinCardButton, initHistorySearchAndFilters, toggleHistoryLimitQuickPicker } from './js/views/history.js';
 import { initToolsUI, initToolsUIController, restoreToolsLocalStorage, setupToolsCardSwipeGestures } from './js/views/toolsUI.js';
