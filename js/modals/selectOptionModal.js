@@ -1,4 +1,4 @@
-// ./js/modals/selectOptionModal.js (1811_R101) - CertiFly EFB Select Option Modal Component
+// ./js/modals/selectOptionModal.js (1811_R102) - CertiFly EFB Select Option Modal Component
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -46,10 +46,10 @@ export function openEfbSelectModal(targetInputId, labelTitle = 'CHOOSE OPTION', 
     const currentVal = document.getElementById(targetInputId)?.value;
     listEl.innerHTML = options.map(opt => {
       const isSelected = opt.value === currentVal;
-      const borderClass = isSelected 
-        ? 'border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400' 
+      const borderClass = isSelected
+        ? 'border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400'
         : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-800 dark:text-slate-100 hover:border-blue-400';
-      return `<button type="button" class="w-full p-3 rounded-xl border ${borderClass} font-bold text-xs text-left transition-all flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="selectEfbOption('${opt.value}', '${opt.label.replace(/'/g, "\\'")}')">
+      return `<button type="button" class="w-full p-3 rounded-xl border ${borderClass} font-bold text-xs text-left transition-all flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="selectEfbOption('${opt.value}', '${opt.label.replace(/'/g, "\'")}')">
         <span>${opt.label}</span>
         ${isSelected ? '<span class="text-blue-600 dark:text-blue-400 font-extrabold text-xs">SELECTED</span>' : ''}
       </button>`;
@@ -66,6 +66,17 @@ export function closeEfbSelectModal() {
 }
 
 export function selectEfbOption(val, label) {
+  if (efbSelectModalState.targetInputId === 'efb-date-picker-year-jump') {
+    const yearNum = parseInt(val, 10);
+    if (!isNaN(yearNum)) {
+      if (typeof window !== 'undefined' && typeof window.setEfbDatePickerYear === 'function') {
+        window.setEfbDatePickerYear(yearNum);
+      }
+    }
+    closeEfbSelectModal();
+    return;
+  }
+
   if (efbSelectModalState.targetInputId) {
     const inputEl = document.getElementById(efbSelectModalState.targetInputId);
     if (inputEl) inputEl.value = val;
