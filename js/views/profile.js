@@ -1,4 +1,4 @@
-// ./js/views/profile.js (1811_R101) - CertiFly Pilot Profile & Credentials Engine
+// ./js/views/profile.js (1811_R102) - CertiFly Pilot Profile & Credentials Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -22,6 +22,13 @@ let selectedQsText = "";
 let selectedQsParsed = null;
 let profileQrScannerActive = false;
 let initialMyQrPassTemplateHTML = "";
+
+export function getSelectedAttestationFile() { return selectedAttestationFile; }
+export function getSelectedAttestationText() { return selectedAttestationText; }
+export function getSelectedQsFile() { return selectedQsFile; }
+export function getSelectedQsText() { return selectedQsText; }
+export function getSelectedQsParsed() { return selectedQsParsed; }
+
 
 export async function extractTextFromPdfFile(file) {
   if (!file) return "";
@@ -223,6 +230,11 @@ export function resetProfileQrMode() {
 }
 if (typeof window !== 'undefined') {
   window.resetProfileQrMode = resetProfileQrMode;
+  window.getSelectedAttestationFile = getSelectedAttestationFile;
+  window.getSelectedAttestationText = getSelectedAttestationText;
+  window.getSelectedQsFile = getSelectedQsFile;
+  window.getSelectedQsText = getSelectedQsText;
+  window.getSelectedQsParsed = getSelectedQsParsed;
 }
 
 export function initProfileUI() {
