@@ -1,4 +1,4 @@
-// js/notifications.js (1911_R387) - CertiFly Unified Notification Engine
+// js/notifications.js (1911_R388) - CertiFly Unified Notification Engine
 
 /**
  * Helper to calculate dynamic top offset for persistent UI overlays
@@ -8,10 +8,10 @@ export function getSystemTopOffset() {
   const statusBarCover = document.getElementById('status-bar-cover');
   const topbar = document.getElementById('persistent-topbar');
 
-  let coverBottom = 20;
+  let coverBottom = 0;
   if (statusBarCover) {
     const rect = statusBarCover.getBoundingClientRect();
-    coverBottom = Math.max(20, rect.bottom);
+    coverBottom = Math.max(0, rect.bottom);
   }
 
   let topbarBottom = 0;
