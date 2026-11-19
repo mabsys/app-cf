@@ -1,10 +1,10 @@
-// ./js/modals/selectOptionModal.js (1811_R102) - CertiFly EFB Select Option Modal Component
+// ./js/modals/selectOptionModal.js (1911_R103) - CertiFly EFB Select Option Modal Component
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
 export const selectOptionModalHTML = `
 <!-- CUSTOM EFB SELECT OPTION MODAL -->
-<div id="efb-select-option-modal" class="fixed inset-0 z-[70] hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 select-none" onclick="if(event.target === this) closeEfbSelectModal()">
+<div id="efb-select-option-modal" class="fixed inset-0 z-[100] hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 select-none" onclick="if(event.target === this) closeEfbSelectModal()">
   <div class="w-11/12 max-w-[340px] mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-h-[75vh] flex flex-col overflow-hidden shadow-md">
     <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/90">
       <div>
