@@ -1,4 +1,4 @@
-// ./js/tools.js (1811_R437) - CertiFly Tools Module, Calculation Engines & Modular EFB Modal Integration
+// ./js/tools.js (1811_R438) - CertiFly Tools Module, Calculation Engines & Modular EFB Modal Integration
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -246,11 +246,7 @@ export function executeAndFlipCard(toolType) {
       return;
     }
     const l1 = document.getElementById('input-recency-l1-date')?.value;
-    const l2 = document.getElementById('input-recency-l2-date')?.value;
-    const l3 = document.getElementById('input-recency-l3-date')?.value;
     if (!l1) { openEfbDatePicker('input-recency-l1-date', 'LANDING #1 DATE'); return; }
-    if (!l2) { openEfbDatePicker('input-recency-l2-date', 'LANDING #2 DATE'); return; }
-    if (!l3) { openEfbDatePicker('input-recency-l3-date', 'LANDING #3 ANCHOR DATE'); return; }
   }
 
   // 1. Gather inputs and execute calculation engine
