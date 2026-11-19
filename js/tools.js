@@ -1,4 +1,4 @@
-// ./js/tools.js (1311_R436) - CertiFly Tools Module, Calculation Engines & EFB Modals
+// ./js/tools.js (1811_R437) - CertiFly Tools Module, Calculation Engines & Modular EFB Modal Integration
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -12,6 +12,87 @@ import * as MedicalEngineModule from './engines/medical-validity-calculator.js';
 import * as RecurrentEngineModule from './engines/recurrent-training-calculator.js';
 import * as LandingRecencyEngineModule from './engines/landing-recency-calculator.js';
 import * as PPCEngineModule from './engines/ppc-validity-calculator.js';
+
+// Modular EFB Components Imports
+import {
+  openEfbDatePicker,
+  closeEfbDatePicker,
+  renderEfbCalendarGrid,
+  changeEfbMonth,
+  setEfbDatePreset,
+  selectEfbDate,
+  openEfbYearSelectModal
+} from './modals/datePickerModal.js';
+
+import {
+  openEfbTimePicker,
+  closeEfbTimePicker,
+  stepEfbTimeHour,
+  stepEfbTimeMin,
+  setEfbTimePreset,
+  confirmEfbTimePicker
+} from './modals/timePickerModal.js';
+
+import {
+  openEfbSelectModal,
+  closeEfbSelectModal,
+  selectEfbOption
+} from './modals/selectOptionModal.js';
+
+import {
+  openEfbNumberPicker,
+  closeEfbNumberPicker,
+  stepEfbNumberVal,
+  confirmEfbNumberPicker
+} from './modals/numberPickerModal.js';
+
+import {
+  openMaxFdpModifiersModal,
+  closeMaxFdpModifiersModal,
+  toggleModifierAccordion,
+  updateModifierInlineSelectionUI,
+  selectModifierInlineOption,
+  confirmMaxFdpModifiers
+} from './modals/maxFdpModifiersModal.js';
+
+import {
+  openRecurrentCourseModal,
+  closeRecurrentCourseModal,
+  selectRecurrentCourse
+} from './modals/recurrentCourseModal.js';
+
+// Re-export EFB Modal Functions for Module Consumers
+export {
+  openEfbDatePicker,
+  closeEfbDatePicker,
+  renderEfbCalendarGrid,
+  changeEfbMonth,
+  setEfbDatePreset,
+  selectEfbDate,
+  openEfbYearSelectModal,
+  openEfbTimePicker,
+  closeEfbTimePicker,
+  stepEfbTimeHour,
+  stepEfbTimeMin,
+  setEfbTimePreset,
+  confirmEfbTimePicker,
+  openEfbSelectModal,
+  closeEfbSelectModal,
+  selectEfbOption,
+  openEfbNumberPicker,
+  closeEfbNumberPicker,
+  stepEfbNumberVal,
+  confirmEfbNumberPicker,
+  openMaxFdpModifiersModal,
+  closeMaxFdpModifiersModal,
+  toggleModifierAccordion,
+  updateModifierInlineSelectionUI,
+  selectModifierInlineOption,
+  confirmMaxFdpModifiers,
+  openRecurrentCourseModal,
+  closeRecurrentCourseModal,
+  selectRecurrentCourse
+};
 
 // ==================================================================
 // TOOLS MODULE STATE
@@ -65,8 +146,6 @@ export function formatDateDDMMMYYYY(dateInput) {
 }
 
 // ==================================================================
-// CUSTOM EFB DATE PICKER MODAL
-// ==================================================================
 let efbDatePickerState = {
   targetInputId: null,
   currentYear: 2026,
@@ -74,211 +153,13 @@ let efbDatePickerState = {
   selectedDate: null
 };
 
-export function openEfbYearSelectModal() {
-  const years = [];
-  const startYear = 1955;
-  const endYear = 2035;
-  for (let y = endYear; y >= startYear; y--) {
-    years.push({ value: String(y), label: String(y) });
-  }
-  openEfbSelectModal('efb-date-picker-year-jump', 'SELECT YEAR', years);
-  
-  const origSelect = window.selectEfbOption;
-  window.selectEfbOption = function(val, label) {
-    const targetInputId = efbSelectModalState.targetInputId;
-    if (targetInputId === 'efb-date-picker-year-jump') {
-      const yearNum = parseInt(val, 10);
-      if (!isNaN(yearNum)) {
-        efbDatePickerState.currentYear = yearNum;
-        renderEfbCalendarGrid();
-      }
-      closeEfbSelectModal();
-      return;
-    }
-    if (typeof origSelect === 'function') {
-      origSelect(val, label);
-    }
-  };
-}
 
-export function openEfbDatePicker(targetInputId, labelTitle = 'SELECT DATE') {
-  if (!navigator.onLine && targetInputId === 'profile-passport-expiry') {
-    if (typeof showToast === 'function') {
-      showToast('Passport details require an active internet connection.', 'warning');
-    }
-    return;
-  }
-  efbDatePickerState.targetInputId = targetInputId;
-  const inputEl = document.getElementById(targetInputId);
-  const currentVal = inputEl ? inputEl.value : '';
 
-  if (currentVal) {
-    const d = new Date(currentVal);
-    if (!isNaN(d.getTime())) {
-      efbDatePickerState.currentYear = d.getFullYear();
-      efbDatePickerState.currentMonth = d.getMonth();
-      efbDatePickerState.selectedDate = d;
-    }
-  } else {
-    const today = new Date();
-    efbDatePickerState.currentYear = today.getFullYear();
-    efbDatePickerState.currentMonth = today.getMonth();
-    efbDatePickerState.selectedDate = today;
-  }
 
-  const titleEl = document.getElementById('efb-date-picker-title');
-  if (titleEl) titleEl.innerText = labelTitle;
 
-  renderEfbCalendarGrid();
 
-  const modal = document.getElementById('efb-date-picker-modal');
-  if (modal) modal.classList.remove('hidden');
-}
 
-export function closeEfbDatePicker() {
-  const modal = document.getElementById('efb-date-picker-modal');
-  if (modal) modal.classList.add('hidden');
-}
 
-export function renderEfbCalendarGrid() {
-  const months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
-  const monthLabelEl = document.getElementById('efb-calendar-month-label');
-  if (monthLabelEl) {
-    monthLabelEl.innerText = `${months[efbDatePickerState.currentMonth]} ${efbDatePickerState.currentYear}`;
-    monthLabelEl.className = "py-1 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold transition-all cursor-pointer select-none text-center";
-    monthLabelEl.title = "Tap to Select Year";
-    monthLabelEl.onclick = () => openEfbYearSelectModal();
-  }
-
-  const daysGridEl = document.getElementById('efb-calendar-days-grid');
-  if (!daysGridEl) return;
-
-  daysGridEl.innerHTML = '';
-
-  const firstDay = new Date(efbDatePickerState.currentYear, efbDatePickerState.currentMonth, 1);
-  const startingDay = (firstDay.getDay() + 6) % 7; // Monday start
-  const daysInMonth = new Date(efbDatePickerState.currentYear, efbDatePickerState.currentMonth + 1, 0).getDate();
-
-  for (let i = 0; i < startingDay; i++) {
-    const emptyCell = document.createElement('div');
-    emptyCell.className = 'py-2';
-    daysGridEl.appendChild(emptyCell);
-  }
-
-  const today = new Date();
-  for (let day = 1; day <= daysInMonth; day++) {
-    const dayBtn = document.createElement('button');
-    dayBtn.type = 'button';
-    const isToday = today.getFullYear() === efbDatePickerState.currentYear && today.getMonth() === efbDatePickerState.currentMonth && today.getDate() === day;
-    const isSelected = efbDatePickerState.selectedDate && efbDatePickerState.selectedDate.getFullYear() === efbDatePickerState.currentYear && efbDatePickerState.selectedDate.getMonth() === efbDatePickerState.currentMonth && efbDatePickerState.selectedDate.getDate() === day;
-
-    let btnClass = 'py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ';
-    if (isSelected) {
-      btnClass += 'bg-blue-600 text-white shadow-md ';
-    } else if (isToday) {
-      btnClass += 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/40 ';
-    } else {
-      btnClass += 'bg-slate-100/80 dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-blue-500/10 ';
-    }
-
-    dayBtn.className = btnClass;
-    dayBtn.innerText = String(day);
-
-    const mStr = String(efbDatePickerState.currentMonth + 1).padStart(2, '0');
-    const dStr = String(day).padStart(2, '0');
-    const isoVal = `${efbDatePickerState.currentYear}-${mStr}-${dStr}`;
-
-    dayBtn.onclick = () => selectEfbDate(isoVal);
-    daysGridEl.appendChild(dayBtn);
-  }
-}
-
-export function changeEfbMonth(delta) {
-  let newMonth = efbDatePickerState.currentMonth + delta;
-  if (newMonth < 0) {
-    efbDatePickerState.currentMonth = 11;
-    efbDatePickerState.currentYear -= 1;
-  } else if (newMonth > 11) {
-    efbDatePickerState.currentMonth = 0;
-    efbDatePickerState.currentYear += 1;
-  } else {
-    efbDatePickerState.currentMonth = newMonth;
-  }
-  renderEfbCalendarGrid();
-}
-
-export function setEfbDatePreset(presetKey) {
-  const inputEl = efbDatePickerState.targetInputId ? document.getElementById(efbDatePickerState.targetInputId) : null;
-  const currentVal = inputEl ? inputEl.value : '';
-  let baseDate = new Date();
-  if (currentVal) {
-    const d = new Date(currentVal);
-    if (!isNaN(d.getTime())) baseDate = d;
-  }
-
-  let targetDate = new Date(baseDate);
-
-  if (presetKey === 'today') {
-    targetDate = new Date();
-  } else if (presetKey === 'eom') {
-    targetDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0);
-  } else if (presetKey === '+1y') {
-    targetDate = new Date(baseDate.getFullYear() + 1, baseDate.getMonth(), baseDate.getDate());
-  } else if (presetKey === '-1y') {
-    targetDate = new Date(baseDate.getFullYear() - 1, baseDate.getMonth(), baseDate.getDate());
-  }
-
-  efbDatePickerState.currentYear = targetDate.getFullYear();
-  efbDatePickerState.currentMonth = targetDate.getMonth();
-  efbDatePickerState.selectedDate = targetDate;
-
-  const mStr = String(targetDate.getMonth() + 1).padStart(2, '0');
-  const dStr = String(targetDate.getDate()).padStart(2, '0');
-  const isoVal = `${targetDate.getFullYear()}-${mStr}-${dStr}`;
-
-  selectEfbDate(isoVal);
-}
-
-export function selectEfbDate(isoVal) {
-  if (efbDatePickerState.targetInputId) {
-    if (efbDatePickerState.targetInputId === 'profile-passport-expiry') {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const selDate = new Date(isoVal);
-      if (selDate < today) {
-        closeEfbDatePicker();
-        showAlertModal('Expired Passport', 'Passport expiry date cannot be in the past.', 'error');
-        return;
-      }
-    }
-
-    const inputEl = document.getElementById(efbDatePickerState.targetInputId);
-    if (inputEl) inputEl.value = isoVal;
-
-    const formattedDate = formatDateDDMMMYYYY(isoVal);
-
-    const displayIdMap = {
-      'input-med-exam-date': 'input-med-exam-date-display',
-      'input-ppc-conduct-date': 'input-ppc-conduct-date-display',
-      'input-ppc-expiry-date': 'input-ppc-expiry-date-display',
-      'input-recurrent-conduct-date': 'input-recurrent-conduct-date-display',
-      'input-recency-flight-date': 'input-recency-flight-date-display',
-      'input-recency-l1-date': 'input-recency-l1-date-display',
-      'input-recency-l2-date': 'input-recency-l2-date-display',
-      'input-recency-l3-date': 'input-recency-l3-date-display',
-      'input-recency-variant-date': 'input-recency-variant-date-display',
-      'profile-passport-expiry': 'profile-passport-expiry-display'
-    };
-
-    const displayId = displayIdMap[efbDatePickerState.targetInputId] || `${efbDatePickerState.targetInputId}-display`;
-    const displayEl = document.getElementById(displayId);
-    if (displayEl) displayEl.innerText = formattedDate;
-  }
-  closeEfbDatePicker();
-}
-
-// ==================================================================
-// CUSTOM EFB TIME PICKER MODAL (HH:mm)
 // ==================================================================
 let efbTimePickerState = {
   targetInputId: null,
@@ -286,43 +167,7 @@ let efbTimePickerState = {
   mm: 0
 };
 
-export function openEfbTimePicker(targetInputId, labelTitle = 'SELECT TIME') {
-  efbTimePickerState.targetInputId = targetInputId;
-  const inputEl = document.getElementById(targetInputId);
-  let val = inputEl ? inputEl.value : '08:00';
-  if (!val || !val.includes(':')) val = '08:00';
-  const parts = val.split(':');
-  efbTimePickerState.hh = parseInt(parts[0], 10) || 8;
-  efbTimePickerState.mm = parseInt(parts[1], 10) || 0;
 
-  const titleEl = document.getElementById('efb-time-picker-title');
-  if (titleEl) titleEl.innerText = labelTitle;
-
-  // Render dynamic time shortcut presets based on targetInputId
-  const presetsMap = {
-    'input-cum-duty-7d': ['15:00', '25:00', '35:00', '45:00'],
-    'input-cum-duty-14d': ['55:00', '65:00', '75:00', '85:00'],
-    'input-cum-duty-28d': ['95:00', '120:00', '145:00', '170:00'],
-    'input-cum-flight-28d': ['25:00', '50:00', '75:00', '100:00']
-  };
-  const presets = presetsMap[targetInputId] || ['03:00', '06:00', '12:00', '16:00'];
-  const presetsGrid = document.getElementById('efb-time-presets-grid');
-  if (presetsGrid) {
-    presetsGrid.innerHTML = presets.map(p => 
-      `<button type="button" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer" onclick="setEfbTimePreset('${p}')">${p}</button>`
-    ).join('');
-  }
-
-  updateEfbTimeDisplay();
-
-  const modal = document.getElementById('efb-time-picker-modal');
-  if (modal) modal.classList.remove('hidden');
-}
-
-export function closeEfbTimePicker() {
-  const modal = document.getElementById('efb-time-picker-modal');
-  if (modal) modal.classList.add('hidden');
-}
 
 function updateEfbTimeDisplay() {
   const hhEl = document.getElementById('efb-time-val-hh');
@@ -331,130 +176,19 @@ function updateEfbTimeDisplay() {
   if (mmEl) mmEl.innerText = String(efbTimePickerState.mm).padStart(2, '0');
 }
 
-export function stepEfbTimeHour(delta) {
-  const isCumulative = efbTimePickerState.targetInputId && efbTimePickerState.targetInputId.startsWith('input-cum-');
-  if (isCumulative) {
-    efbTimePickerState.hh = Math.max(0, Math.min(250, efbTimePickerState.hh + delta));
-  } else {
-    efbTimePickerState.hh = (efbTimePickerState.hh + delta + 24) % 24;
-  }
-  updateEfbTimeDisplay();
-}
 
-export function stepEfbTimeMin(delta) {
-  efbTimePickerState.mm = (efbTimePickerState.mm + delta + 60) % 60;
-  updateEfbTimeDisplay();
-}
 
-export function setEfbTimePreset(timeStr) {
-  if (!timeStr || !timeStr.includes(':')) return;
-  const parts = timeStr.split(':');
-  efbTimePickerState.hh = parseInt(parts[0], 10) || 0;
-  efbTimePickerState.mm = parseInt(parts[1], 10) || 0;
-  updateEfbTimeDisplay();
-}
 
-export function confirmEfbTimePicker() {
-  const timeStr = String(efbTimePickerState.hh).padStart(2, '0') + ':' + String(efbTimePickerState.mm).padStart(2, '0');
-  if (efbTimePickerState.targetInputId) {
-    const inputEl = document.getElementById(efbTimePickerState.targetInputId);
-    if (inputEl) inputEl.value = timeStr;
 
-    const displayIdMap = {
-      'input-maxfdp-report-time': 'btn-maxfdp-report-display',
-      'input-preflight-duty-end-time': 'btn-preflight-duty-end-display',
-      'input-standby-start-time': 'btn-standby-start-display',
-      'input-standby-report-time': 'btn-standby-report-display',
-      'input-standby-time': 'btn-stby-time-display',
-      'input-cum-duty-7d': 'btn-cum-7d-display',
-      'input-cum-duty-14d': 'btn-cum-14d-display',
-      'input-cum-duty-28d': 'btn-cum-28d-display',
-      'input-cum-flight-28d': 'btn-cum-flt28d-display'
-    };
-
-    const displayId = displayIdMap[efbTimePickerState.targetInputId] || `${efbTimePickerState.targetInputId}-display`;
-    const displayEl = document.getElementById(displayId);
-    if (displayEl) displayEl.innerText = timeStr;
-  }
-  closeEfbTimePicker();
-}
-
-// ==================================================================
-// CUSTOM EFB SELECT OPTION MODAL
 // ==================================================================
 let efbSelectModalState = {
   targetInputId: null,
   options: []
 };
 
-export function openEfbSelectModal(targetInputId, labelTitle = 'CHOOSE OPTION', options = []) {
-  efbSelectModalState.targetInputId = targetInputId;
-  efbSelectModalState.options = options;
 
-  const titleEl = document.getElementById('efb-select-title');
-  if (titleEl) titleEl.innerText = labelTitle;
 
-  const listEl = document.getElementById('efb-select-options-list');
-  if (listEl) {
-    const currentVal = document.getElementById(targetInputId)?.value;
-    listEl.innerHTML = options.map(opt => {
-      const isSelected = opt.value === currentVal;
-      const borderClass = isSelected ? 'border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-800 dark:text-slate-100 hover:border-blue-400';
-      return `<button type="button" class="w-full p-3 rounded-xl border ${borderClass} font-bold text-xs text-left transition-all flex items-center justify-between cursor-pointer active:scale-[0.99]" onclick="selectEfbOption('${opt.value}', '${opt.label.replace(/'/g, "\'")}')">
-        <span>${opt.label}</span>
-        ${isSelected ? '<span class="text-blue-600 dark:text-blue-400 font-extrabold text-xs">SELECTED</span>' : ''}
-      </button>`;
-    }).join('');
-  }
 
-  const modal = document.getElementById('efb-select-option-modal');
-  if (modal) modal.classList.remove('hidden');
-}
-
-export function closeEfbSelectModal() {
-  const modal = document.getElementById('efb-select-option-modal');
-  if (modal) modal.classList.add('hidden');
-}
-
-export function selectEfbOption(val, label) {
-  if (efbSelectModalState.targetInputId) {
-    const inputEl = document.getElementById(efbSelectModalState.targetInputId);
-    if (inputEl) inputEl.value = val;
-
-    const displayIdMap = {
-      'input-med-license-type': 'btn-med-license-display',
-      'input-med-age-bracket': 'btn-med-age-display',
-      'input-recency-capacity': 'btn-recency-capacity-display',
-      'input-maxfdp-acclimatised': 'btn-maxfdp-acclim-display',
-      'input-maxfdp-relief': 'btn-maxfdp-relief-display',
-      'input-preflight-location': 'btn-preflight-loc-display',
-      'input-preflight-travel-time': 'btn-preflight-travel-display',
-      'input-preflight-discretion-reduction': 'btn-preflight-discretion-display',
-      'modal-maxfdp-longest-sector': 'btn-modal-maxfdp-longest-display',
-      'modal-maxfdp-split-rest': 'btn-modal-maxfdp-split-display',
-      'modal-maxfdp-inflight-rest': 'btn-modal-maxfdp-inflight-display',
-      'modal-maxfdp-crew-count': 'btn-modal-maxfdp-crew-display',
-      'modal-maxfdp-preceding-rest': 'btn-modal-maxfdp-preceding-display'
-    };
-
-    const targetId = efbSelectModalState.targetInputId;
-    let displayId = displayIdMap[targetId];
-    if (!displayId) {
-      if (document.getElementById(targetId + '-display')) {
-        displayId = targetId + '-display';
-      } else {
-        displayId = targetId.replace('input-', 'btn-') + '-display';
-      }
-    }
-
-    const displayEl = document.getElementById(displayId);
-    if (displayEl) displayEl.innerText = label;
-  }
-  closeEfbSelectModal();
-}
-
-// ==================================================================
-// CUSTOM EFB NUMBER STEPPER MODAL
 // ==================================================================
 let efbNumberPickerState = {
   targetInputId: null,
@@ -463,63 +197,9 @@ let efbNumberPickerState = {
   maxVal: 99
 };
 
-export function openEfbNumberPicker(targetInputId, labelTitle = 'SET VALUE', minVal = 0, maxVal = 99) {
-  efbNumberPickerState.targetInputId = targetInputId;
-  efbNumberPickerState.minVal = minVal;
-  efbNumberPickerState.maxVal = maxVal;
 
-  const inputEl = document.getElementById(targetInputId);
-  efbNumberPickerState.val = parseInt(inputEl ? inputEl.value : '1', 10) || minVal;
 
-  const titleEl = document.getElementById('efb-number-title');
-  if (titleEl) titleEl.innerText = labelTitle;
 
-  const displayValEl = document.getElementById('efb-number-display-val');
-  if (displayValEl) displayValEl.innerText = String(efbNumberPickerState.val);
-
-  const modal = document.getElementById('efb-number-picker-modal');
-  if (modal) modal.classList.remove('hidden');
-}
-
-export function closeEfbNumberPicker() {
-  const modal = document.getElementById('efb-number-picker-modal');
-  if (modal) modal.classList.add('hidden');
-}
-
-export function stepEfbNumberVal(delta) {
-  let nextVal = efbNumberPickerState.val + delta;
-  if (nextVal < efbNumberPickerState.minVal) nextVal = efbNumberPickerState.minVal;
-  if (nextVal > efbNumberPickerState.maxVal) nextVal = efbNumberPickerState.maxVal;
-  efbNumberPickerState.val = nextVal;
-
-  const displayValEl = document.getElementById('efb-number-display-val');
-  if (displayValEl) displayValEl.innerText = String(efbNumberPickerState.val);
-}
-
-export function confirmEfbNumberPicker() {
-  if (efbNumberPickerState.targetInputId) {
-    const inputEl = document.getElementById(efbNumberPickerState.targetInputId);
-    if (inputEl) inputEl.value = String(efbNumberPickerState.val);
-
-    const displayIdMap = {
-      'input-maxfdp-sectors': 'btn-maxfdp-sectors-display',
-      'input-preflight-duty-hours': 'btn-preflight-duty-display'
-    };
-
-    const displayId = displayIdMap[efbNumberPickerState.targetInputId] || `${efbNumberPickerState.targetInputId}-display`;
-    const displayEl = document.getElementById(displayId);
-    if (displayEl) {
-      if (efbNumberPickerState.targetInputId === 'input-maxfdp-sectors') {
-        displayEl.innerText = efbNumberPickerState.val === 1 ? '1 Sector' : `${efbNumberPickerState.val} Sectors`;
-      } else if (efbNumberPickerState.targetInputId === 'input-preflight-duty-hours') {
-        displayEl.innerText = `${efbNumberPickerState.val} Hours`;
-      } else {
-        displayEl.innerText = String(efbNumberPickerState.val);
-      }
-    }
-  }
-  closeEfbNumberPicker();
-}
 
 // ==================================================================
 // 3D CARD FLIP HANDLERS & CALCULATION EXECUTION
@@ -2115,8 +1795,6 @@ export function setSectorCount(count) {
 }
 
 // ==================================================================
-
-// ==================================================================
 // MULTI-VARIANT / SFF / MFF TOGGLE
 // ==================================================================
 export function setRecencyMultiVariant(isMulti) {
@@ -2164,29 +1842,8 @@ export function setRecencyMultiVariant(isMulti) {
 
 // RECURRENT COURSE SELECTOR MODAL
 // ==================================================================
-export function openRecurrentCourseModal() {
-  const modal = document.getElementById('recurrent-course-modal');
-  if (modal) modal.classList.remove('hidden');
-}
 
-export function closeRecurrentCourseModal() {
-  const modal = document.getElementById('recurrent-course-modal');
-  if (modal) modal.classList.add('hidden');
-}
 
-export function selectRecurrentCourse(key, name, category) {
-  toolsState.recurrentCourseKey = key;
-  toolsState.recurrentCourseName = name;
-  toolsState.recurrentCourseCat = category;
-
-  const labelEl = document.getElementById('recurrent-selected-course-label');
-  if (labelEl) labelEl.innerText = name;
-
-  const inputEl = document.getElementById('input-recurrent-course-type');
-  if (inputEl) inputEl.value = key;
-
-  closeRecurrentCourseModal();
-}
 
 export function filterRecurrentCourses(query) {
   const q = String(query).toLowerCase();
@@ -2387,194 +2044,12 @@ export function closeAuditOverlay(toolKey) {
 }
 
 // ==================================================================
-// FLIGHT MODIFIERS INLINE ACCORDION HANDLERS
-// ==================================================================
 
-export function toggleModifierAccordion(paramId) {
-  const accordion = document.getElementById(`accordion-${paramId}`);
-  const arrow = document.getElementById(`arrow-${paramId}`);
-  if (!accordion) return;
 
-  const isClosed = accordion.classList.contains('hidden');
 
-  // Collapse all accordions in the modal first
-  const allAccordions = document.querySelectorAll('[id^=accordion-modal-maxfdp-]');
-  allAccordions.forEach(acc => acc.classList.add('hidden'));
 
-  const allArrows = document.querySelectorAll('[id^=arrow-modal-maxfdp-]');
-  allArrows.forEach(arr => {
-    arr.textContent = '▼';
-    arr.classList.remove('rotate-180');
-  });
 
-  if (isClosed) {
-    accordion.classList.remove('hidden');
-    if (arrow) {
-      arrow.textContent = '▲';
-      arrow.classList.add('rotate-180');
-    }
-  }
-}
 
-export function updateModifierInlineSelectionUI(paramId, val) {
-  const accordion = document.getElementById(`accordion-${paramId}`);
-  if (!accordion) return;
-
-  const btns = accordion.querySelectorAll('.modifier-opt-btn');
-  btns.forEach(btn => {
-    const isMatch = btn.dataset.value === String(val);
-    const badge = btn.querySelector('.badge-selected');
-
-    if (isMatch) {
-      btn.className = 'modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-blue-500/10 border border-blue-500/50 text-blue-600 dark:text-blue-400';
-      if (badge) badge.classList.remove('hidden');
-    } else {
-      btn.className = 'modifier-opt-btn w-full p-2 rounded-lg text-xs font-bold text-left flex items-center justify-between cursor-pointer transition-all bg-white dark:bg-slate-900 border border-transparent text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600';
-      if (badge) badge.classList.add('hidden');
-    }
-  });
-}
-
-export function selectModifierInlineOption(paramId, val, label) {
-  const inputEl = document.getElementById(paramId);
-  if (inputEl) inputEl.value = String(val);
-
-  const displayIdMap = {
-    'modal-maxfdp-longest-sector': 'btn-modal-maxfdp-longest-display',
-    'modal-maxfdp-split-rest': 'btn-modal-maxfdp-split-display',
-    'modal-maxfdp-inflight-rest': 'btn-modal-maxfdp-inflight-display',
-    'modal-maxfdp-crew-count': 'btn-modal-maxfdp-crew-display',
-    'modal-maxfdp-preceding-rest': 'btn-modal-maxfdp-preceding-display'
-  };
-
-  const displayEl = document.getElementById(displayIdMap[paramId]);
-  if (displayEl) displayEl.textContent = label;
-
-  updateModifierInlineSelectionUI(paramId, val);
-
-  // Collapse accordion
-  const accordion = document.getElementById(`accordion-${paramId}`);
-  if (accordion) accordion.classList.add('hidden');
-
-  const arrow = document.getElementById(`arrow-${paramId}`);
-  if (arrow) {
-    arrow.textContent = '▼';
-    arrow.classList.remove('rotate-180');
-  }
-}
-
-export function openMaxFdpModifiersModal() {
-  const modal = document.getElementById('efb-maxfdp-modifiers-modal');
-  if (!modal) return;
-
-  const longestVal = String(toolsState.maxfdpLongestSector || 0);
-  const splitVal = String(toolsState.maxfdpSplitDutyRestHours || 0);
-  const inflightVal = String(toolsState.maxfdpInflightRestHours || 0);
-  const crewVal = String(toolsState.maxfdpCrewCount || 2);
-  const precVal = toolsState.maxfdpPrecedingRest || 'UP_TO_18_OR_OVER_30';
-
-  const longestIn = document.getElementById('modal-maxfdp-longest-sector');
-  const splitIn = document.getElementById('modal-maxfdp-split-rest');
-  const inflightIn = document.getElementById('modal-maxfdp-inflight-rest');
-  const crewIn = document.getElementById('modal-maxfdp-crew-count');
-  const precIn = document.getElementById('modal-maxfdp-preceding-rest');
-
-  if (longestIn) longestIn.value = longestVal;
-  if (splitIn) splitIn.value = splitVal;
-  if (inflightIn) inflightIn.value = inflightVal;
-  if (crewIn) crewIn.value = crewVal;
-  if (precIn) precIn.value = precVal;
-
-  const longestLabels = { '0': 'Standard Sector (< 7h)', '8': 'Long Sector (> 7h to 9h)', '10': 'Extended Sector (> 9h to 11h)', '12': 'Ultra Long Sector (> 11h)' };
-  const splitLabels = { '0': 'None (0h)', '3.5': '3.5 Hours Ground Rest', '4': '4.0 Hours Ground Rest', '5': '5.0 Hours Ground Rest', '6': '6.0+ Hours Ground Rest' };
-  const inflightLabels = { '0': '0.0 Hours', '3': '3.0 Hours Rest', '3.5': '3.5 Hours Rest', '4': '4.0 Hours Rest', '4.5': '4.5 Hours Rest', '5': '5.0 Hours Rest', '5.5': '5.5 Hours Rest', '6': '6.0 Hours Rest' };
-  const crewLabels = { '2': '2 Pilots (Standard Crew)', '3': '3 Pilots (Augmented Crew)', '4': '4 Pilots (Double Crew)' };
-  const precLabels = { 'UP_TO_18_OR_OVER_30': 'Up to 18h OR Over 30h', 'BETWEEN_18_AND_30': 'Between 18h and 30h' };
-
-  const longestDisp = document.getElementById('btn-modal-maxfdp-longest-display');
-  if (longestDisp) longestDisp.textContent = longestLabels[longestVal] || 'Standard Sector (< 7h)';
-
-  const splitDisp = document.getElementById('btn-modal-maxfdp-split-display');
-  if (splitDisp) splitDisp.textContent = splitLabels[splitVal] || 'None (0h)';
-
-  const inflightDisp = document.getElementById('btn-modal-maxfdp-inflight-display');
-  if (inflightDisp) inflightDisp.textContent = inflightLabels[inflightVal] || '0.0 Hours';
-
-  const crewDisp = document.getElementById('btn-modal-maxfdp-crew-display');
-  if (crewDisp) crewDisp.textContent = crewLabels[crewVal] || '2 Pilots (Standard Crew)';
-
-  const precDisp = document.getElementById('btn-modal-maxfdp-preceding-display');
-  if (precDisp) precDisp.textContent = precLabels[precVal] || 'Up to 18h OR Over 30h';
-
-  // Collapse all inline accordions upon modal open
-  const allAccordions = document.querySelectorAll('[id^=accordion-modal-maxfdp-]');
-  allAccordions.forEach(acc => acc.classList.add('hidden'));
-
-  const allArrows = document.getElementById('efb-maxfdp-modifiers-modal')?.querySelectorAll('[id^=arrow-modal-maxfdp-]');
-  if (allArrows) {
-    allArrows.forEach(arr => {
-      arr.textContent = '▼';
-      arr.classList.remove('rotate-180');
-    });
-  }
-
-  // Update selection UI for each parameter
-  updateModifierInlineSelectionUI('modal-maxfdp-longest-sector', longestVal);
-  updateModifierInlineSelectionUI('modal-maxfdp-split-rest', splitVal);
-  updateModifierInlineSelectionUI('modal-maxfdp-inflight-rest', inflightVal);
-  updateModifierInlineSelectionUI('modal-maxfdp-crew-count', crewVal);
-  updateModifierInlineSelectionUI('modal-maxfdp-preceding-rest', precVal);
-
-  modal.classList.remove('hidden');
-}
-
-export function closeMaxFdpModifiersModal() {
-  const modal = document.getElementById('efb-maxfdp-modifiers-modal');
-  if (modal) modal.classList.add('hidden');
-}
-
-export function confirmMaxFdpModifiers() {
-  const longestEl = document.getElementById('modal-maxfdp-longest-sector');
-  const splitEl = document.getElementById('modal-maxfdp-split-rest');
-  const inflightEl = document.getElementById('modal-maxfdp-inflight-rest');
-  const crewEl = document.getElementById('modal-maxfdp-crew-count');
-  const precEl = document.getElementById('modal-maxfdp-preceding-rest');
-
-  if (longestEl) toolsState.maxfdpLongestSector = parseFloat(longestEl.value) || 0;
-  if (splitEl) toolsState.maxfdpSplitDutyRestHours = parseFloat(splitEl.value) || 0;
-  if (inflightEl) toolsState.maxfdpInflightRestHours = parseFloat(inflightEl.value) || 0;
-  if (crewEl) toolsState.maxfdpCrewCount = parseInt(crewEl.value, 10) || 2;
-  if (precEl) toolsState.maxfdpPrecedingRest = precEl.value;
-
-  const badge = document.getElementById('badge-maxfdp-advanced-status');
-  const trigger = document.getElementById('btn-maxfdp-advanced-trigger');
-
-  const hasModifiers = (
-    toolsState.maxfdpLongestSector > 0 ||
-    toolsState.maxfdpSplitDutyRestHours > 0 ||
-    toolsState.maxfdpInflightRestHours > 0 ||
-    toolsState.maxfdpCrewCount > 2
-  );
-
-  if (badge) {
-    if (hasModifiers) {
-      const parts = [];
-      if (toolsState.maxfdpLongestSector > 0) parts.push(`Longest ${toolsState.maxfdpLongestSector}h`);
-      if (toolsState.maxfdpSplitDutyRestHours > 0) parts.push(`Split ${toolsState.maxfdpSplitDutyRestHours}h`);
-      if (toolsState.maxfdpInflightRestHours > 0) parts.push(`Rest ${toolsState.maxfdpInflightRestHours}h`);
-      if (toolsState.maxfdpCrewCount > 2) parts.push(`${toolsState.maxfdpCrewCount} Pilots`);
-      badge.textContent = parts.join(' • ');
-      badge.className = 'text-[10px] font-extrabold bg-blue-600 text-white px-2 py-0.5 rounded-full';
-      if (trigger) trigger.className = 'w-full py-2 px-3 rounded-xl border border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold flex items-center justify-between cursor-pointer transition-all';
-    } else {
-      badge.textContent = 'Standard';
-      badge.className = 'text-[10px] text-slate-400 font-medium';
-      if (trigger) trigger.className = 'w-full py-2 px-3 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 bg-slate-50/50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 text-xs font-semibold flex items-center justify-between cursor-pointer transition-all';
-    }
-  }
-
-  closeMaxFdpModifiersModal();
-}
 
 // Global backdrop dismissal handler for modals
 if (typeof window !== 'undefined') {
