@@ -1,4 +1,4 @@
-// ./js/views/dashboard.js (1811_R101) - CertiFly Dashboard Engine & Overview Controller
+// ./js/views/dashboard.js (1811_R102) - CertiFly Dashboard Engine & Overview Controller
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1405,13 +1405,3 @@ if (typeof window !== 'undefined') {
   window.sortCaamQualifications = sortCaamQualifications;
   window.setupDocumentViewers = setupDocumentViewers;
 }
-
-export {
-  getDashEl,
-  saveDashboardTemplates,
-  startWelcomeTextAnimation,
-  renderDashboardView,
-  sortCaamQualifications,
-  renderDashboardResults,
-  setupDocumentViewers
-};
