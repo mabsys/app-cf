@@ -1,4 +1,40 @@
-// js/notifications.js (1511_R384) - CertiFly Unified Notification Engine
+// js/notifications.js (1911_R385) - CertiFly Unified Notification Engine
+
+/**
+ * Helper to calculate dynamic top offset for persistent UI overlays
+ * Stacks below status-bar-cover or persistent-topbar
+ */
+function getSystemTopOffset() {
+  const statusBarCover = document.getElementById('status-bar-cover');
+  const topbar = document.getElementById('persistent-topbar');
+
+  let coverBottom = 0;
+  if (statusBarCover) {
+    coverBottom = Math.max(0, statusBarCover.getBoundingClientRect().bottom);
+  }
+
+  let topbarBottom = 0;
+  if (topbar) {
+    const rect = topbar.getBoundingClientRect();
+    if (rect.bottom > coverBottom) {
+      topbarBottom = rect.bottom;
+    }
+  }
+
+  return Math.max(coverBottom, topbarBottom);
+}
+
+function getToastTopOffset() {
+  const baseOffset = getSystemTopOffset();
+  const banner = document.getElementById('certifly-top-banner');
+  if (banner && !banner.classList.contains('hidden') && !banner.classList.contains('-translate-y-full')) {
+    const bannerRect = banner.getBoundingClientRect();
+    if (bannerRect.bottom > baseOffset) {
+      return bannerRect.bottom + 12;
+    }
+  }
+  return baseOffset + 12;
+}
 
 /**
  * 1. FLOATING TOAST NOTIFICATIONS (Auto-Dismiss Feedback)
@@ -11,24 +47,26 @@ export function showToast(message, type = 'info', duration = 3000) {
   if (!container) {
     container = document.createElement('div');
     container.id = 'certifly-toast-container';
-    container.className = 'fixed top-5 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 max-w-xs w-[90%] pointer-events-none';
+    container.className = 'fixed left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 max-w-xs w-[90%] pointer-events-none transition-all duration-300';
     document.body.appendChild(container);
   }
 
+  container.style.top = `${getToastTopOffset()}px`;
+
   const styles = {
-    success: 'bg-slate-800 text-emerald-400 border border-slate-800 shadow-md',
+    success: 'bg-slate-800 text-green-400 border border-slate-800 shadow-md',
     error: 'bg-slate-800 text-rose-400 border border-slate-800 shadow-md',
     warning: 'bg-slate-800 text-amber-500 border border-slate-800 shadow-md',
-    info: 'bg-slate-800 text-sky-400 border border-slate-800 shadow-md',
-    offline: 'bg-slate-800 text-amber-400 border border-slate-800 shadow-md'
+    info: 'bg-slate-800 text-white border border-slate-800 shadow-md',
+    offline: 'bg-slate-800 text-white border border-slate-800 shadow-md'
   };
 
   const icons = {
     success: `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
     error: `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9.303 3.376c.866 1.5-.217 3.374-1.948 3.374H4.551c-1.73 0-2.813-1.874-1.948-3.374L10.051 3.378c.866-1.5 3.032-1.5 3.898 0l7.354 12.748zM12 15.75h.007v.008H12v-.008z" /></svg>`,
-    warning: `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874-1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>`,
-    info: `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
-    offline: `<svg class="w-4 h-4 shrink-0 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9.303 3.376c.866 1.5-.217 3.374-1.948 3.374H4.551c-1.73 0-2.813-1.874-1.948-3.374L10.051 3.378c.866-1.5 3.032-1.5 3.898 0l7.354 12.748zM12 15.75h.007v.008H12v-.008z" /></svg>`
+    warning: `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9.303 3.376c.866 1.5-.217 3.374-1.948 3.374H4.551c-1.73 0-2.813-1.874-1.948-3.374L10.051 3.378c.866-1.5 3.032-1.5 3.898 0l7.354 12.748zM12 15.75h.007v.008H12v-.008z" /></svg>`,
+    info: `<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8-8 8"/></svg>`,
+    offline: `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9.303 3.376c.866 1.5-.217 3.374-1.948 3.374H4.551c-1.73 0-2.813-1.874-1.948-3.374L10.051 3.378c.866-1.5 3.032-1.5 3.898 0l7.354 12.748zM12 15.75h.007v.008H12v-.008z" /></svg>`
   };
 
   const toast = document.createElement('div');
@@ -76,14 +114,8 @@ export function setTopBanner(message, type = 'warning', show = true, dismissible
     document.body.appendChild(banner);
   }
 
-  const topbar = document.getElementById('persistent-topbar');
-  if (topbar) {
-    const rect = topbar.getBoundingClientRect();
-    const topOffset = Math.max(0, rect.bottom);
-    banner.style.top = `${topOffset}px`;
-  } else {
-    banner.style.top = '0px';
-  }
+  const topOffset = getSystemTopOffset();
+  banner.style.top = `${topOffset}px`;
 
   if (!show || banner.getAttribute('data-dismissed') === 'true') {
     banner.classList.remove('translate-y-0');
@@ -102,8 +134,8 @@ export function setTopBanner(message, type = 'warning', show = true, dismissible
 
   const icons = {
     offline: `<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9.303 3.376c.866 1.5-.217 3.374-1.948 3.374H4.551c-1.73 0-2.813-1.874-1.948-3.374L10.051 3.378c.866-1.5 3.032-1.5 3.898 0l7.354 12.748zM12 15.75h.007v.008H12v-.008z" /></svg>`,
-    warning: `<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874-1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>`,
-    info: `<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`
+    warning: `<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9.303 3.376c.866 1.5-.217 3.374-1.948 3.374H4.551c-1.73 0-2.813-1.874-1.948-3.374L10.051 3.378c.866-1.5 3.032-1.5 3.898 0l7.354 12.748zM12 15.75h.007v.008H12v-.008z" /></svg>`,
+    info: `<svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8-8 8"/></svg>`
   };
 
   banner.className = `fixed left-0 right-0 z-40 text-[10px] font-black uppercase tracking-widest py-2.5 px-4 shadow-md flex items-center justify-between transition-transform duration-300 translate-y-0 ${styles[type] || styles.info}`;
@@ -140,7 +172,7 @@ export function renderNoticeCard(container, { title, message, type = 'warning', 
       bg: 'bg-amber-500/10 border-amber-500/20 text-slate-700 dark:text-slate-300',
       iconColor: 'text-amber-500',
       titleColor: 'text-amber-600 dark:text-amber-400',
-      svg: `<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874-1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />`
+      svg: `<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9.303 3.376c.866 1.5-.217 3.374-1.948 3.374H4.551c-1.73 0-2.813-1.874-1.948-3.374L10.051 3.378c.866-1.5 3.032-1.5 3.898 0l7.354 12.748zM12 15.75h.007v.008H12v-.008z" />`
     },
     danger: {
       bg: 'bg-rose-500/10 border-rose-500/40 text-rose-800 dark:text-rose-200',
@@ -152,7 +184,7 @@ export function renderNoticeCard(container, { title, message, type = 'warning', 
       bg: 'bg-blue-500/10 border-blue-500/20 text-slate-700 dark:text-slate-300',
       iconColor: 'text-blue-500',
       titleColor: 'text-blue-600 dark:text-blue-400',
-      svg: `<path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />`
+      svg: `<path fill="currentColor" d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8-8 8"/>`
     },
     success: {
       bg: 'bg-emerald-500/10 border-emerald-500/20 text-slate-700 dark:text-slate-300',
@@ -168,8 +200,10 @@ export function renderNoticeCard(container, { title, message, type = 'warning', 
   card.setAttribute('data-notice-card', 'true');
   card.className = `p-3.5 rounded-2xl border flex items-start gap-2.5 transition-all ${theme.bg}`;
 
+  const svgAttrs = type === 'info' ? `fill="none" viewBox="0 0 24 24"` : `fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"`;
+
   card.innerHTML = `
-    <svg class="w-4 h-4 ${theme.iconColor} shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <svg class="w-4 h-4 ${theme.iconColor} shrink-0 mt-0.5" ${svgAttrs}>
       ${theme.svg}
     </svg>
     <div class="flex-1 text-[10px] leading-relaxed">
