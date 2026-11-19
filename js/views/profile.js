@@ -1,8 +1,8 @@
-// ./js/views/profile.js (1811_R102) - CertiFly Pilot Profile & Credentials Engine
+// ./js/views/profile.js (1811_R103) - CertiFly Pilot Profile & Credentials Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
-import { showToast, showAlertModal } from '../notifications.js';
+import { showToast, showAlertModal, showConfirmDialog } from '../notifications.js';
 import { PROXY_URL } from '../config.js';
 import { parseLicenseDOM } from '../caamParser.js';
 import { parseAttestationText, validateAttestationContent, parseQualificationSlipText, validateQualificationSlipContent } from '../parser.js';
@@ -13,7 +13,7 @@ import {
   getQualificationSlipPdf, setQualificationSlipPdf, removeQualificationSlipPdf, getQualificationSlipData, setQualificationSlipData, clearQualificationSlipData 
 } from '../storage.js';
 import { startScanner, stopScanner } from '../scanner.js';
-import { updateNetworkStatus, showError, showView, openProfileMenu } from '../ui.js';
+import { updateNetworkStatus, showError, showLoading, showView, openProfileMenu } from '../ui.js';
 
 let selectedAttestationFile = null;
 let selectedAttestationText = "";
