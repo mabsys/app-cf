@@ -1,7 +1,8 @@
-// ./main.js (1811_R439) - CertiFly Application Shell & Orchestrator
+// ./main.js (1911_R440) - CertiFly Application Shell & Orchestrator
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
+import { initPdfViewerModal, openPdfViewerModal, closePdfViewerModal } from './js/modals/pdfViewerModal.js';
 import { showToast, setTopBanner, renderNoticeCard, showAlertModal, showConfirmDialog } from './js/notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance, animateBottomBanner } from './js/animations.js';
 import { initToolsModule } from './js/tools.js';
@@ -29,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initApp();
   initScanHubUI();
   initNavigationBars();
+  initPdfViewerModal();
   initProfileUI();
   initSettingsUI();
   initStorageUI();
