@@ -1,11 +1,11 @@
-// ./js/views/dashboard.js (1811_R103) - CertiFly Dashboard Engine & Overview Controller
+// ./js/views/dashboard.js (1811_R104) - CertiFly Dashboard Engine & Overview Controller
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
-import { showAlertModal, showToast } from '../notifications.js';
+import { showAlertModal, showToast, showConfirmDialog } from '../notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance } from '../animations.js';
 import { getProfileData, getAttestationData, getQualificationSlipData, getAttestationPdf, getQualificationSlipPdf, getFreshnessLimit, getThresholdDays } from '../storage.js';
-import { showView, openProfileMenu } from '../ui.js';
+import { showView, showLoading, openProfileMenu } from '../ui.js';
 import { getSelectedAttestationFile, getSelectedQsFile, getSelectedQsParsed } from './profile.js';
 
 export function isSupervisoryQual(name) {
