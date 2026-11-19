@@ -1,4 +1,4 @@
-// ./main.js (1811_R437) - CertiFly Application Shell & Orchestrator
+// ./main.js (1811_R438) - CertiFly Application Shell & Orchestrator
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -13,19 +13,14 @@ import { startScanner, stopScanner, switchScanHubTab, renderRecentPilotsList, cy
 import { updateNetworkStatus, showScannerView, showLoading, showError, showView, initNavigationBars, closeMenu, applyThemeMode, applyTextSize, updateThresholdPills, updateHistoryLimitPills, updateFreshnessLimitPills, switchResultTab, openProfileMenu, openMenu, initToolsViewUI, dispatchActiveToolCalculation, switchActiveTool, toggleProfileAccordionSection } from './js/ui.js';
 import { initFestiveEngine, setFestiveEnabled } from './js/festiveEngine.js';
 import { renderResults, setupResultViewScrollBanner, setLastScannedUrl, getLastScannedUrl } from './js/views/results.js';
-import { initProfileUI, resetProfileQrMode, updateSaveProfileButtonLabel, renderMyQrPass, handleProfileQrScanned, processAndCacheProfileData } from './js/views/profile.js';
+import { initProfileUI, resetProfileQrMode, updateSaveProfileButtonLabel, renderMyQrPass, handleProfileQrScanned, processAndCacheProfileData, getSelectedAttestationFile, getSelectedAttestationText, extractTextFromPdfFile } from './js/views/profile.js';
 import { renderDashboardView, renderDashboardResults, saveDashboardTemplates, startWelcomeTextAnimation } from './js/views/dashboard.js';
 import { updateHistoryCounts, updateHistoryPillUI, updateBulkActionBarUI, initHistoryManageModeControls, setupHistorySwipeListeners, customRenderHistoryList, setupReverifyOnlineButton, setupPinCardButton, initHistorySearchAndFilters, toggleHistoryLimitQuickPicker } from './js/views/history.js';
 import { initToolsUI, initToolsUIController, restoreToolsLocalStorage, setupToolsCardSwipeGestures } from './js/views/toolsUI.js';
 
 
 let lastScannedUrl = "";
-let selectedAttestationFile = null;
-let selectedAttestationText = "";
-let selectedQsFile = null;
-let selectedQsText = "";
-let selectedQsParsed = null;
-let profileQrScannerActive = false;
+
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -388,10 +383,11 @@ async function processLicenseUrl(url) {
 
   let mabResults = null;
   if (isProfileUrlMatch) {
-    let mabTextToParse = selectedAttestationText;
-    if (!mabTextToParse && selectedAttestationFile) {
+    let mabTextToParse = (typeof getSelectedAttestationText === "function") ? getSelectedAttestationText() : "";
+    const selAttFile = (typeof getSelectedAttestationFile === "function") ? getSelectedAttestationFile() : null;
+    if (!mabTextToParse && selAttFile) {
       try {
-        mabTextToParse = await extractTextFromPdfFile(selectedAttestationFile);
+        mabTextToParse = await extractTextFromPdfFile(selAttFile);
       } catch (e) {}
     }
 
