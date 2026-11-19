@@ -1,8 +1,9 @@
-// ./js/modals/datePickerModal.js (1811_R101) - CertiFly EFB Date Picker Modal Component
+// ./js/modals/datePickerModal.js (1811_R102) - CertiFly EFB Date Picker Modal Component
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
 import { showAlertModal, showToast } from '../notifications.js';
+import { openEfbSelectModal, closeEfbSelectModal } from './selectOptionModal.js';
 
 export const datePickerModalHTML = `
 <!-- EFB DATE PICKER MODAL -->
@@ -29,7 +30,7 @@ export const datePickerModalHTML = `
     <!-- Month & Year Navigation Header -->
     <div class="p-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
       <button type="button" class="py-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 text-xs font-bold transition-all cursor-pointer" onclick="changeEfbMonth(-1)">◄ Prev</button>
-      <button type="button" id="efb-calendar-month-label" class="py-1 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold transition-all cursor-pointer select-none text-center" onclick="openEfbYearSelectModal()">NOVEMBER 2026</button>
+      <button type="button" id="efb-calendar-month-label" class="py-1 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 text-xs font-bold transition-all cursor-pointer select-none text-center" onclick="openEfbYearSelectModal()">NOVEMBER 2026</button>
       <button type="button" class="py-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 text-xs font-bold transition-all cursor-pointer" onclick="changeEfbMonth(1)">Next ►</button>
     </div>
 
@@ -59,6 +60,23 @@ let efbDatePickerState = {
 export function initEfbDatePickerModal() {
   if (!document.getElementById("efb-date-picker-modal")) {
     document.body.insertAdjacentHTML("beforeend", datePickerModalHTML);
+  }
+}
+
+export function openEfbYearSelectModal() {
+  const years = [];
+  const startYear = 1955;
+  const endYear = 2035;
+  for (let y = endYear; y >= startYear; y--) {
+    years.push({ value: String(y), label: String(y) });
+  }
+  openEfbSelectModal('efb-date-picker-year-jump', 'SELECT YEAR', years);
+}
+
+export function setEfbDatePickerYear(yearNum) {
+  if (!isNaN(yearNum)) {
+    efbDatePickerState.currentYear = yearNum;
+    renderEfbCalendarGrid();
   }
 }
 
@@ -233,7 +251,7 @@ export function selectEfbDate(isoVal) {
 
     const displayId = displayIdMap[efbDatePickerState.targetInputId] || `${efbDatePickerState.targetInputId}-display`;
     const displayEl = document.getElementById(displayId);
-    
+
     if (displayEl) {
       if (typeof window !== 'undefined' && typeof window.formatDateDDMMMYYYY === 'function') {
         displayEl.innerText = window.formatDateDDMMMYYYY(isoVal);
@@ -251,6 +269,8 @@ export function selectEfbDate(isoVal) {
 
 // Global window exposure
 if (typeof window !== 'undefined') {
+  window.openEfbYearSelectModal = openEfbYearSelectModal;
+  window.setEfbDatePickerYear = setEfbDatePickerYear;
   window.openEfbDatePicker = openEfbDatePicker;
   window.closeEfbDatePicker = closeEfbDatePicker;
   window.renderEfbCalendarGrid = renderEfbCalendarGrid;
