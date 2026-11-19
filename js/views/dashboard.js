@@ -1,4 +1,4 @@
-// ./js/views/dashboard.js (1811_R102) - CertiFly Dashboard Engine & Overview Controller
+// ./js/views/dashboard.js (1811_R103) - CertiFly Dashboard Engine & Overview Controller
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -6,6 +6,7 @@ import { showAlertModal, showToast } from '../notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance } from '../animations.js';
 import { getProfileData, getAttestationData, getQualificationSlipData, getAttestationPdf, getQualificationSlipPdf, getFreshnessLimit, getThresholdDays } from '../storage.js';
 import { showView, openProfileMenu } from '../ui.js';
+import { getSelectedAttestationFile, getSelectedQsFile, getSelectedQsParsed } from './profile.js';
 
 export function isSupervisoryQual(name) {
   if (!name) return false;
@@ -231,7 +232,8 @@ export async function renderDashboardView() {
   const profile = getProfileData();
 
   const hasCaam = Boolean((profile.cachedCaamResults && profile.cachedCaamResults.pilotDetails) || (profile.url && isValidCaamUrl(profile.url)));
-  const hasMab = Boolean(profile.cachedMabResults || profile.attestationFileName || selectedAttestationFile);
+  const selAttFile = (typeof getSelectedAttestationFile === "function") ? getSelectedAttestationFile() : null;
+  const hasMab = Boolean(profile.cachedMabResults || profile.attestationFileName || selAttFile);
 
   if (!hasCaam || !hasMab) {
     renderBlankDashboard();
@@ -1323,7 +1325,8 @@ export async function setupDocumentViewers() {
   const qsBadgeText = getDashEl("mab-qs-status-text");
   const qsBadgePill = getDashEl("mab-qs-cert-no");
 
-  const qsData = getQualificationSlipData() || selectedQsParsed;
+  const selQsParsed = (typeof getSelectedQsParsed === "function") ? getSelectedQsParsed() : null;
+  const qsData = getQualificationSlipData() || selQsParsed;
 
   const qsBadgeBox = getDashEl("mab-qs-badge");
   if (qsBadgeText && qsBadgePill) {
@@ -1353,12 +1356,13 @@ export async function setupDocumentViewers() {
 
   if (attestationBtn) {
     const attBlob = await getAttestationPdf();
-    if (attBlob || selectedAttestationFile) {
+    const selAttFile = (typeof getSelectedAttestationFile === "function") ? getSelectedAttestationFile() : null;
+    if (attBlob || selAttFile) {
       attestationBtn.disabled = false;
       attestationBtn.className = "w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]";
       attestationBtn.onclick = async () => {
         let blob = attBlob;
-        if (!blob && selectedAttestationFile) blob = selectedAttestationFile;
+        if (!blob && selAttFile) blob = selAttFile;
         if (blob) {
           const blobUrl = URL.createObjectURL(blob);
           window.open(blobUrl, "_blank");
@@ -1375,12 +1379,13 @@ export async function setupDocumentViewers() {
 
   if (qsBtn) {
     const qsBlob = await getQualificationSlipPdf();
-    if (qsBlob || selectedQsFile) {
+    const selQsFile = (typeof getSelectedQsFile === "function") ? getSelectedQsFile() : null;
+    if (qsBlob || selQsFile) {
       qsBtn.disabled = false;
       qsBtn.className = "w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]";
       qsBtn.onclick = async () => {
         let blob = qsBlob;
-        if (!blob && selectedQsFile) blob = selectedQsFile;
+        if (!blob && selQsFile) blob = selQsFile;
         if (blob) {
           const blobUrl = URL.createObjectURL(blob);
           window.open(blobUrl, "_blank");
