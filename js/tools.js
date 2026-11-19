@@ -1,4 +1,4 @@
-// ./js/tools.js (1811_R438) - CertiFly Tools Module, Calculation Engines & Modular EFB Modal Integration
+// ./js/tools.js (1811_R439) - CertiFly Tools Module, Calculation Engines & Modular EFB Modal Integration
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1965,6 +1965,8 @@ window.setRecencyMultiVariant = setRecencyMultiVariant;
 
   window.setSectorCount = setSectorCount;
   window.getSectorCount = getSectorCount;
+  window.getToolsState = getToolsState;
+  window.toolsState = toolsState;
   window.initToolsModule = initToolsModule;
   window.calculateMedicalWindow = calculateMedicalWindow;
   window.calculateCourseExpiry = calculateCourseExpiry;
