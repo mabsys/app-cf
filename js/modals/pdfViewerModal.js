@@ -1,4 +1,4 @@
-// ./js/modals/pdfViewerModal.js (1911_R111) - CertiFly In-App PDF Document Viewer Modal Component (Mozilla PDF.js Engine)
+// ./js/modals/pdfViewerModal.js (1911_R112) - CertiFly In-App PDF Document Viewer Modal Component (Mozilla PDF.js Engine)
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -64,79 +64,104 @@ export function initPdfViewerModal() {
 }
 
 /**
- * Injects custom EFB Read-Only & Stripped Toolbar styles into Mozilla's viewer.html iframe
+ * Injects strict EFB Read-Only, No-Toolbar & No-Text-Selection CSS into Mozilla viewer iframe
  */
 function applyEfbViewerStyles(iframe) {
   try {
-    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+    const iframeDoc = iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document);
     if (!iframeDoc) return;
 
-    // Check if custom EFB style tag is already injected
-    if (iframeDoc.getElementById('certifly-efb-pdf-overrides')) return;
+    if (!iframeDoc.getElementById('certifly-efb-pdf-overrides')) {
+      const styleEl = iframeDoc.createElement('style');
+      styleEl.id = 'certifly-efb-pdf-overrides';
+      styleEl.textContent = `
+        /* ==========================================================================
+           CertiFly EFB Read-Only & Zero-Toolbar Overrides for Mozilla PDF.js
+           ========================================================================== */
 
-    const styleEl = iframeDoc.createElement('style');
-    styleEl.id = 'certifly-efb-pdf-overrides';
-    styleEl.textContent = `
-      /* ==========================================================================
-         CertiFly EFB Read-Only & Stripped Toolbar Styles for Mozilla PDF.js Viewer
-         ========================================================================== */
+        /* 1. HIDE ENTIRE TOP TOOLBAR, FLOATING TOOLBARS & SEARCH BARS */
+        #toolbarContainer,
+        #toolbarViewer,
+        .toolbar,
+        #secondaryToolbar,
+        #viewFind,
+        #findbar,
+        .findbar {
+          display: none !important;
+          visibility: hidden !important;
+          height: 0 !important;
+          min-height: 0 !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
+        }
 
-      /* 1. DISABLE TEXT SELECTION & TEXT COPYING */
-      .textLayer,
-      .annotationLayer {
-        display: none !important;
-        pointer-events: none !important;
-      }
-      #viewerContainer, 
-      #viewer {
-        user-select: none !important;
-        -webkit-user-select: none !important;
-        -moz-user-select: none !important;
-        -ms-user-select: none !important;
-      }
+        /* 2. OFFSET VIEWER CONTAINER TO TOP OF IFRAME */
+        #viewerContainer {
+          top: 0 !important;
+          inset: 0 !important;
+        }
 
-      /* 2. HIDE SEARCH / FIND TOOLBAR & BUTTONS */
-      #viewFind,
-      #findbar,
-      #findInput,
-      .findbar {
-        display: none !important;
-      }
-
-      /* 3. STRIP DOWN UNWANTED TOOLBAR BUTTONS FOR CLEAN EFB LOOK */
-      #sidebarToggle,
-      #secondaryToolbarToggle,
-      #openFile,
-      #print,
-      #download,
-      #editorModeButtons,
-      #editorHighlight,
-      #editorFreeText,
-      #editorInk,
-      #editorStamp {
-        display: none !important;
-      }
-
-      /* 4. OPTIMIZE TOOLBAR LAYOUT & PADDING FOR MOBILE EFB MODAL */
-      .toolbar {
-        box-shadow: none !important;
-        border-bottom: 1px solid rgba(226, 232, 240, 0.2) !important;
-      }
-      #toolbarViewer {
-        padding: 0 4px !important;
-      }
-    `;
-    iframeDoc.head.appendChild(styleEl);
+        /* 3. DISABLE TEXT SELECTION & TEXT COPYING */
+        .textLayer,
+        .annotationLayer {
+          display: none !important;
+          pointer-events: none !important;
+        }
+        #viewerContainer, 
+        #viewer,
+        body {
+          user-select: none !important;
+          -webkit-user-select: none !important;
+          -moz-user-select: none !important;
+          -ms-user-select: none !important;
+        }
+      `;
+      (iframeDoc.head || iframeDoc.documentElement).appendChild(styleEl);
+    }
 
     // Disable Find/Search Keyboard Shortcut (Ctrl+F / Cmd+F) inside iframe
-    iframeDoc.addEventListener('keydown', (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    }, true);
+    if (iframe.contentWindow) {
+      iframe.contentWindow.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }, true);
+    }
   } catch (err) {
-    console.warn('Could not inject inline EFB overrides into PDF.js iframe (cross-origin limitation):', err);
+    console.warn('Could not inject EFB overrides into PDF.js iframe:', err);
+  }
+}
+
+/**
+ * Safely loads PDF data into Mozilla PDF.js viewer via PDFViewerApplication API
+ */
+async function loadPdfIntoViewerApp(iframe, pdfData) {
+  const win = iframe.contentWindow;
+  if (!win) throw new Error('Iframe window unavailable');
+
+  // Poll until PDFViewerApplication is initialized by viewer.js
+  let attempts = 0;
+  while ((!win.PDFViewerApplication || !win.PDFViewerApplication.initialized) && attempts < 60) {
+    await new Promise(resolve => setTimeout(resolve, 50));
+    attempts++;
+  }
+
+  const app = win.PDFViewerApplication;
+  if (!app) throw new Error('PDFViewerApplication not initialized in iframe');
+
+  if (app.initializedPromise) {
+    await app.initializedPromise;
+  }
+
+  // Open PDF data via PDFViewerApplication (handles ArrayBuffer, Blobs, and URLs cleanly without CORS/origin errors)
+  if (typeof pdfData === 'string') {
+    await app.open(pdfData);
+  } else if (pdfData instanceof ArrayBuffer) {
+    await app.open({ data: pdfData });
+  } else if (pdfData instanceof Blob || pdfData instanceof File) {
+    const buf = await pdfData.arrayBuffer();
+    await app.open({ data: buf });
   }
 }
 
@@ -153,42 +178,63 @@ export async function openPdfViewerModal(pdfUrlOrBlob, title = 'Document Viewer'
 
   if (titleEl) titleEl.textContent = title;
 
-  // Revoke previous Blob URL to prevent memory leaks
+  // Revoke previous Blob URL
   if (activeBlobUrl) {
     try { URL.revokeObjectURL(activeBlobUrl); } catch (e) {}
     activeBlobUrl = null;
   }
 
-  let documentUrl = pdfUrlOrBlob;
-  if (typeof Blob !== 'undefined' && (pdfUrlOrBlob instanceof Blob || pdfUrlOrBlob instanceof File)) {
-    activeBlobUrl = URL.createObjectURL(pdfUrlOrBlob);
-    documentUrl = activeBlobUrl;
-  }
-
   if (loader) loader.classList.remove('hidden');
   if (fallback) fallback.classList.add('hidden');
-
-  // Configure onload handler to inject read-only styles & hide spinner
-  iframe.onload = () => {
-    if (loader) loader.classList.add('hidden');
-    applyEfbViewerStyles(iframe);
-  };
-
-  iframe.onerror = () => {
-    if (loader) loader.classList.add('hidden');
-    if (fallback) fallback.classList.remove('hidden');
-  };
-
-  // Build viewer URL with page-width zoom parameter
-  const viewerBasePath = './js/vendor/pdfjs/web/viewer.html';
-  const targetSrc = `${viewerBasePath}?file=${encodeURIComponent(documentUrl)}#page=1&zoom=page-width`;
-
-  iframe.src = targetSrc;
 
   modal.classList.remove('hidden');
   requestAnimationFrame(() => {
     modal.classList.remove('opacity-0');
   });
+
+  try {
+    // Extract ArrayBuffer if File or Blob
+    let pdfData = pdfUrlOrBlob;
+    if (typeof Blob !== 'undefined' && (pdfUrlOrBlob instanceof Blob || pdfUrlOrBlob instanceof File)) {
+      pdfData = await pdfUrlOrBlob.arrayBuffer();
+    }
+
+    const viewerBasePath = './js/vendor/pdfjs/web/viewer.html';
+
+    // Set iframe src to viewer.html (clean base URL, no problematic file= parameter)
+    const currentIframeSrc = iframe.getAttribute('data-loaded-src');
+    if (currentIframeSrc !== viewerBasePath) {
+      iframe.src = viewerBasePath;
+      iframe.setAttribute('data-loaded-src', viewerBasePath);
+
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => resolve(), 4000);
+        iframe.onload = () => {
+          clearTimeout(timeout);
+          resolve();
+        };
+        iframe.onerror = (e) => {
+          clearTimeout(timeout);
+          reject(e);
+        };
+      });
+    }
+
+    // Apply strict EFB CSS overrides (hides toolbar, text selection, find bar)
+    applyEfbViewerStyles(iframe);
+
+    // Load PDF into PDFViewerApplication
+    await loadPdfIntoViewerApp(iframe, pdfData);
+
+    // Re-apply EFB styles to ensure new elements created during render stay hidden
+    applyEfbViewerStyles(iframe);
+
+    if (loader) loader.classList.add('hidden');
+  } catch (err) {
+    console.warn('Mozilla PDF.js viewer load error, displaying fallback:', err);
+    if (loader) loader.classList.add('hidden');
+    if (fallback) fallback.classList.remove('hidden');
+  }
 }
 
 export function closePdfViewerModal() {
@@ -204,7 +250,10 @@ export function closePdfViewerModal() {
     modal.classList.add('opacity-0');
     setTimeout(() => {
       modal.classList.add('hidden');
-      if (iframe) iframe.src = 'about:blank';
+      if (iframe) {
+        iframe.removeAttribute('data-loaded-src');
+        iframe.src = 'about:blank';
+      }
     }, 250);
   }
 }
