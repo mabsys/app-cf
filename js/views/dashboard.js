@@ -1,9 +1,9 @@
-// ./js/views/dashboard.js (1911_R106) - CertiFly Dashboard Engine & Overview Controller
+// ./js/views/dashboard.js (1911_R107) - CertiFly Dashboard Engine & Overview Controller
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
 import { openPdfViewerModal } from '../modals/pdfViewerModal.js';
-import { showAlertModal, showToast, showConfirmDialog } from '../notifications.js';
+import { showAlertModal, showToast, showConfirmDialog, renderNoticeCard } from '../notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance } from '../animations.js';
 import { getProfileData, getAttestationData, getQualificationSlipData, getAttestationPdf, getQualificationSlipPdf, getFreshnessLimit, getThresholdDays } from '../storage.js';
 import { showView, showLoading, openProfileMenu } from '../ui.js';
@@ -1362,16 +1362,19 @@ export async function setupDocumentViewers() {
       attestationBtn.disabled = false;
       attestationBtn.className = "w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]";
       attestationBtn.onclick = async () => {
-        let blob = await getAttestationPdf();
-        if (!blob && typeof getSelectedAttestationFile === "function") blob = getSelectedAttestationFile();
+        let blob = attBlob;
+        if (!blob && selAttFile) blob = selAttFile;
+        if (!blob && typeof getAttestationPdf === 'function') {
+          try { blob = await getAttestationPdf(); } catch (e) {}
+        }
         if (blob) {
           if (typeof openPdfViewerModal === 'function') {
             openPdfViewerModal(blob, 'MAB Company Attestation');
           } else if (typeof window.openPdfViewerModal === 'function') {
             window.openPdfViewerModal(blob, 'MAB Company Attestation');
           } else {
-            const blobUrl = URL.createObjectURL(blob);
-            window.open(blobUrl, "_blank");
+            const blobUrl = (blob instanceof Blob) ? URL.createObjectURL(blob) : (typeof blob === 'string' ? blob : null);
+            if (blobUrl) window.open(blobUrl, "_blank");
           }
         } else {
           await showAlertModal("File Not Found", "Attestation PDF file not found in local storage.", "error");
@@ -1391,16 +1394,19 @@ export async function setupDocumentViewers() {
       qsBtn.disabled = false;
       qsBtn.className = "w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]";
       qsBtn.onclick = async () => {
-        let blob = await getQualificationSlipPdf();
-        if (!blob && typeof getSelectedQsFile === "function") blob = getSelectedQsFile();
+        let blob = qsBlob;
+        if (!blob && selQsFile) blob = selQsFile;
+        if (!blob && typeof getQualificationSlipPdf === 'function') {
+          try { blob = await getQualificationSlipPdf(); } catch (e) {}
+        }
         if (blob) {
           if (typeof openPdfViewerModal === 'function') {
             openPdfViewerModal(blob, 'Qualification Slip (QS)');
           } else if (typeof window.openPdfViewerModal === 'function') {
             window.openPdfViewerModal(blob, 'Qualification Slip (QS)');
           } else {
-            const blobUrl = URL.createObjectURL(blob);
-            window.open(blobUrl, "_blank");
+            const blobUrl = (blob instanceof Blob) ? URL.createObjectURL(blob) : (typeof blob === 'string' ? blob : null);
+            if (blobUrl) window.open(blobUrl, "_blank");
           }
         } else {
           await showAlertModal("File Not Found", "Qualification Slip PDF file not found in local storage.", "error");
