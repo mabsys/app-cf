@@ -1,26 +1,16 @@
-// ./js/modals/pdfViewerModal.js (1911_R110) - CertiFly In-App PDF Document Viewer Modal Component
+// ./js/modals/pdfViewerModal.js (1911_R111) - CertiFly In-App PDF Document Viewer Modal Component (Mozilla PDF.js Engine)
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
-let currentPdfTask = null;
-let currentZoom = 1.0;
 let activeBlobUrl = null;
 
-// Touch & Zoom Gesture Controller State
-let isPinching = false;
-let initialPinchDist = 0;
-let initialZoom = 1.0;
-let lastPinchCenter = { x: 0, y: 0 };
-let lastTap = { time: 0, x: 0, y: 0 };
-let rAFPending = false;
-
 export const pdfViewerModalHTML = `
-<!-- EFB IN-APP PDF VIEWER MODAL -->
+<!-- EFB IN-APP PDF VIEWER MODAL (Mozilla PDF.js Integration) -->
 <div id="efb-pdf-viewer-modal" class="fixed inset-0 z-[80] bg-slate-950/80 dark:bg-slate-950/90 backdrop-blur-md flex flex-col hidden select-none transition-opacity duration-300 opacity-0" onclick="if(event.target === this) closePdfViewerModal()">
   <div class="w-full max-w-full md:max-w-5xl lg:max-w-6xl mx-auto h-full flex flex-col p-2 sm:p-4 pointer-events-none">
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl h-full flex flex-col overflow-hidden shadow-2xl pointer-events-auto">
       
-      <!-- MODAL HEADER (Theme-aware, crisp icon, no external link) -->
+      <!-- MODAL HEADER (Theme-aware, crisp icon, clean EFB style) -->
       <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-900/90 shrink-0">
         <div class="flex items-center gap-2.5 truncate pr-2">
           <div class="w-7 h-7 flex items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0 flex-none">
@@ -40,8 +30,8 @@ export const pdfViewerModalHTML = `
         </div>
       </div>
 
-      <!-- PDF DOCUMENT VIEWPORT (Natural continuous document flow & zooming) -->
-      <div id="pdf-modal-viewport" class="relative flex-1 bg-slate-100 dark:bg-slate-950 w-full h-full overflow-y-auto overflow-x-auto p-0 sm:p-2 no-scrollbar touch-pan-x touch-pan-y">
+      <!-- MOZILLA PDF.JS VIEWER IFRAME CONTAINER -->
+      <div id="pdf-modal-viewport" class="relative flex-1 bg-slate-100 dark:bg-slate-950 w-full h-full overflow-hidden">
         
         <!-- LOADER SPINNER -->
         <div id="pdf-modal-loader" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-100/90 dark:bg-slate-950/90 z-10 transition-opacity duration-200">
@@ -49,12 +39,8 @@ export const pdfViewerModalHTML = `
           <span class="text-xs font-bold text-slate-600 dark:text-slate-400 animate-pulse">Loading Document...</span>
         </div>
 
-        <!-- CONTINUOUS DOCUMENT STAGE (Pages arranged vertically by default, dynamic width zoom) -->
-        <div id="pdf-modal-document-stage" class="w-full max-w-none mx-auto flex flex-col items-center gap-2 py-1 origin-top">
-        </div>
-
-        <!-- IFRAME FALLBACK CONTAINER (Used if PDF.js fails) -->
-        <iframe id="pdf-modal-iframe" class="w-full h-full border-0 bg-white dark:bg-slate-900 hidden" title="PDF Document Viewer"></iframe>
+        <!-- OFFICIAL MOZILLA PDF.JS EMBEDDED VIEWER -->
+        <iframe id="pdf-modal-iframe" class="w-full h-full border-0 bg-white dark:bg-slate-900" title="PDF Document Viewer"></iframe>
 
         <!-- FALLBACK NOTICE CONTAINER -->
         <div id="pdf-modal-fallback" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hidden z-20">
@@ -62,7 +48,7 @@ export const pdfViewerModalHTML = `
             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
           </svg>
           <p class="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">Unable to Load Document</p>
-          <p class="text-[10px] text-slate-500 dark:text-slate-400 mb-4 max-w-xs">The PDF document could not be rendered inside the app viewer.</p>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 mb-4 max-w-xs">The PDF document could not be rendered inside the viewer.</p>
         </div>
       </div>
 
@@ -74,271 +60,135 @@ export const pdfViewerModalHTML = `
 export function initPdfViewerModal() {
   if (!document.getElementById('efb-pdf-viewer-modal')) {
     document.body.insertAdjacentHTML('beforeend', pdfViewerModalHTML);
-    setupGestureListeners();
   }
 }
 
-function setupGestureListeners() {
-  const viewport = document.getElementById('pdf-modal-viewport');
-  const stage = document.getElementById('pdf-modal-document-stage');
-  if (!viewport || viewport.dataset.gesturesInit) return;
-  viewport.dataset.gesturesInit = 'true';
+/**
+ * Injects custom EFB Read-Only & Stripped Toolbar styles into Mozilla's viewer.html iframe
+ */
+function applyEfbViewerStyles(iframe) {
+  try {
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+    if (!iframeDoc) return;
 
-  // Prevent default Safari gestures when interacting with the modal
-  viewport.addEventListener('gesturestart', (e) => e.preventDefault());
-  viewport.addEventListener('gesturechange', (e) => e.preventDefault());
+    // Check if custom EFB style tag is already injected
+    if (iframeDoc.getElementById('certifly-efb-pdf-overrides')) return;
 
-  viewport.addEventListener('touchstart', (e) => {
-    const vRect = viewport.getBoundingClientRect();
+    const styleEl = iframeDoc.createElement('style');
+    styleEl.id = 'certifly-efb-pdf-overrides';
+    styleEl.textContent = `
+      /* ==========================================================================
+         CertiFly EFB Read-Only & Stripped Toolbar Styles for Mozilla PDF.js Viewer
+         ========================================================================== */
 
-    if (e.touches.length === 2) {
-      isPinching = true;
-      initialPinchDist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      initialZoom = currentZoom;
+      /* 1. DISABLE TEXT SELECTION & TEXT COPYING */
+      .textLayer,
+      .annotationLayer {
+        display: none !important;
+        pointer-events: none !important;
+      }
+      #viewerContainer, 
+      #viewer {
+        user-select: none !important;
+        -webkit-user-select: none !important;
+        -moz-user-select: none !important;
+        -ms-user-select: none !important;
+      }
 
-      const cX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - vRect.left;
-      const cY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - vRect.top;
-      lastPinchCenter = { x: cX, y: cY };
+      /* 2. HIDE SEARCH / FIND TOOLBAR & BUTTONS */
+      #viewFind,
+      #findbar,
+      #findInput,
+      .findbar {
+        display: none !important;
+      }
 
-      if (stage) stage.style.transition = 'none';
-    } else if (e.touches.length === 1 && !isPinching) {
-      const touchX = e.touches[0].clientX - vRect.left;
-      const touchY = e.touches[0].clientY - vRect.top;
-      const now = Date.now();
-      const dist = Math.hypot(touchX - lastTap.x, touchY - lastTap.y);
+      /* 3. STRIP DOWN UNWANTED TOOLBAR BUTTONS FOR CLEAN EFB LOOK */
+      #sidebarToggle,
+      #secondaryToolbarToggle,
+      #openFile,
+      #print,
+      #download,
+      #editorModeButtons,
+      #editorHighlight,
+      #editorFreeText,
+      #editorInk,
+      #editorStamp {
+        display: none !important;
+      }
 
-      if (now - lastTap.time < 300 && dist < 40) {
-        // Double-tap detected
+      /* 4. OPTIMIZE TOOLBAR LAYOUT & PADDING FOR MOBILE EFB MODAL */
+      .toolbar {
+        box-shadow: none !important;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.2) !important;
+      }
+      #toolbarViewer {
+        padding: 0 4px !important;
+      }
+    `;
+    iframeDoc.head.appendChild(styleEl);
+
+    // Disable Find/Search Keyboard Shortcut (Ctrl+F / Cmd+F) inside iframe
+    iframeDoc.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
         e.preventDefault();
-        const targetZoom = currentZoom > 1.25 ? 1.0 : 2.0;
-        setZoom(targetZoom, touchX, touchY, true);
-        lastTap = { time: 0, x: 0, y: 0 };
-      } else {
-        lastTap = { time: now, x: touchX, y: touchY };
+        e.stopPropagation();
       }
-    }
-  }, { passive: false });
-
-  viewport.addEventListener('touchmove', (e) => {
-    if (e.touches.length === 2 && isPinching && initialPinchDist > 0) {
-      e.preventDefault();
-      const vRect = viewport.getBoundingClientRect();
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      const factor = dist / initialPinchDist;
-      const targetZoom = initialZoom * factor;
-
-      const currCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - vRect.left;
-      const currCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - vRect.top;
-
-      if (!rAFPending) {
-        rAFPending = true;
-        requestAnimationFrame(() => {
-          setZoomPinch(targetZoom, currCenterX, currCenterY);
-          rAFPending = false;
-        });
-      }
-    }
-  }, { passive: false });
-
-  viewport.addEventListener('touchend', (e) => {
-    if (e.touches.length < 2 && isPinching) {
-      isPinching = false;
-      initialPinchDist = 0;
-
-      // Snap to 1.0 if zoomed out below baseline
-      if (currentZoom < 1.02) {
-        setZoom(1.0, undefined, undefined, true);
-      }
-    }
-  }, { passive: true });
-
-  // Trackpad / Wheel zoom (Ctrl/Cmd + Wheel)
-  viewport.addEventListener('wheel', (e) => {
-    if (e.ctrlKey || e.metaKey) {
-      e.preventDefault();
-      const vRect = viewport.getBoundingClientRect();
-      const focalX = e.clientX - vRect.left;
-      const focalY = e.clientY - vRect.top;
-      const delta = e.deltaY < 0 ? 0.2 : -0.2;
-      setZoom(currentZoom + delta, focalX, focalY, false);
-    }
-  }, { passive: false });
-}
-
-function setZoomPinch(targetZoom, currCenterX, currCenterY) {
-  const viewport = document.getElementById('pdf-modal-viewport');
-  const stage = document.getElementById('pdf-modal-document-stage');
-  if (!viewport || !stage) return;
-
-  const clampedZoom = Math.min(Math.max(1.0, targetZoom), 3.5);
-  const oldZoom = currentZoom;
-  currentZoom = clampedZoom;
-  const ratio = currentZoom / oldZoom;
-
-  const prevX = lastPinchCenter.x;
-  const prevY = lastPinchCenter.y;
-  const deltaX = currCenterX - prevX;
-  const deltaY = currCenterY - prevY;
-
-  stage.style.transition = 'none';
-  stage.style.width = `${currentZoom * 100}%`;
-
-  viewport.scrollLeft = (viewport.scrollLeft + prevX) * ratio - prevX - deltaX;
-  viewport.scrollTop = (viewport.scrollTop + prevY) * ratio - prevY - deltaY;
-
-  lastPinchCenter = { x: currCenterX, y: currCenterY };
-}
-
-function setZoom(targetZoom, focalX, focalY, animate = false) {
-  const viewport = document.getElementById('pdf-modal-viewport');
-  const stage = document.getElementById('pdf-modal-document-stage');
-  if (!viewport || !stage) return;
-
-  const clampedZoom = Math.min(Math.max(1.0, targetZoom), 3.5);
-  if (Math.abs(clampedZoom - currentZoom) < 0.001) return;
-
-  const oldZoom = currentZoom;
-  currentZoom = clampedZoom;
-  const ratio = currentZoom / oldZoom;
-
-  const vRect = viewport.getBoundingClientRect();
-  const fX = typeof focalX === 'number' ? focalX : vRect.width / 2;
-  const fY = typeof focalY === 'number' ? focalY : vRect.height / 2;
-
-  if (animate) {
-    stage.style.transition = 'width 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
-  } else {
-    stage.style.transition = 'none';
+    }, true);
+  } catch (err) {
+    console.warn('Could not inject inline EFB overrides into PDF.js iframe (cross-origin limitation):', err);
   }
-
-  stage.style.width = `${currentZoom * 100}%`;
-
-  viewport.scrollLeft = (viewport.scrollLeft + fX) * ratio - fX;
-  viewport.scrollTop = (viewport.scrollTop + fY) * ratio - fY;
-
-  lastPinchCenter = { x: fX, y: fY };
-}
-
-function applyZoom() {
-  setZoom(currentZoom, undefined, undefined, false);
 }
 
 export async function openPdfViewerModal(pdfUrlOrBlob, title = 'Document Viewer') {
-  let pdfUrl = pdfUrlOrBlob;
-  if (typeof Blob !== 'undefined' && (pdfUrlOrBlob instanceof Blob || pdfUrlOrBlob instanceof File)) {
-    if (activeBlobUrl) {
-      try { URL.revokeObjectURL(activeBlobUrl); } catch (e) {}
-    }
-    activeBlobUrl = URL.createObjectURL(pdfUrlOrBlob);
-    pdfUrl = activeBlobUrl;
-  }
   initPdfViewerModal();
 
   const modal = document.getElementById('efb-pdf-viewer-modal');
   const titleEl = document.getElementById('pdf-modal-title');
-  const stage = document.getElementById('pdf-modal-document-stage');
+  const iframe = document.getElementById('pdf-modal-iframe');
   const loader = document.getElementById('pdf-modal-loader');
   const fallback = document.getElementById('pdf-modal-fallback');
-  const iframe = document.getElementById('pdf-modal-iframe');
-  const viewportEl = document.getElementById('pdf-modal-viewport');
 
-  if (!modal || !stage) return;
+  if (!modal || !iframe) return;
 
   if (titleEl) titleEl.textContent = title;
 
-  // Reset zoom & view state
-  currentZoom = 1;
-  applyZoom();
-  stage.innerHTML = '';
+  // Revoke previous Blob URL to prevent memory leaks
+  if (activeBlobUrl) {
+    try { URL.revokeObjectURL(activeBlobUrl); } catch (e) {}
+    activeBlobUrl = null;
+  }
+
+  let documentUrl = pdfUrlOrBlob;
+  if (typeof Blob !== 'undefined' && (pdfUrlOrBlob instanceof Blob || pdfUrlOrBlob instanceof File)) {
+    activeBlobUrl = URL.createObjectURL(pdfUrlOrBlob);
+    documentUrl = activeBlobUrl;
+  }
+
   if (loader) loader.classList.remove('hidden');
   if (fallback) fallback.classList.add('hidden');
-  if (iframe) iframe.classList.add('hidden');
+
+  // Configure onload handler to inject read-only styles & hide spinner
+  iframe.onload = () => {
+    if (loader) loader.classList.add('hidden');
+    applyEfbViewerStyles(iframe);
+  };
+
+  iframe.onerror = () => {
+    if (loader) loader.classList.add('hidden');
+    if (fallback) fallback.classList.remove('hidden');
+  };
+
+  // Build viewer URL with page-width zoom parameter
+  const viewerBasePath = './js/vendor/pdfjs/web/viewer.html';
+  const targetSrc = `${viewerBasePath}?file=${encodeURIComponent(documentUrl)}#page=1&zoom=page-width`;
+
+  iframe.src = targetSrc;
 
   modal.classList.remove('hidden');
   requestAnimationFrame(() => {
     modal.classList.remove('opacity-0');
   });
-
-  // Cancel any previous PDF rendering
-  if (currentPdfTask) {
-    try { currentPdfTask.destroy(); } catch (e) {}
-    currentPdfTask = null;
-  }
-
-  try {
-    const pdfLib = window.pdfjsLib;
-    if (pdfLib) {
-      pdfLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-      let loadingTask = null;
-      if (typeof Blob !== 'undefined' && (pdfUrlOrBlob instanceof Blob || pdfUrlOrBlob instanceof File)) {
-        const arrayBuffer = await pdfUrlOrBlob.arrayBuffer();
-        loadingTask = pdfLib.getDocument({ data: arrayBuffer });
-      } else {
-        loadingTask = pdfLib.getDocument(pdfUrl);
-      }
-
-      currentPdfTask = loadingTask;
-      const pdf = await currentPdfTask.promise;
-
-      if (loader) loader.classList.add('hidden');
-
-      const dpr = window.devicePixelRatio || 1;
-
-      // Render each PDF page directly into continuous vertical block flow
-      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-        const page = await pdf.getPage(pageNum);
-
-        const containerWidth = viewportEl ? (viewportEl.clientWidth || (window.innerWidth - 32)) : (window.innerWidth - 32);
-        const unscaledViewport = page.getViewport({ scale: 1 });
-
-        // Calculate responsive base scale to fit page width naturally to full modal container width
-        const baseScale = Math.max(0.4, containerWidth / unscaledViewport.width);
-        const renderScale = baseScale * Math.max(dpr, 2);
-        const viewport = page.getViewport({ scale: renderScale });
-
-        const pageWrapper = document.createElement('div');
-        pageWrapper.className = 'pdf-page-wrapper relative block w-full bg-white dark:bg-slate-800 shadow-xs border-b border-slate-200 dark:border-slate-800/80 shrink-0';
-        pageWrapper.style.aspectRatio = `${unscaledViewport.width} / ${unscaledViewport.height}`;
-
-        const canvas = document.createElement('canvas');
-        canvas.className = 'pdf-page-canvas block w-full h-full object-cover';
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-
-        const ctx = canvas.getContext('2d');
-        const renderContext = {
-          canvasContext: ctx,
-          viewport: viewport
-        };
-
-        pageWrapper.appendChild(canvas);
-        stage.appendChild(pageWrapper);
-        await page.render(renderContext).promise;
-      }
-    } else {
-      useIframeFallback(pdfUrl, loader, iframe, fallback);
-    }
-  } catch (err) {
-    console.warn('PDF.js render error, falling back:', err);
-    useIframeFallback(pdfUrl, loader, iframe, fallback);
-  }
-}
-
-function useIframeFallback(pdfUrl, loader, iframe, fallback) {
-  if (loader) loader.classList.add('hidden');
-  if (iframe) {
-    iframe.classList.remove('hidden');
-    iframe.src = `${pdfUrl}#toolbar=0&navpanes=0&view=FitH`;
-  } else if (fallback) {
-    fallback.classList.remove('hidden');
-  }
 }
 
 export function closePdfViewerModal() {
@@ -346,22 +196,15 @@ export function closePdfViewerModal() {
     try { URL.revokeObjectURL(activeBlobUrl); } catch (e) {}
     activeBlobUrl = null;
   }
-  const modal = document.getElementById('efb-pdf-viewer-modal');
-  const stage = document.getElementById('pdf-modal-document-stage');
-  const iframe = document.getElementById('pdf-modal-iframe');
 
-  if (currentPdfTask) {
-    try { currentPdfTask.destroy(); } catch (e) {}
-    currentPdfTask = null;
-  }
+  const modal = document.getElementById('efb-pdf-viewer-modal');
+  const iframe = document.getElementById('pdf-modal-iframe');
 
   if (modal) {
     modal.classList.add('opacity-0');
     setTimeout(() => {
       modal.classList.add('hidden');
-      if (stage) stage.innerHTML = '';
       if (iframe) iframe.src = 'about:blank';
-      currentZoom = 1;
     }, 250);
   }
 }
