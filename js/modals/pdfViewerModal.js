@@ -1,13 +1,18 @@
-// ./js/modals/pdfViewerModal.js (1911_R106) - CertiFly In-App PDF Document Viewer Modal Component
+// ./js/modals/pdfViewerModal.js (1911_R107) - CertiFly In-App PDF Document Viewer Modal Component
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
 let currentPdfTask = null;
-let currentZoom = 1;
-let initialDistance = 0;
-let initialScale = 1;
-let lastTapTime = 0;
+let currentZoom = 1.0;
 let activeBlobUrl = null;
+
+// Touch & Zoom Gesture Controller State
+let isPinching = false;
+let initialPinchDist = 0;
+let initialZoom = 1.0;
+let pinchCenter = { x: 0, y: 0 };
+let lastTap = { time: 0, x: 0, y: 0 };
+let rAFPending = false;
 
 export const pdfViewerModalHTML = `
 <!-- EFB IN-APP PDF VIEWER MODAL -->
@@ -45,7 +50,7 @@ export const pdfViewerModalHTML = `
         </div>
 
         <!-- CONTINUOUS DOCUMENT STAGE (Pages arranged vertically by default, dynamic width zoom) -->
-        <div id="pdf-modal-document-stage" class="w-full mx-auto flex flex-col items-center gap-2 py-1 transition-all duration-150 origin-top">
+        <div id="pdf-modal-document-stage" class="w-full mx-auto flex flex-col items-center gap-2 py-1 origin-top">
         </div>
 
         <!-- IFRAME FALLBACK CONTAINER (Used if PDF.js fails) -->
@@ -75,60 +80,123 @@ export function initPdfViewerModal() {
 
 function setupGestureListeners() {
   const viewport = document.getElementById('pdf-modal-viewport');
+  const stage = document.getElementById('pdf-modal-document-stage');
   if (!viewport || viewport.dataset.gesturesInit) return;
   viewport.dataset.gesturesInit = 'true';
 
-  // Pinch-to-zoom & Double-tap zoom handling
+  // Prevent default Safari gestures when interacting with the modal
+  viewport.addEventListener('gesturestart', (e) => e.preventDefault());
+  viewport.addEventListener('gesturechange', (e) => e.preventDefault());
+
   viewport.addEventListener('touchstart', (e) => {
+    const vRect = viewport.getBoundingClientRect();
+
     if (e.touches.length === 2) {
-      initialDistance = Math.hypot(
+      isPinching = true;
+      initialPinchDist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
-      initialScale = currentZoom;
-    } else if (e.touches.length === 1) {
+      initialZoom = currentZoom;
+
+      const cX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - vRect.left;
+      const cY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - vRect.top;
+      pinchCenter = { x: cX, y: cY };
+
+      if (stage) stage.style.transition = 'none';
+    } else if (e.touches.length === 1 && !isPinching) {
+      const touchX = e.touches[0].clientX - vRect.left;
+      const touchY = e.touches[0].clientY - vRect.top;
       const now = Date.now();
-      if (now - lastTapTime < 300) {
-        currentZoom = currentZoom > 1.2 ? 1 : 1.8;
-        applyZoom();
+      const dist = Math.hypot(touchX - lastTap.x, touchY - lastTap.y);
+
+      if (now - lastTap.time < 300 && dist < 40) {
+        // Double-tap detected
+        e.preventDefault();
+        const targetZoom = currentZoom > 1.25 ? 1.0 : 2.0;
+        setZoom(targetZoom, touchX, touchY, true);
+        lastTap = { time: 0, x: 0, y: 0 };
+      } else {
+        lastTap = { time: now, x: touchX, y: touchY };
       }
-      lastTapTime = now;
     }
-  }, { passive: true });
+  }, { passive: false });
 
   viewport.addEventListener('touchmove', (e) => {
-    if (e.touches.length === 2 && initialDistance > 0) {
+    if (e.touches.length === 2 && isPinching && initialPinchDist > 0) {
+      e.preventDefault();
       const dist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
-      const factor = dist / initialDistance;
-      currentZoom = Math.min(Math.max(0.8, initialScale * factor), 3.0);
-      applyZoom();
+      const factor = dist / initialPinchDist;
+      const targetZoom = initialZoom * factor;
+
+      if (!rAFPending) {
+        rAFPending = true;
+        requestAnimationFrame(() => {
+          setZoom(targetZoom, pinchCenter.x, pinchCenter.y, false);
+          rAFPending = false;
+        });
+      }
     }
-  }, { passive: true });
+  }, { passive: false });
 
   viewport.addEventListener('touchend', (e) => {
-    if (e.touches.length < 2) {
-      initialDistance = 0;
+    if (e.touches.length < 2 && isPinching) {
+      isPinching = false;
+      initialPinchDist = 0;
+
+      // Snap to 1.0 if zoomed out below baseline
+      if (currentZoom < 1.02) {
+        setZoom(1.0, undefined, undefined, true);
+      }
     }
   }, { passive: true });
 
-  // Desktop trackpad / Ctrl + wheel zoom
+  // Trackpad / Wheel zoom (Ctrl/Cmd + Wheel)
   viewport.addEventListener('wheel', (e) => {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
-      const delta = e.deltaY < 0 ? 0.15 : -0.15;
-      currentZoom = Math.min(Math.max(0.8, currentZoom + delta), 3.0);
-      applyZoom();
+      const vRect = viewport.getBoundingClientRect();
+      const focalX = e.clientX - vRect.left;
+      const focalY = e.clientY - vRect.top;
+      const delta = e.deltaY < 0 ? 0.2 : -0.2;
+      setZoom(currentZoom + delta, focalX, focalY, false);
     }
   }, { passive: false });
 }
 
-function applyZoom() {
+function setZoom(targetZoom, focalX, focalY, animate = false) {
+  const viewport = document.getElementById('pdf-modal-viewport');
   const stage = document.getElementById('pdf-modal-document-stage');
-  if (!stage) return;
+  if (!viewport || !stage) return;
+
+  const clampedZoom = Math.min(Math.max(1.0, targetZoom), 3.5);
+  if (Math.abs(clampedZoom - currentZoom) < 0.001) return;
+
+  const oldZoom = currentZoom;
+  currentZoom = clampedZoom;
+  const ratio = currentZoom / oldZoom;
+
+  const vRect = viewport.getBoundingClientRect();
+  const fX = typeof focalX === 'number' ? focalX : vRect.width / 2;
+  const fY = typeof focalY === 'number' ? focalY : vRect.height / 2;
+
+  if (animate) {
+    stage.style.transition = 'width 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
+  } else {
+    stage.style.transition = 'none';
+  }
+
   stage.style.width = `${currentZoom * 100}%`;
+
+  viewport.scrollLeft = (viewport.scrollLeft + fX) * ratio - fX;
+  viewport.scrollTop = (viewport.scrollTop + fY) * ratio - fY;
+}
+
+function applyZoom() {
+  setZoom(currentZoom, undefined, undefined, false);
 }
 
 export async function openPdfViewerModal(pdfUrlOrBlob, title = 'Document Viewer') {
