@@ -1,4 +1,4 @@
-// ./js/modals/pdfViewerModal.js (1911_R107) - CertiFly In-App PDF Document Viewer Modal Component
+// ./js/modals/pdfViewerModal.js (1911_R108) - CertiFly In-App PDF Document Viewer Modal Component
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -50,7 +50,7 @@ export const pdfViewerModalHTML = `
         </div>
 
         <!-- CONTINUOUS DOCUMENT STAGE (Pages arranged vertically by default, dynamic width zoom) -->
-        <div id="pdf-modal-document-stage" class="w-full mx-auto flex flex-col items-center gap-2 py-1 origin-top">
+        <div id="pdf-modal-document-stage" class="w-full max-w-none mx-auto flex flex-col items-center gap-2 py-1 origin-top">
         </div>
 
         <!-- IFRAME FALLBACK CONTAINER (Used if PDF.js fails) -->
@@ -273,8 +273,12 @@ export async function openPdfViewerModal(pdfUrlOrBlob, title = 'Document Viewer'
         const renderScale = baseScale * Math.max(dpr, 2);
         const viewport = page.getViewport({ scale: renderScale });
 
+        const pageWrapper = document.createElement('div');
+        pageWrapper.className = 'pdf-page-wrapper relative block w-full bg-white dark:bg-slate-800 shadow-xs border-b border-slate-200 dark:border-slate-800/80 shrink-0 overflow-hidden';
+        pageWrapper.style.aspectRatio = `${unscaledViewport.width} / ${unscaledViewport.height}`;
+
         const canvas = document.createElement('canvas');
-        canvas.className = 'pdf-page-canvas block w-full h-auto bg-white dark:bg-slate-800 shadow-xs border-b border-slate-200 dark:border-slate-800/80 shrink-0';
+        canvas.className = 'pdf-page-canvas block w-full h-full object-cover';
         canvas.width = viewport.width;
         canvas.height = viewport.height;
 
@@ -284,7 +288,8 @@ export async function openPdfViewerModal(pdfUrlOrBlob, title = 'Document Viewer'
           viewport: viewport
         };
 
-        stage.appendChild(canvas);
+        pageWrapper.appendChild(canvas);
+        stage.appendChild(pageWrapper);
         await page.render(renderContext).promise;
       }
     } else {
