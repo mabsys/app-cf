@@ -28,8 +28,8 @@ export const topbarHTML = `
 
       <!-- Compact Logo -->
       <div class="flex items-center gap-0.5 font-semibold italic text-sm tracking-tight pointer-events-none">
-          <svg xmlns="http://w3.org" viewBox="0 0 256 256" width="16" height="16" fill="currentColor">
-               <path d="M227.82 47.92 175.27 234.25a15.87 15.87 0 0 1-14.06 11.6q-.7.06-1.38.06a15.85 15.85 0 0 1-14.42-9.15l-36.91-77.94 53.28-53.28a8 8 0 0 0-11.31-11.31l-53.29 53.28-77.93-36.92a16 16 0 0 1 2.5-29.86L208.08 28.18a16 16 0 0 1 19.74 19.74Z"></path>
+          <svg xmlns="http://w3.org" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+               <path d="M1.946 9.315c-.522-.174-.527-.455.01-.634l19.087-6.362c.529-.176.832.12.684.638l-5.454 19.086c-.15.529-.455.547-.679.045L12 14l6-8-8 6-8.054-2.685z"></path>
           </svg>
         <span class="leading-none">
           CertiFly<span class="align-super text-[6px] font-bold ml-0.5">™</span>
