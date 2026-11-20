@@ -1,7 +1,8 @@
-// ./js/views/dashboard.js (1811_R104) - CertiFly Dashboard Engine & Overview Controller
+// ./js/views/dashboard.js (1911_R105) - CertiFly Dashboard Engine & Overview Controller
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
+import { openPdfViewerModal } from '../modals/pdfViewerModal.js';
 import { showAlertModal, showToast, showConfirmDialog } from '../notifications.js';
 import { animateOverviewDashboard, animateOverviewEntrance } from '../animations.js';
 import { getProfileData, getAttestationData, getQualificationSlipData, getAttestationPdf, getQualificationSlipPdf, getFreshnessLimit, getThresholdDays } from '../storage.js';
@@ -1364,8 +1365,14 @@ export async function setupDocumentViewers() {
         let blob = attBlob;
         if (!blob && selAttFile) blob = selAttFile;
         if (blob) {
-          const blobUrl = URL.createObjectURL(blob);
-          window.open(blobUrl, "_blank");
+          if (typeof openPdfViewerModal === 'function') {
+            openPdfViewerModal(blob, 'MAB Company Attestation');
+          } else if (typeof window.openPdfViewerModal === 'function') {
+            window.openPdfViewerModal(blob, 'MAB Company Attestation');
+          } else {
+            const blobUrl = URL.createObjectURL(blob);
+            window.open(blobUrl, "_blank");
+          }
         } else {
           await showAlertModal("File Not Found", "Attestation PDF file not found in local storage.", "error");
         }
@@ -1387,8 +1394,14 @@ export async function setupDocumentViewers() {
         let blob = qsBlob;
         if (!blob && selQsFile) blob = selQsFile;
         if (blob) {
-          const blobUrl = URL.createObjectURL(blob);
-          window.open(blobUrl, "_blank");
+          if (typeof openPdfViewerModal === 'function') {
+            openPdfViewerModal(blob, 'Qualification Slip (QS)');
+          } else if (typeof window.openPdfViewerModal === 'function') {
+            window.openPdfViewerModal(blob, 'Qualification Slip (QS)');
+          } else {
+            const blobUrl = URL.createObjectURL(blob);
+            window.open(blobUrl, "_blank");
+          }
         } else {
           await showAlertModal("File Not Found", "Qualification Slip PDF file not found in local storage.", "error");
         }
