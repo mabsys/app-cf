@@ -1,4 +1,4 @@
-// ./js/modals/pdfViewerModal.js (1911_R116) - CertiFly EFB In-App PDF Document Viewer Component
+// ./js/modals/pdfViewerModal.js (1911_R117) - CertiFly EFB In-App PDF Document Viewer Component
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -6,7 +6,7 @@ let currentPdfTask = null;
 let currentZoom = 1.0;
 let activeBlobUrl = null;
 
-// Fixed Unscaled Dimensions of Document Stage (Captured at Zoom 1.0)
+// Unscaled base dimensions at 100% baseline zoom (Prevents double compounding & NaN math)
 let unscaledStageWidth = 0;
 let unscaledStageHeight = 0;
 
@@ -19,7 +19,7 @@ let lastTap = { time: 0, x: 0, y: 0 };
 let rAFPending = false;
 
 export const pdfViewerModalHTML = `
-<!-- EFB IN-APP PDF VIEWER MODAL (GPU Hardware Accelerated Pure CSS Transform Engine) -->
+<!-- EFB IN-APP PDF VIEWER MODAL (iPad Safeguarded GPU CSS Transform Engine) -->
 <div id="efb-pdf-viewer-modal" class="fixed inset-0 z-[80] bg-slate-950/80 dark:bg-slate-950/90 backdrop-blur-md flex flex-col hidden select-none transition-opacity duration-300 opacity-0" onclick="if(event.target === this) closePdfViewerModal()">
   <div class="w-full max-w-full md:max-w-5xl lg:max-w-6xl mx-auto h-full flex flex-col p-2 sm:p-4 pointer-events-none">
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl h-full flex flex-col overflow-hidden shadow-2xl pointer-events-auto">
@@ -47,8 +47,8 @@ export const pdfViewerModalHTML = `
         </div>
       </div>
 
-      <!-- PDF DOCUMENT VIEWPORT (Continuous vertical flow & GPU CSS Transform smooth zoom) -->
-      <div id="pdf-modal-viewport" class="relative flex-1 bg-slate-100 dark:bg-slate-950 w-full h-full overflow-y-auto overflow-x-auto p-0 sm:p-2 no-scrollbar touch-pan-x touch-pan-y">
+      <!-- PDF DOCUMENT VIEWPORT (Continuous vertical flow & GPU CSS Transform Engine with iPad touch safeguards) -->
+      <div id="pdf-modal-viewport" class="relative flex-1 bg-slate-100 dark:bg-slate-950 w-full h-full overflow-y-auto overflow-x-auto p-0 sm:p-2 no-scrollbar touch-pan-x touch-pan-y" style="touch-action: pan-x pan-y;">
         
         <!-- LOADER SPINNER -->
         <div id="pdf-modal-loader" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-100/90 dark:bg-slate-950/90 z-10 transition-opacity duration-200">
@@ -56,7 +56,7 @@ export const pdfViewerModalHTML = `
           <span class="text-xs font-bold text-slate-600 dark:text-slate-400 animate-pulse">Loading Document...</span>
         </div>
 
-        <!-- DYNAMIC SCROLL SPACER (Matches visual GPU transformed area) -->
+        <!-- DYNAMIC SCROLL SPACER (Expands scrollable bounds matching transform scale without altering stage width) -->
         <div id="pdf-modal-stage-wrapper" class="relative w-full mx-auto min-h-full origin-top-left transition-none">
           <!-- GPU TRANSFORM CONTAINER (Canvas page stack scaled smoothly via CSS transform) -->
           <div id="pdf-modal-document-stage" class="absolute top-0 left-0 w-full flex flex-col items-center gap-2 py-1 origin-top-left">
@@ -69,7 +69,7 @@ export const pdfViewerModalHTML = `
         <!-- FALLBACK NOTICE CONTAINER -->
         <div id="pdf-modal-fallback" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hidden z-20">
           <svg class="w-12 h-12 text-slate-400 dark:text-slate-500 mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 01-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
           </svg>
           <p class="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">Unable to Load Document</p>
           <p class="text-[10px] text-slate-500 dark:text-slate-400 mb-4 max-w-xs">The PDF document could not be rendered inside the viewer.</p>
@@ -88,31 +88,53 @@ export function initPdfViewerModal() {
   }
 }
 
+function resetPinchState() {
+  isPinching = false;
+  initialPinchDist = 0;
+  rAFPending = false;
+}
+
 function setupGestureListeners() {
   const viewport = document.getElementById('pdf-modal-viewport');
   const stage = document.getElementById('pdf-modal-document-stage');
   if (!viewport || viewport.dataset.gesturesInit) return;
   viewport.dataset.gesturesInit = 'true';
 
-  viewport.addEventListener('gesturestart', (e) => e.preventDefault());
-  viewport.addEventListener('gesturechange', (e) => e.preventDefault());
+  // Prevent iPad Safari native window zoom collision
+  viewport.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+  viewport.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
 
   viewport.addEventListener('touchstart', (e) => {
     const vRect = viewport.getBoundingClientRect();
 
     if (e.touches.length === 2) {
-      isPinching = true;
-      initialPinchDist = Math.hypot(
+      // Guard against pinch starting before unscaled base dimensions are measured
+      if (!unscaledStageWidth || unscaledStageWidth <= 0) {
+        if (stage) unscaledStageWidth = stage.offsetWidth || (window.innerWidth - 32);
+      }
+      if (!unscaledStageHeight || unscaledStageHeight <= 0) {
+        if (stage) unscaledStageHeight = stage.offsetHeight || 600;
+      }
+
+      const dist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
-      initialZoom = currentZoom;
 
-      const cX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - vRect.left;
-      const cY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - vRect.top;
-      lastPinchCenter = { x: cX, y: cY };
+      // Only engage pinch if distance between fingers is valid (> 10px)
+      if (Number.isFinite(dist) && dist > 10) {
+        isPinching = true;
+        initialPinchDist = dist;
+        initialZoom = currentZoom;
 
-      if (stage) stage.style.transition = 'none';
+        const cX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - vRect.left;
+        const cY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - vRect.top;
+        lastPinchCenter = { x: cX, y: cY };
+
+        if (stage) stage.style.transition = 'none';
+      } else {
+        resetPinchState();
+      }
     } else if (e.touches.length === 1 && !isPinching) {
       const touchX = e.touches[0].clientX - vRect.left;
       const touchY = e.touches[0].clientY - vRect.top;
@@ -131,12 +153,15 @@ function setupGestureListeners() {
   }, { passive: false });
 
   viewport.addEventListener('touchmove', (e) => {
-    if (e.touches.length === 2 && isPinching && initialPinchDist > 0) {
+    if (e.touches.length === 2 && isPinching && initialPinchDist > 10) {
       e.preventDefault();
       const dist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
+
+      if (!Number.isFinite(dist) || dist <= 0) return;
+
       const factor = dist / initialPinchDist;
       const targetZoom = initialZoom * factor;
 
@@ -154,16 +179,19 @@ function setupGestureListeners() {
     }
   }, { passive: false });
 
-  viewport.addEventListener('touchend', (e) => {
+  const handleTouchEndOrCancel = (e) => {
     if (e.touches.length < 2 && isPinching) {
-      isPinching = false;
-      initialPinchDist = 0;
+      resetPinchState();
 
       if (currentZoom < 1.02) {
         setZoom(1.0, undefined, undefined, true);
       }
     }
-  }, { passive: true });
+  };
+
+  // Safely reset state on both touchend AND iPad touchcancel events
+  viewport.addEventListener('touchend', handleTouchEndOrCancel, { passive: true });
+  viewport.addEventListener('touchcancel', handleTouchEndOrCancel, { passive: true });
 
   viewport.addEventListener('wheel', (e) => {
     if (e.ctrlKey || e.metaKey) {
@@ -184,28 +212,34 @@ function setZoomPinch(targetZoom, currCenterX, currCenterY) {
   if (!viewport || !stage || !wrapper) return;
 
   const clampedZoom = Math.min(Math.max(1.0, targetZoom), 3.5);
+  if (!Number.isFinite(clampedZoom)) return;
+
   const oldZoom = currentZoom;
   currentZoom = clampedZoom;
   const ratio = currentZoom / oldZoom;
 
-  const prevCX = lastPinchCenter.x;
-  const prevCY = lastPinchCenter.y;
-  lastPinchCenter = { x: currCenterX, y: currCenterY };
+  const deltaX = currCenterX - lastPinchCenter.x;
+  const deltaY = currCenterY - lastPinchCenter.y;
 
   stage.style.transition = 'none';
   wrapper.style.transition = 'none';
 
+  // Apply GPU hardware scale cleanly
   stage.style.transform = `scale(${currentZoom})`;
-  
-  const baseW = unscaledStageWidth || stage.offsetWidth || 400;
-  const baseH = unscaledStageHeight || stage.offsetHeight || 600;
 
-  wrapper.style.width = `${baseW * currentZoom}px`;
-  wrapper.style.height = `${baseH * currentZoom}px`;
+  // Synchronize scroll container bounds cleanly matching zoom level
+  if (unscaledStageWidth > 0) {
+    wrapper.style.width = `${unscaledStageWidth * currentZoom}px`;
+  }
+  if (unscaledStageHeight > 0) {
+    wrapper.style.height = `${unscaledStageHeight * currentZoom}px`;
+  }
 
-  viewport.scrollLeft = (viewport.scrollLeft + prevCX) * ratio - currCenterX;
-  viewport.scrollTop = (viewport.scrollTop + prevCY) * ratio - currCenterY;
+  // Focal scroll shift: anchors 2-finger midpoint precisely
+  viewport.scrollLeft = (viewport.scrollLeft + lastPinchCenter.x) * ratio - currCenterX;
+  viewport.scrollTop = (viewport.scrollTop + lastPinchCenter.y) * ratio - currCenterY;
 
+  lastPinchCenter = { x: currCenterX, y: currCenterY };
   updateZoomLabel();
 }
 
@@ -216,7 +250,7 @@ function setZoom(targetZoom, focalX, focalY, animate = false) {
   if (!viewport || !stage || !wrapper) return;
 
   const clampedZoom = Math.min(Math.max(1.0, targetZoom), 3.5);
-  if (Math.abs(clampedZoom - currentZoom) < 0.001) return;
+  if (!Number.isFinite(clampedZoom) || Math.abs(clampedZoom - currentZoom) < 0.001) return;
 
   const oldZoom = currentZoom;
   currentZoom = clampedZoom;
@@ -236,11 +270,12 @@ function setZoom(targetZoom, focalX, focalY, animate = false) {
 
   stage.style.transform = `scale(${currentZoom})`;
 
-  const baseW = unscaledStageWidth || stage.offsetWidth || 400;
-  const baseH = unscaledStageHeight || stage.offsetHeight || 600;
-
-  wrapper.style.width = `${baseW * currentZoom}px`;
-  wrapper.style.height = `${baseH * currentZoom}px`;
+  if (unscaledStageWidth > 0) {
+    wrapper.style.width = `${unscaledStageWidth * currentZoom}px`;
+  }
+  if (unscaledStageHeight > 0) {
+    wrapper.style.height = `${unscaledStageHeight * currentZoom}px`;
+  }
 
   viewport.scrollLeft = (viewport.scrollLeft + fX) * ratio - fX;
   viewport.scrollTop = (viewport.scrollTop + fY) * ratio - fY;
@@ -283,8 +318,10 @@ export async function openPdfViewerModal(pdfUrlOrBlob, title = 'Document Viewer'
 
   if (titleEl) titleEl.textContent = title;
 
+  resetPinchState();
   currentZoom = 1.0;
   updateZoomLabel();
+
   stage.style.transform = 'scale(1)';
   stage.style.width = '100%';
   if (wrapper) {
@@ -292,6 +329,7 @@ export async function openPdfViewerModal(pdfUrlOrBlob, title = 'Document Viewer'
     wrapper.style.height = 'auto';
   }
   stage.innerHTML = '';
+
   if (loader) loader.classList.remove('hidden');
   if (fallback) fallback.classList.add('hidden');
   if (iframe) iframe.classList.add('hidden');
@@ -357,15 +395,15 @@ export async function openPdfViewerModal(pdfUrlOrBlob, title = 'Document Viewer'
         await page.render(renderContext).promise;
       }
 
-      // Capture unscaled dimensions at zoom 1.0
-      unscaledStageWidth = stage.offsetWidth;
-      unscaledStageHeight = stage.offsetHeight;
-      stage.style.width = `${unscaledStageWidth}px`;
-
-      if (wrapper) {
-        wrapper.style.width = `${unscaledStageWidth}px`;
-        wrapper.style.height = `${unscaledStageHeight}px`;
-      }
+      // Capture unscaled base geometry for stable transform zoom calculations
+      requestAnimationFrame(() => {
+        unscaledStageWidth = stage.offsetWidth || (window.innerWidth - 32);
+        unscaledStageHeight = stage.offsetHeight || 600;
+        if (wrapper) {
+          wrapper.style.width = `${unscaledStageWidth}px`;
+          wrapper.style.height = `${unscaledStageHeight}px`;
+        }
+      });
     } else {
       useIframeFallback(pdfUrl, loader, iframe, fallback);
     }
@@ -400,15 +438,13 @@ export function closePdfViewerModal() {
     currentPdfTask = null;
   }
 
+  resetPinchState();
+
   if (modal) {
     modal.classList.add('opacity-0');
     setTimeout(() => {
       modal.classList.add('hidden');
-      if (stage) {
-        stage.innerHTML = '';
-        stage.style.width = '100%';
-        stage.style.transform = 'scale(1)';
-      }
+      if (stage) stage.innerHTML = '';
       if (wrapper) {
         wrapper.style.width = '100%';
         wrapper.style.height = 'auto';
