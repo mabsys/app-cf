@@ -1,4 +1,4 @@
-// ./js/views/profile.js (1911_R104) - CertiFly Pilot Profile & Credentials Engine
+// ./js/views/profile.js (1911_R105) - CertiFly Pilot Profile & Credentials Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -87,15 +87,7 @@ export async function extractTextFromPdfFile(file) {
   if (!file) return "";
   if (window.pdfjsLib) {
     try {
-      if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
-        try {
-          const workerUrl = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-          const blob = new Blob([`importScripts("${workerUrl}");`], { type: "application/javascript" });
-          window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
-        } catch (e) {
-          window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-        }
-      }
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
