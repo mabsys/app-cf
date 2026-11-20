@@ -1,4 +1,4 @@
-// ./js/modals/pdfViewerModal.js (1911_R109) - CertiFly In-App PDF Document Viewer Modal Component
+// ./js/modals/pdfViewerModal.js (1911_R110) - CertiFly In-App PDF Document Viewer Modal Component
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -305,7 +305,7 @@ export async function openPdfViewerModal(pdfUrlOrBlob, title = 'Document Viewer'
 
         const pageWrapper = document.createElement('div');
         pageWrapper.className = 'pdf-page-wrapper relative block w-full bg-white dark:bg-slate-800 shadow-xs border-b border-slate-200 dark:border-slate-800/80 shrink-0';
-        pageWrapper.style.aspectRatio = ;
+        pageWrapper.style.aspectRatio = `${unscaledViewport.width} / ${unscaledViewport.height}`;
 
         const canvas = document.createElement('canvas');
         canvas.className = 'pdf-page-canvas block w-full h-full object-cover';
