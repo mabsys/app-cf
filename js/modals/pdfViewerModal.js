@@ -1,4 +1,4 @@
-// ./js/modals/pdfViewerModal.js (1911_R113) - CertiFly EFB In-App PDF Document Viewer Component
+// ./js/modals/pdfViewerModal.js (1911_R114) - CertiFly EFB In-App PDF Document Viewer Component
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -15,7 +15,7 @@ let lastTap = { time: 0, x: 0, y: 0 };
 let rAFPending = false;
 
 export const pdfViewerModalHTML = `
-<!-- EFB IN-APP PDF VIEWER MODAL (GPU Accelerated Read-Only Engine) -->
+<!-- EFB IN-APP PDF VIEWER MODAL (Pure Layout Scale + Focal Scroll Anchoring) -->
 <div id="efb-pdf-viewer-modal" class="fixed inset-0 z-[80] bg-slate-950/80 dark:bg-slate-950/90 backdrop-blur-md flex flex-col hidden select-none transition-opacity duration-300 opacity-0" onclick="if(event.target === this) closePdfViewerModal()">
   <div class="w-full max-w-full md:max-w-5xl lg:max-w-6xl mx-auto h-full flex flex-col p-2 sm:p-4 pointer-events-none">
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl h-full flex flex-col overflow-hidden shadow-2xl pointer-events-auto">
@@ -43,7 +43,7 @@ export const pdfViewerModalHTML = `
         </div>
       </div>
 
-      <!-- PDF DOCUMENT VIEWPORT (Continuous vertical flow & GPU-accelerated smooth zoom) -->
+      <!-- PDF DOCUMENT VIEWPORT (Continuous vertical flow & Focal-Anchored natural pinch zoom) -->
       <div id="pdf-modal-viewport" class="relative flex-1 bg-slate-100 dark:bg-slate-950 w-full h-full overflow-y-auto overflow-x-auto p-0 sm:p-2 no-scrollbar touch-pan-x touch-pan-y">
         
         <!-- LOADER SPINNER -->
@@ -52,11 +52,8 @@ export const pdfViewerModalHTML = `
           <span class="text-xs font-bold text-slate-600 dark:text-slate-400 animate-pulse">Loading Document...</span>
         </div>
 
-        <!-- DYNAMIC SCROLL SPACER (Expands scrollable viewport area matching zoom scale) -->
-        <div id="pdf-modal-stage-wrapper" class="relative w-full mx-auto min-h-full origin-top-left transition-none">
-          <!-- GPU TRANSFORM CONTAINER (Canvas page stack scaled smoothly via CSS transform) -->
-          <div id="pdf-modal-document-stage" class="absolute top-0 left-0 w-full flex flex-col items-center gap-2 py-1 origin-top-left">
-          </div>
+        <!-- CONTINUOUS DOCUMENT STAGE (Pages arranged vertically, scaled naturally via layout width) -->
+        <div id="pdf-modal-document-stage" class="w-full max-w-none mx-auto flex flex-col items-center gap-2 py-1 origin-top transition-none">
         </div>
 
         <!-- IFRAME FALLBACK CONTAINER -->
@@ -176,8 +173,7 @@ function setupGestureListeners() {
 function setZoomPinch(targetZoom, currCenterX, currCenterY) {
   const viewport = document.getElementById('pdf-modal-viewport');
   const stage = document.getElementById('pdf-modal-document-stage');
-  const wrapper = document.getElementById('pdf-modal-stage-wrapper');
-  if (!viewport || !stage || !wrapper) return;
+  if (!viewport || !stage) return;
 
   const clampedZoom = Math.min(Math.max(1.0, targetZoom), 3.5);
   const oldZoom = currentZoom;
@@ -189,14 +185,7 @@ function setZoomPinch(targetZoom, currCenterX, currCenterY) {
   lastPinchCenter = { x: currCenterX, y: currCenterY };
 
   stage.style.transition = 'none';
-  wrapper.style.transition = 'none';
-
-  stage.style.transform = `scale(${currentZoom})`;
-  
-  const baseHeight = stage.offsetHeight || 600;
-
-  wrapper.style.width = `${currentZoom * 100}%`;
-  wrapper.style.height = `${baseHeight * currentZoom}px`;
+  stage.style.width = `${currentZoom * 100}%`;
 
   viewport.scrollLeft = (viewport.scrollLeft + currCenterX) * ratio - currCenterX - deltaX;
   viewport.scrollTop = (viewport.scrollTop + currCenterY) * ratio - currCenterY - deltaY;
@@ -207,8 +196,7 @@ function setZoomPinch(targetZoom, currCenterX, currCenterY) {
 function setZoom(targetZoom, focalX, focalY, animate = false) {
   const viewport = document.getElementById('pdf-modal-viewport');
   const stage = document.getElementById('pdf-modal-document-stage');
-  const wrapper = document.getElementById('pdf-modal-stage-wrapper');
-  if (!viewport || !stage || !wrapper) return;
+  if (!viewport || !stage) return;
 
   const clampedZoom = Math.min(Math.max(1.0, targetZoom), 3.5);
   if (Math.abs(clampedZoom - currentZoom) < 0.001) return;
@@ -222,18 +210,12 @@ function setZoom(targetZoom, focalX, focalY, animate = false) {
   const fY = typeof focalY === 'number' ? focalY : vRect.height / 2;
 
   if (animate) {
-    stage.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
-    wrapper.style.transition = 'width 0.25s cubic-bezier(0.25, 1, 0.5, 1), height 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
+    stage.style.transition = 'width 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
   } else {
     stage.style.transition = 'none';
-    wrapper.style.transition = 'none';
   }
 
-  stage.style.transform = `scale(${currentZoom})`;
-
-  const baseHeight = stage.offsetHeight || 600;
-  wrapper.style.width = `${currentZoom * 100}%`;
-  wrapper.style.height = `${baseHeight * currentZoom}px`;
+  stage.style.width = `${currentZoom * 100}%`;
 
   viewport.scrollLeft = (viewport.scrollLeft + fX) * ratio - fX;
   viewport.scrollTop = (viewport.scrollTop + fY) * ratio - fY;
@@ -266,7 +248,6 @@ export async function openPdfViewerModal(pdfUrlOrBlob, title = 'Document Viewer'
   const modal = document.getElementById('efb-pdf-viewer-modal');
   const titleEl = document.getElementById('pdf-modal-title');
   const stage = document.getElementById('pdf-modal-document-stage');
-  const wrapper = document.getElementById('pdf-modal-stage-wrapper');
   const loader = document.getElementById('pdf-modal-loader');
   const fallback = document.getElementById('pdf-modal-fallback');
   const iframe = document.getElementById('pdf-modal-iframe');
@@ -278,11 +259,7 @@ export async function openPdfViewerModal(pdfUrlOrBlob, title = 'Document Viewer'
 
   currentZoom = 1.0;
   updateZoomLabel();
-  stage.style.transform = 'scale(1)';
-  if (wrapper) {
-    wrapper.style.width = '100%';
-    wrapper.style.height = 'auto';
-  }
+  stage.style.width = '100%';
   stage.innerHTML = '';
   if (loader) loader.classList.remove('hidden');
   if (fallback) fallback.classList.add('hidden');
@@ -348,10 +325,6 @@ export async function openPdfViewerModal(pdfUrlOrBlob, title = 'Document Viewer'
         stage.appendChild(pageCard);
         await page.render(renderContext).promise;
       }
-
-      if (wrapper) {
-        wrapper.style.height = `${stage.offsetHeight}px`;
-      }
     } else {
       useIframeFallback(pdfUrl, loader, iframe, fallback);
     }
@@ -378,7 +351,6 @@ export function closePdfViewerModal() {
   }
   const modal = document.getElementById('efb-pdf-viewer-modal');
   const stage = document.getElementById('pdf-modal-document-stage');
-  const wrapper = document.getElementById('pdf-modal-stage-wrapper');
   const iframe = document.getElementById('pdf-modal-iframe');
 
   if (currentPdfTask) {
@@ -390,10 +362,9 @@ export function closePdfViewerModal() {
     modal.classList.add('opacity-0');
     setTimeout(() => {
       modal.classList.add('hidden');
-      if (stage) stage.innerHTML = '';
-      if (wrapper) {
-        wrapper.style.width = '100%';
-        wrapper.style.height = 'auto';
+      if (stage) {
+        stage.innerHTML = '';
+        stage.style.width = '100%';
       }
       if (iframe) iframe.src = 'about:blank';
       currentZoom = 1.0;
