@@ -1,4 +1,4 @@
-// ./js/modals/pdfViewerModal.js (1911_R108) - CertiFly In-App PDF Document Viewer Modal Component
+// ./js/modals/pdfViewerModal.js (1911_R109) - CertiFly In-App PDF Document Viewer Modal Component
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -10,7 +10,7 @@ let activeBlobUrl = null;
 let isPinching = false;
 let initialPinchDist = 0;
 let initialZoom = 1.0;
-let pinchCenter = { x: 0, y: 0 };
+let lastPinchCenter = { x: 0, y: 0 };
 let lastTap = { time: 0, x: 0, y: 0 };
 let rAFPending = false;
 
@@ -101,7 +101,7 @@ function setupGestureListeners() {
 
       const cX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - vRect.left;
       const cY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - vRect.top;
-      pinchCenter = { x: cX, y: cY };
+      lastPinchCenter = { x: cX, y: cY };
 
       if (stage) stage.style.transition = 'none';
     } else if (e.touches.length === 1 && !isPinching) {
@@ -125,6 +125,7 @@ function setupGestureListeners() {
   viewport.addEventListener('touchmove', (e) => {
     if (e.touches.length === 2 && isPinching && initialPinchDist > 0) {
       e.preventDefault();
+      const vRect = viewport.getBoundingClientRect();
       const dist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
@@ -132,10 +133,13 @@ function setupGestureListeners() {
       const factor = dist / initialPinchDist;
       const targetZoom = initialZoom * factor;
 
+      const currCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - vRect.left;
+      const currCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - vRect.top;
+
       if (!rAFPending) {
         rAFPending = true;
         requestAnimationFrame(() => {
-          setZoom(targetZoom, pinchCenter.x, pinchCenter.y, false);
+          setZoomPinch(targetZoom, currCenterX, currCenterY);
           rAFPending = false;
         });
       }
@@ -167,6 +171,30 @@ function setupGestureListeners() {
   }, { passive: false });
 }
 
+function setZoomPinch(targetZoom, currCenterX, currCenterY) {
+  const viewport = document.getElementById('pdf-modal-viewport');
+  const stage = document.getElementById('pdf-modal-document-stage');
+  if (!viewport || !stage) return;
+
+  const clampedZoom = Math.min(Math.max(1.0, targetZoom), 3.5);
+  const oldZoom = currentZoom;
+  currentZoom = clampedZoom;
+  const ratio = currentZoom / oldZoom;
+
+  const prevX = lastPinchCenter.x;
+  const prevY = lastPinchCenter.y;
+  const deltaX = currCenterX - prevX;
+  const deltaY = currCenterY - prevY;
+
+  stage.style.transition = 'none';
+  stage.style.width = `${currentZoom * 100}%`;
+
+  viewport.scrollLeft = (viewport.scrollLeft + prevX) * ratio - prevX - deltaX;
+  viewport.scrollTop = (viewport.scrollTop + prevY) * ratio - prevY - deltaY;
+
+  lastPinchCenter = { x: currCenterX, y: currCenterY };
+}
+
 function setZoom(targetZoom, focalX, focalY, animate = false) {
   const viewport = document.getElementById('pdf-modal-viewport');
   const stage = document.getElementById('pdf-modal-document-stage');
@@ -193,6 +221,8 @@ function setZoom(targetZoom, focalX, focalY, animate = false) {
 
   viewport.scrollLeft = (viewport.scrollLeft + fX) * ratio - fX;
   viewport.scrollTop = (viewport.scrollTop + fY) * ratio - fY;
+
+  lastPinchCenter = { x: fX, y: fY };
 }
 
 function applyZoom() {
@@ -274,8 +304,8 @@ export async function openPdfViewerModal(pdfUrlOrBlob, title = 'Document Viewer'
         const viewport = page.getViewport({ scale: renderScale });
 
         const pageWrapper = document.createElement('div');
-        pageWrapper.className = 'pdf-page-wrapper relative block w-full bg-white dark:bg-slate-800 shadow-xs border-b border-slate-200 dark:border-slate-800/80 shrink-0 overflow-hidden';
-        pageWrapper.style.aspectRatio = `${unscaledViewport.width} / ${unscaledViewport.height}`;
+        pageWrapper.className = 'pdf-page-wrapper relative block w-full bg-white dark:bg-slate-800 shadow-xs border-b border-slate-200 dark:border-slate-800/80 shrink-0';
+        pageWrapper.style.aspectRatio = ;
 
         const canvas = document.createElement('canvas');
         canvas.className = 'pdf-page-canvas block w-full h-full object-cover';
