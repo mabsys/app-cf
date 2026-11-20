@@ -1,10 +1,14 @@
-// ./js/modals/pdfViewerModal.js (1911_R114) - CertiFly EFB In-App PDF Document Viewer Component
+// ./js/modals/pdfViewerModal.js (1911_R115) - CertiFly EFB In-App PDF Document Viewer Component
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
+let currentPdfDocument = null;
 let currentPdfTask = null;
 let currentZoom = 1.0;
+let lastRenderedZoom = 1.0;
 let activeBlobUrl = null;
+let reRenderTimer = null;
+let renderedPageDimensions = []; // [{ pageNum, unscaledW, unscaledH }]
 
 // Touch & Zoom Gesture Controller State
 let isPinching = false;
@@ -15,7 +19,7 @@ let lastTap = { time: 0, x: 0, y: 0 };
 let rAFPending = false;
 
 export const pdfViewerModalHTML = `
-<!-- EFB IN-APP PDF VIEWER MODAL (Pure Layout Scale + Focal Scroll Anchoring) -->
+<!-- EFB IN-APP PDF VIEWER MODAL (Option B: Deferred High-Res Re-render + Safe WebKit GPU Caps) -->
 <div id="efb-pdf-viewer-modal" class="fixed inset-0 z-[80] bg-slate-950/80 dark:bg-slate-950/90 backdrop-blur-md flex flex-col hidden select-none transition-opacity duration-300 opacity-0" onclick="if(event.target === this) closePdfViewerModal()">
   <div class="w-full max-w-full md:max-w-5xl lg:max-w-6xl mx-auto h-full flex flex-col p-2 sm:p-4 pointer-events-none">
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl h-full flex flex-col overflow-hidden shadow-2xl pointer-events-auto">
@@ -154,6 +158,8 @@ function setupGestureListeners() {
 
       if (currentZoom < 1.02) {
         setZoom(1.0, undefined, undefined, true);
+      } else {
+        scheduleDeferredReRender();
       }
     }
   }, { passive: true });
@@ -221,6 +227,7 @@ function setZoom(targetZoom, focalX, focalY, animate = false) {
   viewport.scrollTop = (viewport.scrollTop + fY) * ratio - fY;
 
   updateZoomLabel();
+  scheduleDeferredReRender();
 }
 
 export function resetPdfViewerZoom() {
@@ -231,6 +238,86 @@ function updateZoomLabel() {
   const label = document.getElementById('pdf-modal-zoom-label');
   if (label) {
     label.textContent = `${Math.round(currentZoom * 100)}%`;
+  }
+}
+
+/**
+ * Option B: Debounces and schedules high-res canvas re-rendering after gestures settle
+ */
+function scheduleDeferredReRender() {
+  if (reRenderTimer) clearTimeout(reRenderTimer);
+  reRenderTimer = setTimeout(() => {
+    if (Math.abs(lastRenderedZoom - currentZoom) > 0.12) {
+      reRenderCanvasesAtZoom(currentZoom);
+    }
+  }, 180);
+}
+
+/**
+ * Calculates render scale for page canvas with strict WebKit GPU safety caps (Max 2048px dimension / 3.1MP surface area)
+ */
+function calculateSafeRenderViewport(page, containerWidth, dpr, zoomLevel) {
+  const unscaledViewport = page.getViewport({ scale: 1 });
+  const baseScale = Math.max(0.4, containerWidth / unscaledViewport.width);
+  const targetScale = baseScale * Math.min(dpr * zoomLevel, 2.8);
+
+  const calcW = unscaledViewport.width * targetScale;
+  const calcH = unscaledViewport.height * targetScale;
+
+  const MAX_CANVAS_DIM = 2048;
+  const MAX_CANVAS_AREA = 3145728; // 3.1 Megapixels
+
+  let scaleFactor = 1.0;
+  if (calcW > MAX_CANVAS_DIM) {
+    scaleFactor = Math.min(scaleFactor, MAX_CANVAS_DIM / calcW);
+  }
+  if (calcH > MAX_CANVAS_DIM) {
+    scaleFactor = Math.min(scaleFactor, MAX_CANVAS_DIM / calcH);
+  }
+  if ((calcW * scaleFactor) * (calcH * scaleFactor) > MAX_CANVAS_AREA) {
+    scaleFactor = Math.min(scaleFactor, Math.sqrt(MAX_CANVAS_AREA / (calcW * calcH)));
+  }
+
+  const finalScale = targetScale * scaleFactor;
+  return page.getViewport({ scale: finalScale });
+}
+
+/**
+ * Option B: Re-renders visible document canvases at target zoom resolution
+ */
+async function reRenderCanvasesAtZoom(targetZoom) {
+  if (!currentPdfDocument) return;
+  const viewportEl = document.getElementById('pdf-modal-viewport');
+  const stage = document.getElementById('pdf-modal-document-stage');
+  if (!stage || !viewportEl) return;
+
+  const containerWidth = viewportEl.clientWidth || (window.innerWidth - 32);
+  const dpr = window.devicePixelRatio || 1;
+  lastRenderedZoom = targetZoom;
+
+  const pageCards = stage.querySelectorAll('.pdf-page-card');
+  for (let i = 0; i < pageCards.length; i++) {
+    const card = pageCards[i];
+    const pageNum = i + 1;
+    const canvas = card.querySelector('canvas');
+    if (!canvas) continue;
+
+    try {
+      const page = await currentPdfDocument.getPage(pageNum);
+      const viewport = calculateSafeRenderViewport(page, containerWidth, dpr, targetZoom);
+
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      const ctx = canvas.getContext('2d');
+      const renderContext = {
+        canvasContext: ctx,
+        viewport: viewport
+      };
+      await page.render(renderContext).promise;
+    } catch (e) {
+      console.warn(`Error re-rendering page ${pageNum} at zoom ${targetZoom}:`, e);
+    }
   }
 }
 
@@ -258,6 +345,7 @@ export async function openPdfViewerModal(pdfUrlOrBlob, title = 'Document Viewer'
   if (titleEl) titleEl.textContent = title;
 
   currentZoom = 1.0;
+  lastRenderedZoom = 1.0;
   updateZoomLabel();
   stage.style.width = '100%';
   stage.innerHTML = '';
@@ -273,6 +361,7 @@ export async function openPdfViewerModal(pdfUrlOrBlob, title = 'Document Viewer'
   if (currentPdfTask) {
     try { currentPdfTask.destroy(); } catch (e) {}
     currentPdfTask = null;
+    currentPdfDocument = null;
   }
 
   try {
@@ -292,26 +381,32 @@ export async function openPdfViewerModal(pdfUrlOrBlob, title = 'Document Viewer'
 
       currentPdfTask = loadingTask;
       const pdf = await currentPdfTask.promise;
+      currentPdfDocument = pdf;
 
       if (loader) loader.classList.add('hidden');
 
       const dpr = window.devicePixelRatio || 1;
+      const containerWidth = viewportEl ? (viewportEl.clientWidth || (window.innerWidth - 32)) : (window.innerWidth - 32);
+
+      renderedPageDimensions = [];
 
       for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
         const page = await pdf.getPage(pageNum);
-
-        const containerWidth = viewportEl ? (viewportEl.clientWidth || (window.innerWidth - 32)) : (window.innerWidth - 32);
         const unscaledViewport = page.getViewport({ scale: 1 });
+        renderedPageDimensions.push({
+          pageNum,
+          unscaledW: unscaledViewport.width,
+          unscaledH: unscaledViewport.height
+        });
 
-        const baseScale = Math.max(0.4, containerWidth / unscaledViewport.width);
-        const renderScale = baseScale * Math.max(dpr, 2);
-        const viewport = page.getViewport({ scale: renderScale });
+        const viewport = calculateSafeRenderViewport(page, containerWidth, dpr, 1.0);
 
         const pageCard = document.createElement('div');
         pageCard.className = 'pdf-page-card relative block w-full bg-white dark:bg-slate-800 shadow-xs border-b border-slate-200 dark:border-slate-800/80 shrink-0 select-none';
+        pageCard.style.aspectRatio = `${unscaledViewport.width} / ${unscaledViewport.height}`;
 
         const canvas = document.createElement('canvas');
-        canvas.className = 'pdf-page-canvas block w-full h-auto pointer-events-none';
+        canvas.className = 'pdf-page-canvas block w-full h-full object-contain pointer-events-none';
         canvas.width = viewport.width;
         canvas.height = viewport.height;
 
@@ -345,6 +440,7 @@ function useIframeFallback(pdfUrl, loader, iframe, fallback) {
 }
 
 export function closePdfViewerModal() {
+  if (reRenderTimer) clearTimeout(reRenderTimer);
   if (activeBlobUrl) {
     try { URL.revokeObjectURL(activeBlobUrl); } catch (e) {}
     activeBlobUrl = null;
@@ -356,6 +452,7 @@ export function closePdfViewerModal() {
   if (currentPdfTask) {
     try { currentPdfTask.destroy(); } catch (e) {}
     currentPdfTask = null;
+    currentPdfDocument = null;
   }
 
   if (modal) {
@@ -368,6 +465,7 @@ export function closePdfViewerModal() {
       }
       if (iframe) iframe.src = 'about:blank';
       currentZoom = 1.0;
+      lastRenderedZoom = 1.0;
     }, 250);
   }
 }
