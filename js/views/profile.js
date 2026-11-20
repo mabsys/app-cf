@@ -1,8 +1,9 @@
-// ./js/views/profile.js (1811_R103) - CertiFly Pilot Profile & Credentials Engine
+// ./js/views/profile.js (1911_R104) - CertiFly Pilot Profile & Credentials Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
 import { showToast, showAlertModal, showConfirmDialog } from '../notifications.js';
+import { openPdfViewerModal } from '../modals/pdfViewerModal.js';
 import { PROXY_URL } from '../config.js';
 import { parseLicenseDOM } from '../caamParser.js';
 import { parseAttestationText, validateAttestationContent, parseQualificationSlipText, validateQualificationSlipContent } from '../parser.js';
@@ -28,6 +29,58 @@ export function getSelectedAttestationText() { return selectedAttestationText; }
 export function getSelectedQsFile() { return selectedQsFile; }
 export function getSelectedQsText() { return selectedQsText; }
 export function getSelectedQsParsed() { return selectedQsParsed; }
+
+export async function viewStoredAttestationPdf() {
+  try {
+    let fileToView = selectedAttestationFile;
+    if (!fileToView) {
+      fileToView = await getAttestationPdf();
+    }
+
+    if (!fileToView) {
+      showToast('No stored Attestation PDF found', 'warning');
+      return;
+    }
+
+    const currentProfile = getProfileData();
+    const title = fileToView.name || (currentProfile && currentProfile.attestationFileName) || 'MAB Flight Attestation';
+
+    if (typeof openPdfViewerModal === 'function') {
+      openPdfViewerModal(fileToView, title);
+    } else if (typeof window.openPdfViewerModal === 'function') {
+      window.openPdfViewerModal(fileToView, title);
+    }
+  } catch (err) {
+    console.error('Failed to view Attestation PDF:', err);
+    showToast('Unable to open stored Attestation PDF', 'error');
+  }
+}
+
+export async function viewStoredQualificationSlipPdf() {
+  try {
+    let fileToView = selectedQsFile;
+    if (!fileToView) {
+      fileToView = await getQualificationSlipPdf();
+    }
+
+    if (!fileToView) {
+      showToast('No stored Qualification Slip PDF found', 'warning');
+      return;
+    }
+
+    const currentQsData = getQualificationSlipData();
+    const title = fileToView.name || (currentQsData && currentQsData.fileName) || 'Qualification Slip (QS)';
+
+    if (typeof openPdfViewerModal === 'function') {
+      openPdfViewerModal(fileToView, title);
+    } else if (typeof window.openPdfViewerModal === 'function') {
+      window.openPdfViewerModal(fileToView, title);
+    }
+  } catch (err) {
+    console.error('Failed to view Qualification Slip PDF:', err);
+    showToast('Unable to open stored Qualification Slip PDF', 'error');
+  }
+}
 
 
 export async function extractTextFromPdfFile(file) {
@@ -230,6 +283,8 @@ export function resetProfileQrMode() {
 }
 if (typeof window !== 'undefined') {
   window.resetProfileQrMode = resetProfileQrMode;
+  window.viewStoredAttestationPdf = viewStoredAttestationPdf;
+  window.viewStoredQualificationSlipPdf = viewStoredQualificationSlipPdf;
   window.getSelectedAttestationFile = getSelectedAttestationFile;
   window.getSelectedAttestationText = getSelectedAttestationText;
   window.getSelectedQsFile = getSelectedQsFile;
@@ -1157,5 +1212,7 @@ export function renderMyQrPass() {
 
 if (typeof window !== 'undefined') {
   window.resetProfileQrMode = resetProfileQrMode;
+  window.viewStoredAttestationPdf = viewStoredAttestationPdf;
+  window.viewStoredQualificationSlipPdf = viewStoredQualificationSlipPdf;
   window.renderMyQrPass = renderMyQrPass;
 }
