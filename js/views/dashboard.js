@@ -1,4 +1,4 @@
-// ./js/views/dashboard.js (1911_R105) - CertiFly Dashboard Engine & Overview Controller
+// ./js/views/dashboard.js (1911_R106) - CertiFly Dashboard Engine & Overview Controller
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1362,8 +1362,8 @@ export async function setupDocumentViewers() {
       attestationBtn.disabled = false;
       attestationBtn.className = "w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]";
       attestationBtn.onclick = async () => {
-        let blob = attBlob;
-        if (!blob && selAttFile) blob = selAttFile;
+        let blob = await getAttestationPdf();
+        if (!blob && typeof getSelectedAttestationFile === "function") blob = getSelectedAttestationFile();
         if (blob) {
           if (typeof openPdfViewerModal === 'function') {
             openPdfViewerModal(blob, 'MAB Company Attestation');
@@ -1391,8 +1391,8 @@ export async function setupDocumentViewers() {
       qsBtn.disabled = false;
       qsBtn.className = "w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]";
       qsBtn.onclick = async () => {
-        let blob = qsBlob;
-        if (!blob && selQsFile) blob = selQsFile;
+        let blob = await getQualificationSlipPdf();
+        if (!blob && typeof getSelectedQsFile === "function") blob = getSelectedQsFile();
         if (blob) {
           if (typeof openPdfViewerModal === 'function') {
             openPdfViewerModal(blob, 'Qualification Slip (QS)');
