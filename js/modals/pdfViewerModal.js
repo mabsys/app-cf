@@ -1,16 +1,26 @@
-// ./js/modals/pdfViewerModal.js (1911_R112) - CertiFly In-App PDF Document Viewer Modal Component (Mozilla PDF.js Engine)
+// ./js/modals/pdfViewerModal.js (1911_R113) - CertiFly EFB In-App PDF Document Viewer Component
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
+let currentPdfTask = null;
+let currentZoom = 1.0;
 let activeBlobUrl = null;
 
+// Touch & Zoom Gesture Controller State
+let isPinching = false;
+let initialPinchDist = 0;
+let initialZoom = 1.0;
+let lastPinchCenter = { x: 0, y: 0 };
+let lastTap = { time: 0, x: 0, y: 0 };
+let rAFPending = false;
+
 export const pdfViewerModalHTML = `
-<!-- EFB IN-APP PDF VIEWER MODAL (Mozilla PDF.js Integration) -->
+<!-- EFB IN-APP PDF VIEWER MODAL (GPU Accelerated Read-Only Engine) -->
 <div id="efb-pdf-viewer-modal" class="fixed inset-0 z-[80] bg-slate-950/80 dark:bg-slate-950/90 backdrop-blur-md flex flex-col hidden select-none transition-opacity duration-300 opacity-0" onclick="if(event.target === this) closePdfViewerModal()">
   <div class="w-full max-w-full md:max-w-5xl lg:max-w-6xl mx-auto h-full flex flex-col p-2 sm:p-4 pointer-events-none">
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl h-full flex flex-col overflow-hidden shadow-2xl pointer-events-auto">
       
-      <!-- MODAL HEADER (Theme-aware, crisp icon, clean EFB style) -->
+      <!-- MODAL HEADER (Theme-aware, crisp icon, clean EFB style, no toolbar clutter) -->
       <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-900/90 shrink-0">
         <div class="flex items-center gap-2.5 truncate pr-2">
           <div class="w-7 h-7 flex items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0 flex-none">
@@ -24,14 +34,17 @@ export const pdfViewerModalHTML = `
           </div>
         </div>
 
-        <!-- HEADER CLOSE ACTION -->
+        <!-- HEADER ACTIONS (Zoom Badge & Close Button) -->
         <div class="flex items-center gap-2 shrink-0">
+          <button type="button" class="px-2.5 py-1 bg-slate-200/60 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-[10px] font-extrabold transition-colors cursor-pointer" onclick="resetPdfViewerZoom()" title="Reset Zoom">
+            <span id="pdf-modal-zoom-label">100%</span>
+          </button>
           <button type="button" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors text-xs font-bold cursor-pointer flex items-center justify-center" aria-label="Close PDF Viewer" onclick="closePdfViewerModal()">✕</button>
         </div>
       </div>
 
-      <!-- MOZILLA PDF.JS VIEWER IFRAME CONTAINER -->
-      <div id="pdf-modal-viewport" class="relative flex-1 bg-slate-100 dark:bg-slate-950 w-full h-full overflow-hidden">
+      <!-- PDF DOCUMENT VIEWPORT (Continuous vertical flow & GPU-accelerated smooth zoom) -->
+      <div id="pdf-modal-viewport" class="relative flex-1 bg-slate-100 dark:bg-slate-950 w-full h-full overflow-y-auto overflow-x-auto p-0 sm:p-2 no-scrollbar touch-pan-x touch-pan-y">
         
         <!-- LOADER SPINNER -->
         <div id="pdf-modal-loader" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-100/90 dark:bg-slate-950/90 z-10 transition-opacity duration-200">
@@ -39,8 +52,15 @@ export const pdfViewerModalHTML = `
           <span class="text-xs font-bold text-slate-600 dark:text-slate-400 animate-pulse">Loading Document...</span>
         </div>
 
-        <!-- OFFICIAL MOZILLA PDF.JS EMBEDDED VIEWER -->
-        <iframe id="pdf-modal-iframe" class="w-full h-full border-0 bg-white dark:bg-slate-900" title="PDF Document Viewer"></iframe>
+        <!-- DYNAMIC SCROLL SPACER (Expands scrollable viewport area matching zoom scale) -->
+        <div id="pdf-modal-stage-wrapper" class="relative w-full mx-auto min-h-full origin-top-left transition-none">
+          <!-- GPU TRANSFORM CONTAINER (Canvas page stack scaled smoothly via CSS transform) -->
+          <div id="pdf-modal-document-stage" class="absolute top-0 left-0 w-full flex flex-col items-center gap-2 py-1 origin-top-left">
+          </div>
+        </div>
+
+        <!-- IFRAME FALLBACK CONTAINER -->
+        <iframe id="pdf-modal-iframe" class="w-full h-full border-0 bg-white dark:bg-slate-900 hidden" title="PDF Document Viewer"></iframe>
 
         <!-- FALLBACK NOTICE CONTAINER -->
         <div id="pdf-modal-fallback" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hidden z-20">
@@ -60,180 +80,294 @@ export const pdfViewerModalHTML = `
 export function initPdfViewerModal() {
   if (!document.getElementById('efb-pdf-viewer-modal')) {
     document.body.insertAdjacentHTML('beforeend', pdfViewerModalHTML);
+    setupGestureListeners();
   }
 }
 
-/**
- * Injects strict EFB Read-Only, No-Toolbar & No-Text-Selection CSS into Mozilla viewer iframe
- */
-function applyEfbViewerStyles(iframe) {
-  try {
-    const iframeDoc = iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document);
-    if (!iframeDoc) return;
+function setupGestureListeners() {
+  const viewport = document.getElementById('pdf-modal-viewport');
+  const stage = document.getElementById('pdf-modal-document-stage');
+  if (!viewport || viewport.dataset.gesturesInit) return;
+  viewport.dataset.gesturesInit = 'true';
 
-    if (!iframeDoc.getElementById('certifly-efb-pdf-overrides')) {
-      const styleEl = iframeDoc.createElement('style');
-      styleEl.id = 'certifly-efb-pdf-overrides';
-      styleEl.textContent = `
-        /* ==========================================================================
-           CertiFly EFB Read-Only & Zero-Toolbar Overrides for Mozilla PDF.js
-           ========================================================================== */
+  viewport.addEventListener('gesturestart', (e) => e.preventDefault());
+  viewport.addEventListener('gesturechange', (e) => e.preventDefault());
 
-        /* 1. HIDE ENTIRE TOP TOOLBAR, FLOATING TOOLBARS & SEARCH BARS */
-        #toolbarContainer,
-        #toolbarViewer,
-        .toolbar,
-        #secondaryToolbar,
-        #viewFind,
-        #findbar,
-        .findbar {
-          display: none !important;
-          visibility: hidden !important;
-          height: 0 !important;
-          min-height: 0 !important;
-          opacity: 0 !important;
-          pointer-events: none !important;
-        }
+  viewport.addEventListener('touchstart', (e) => {
+    const vRect = viewport.getBoundingClientRect();
 
-        /* 2. OFFSET VIEWER CONTAINER TO TOP OF IFRAME */
-        #viewerContainer {
-          top: 0 !important;
-          inset: 0 !important;
-        }
+    if (e.touches.length === 2) {
+      isPinching = true;
+      initialPinchDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      initialZoom = currentZoom;
 
-        /* 3. DISABLE TEXT SELECTION & TEXT COPYING */
-        .textLayer,
-        .annotationLayer {
-          display: none !important;
-          pointer-events: none !important;
-        }
-        #viewerContainer, 
-        #viewer,
-        body {
-          user-select: none !important;
-          -webkit-user-select: none !important;
-          -moz-user-select: none !important;
-          -ms-user-select: none !important;
-        }
-      `;
-      (iframeDoc.head || iframeDoc.documentElement).appendChild(styleEl);
+      const cX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - vRect.left;
+      const cY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - vRect.top;
+      lastPinchCenter = { x: cX, y: cY };
+
+      if (stage) stage.style.transition = 'none';
+    } else if (e.touches.length === 1 && !isPinching) {
+      const touchX = e.touches[0].clientX - vRect.left;
+      const touchY = e.touches[0].clientY - vRect.top;
+      const now = Date.now();
+      const dist = Math.hypot(touchX - lastTap.x, touchY - lastTap.y);
+
+      if (now - lastTap.time < 300 && dist < 40) {
+        e.preventDefault();
+        const targetZoom = currentZoom > 1.25 ? 1.0 : 2.0;
+        setZoom(targetZoom, touchX, touchY, true);
+        lastTap = { time: 0, x: 0, y: 0 };
+      } else {
+        lastTap = { time: now, x: touchX, y: touchY };
+      }
     }
+  }, { passive: false });
 
-    // Disable Find/Search Keyboard Shortcut (Ctrl+F / Cmd+F) inside iframe
-    if (iframe.contentWindow) {
-      iframe.contentWindow.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }, true);
+  viewport.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2 && isPinching && initialPinchDist > 0) {
+      e.preventDefault();
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const factor = dist / initialPinchDist;
+      const targetZoom = initialZoom * factor;
+
+      const vRect = viewport.getBoundingClientRect();
+      const currX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - vRect.left;
+      const currY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - vRect.top;
+
+      if (!rAFPending) {
+        rAFPending = true;
+        requestAnimationFrame(() => {
+          setZoomPinch(targetZoom, currX, currY);
+          rAFPending = false;
+        });
+      }
     }
-  } catch (err) {
-    console.warn('Could not inject EFB overrides into PDF.js iframe:', err);
-  }
+  }, { passive: false });
+
+  viewport.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2 && isPinching) {
+      isPinching = false;
+      initialPinchDist = 0;
+
+      if (currentZoom < 1.02) {
+        setZoom(1.0, undefined, undefined, true);
+      }
+    }
+  }, { passive: true });
+
+  viewport.addEventListener('wheel', (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const vRect = viewport.getBoundingClientRect();
+      const focalX = e.clientX - vRect.left;
+      const focalY = e.clientY - vRect.top;
+      const delta = e.deltaY < 0 ? 0.2 : -0.2;
+      setZoom(currentZoom + delta, focalX, focalY, false);
+    }
+  }, { passive: false });
 }
 
-/**
- * Safely loads PDF data into Mozilla PDF.js viewer via PDFViewerApplication API
- */
-async function loadPdfIntoViewerApp(iframe, pdfData) {
-  const win = iframe.contentWindow;
-  if (!win) throw new Error('Iframe window unavailable');
+function setZoomPinch(targetZoom, currCenterX, currCenterY) {
+  const viewport = document.getElementById('pdf-modal-viewport');
+  const stage = document.getElementById('pdf-modal-document-stage');
+  const wrapper = document.getElementById('pdf-modal-stage-wrapper');
+  if (!viewport || !stage || !wrapper) return;
 
-  // Poll until PDFViewerApplication is initialized by viewer.js
-  let attempts = 0;
-  while ((!win.PDFViewerApplication || !win.PDFViewerApplication.initialized) && attempts < 60) {
-    await new Promise(resolve => setTimeout(resolve, 50));
-    attempts++;
+  const clampedZoom = Math.min(Math.max(1.0, targetZoom), 3.5);
+  const oldZoom = currentZoom;
+  currentZoom = clampedZoom;
+  const ratio = currentZoom / oldZoom;
+
+  const deltaX = currCenterX - lastPinchCenter.x;
+  const deltaY = currCenterY - lastPinchCenter.y;
+  lastPinchCenter = { x: currCenterX, y: currCenterY };
+
+  stage.style.transition = 'none';
+  wrapper.style.transition = 'none';
+
+  stage.style.transform = `scale(${currentZoom})`;
+  
+  const baseHeight = stage.offsetHeight || 600;
+
+  wrapper.style.width = `${currentZoom * 100}%`;
+  wrapper.style.height = `${baseHeight * currentZoom}px`;
+
+  viewport.scrollLeft = (viewport.scrollLeft + currCenterX) * ratio - currCenterX - deltaX;
+  viewport.scrollTop = (viewport.scrollTop + currCenterY) * ratio - currCenterY - deltaY;
+
+  updateZoomLabel();
+}
+
+function setZoom(targetZoom, focalX, focalY, animate = false) {
+  const viewport = document.getElementById('pdf-modal-viewport');
+  const stage = document.getElementById('pdf-modal-document-stage');
+  const wrapper = document.getElementById('pdf-modal-stage-wrapper');
+  if (!viewport || !stage || !wrapper) return;
+
+  const clampedZoom = Math.min(Math.max(1.0, targetZoom), 3.5);
+  if (Math.abs(clampedZoom - currentZoom) < 0.001) return;
+
+  const oldZoom = currentZoom;
+  currentZoom = clampedZoom;
+  const ratio = currentZoom / oldZoom;
+
+  const vRect = viewport.getBoundingClientRect();
+  const fX = typeof focalX === 'number' ? focalX : vRect.width / 2;
+  const fY = typeof focalY === 'number' ? focalY : vRect.height / 2;
+
+  if (animate) {
+    stage.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
+    wrapper.style.transition = 'width 0.25s cubic-bezier(0.25, 1, 0.5, 1), height 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
+  } else {
+    stage.style.transition = 'none';
+    wrapper.style.transition = 'none';
   }
 
-  const app = win.PDFViewerApplication;
-  if (!app) throw new Error('PDFViewerApplication not initialized in iframe');
+  stage.style.transform = `scale(${currentZoom})`;
 
-  if (app.initializedPromise) {
-    await app.initializedPromise;
-  }
+  const baseHeight = stage.offsetHeight || 600;
+  wrapper.style.width = `${currentZoom * 100}%`;
+  wrapper.style.height = `${baseHeight * currentZoom}px`;
 
-  // Open PDF data via PDFViewerApplication (handles ArrayBuffer, Blobs, and URLs cleanly without CORS/origin errors)
-  if (typeof pdfData === 'string') {
-    await app.open(pdfData);
-  } else if (pdfData instanceof ArrayBuffer) {
-    await app.open({ data: pdfData });
-  } else if (pdfData instanceof Blob || pdfData instanceof File) {
-    const buf = await pdfData.arrayBuffer();
-    await app.open({ data: buf });
+  viewport.scrollLeft = (viewport.scrollLeft + fX) * ratio - fX;
+  viewport.scrollTop = (viewport.scrollTop + fY) * ratio - fY;
+
+  updateZoomLabel();
+}
+
+export function resetPdfViewerZoom() {
+  setZoom(1.0, undefined, undefined, true);
+}
+
+function updateZoomLabel() {
+  const label = document.getElementById('pdf-modal-zoom-label');
+  if (label) {
+    label.textContent = `${Math.round(currentZoom * 100)}%`;
   }
 }
 
 export async function openPdfViewerModal(pdfUrlOrBlob, title = 'Document Viewer') {
+  let pdfUrl = pdfUrlOrBlob;
+  if (typeof Blob !== 'undefined' && (pdfUrlOrBlob instanceof Blob || pdfUrlOrBlob instanceof File)) {
+    if (activeBlobUrl) {
+      try { URL.revokeObjectURL(activeBlobUrl); } catch (e) {}
+    }
+    activeBlobUrl = URL.createObjectURL(pdfUrlOrBlob);
+    pdfUrl = activeBlobUrl;
+  }
   initPdfViewerModal();
 
   const modal = document.getElementById('efb-pdf-viewer-modal');
   const titleEl = document.getElementById('pdf-modal-title');
-  const iframe = document.getElementById('pdf-modal-iframe');
+  const stage = document.getElementById('pdf-modal-document-stage');
+  const wrapper = document.getElementById('pdf-modal-stage-wrapper');
   const loader = document.getElementById('pdf-modal-loader');
   const fallback = document.getElementById('pdf-modal-fallback');
+  const iframe = document.getElementById('pdf-modal-iframe');
+  const viewportEl = document.getElementById('pdf-modal-viewport');
 
-  if (!modal || !iframe) return;
+  if (!modal || !stage) return;
 
   if (titleEl) titleEl.textContent = title;
 
-  // Revoke previous Blob URL
-  if (activeBlobUrl) {
-    try { URL.revokeObjectURL(activeBlobUrl); } catch (e) {}
-    activeBlobUrl = null;
+  currentZoom = 1.0;
+  updateZoomLabel();
+  stage.style.transform = 'scale(1)';
+  if (wrapper) {
+    wrapper.style.width = '100%';
+    wrapper.style.height = 'auto';
   }
-
+  stage.innerHTML = '';
   if (loader) loader.classList.remove('hidden');
   if (fallback) fallback.classList.add('hidden');
+  if (iframe) iframe.classList.add('hidden');
 
   modal.classList.remove('hidden');
   requestAnimationFrame(() => {
     modal.classList.remove('opacity-0');
   });
 
+  if (currentPdfTask) {
+    try { currentPdfTask.destroy(); } catch (e) {}
+    currentPdfTask = null;
+  }
+
   try {
-    // Extract ArrayBuffer if File or Blob
-    let pdfData = pdfUrlOrBlob;
-    if (typeof Blob !== 'undefined' && (pdfUrlOrBlob instanceof Blob || pdfUrlOrBlob instanceof File)) {
-      pdfData = await pdfUrlOrBlob.arrayBuffer();
-    }
+    const pdfLib = window.pdfjsLib;
+    if (pdfLib) {
+      if (!pdfLib.GlobalWorkerOptions.workerSrc) {
+        pdfLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      }
 
-    const viewerBasePath = './js/vendor/pdfjs/web/viewer.html';
+      let loadingTask = null;
+      if (typeof Blob !== 'undefined' && (pdfUrlOrBlob instanceof Blob || pdfUrlOrBlob instanceof File)) {
+        const arrayBuffer = await pdfUrlOrBlob.arrayBuffer();
+        loadingTask = pdfLib.getDocument({ data: arrayBuffer });
+      } else {
+        loadingTask = pdfLib.getDocument(pdfUrl);
+      }
 
-    // Set iframe src to viewer.html (clean base URL, no problematic file= parameter)
-    const currentIframeSrc = iframe.getAttribute('data-loaded-src');
-    if (currentIframeSrc !== viewerBasePath) {
-      iframe.src = viewerBasePath;
-      iframe.setAttribute('data-loaded-src', viewerBasePath);
+      currentPdfTask = loadingTask;
+      const pdf = await currentPdfTask.promise;
 
-      await new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => resolve(), 4000);
-        iframe.onload = () => {
-          clearTimeout(timeout);
-          resolve();
+      if (loader) loader.classList.add('hidden');
+
+      const dpr = window.devicePixelRatio || 1;
+
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+
+        const containerWidth = viewportEl ? (viewportEl.clientWidth || (window.innerWidth - 32)) : (window.innerWidth - 32);
+        const unscaledViewport = page.getViewport({ scale: 1 });
+
+        const baseScale = Math.max(0.4, containerWidth / unscaledViewport.width);
+        const renderScale = baseScale * Math.max(dpr, 2);
+        const viewport = page.getViewport({ scale: renderScale });
+
+        const pageCard = document.createElement('div');
+        pageCard.className = 'pdf-page-card relative block w-full bg-white dark:bg-slate-800 shadow-xs border-b border-slate-200 dark:border-slate-800/80 shrink-0 select-none';
+
+        const canvas = document.createElement('canvas');
+        canvas.className = 'pdf-page-canvas block w-full h-auto pointer-events-none';
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        const ctx = canvas.getContext('2d');
+        const renderContext = {
+          canvasContext: ctx,
+          viewport: viewport
         };
-        iframe.onerror = (e) => {
-          clearTimeout(timeout);
-          reject(e);
-        };
-      });
+
+        pageCard.appendChild(canvas);
+        stage.appendChild(pageCard);
+        await page.render(renderContext).promise;
+      }
+
+      if (wrapper) {
+        wrapper.style.height = `${stage.offsetHeight}px`;
+      }
+    } else {
+      useIframeFallback(pdfUrl, loader, iframe, fallback);
     }
-
-    // Apply strict EFB CSS overrides (hides toolbar, text selection, find bar)
-    applyEfbViewerStyles(iframe);
-
-    // Load PDF into PDFViewerApplication
-    await loadPdfIntoViewerApp(iframe, pdfData);
-
-    // Re-apply EFB styles to ensure new elements created during render stay hidden
-    applyEfbViewerStyles(iframe);
-
-    if (loader) loader.classList.add('hidden');
   } catch (err) {
-    console.warn('Mozilla PDF.js viewer load error, displaying fallback:', err);
-    if (loader) loader.classList.add('hidden');
-    if (fallback) fallback.classList.remove('hidden');
+    console.warn('PDF.js render error, falling back:', err);
+    useIframeFallback(pdfUrl, loader, iframe, fallback);
+  }
+}
+
+function useIframeFallback(pdfUrl, loader, iframe, fallback) {
+  if (loader) loader.classList.add('hidden');
+  if (iframe) {
+    iframe.classList.remove('hidden');
+    iframe.src = `${pdfUrl}#toolbar=0&navpanes=0&view=FitH`;
+  } else if (fallback) {
+    fallback.classList.remove('hidden');
   }
 }
 
@@ -242,18 +376,27 @@ export function closePdfViewerModal() {
     try { URL.revokeObjectURL(activeBlobUrl); } catch (e) {}
     activeBlobUrl = null;
   }
-
   const modal = document.getElementById('efb-pdf-viewer-modal');
+  const stage = document.getElementById('pdf-modal-document-stage');
+  const wrapper = document.getElementById('pdf-modal-stage-wrapper');
   const iframe = document.getElementById('pdf-modal-iframe');
+
+  if (currentPdfTask) {
+    try { currentPdfTask.destroy(); } catch (e) {}
+    currentPdfTask = null;
+  }
 
   if (modal) {
     modal.classList.add('opacity-0');
     setTimeout(() => {
       modal.classList.add('hidden');
-      if (iframe) {
-        iframe.removeAttribute('data-loaded-src');
-        iframe.src = 'about:blank';
+      if (stage) stage.innerHTML = '';
+      if (wrapper) {
+        wrapper.style.width = '100%';
+        wrapper.style.height = 'auto';
       }
+      if (iframe) iframe.src = 'about:blank';
+      currentZoom = 1.0;
     }, 250);
   }
 }
@@ -263,4 +406,5 @@ if (typeof window !== 'undefined') {
   window.initPdfViewerModal = initPdfViewerModal;
   window.openPdfViewerModal = openPdfViewerModal;
   window.closePdfViewerModal = closePdfViewerModal;
+  window.resetPdfViewerZoom = resetPdfViewerZoom;
 }
