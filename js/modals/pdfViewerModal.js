@@ -1,4 +1,4 @@
-// ./js/modals/pdfViewerModal.js (1911_R104) - CertiFly In-App PDF Document Viewer Modal Component
+// ./js/modals/pdfViewerModal.js (1911_R105) - CertiFly In-App PDF Document Viewer Modal Component
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -7,6 +7,7 @@ let currentZoom = 1;
 let initialDistance = 0;
 let initialScale = 1;
 let lastTapTime = 0;
+let activeBlobUrl = null;
 
 export const pdfViewerModalHTML = `
 <!-- EFB IN-APP PDF VIEWER MODAL -->
@@ -130,7 +131,15 @@ function applyZoom() {
   stage.style.width = `${currentZoom * 100}%`;
 }
 
-export async function openPdfViewerModal(pdfUrl, title = 'Document Viewer') {
+export async function openPdfViewerModal(pdfUrlOrBlob, title = 'Document Viewer') {
+  let pdfUrl = pdfUrlOrBlob;
+  if (typeof Blob !== 'undefined' && (pdfUrlOrBlob instanceof Blob || pdfUrlOrBlob instanceof File)) {
+    if (activeBlobUrl) {
+      try { URL.revokeObjectURL(activeBlobUrl); } catch (e) {}
+    }
+    activeBlobUrl = URL.createObjectURL(pdfUrlOrBlob);
+    pdfUrl = activeBlobUrl;
+  }
   initPdfViewerModal();
 
   const modal = document.getElementById('efb-pdf-viewer-modal');
@@ -224,6 +233,10 @@ function useIframeFallback(pdfUrl, loader, iframe, fallback) {
 }
 
 export function closePdfViewerModal() {
+  if (activeBlobUrl) {
+    try { URL.revokeObjectURL(activeBlobUrl); } catch (e) {}
+    activeBlobUrl = null;
+  }
   const modal = document.getElementById('efb-pdf-viewer-modal');
   const stage = document.getElementById('pdf-modal-document-stage');
   const iframe = document.getElementById('pdf-modal-iframe');
