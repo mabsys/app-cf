@@ -1,4 +1,4 @@
-// ./js/modals/pdfViewerModal.js (1911_R105) - CertiFly In-App PDF Document Viewer Modal Component
+// ./js/modals/pdfViewerModal.js (1911_R106) - CertiFly In-App PDF Document Viewer Modal Component
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -176,11 +176,17 @@ export async function openPdfViewerModal(pdfUrlOrBlob, title = 'Document Viewer'
   try {
     const pdfLib = window.pdfjsLib;
     if (pdfLib) {
-      if (!pdfLib.GlobalWorkerOptions.workerSrc) {
-        pdfLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      pdfLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+      let loadingTask = null;
+      if (typeof Blob !== 'undefined' && (pdfUrlOrBlob instanceof Blob || pdfUrlOrBlob instanceof File)) {
+        const arrayBuffer = await pdfUrlOrBlob.arrayBuffer();
+        loadingTask = pdfLib.getDocument({ data: arrayBuffer });
+      } else {
+        loadingTask = pdfLib.getDocument(pdfUrl);
       }
 
-      currentPdfTask = pdfLib.getDocument(pdfUrl);
+      currentPdfTask = loadingTask;
       const pdf = await currentPdfTask.promise;
 
       if (loader) loader.classList.add('hidden');
