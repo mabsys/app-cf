@@ -1,4 +1,4 @@
-// ./js/modals/pdfViewerModal.js (1911_R117) - CertiFly EFB In-App PDF Document Viewer Component
+// ./js/modals/pdfViewerModal.js (1911_R118) - CertiFly EFB In-App PDF Document Viewer Component
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -59,7 +59,7 @@ export const pdfViewerModalHTML = `
         <!-- DYNAMIC SCROLL SPACER (Expands scrollable bounds matching transform scale without altering stage width) -->
         <div id="pdf-modal-stage-wrapper" class="relative w-full mx-auto min-h-full origin-top-left transition-none">
           <!-- GPU TRANSFORM CONTAINER (Canvas page stack scaled smoothly via CSS transform) -->
-          <div id="pdf-modal-document-stage" class="absolute top-0 left-0 w-full flex flex-col items-center gap-2 py-1 origin-top-left">
+          <div id="pdf-modal-document-stage" class="absolute top-0 left-0 flex flex-col items-center gap-2 py-1 origin-top-left">
           </div>
         </div>
 
@@ -110,10 +110,10 @@ function setupGestureListeners() {
     if (e.touches.length === 2) {
       // Guard against pinch starting before unscaled base dimensions are measured
       if (!unscaledStageWidth || unscaledStageWidth <= 0) {
-        if (stage) unscaledStageWidth = stage.offsetWidth || (window.innerWidth - 32);
+        if (stage) unscaledStageWidth = (stage.offsetWidth / (currentZoom || 1.0)) || (window.innerWidth - 32);
       }
       if (!unscaledStageHeight || unscaledStageHeight <= 0) {
-        if (stage) unscaledStageHeight = stage.offsetHeight || 600;
+        if (stage) unscaledStageHeight = (stage.offsetHeight / (currentZoom || 1.0)) || 600;
       }
 
       const dist = Math.hypot(
@@ -224,16 +224,17 @@ function setZoomPinch(targetZoom, currCenterX, currCenterY) {
   stage.style.transition = 'none';
   wrapper.style.transition = 'none';
 
-  // Apply GPU hardware scale cleanly
-  stage.style.transform = `scale(${currentZoom})`;
-
-  // Synchronize scroll container bounds cleanly matching zoom level
+  // Lock stage layout width to unscaled baseline to prevent double compounding
   if (unscaledStageWidth > 0) {
+    stage.style.width = `${unscaledStageWidth}px`;
     wrapper.style.width = `${unscaledStageWidth * currentZoom}px`;
   }
   if (unscaledStageHeight > 0) {
     wrapper.style.height = `${unscaledStageHeight * currentZoom}px`;
   }
+
+  // Apply GPU hardware scale cleanly
+  stage.style.transform = `scale(${currentZoom})`;
 
   // Focal scroll shift: anchors 2-finger midpoint precisely
   viewport.scrollLeft = (viewport.scrollLeft + lastPinchCenter.x) * ratio - currCenterX;
@@ -268,14 +269,15 @@ function setZoom(targetZoom, focalX, focalY, animate = false) {
     wrapper.style.transition = 'none';
   }
 
-  stage.style.transform = `scale(${currentZoom})`;
-
   if (unscaledStageWidth > 0) {
+    stage.style.width = `${unscaledStageWidth}px`;
     wrapper.style.width = `${unscaledStageWidth * currentZoom}px`;
   }
   if (unscaledStageHeight > 0) {
     wrapper.style.height = `${unscaledStageHeight * currentZoom}px`;
   }
+
+  stage.style.transform = `scale(${currentZoom})`;
 
   viewport.scrollLeft = (viewport.scrollLeft + fX) * ratio - fX;
   viewport.scrollTop = (viewport.scrollTop + fY) * ratio - fY;
@@ -399,6 +401,7 @@ export async function openPdfViewerModal(pdfUrlOrBlob, title = 'Document Viewer'
       requestAnimationFrame(() => {
         unscaledStageWidth = stage.offsetWidth || (window.innerWidth - 32);
         unscaledStageHeight = stage.offsetHeight || 600;
+        stage.style.width = `${unscaledStageWidth}px`;
         if (wrapper) {
           wrapper.style.width = `${unscaledStageWidth}px`;
           wrapper.style.height = `${unscaledStageHeight}px`;
