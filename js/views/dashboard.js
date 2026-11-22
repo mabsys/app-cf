@@ -772,8 +772,8 @@ export async function renderDashboardResults(caamResults, mabResults = null) {
     }
   } else {
     if (passExpEl) passExpEl.innerText = "NOT CONFIGURED";
-    if (passNoEl) passNoEl.innerText = "Tap to set up in My Credentials";
-    if (passDaysEl) passDaysEl.innerText = "Click tile to configure";
+    if (passNoEl) passNoEl.innerText = "Tap to configure";
+    if (passDaysEl) passDaysEl.innerText = "";
     if (passBarEl) {
       passBarEl.style.width = "0%";
       passBarEl.className = "h-full bg-slate-300 dark:bg-slate-700 rounded-full transition-all duration-500 relative z-10";
