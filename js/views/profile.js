@@ -342,7 +342,7 @@ export function initProfileUI() {
   if (qsPdfStatusBadge) {
     if (storedQsData) {
       qsPdfStatusBadge.classList.remove("hidden");
-      if (qsPdfStatusText) qsPdfStatusText.innerText = "Stored Qualification Slip (QS) file";
+      if (qsPdfStatusText) qsPdfStatusText.innerText = "Qualification Slip PDF saved";
     } else {
       qsPdfStatusBadge.classList.add("hidden");
     }
@@ -360,7 +360,7 @@ export function initProfileUI() {
   if (pdfStatusBadge && pdfStatusText) {
     if (profile.attestationFileName) {
       pdfStatusBadge.classList.remove("hidden");
-      pdfStatusText.innerText = "Stored Attestation PDF file";
+      pdfStatusText.innerText = "Attestation PDF saved";
     } else {
       pdfStatusBadge.classList.add("hidden");
     }
@@ -514,7 +514,7 @@ export function initProfileUI() {
         if (pdfStatusBadge && pdfStatusText) {
           if (currentProfile.attestationFileName) {
             pdfStatusBadge.classList.remove("hidden");
-            pdfStatusText.innerText = "Stored Attestation PDF file";
+            pdfStatusText.innerText = "Attestation PDF saved";
           } else {
             pdfStatusBadge.classList.add("hidden");
           }
@@ -590,7 +590,7 @@ export function initProfileUI() {
         if (qsPdfStatusBadge) {
           if (currentQsData) {
             qsPdfStatusBadge.classList.remove("hidden");
-            if (qsPdfStatusText) qsPdfStatusText.innerText = "Stored Qualification Slip (QS) file";
+            if (qsPdfStatusText) qsPdfStatusText.innerText = "Qualification Slip PDF saved";
           } else {
             qsPdfStatusBadge.classList.add("hidden");
           }
@@ -778,7 +778,7 @@ export function initProfileUI() {
       updateProfileUrlBadge(urlVal);
       if (pdfStatusBadge && pdfStatusText) {
         pdfStatusBadge.classList.remove("hidden");
-        pdfStatusText.innerText = "Stored Attestation PDF file";
+        pdfStatusText.innerText = "Attestation PDF saved";
       }
       showToast("Crew credentials saved successfully!", "success");
       if (typeof updateNetworkStatus === "function") updateNetworkStatus();
