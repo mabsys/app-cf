@@ -772,12 +772,6 @@ export function showDashboardOverview() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Bind to window object for inline HTML onclick compatibility
-if (typeof window !== 'undefined') {
-  window.showDashboardOverview = showDashboardOverview;
-}
-
-
 
 export function showLoading(msg = "Fetching digital licence...") {
   const loadingText = document.getElementById("loading-text");
@@ -907,6 +901,7 @@ if (typeof window !== 'undefined') {
   window.applyTextSize = applyTextSize;
   window.animateAccordionResize = animateAccordionResize;
   window.toggleProfileAccordionSection = toggleProfileAccordionSection;
+  window.showDashboardOverview = showDashboardOverview;
 }
 
 // Phase 3 Tools Controller
