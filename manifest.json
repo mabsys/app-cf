@@ -1,32 +1,97 @@
 {
-  "name": "CertiFly Digital Licence Checker",
-  "short_name": "CertiFly",
-  "id": "/certifly-v2",
-  "description": "Digital Licence Checker",
-  "start_url": "index.html",
+  "name": "CertiFly™ - Flight Crew Compliance & Validity Calculator Suite",
+  "short_name": "CertiFly™",
+  "description": "CertiFly PWA - Flight Crew Compliance, License Validity & FTL Calculator Suite for Pilots and EFB Flight Operations.",
+  "id": "/index.html",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#f8fafc",
-  "theme_color": "#172554",
-  "orientation": "portrait",
+  "orientation": "any",
+  "theme_color": "#0F172B",
+  "background_color": "#0F172B",
+  "lang": "en-US",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "categories": [
+    "utilities",
+    "productivity",
+    "navigation"
+  ],
   "icons": [
     {
-      "src": "icons/icon-192.png",
+      "src": "assets/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/icon-512.png",
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "assets/icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
     }
   ],
   "shortcuts": [
     {
-      "name": "Scan QR Code",
-      "url": "index.html?action=scan",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+      "name": "Dashboard & Currency",
+      "short_name": "Dashboard",
+      "description": "View overall pilot validity and currency ring status",
+      "url": "./index.html#view-dashboard",
+      "icons": [
+        {
+          "src": "assets/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Compliance Calculators",
+      "short_name": "Calculators",
+      "description": "Open FDP, Rest, and Validity Calculators",
+      "url": "./index.html#view-tools",
+      "icons": [
+        {
+          "src": "assets/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "QR & License Scanner",
+      "short_name": "Scanner",
+      "description": "Scan pilot QR pass or attestation document",
+      "url": "./index.html#view-scanner",
+      "icons": [
+        {
+          "src": "assets/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
-  ]
+  ],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  }
 }
