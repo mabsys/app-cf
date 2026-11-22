@@ -761,6 +761,24 @@ export function showScannerView() {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+// Add to js/ui.js
+
+export function showDashboardOverview() {
+  if (typeof stopScanner === 'function') stopScanner();
+  if (typeof switchResultTab === 'function') switchResultTab('overview');
+  if (typeof window.renderDashboardView === 'function') window.renderDashboardView();
+  
+  showView('dashboard-view', 'overview');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Bind to window object for inline HTML onclick compatibility
+if (typeof window !== 'undefined') {
+  window.showDashboardOverview = showDashboardOverview;
+}
+
+
+
 export function showLoading(msg = "Fetching digital licence...") {
   const loadingText = document.getElementById("loading-text");
   if (loadingText) loadingText.innerText = msg;
