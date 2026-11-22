@@ -16,17 +16,7 @@ export const DEFAULT_FESTIVE_CONFIG = {
       themeColor: "#f59e0b",
       badgeText: "Happy World Pilots' Day!",
       icon: "pilots-wings",
-      stickerUrl: "./assets/festive/aviator-wings-gold.svg"
-    },
-    {
-      id: "hari_raya",
-      name: "Hari Raya Aidilfitri",
-      startDate: "2026-03-20",
-      endDate: "2026-03-24",
-      themeColor: "#10b981",
-      badgeText: "Selamat Hari Raya Aidilfitri!",
-      icon: "crescent-star",
-      stickerUrl: "./assets/festive/ketupat-hanging.svg"
+      stickerUrl: "./assets/festive/pilot_2.png"
     },
     {
       id: "merdeka_day",
@@ -36,7 +26,7 @@ export const DEFAULT_FESTIVE_CONFIG = {
       themeColor: "#3b82f6",
       badgeText: "Selamat Hari Merdeka!",
       icon: "flag-star",
-      stickerUrl: "./assets/festive/merdeka-star-ribbon.svg"
+      stickerUrl: "./assets/festive/merdeka.png"
     },
     {
       id: "hari_malaysia",
@@ -46,17 +36,7 @@ export const DEFAULT_FESTIVE_CONFIG = {
       themeColor: "#f59e0b",
       badgeText: "Selamat Hari Malaysia!",
       icon: "flag-star",
-      stickerUrl: "./assets/festive/hari-malaysia-badge.svg"
-    },
-    {
-      id: "cny",
-      name: "Chinese New Year",
-      startDate: "2027-02-05",
-      endDate: "2027-02-09",
-      themeColor: "#ef4444",
-      badgeText: "Gong Xi Fa Cai!",
-      icon: "lantern",
-      stickerUrl: "./assets/festive/cny-lantern-tassel.svg"
+      stickerUrl: "./assets/festive/msia_2.png"
     },
     {
       id: "year_end",
@@ -66,7 +46,7 @@ export const DEFAULT_FESTIVE_CONFIG = {
       themeColor: "#38bdf8",
       badgeText: "Happy Holidays & Happy New Year!",
       icon: "snow-sparkle",
-      stickerUrl: "./assets/festive/snow-sparkle-frost.svg"
+      stickerUrl: "./assets/festive/xmas.png"
     }
   ]
 };
