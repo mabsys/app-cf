@@ -15,7 +15,7 @@ export const topbarHTML = `
     <!-- Left Group: Mini Home + Thin Vertical Separator + Left-Aligned Compact Logo -->
     <div class="flex items-center gap-2.5">
       <!-- Mini Home Button -->
-      <button onclick="if(window.showScannerView) window.showScannerView();"
+      <button onclick="if(window.showDashboardOverview) window.showDashboardOverview();"
               class="p-1.5 hover:bg-white/10 active:scale-95 rounded-md transition-all text-white flex items-center justify-center cursor-pointer"
               aria-label="Home">
         <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
