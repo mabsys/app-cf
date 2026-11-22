@@ -176,7 +176,7 @@ if (typeof window !== "undefined") {
   <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center justify-center h-7 overflow-hidden">
     <span id="welcome-text-anim" class="inline-block transition-all">Welcome!</span>
   </h3>
-  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">Let’s get your personal dashboard up and running! Have your licence QR & attestation PDF file ready.</p>
+  <p class="dyn-txt text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">Let’s get your personal dashboard up and running! Have your licence QR & attestation PDF file ready.</p>
   <button onclick="openProfileMenu('licence')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
     Set Up Credentials
   </button>
@@ -193,8 +193,8 @@ if (typeof window !== "undefined") {
     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h2a2 2 0 012 2v1m-4 0h4"></path></svg>
   </div>
   <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No CAAM Digital Licence</h3>
-  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
-    Scan the QR code on your physical licence card or paste its URL in My Credentials menu to continue.
+  <p class="dyn-txt text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+    Scan the QR code on your physical licence card or paste its URL in My Credentials to continue.
   </p>
   <button onclick="openProfileMenu('licence')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
     Configure Licence Source
@@ -211,7 +211,7 @@ if (typeof window !== "undefined") {
     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
   </div>
   <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">No MAB Attestation PDF</h3>
-  <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+  <p class="dyn-txt text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
     Upload your MAB E-Attestation PDF document in My Credentials to view company qualifications.
   </p>
   <button onclick="openProfileMenu('docs')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">
