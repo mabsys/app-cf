@@ -45,3 +45,33 @@ input, #manual-url-input {
 .animate-horizontal-bounce {
   animation: horizontal-bounce 1s infinite;
 }
+
+
+/* Custom Scrollbar Utility */
+.no-scrollbar::-webkit-scrollbar { display: none !important; }
+.no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
+
+/* Cockpit Tools Sub-tab Horizontal Touch Strip */
+.tools-subtab-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  scroll-behavior: smooth;
+  user-select: none;
+  cursor: grab;
+}
+.tools-subtab-strip:active {
+  cursor: grabbing;
+}
+
+/* 3D QR Pass Card Flip Utility Classes */
+.perspective-1000 { perspective: 1000px; -webkit-perspective: 1000px; }
+.transform-style-3d { transform-style: preserve-3d; -webkit-transform-style: preserve-3d; }
+.backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.rotate-y-180 { transform: rotateY(180deg); -webkit-transform: rotateY(180deg); }
+.card-3d-inner { transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+.card-3d-inner.is-flipped { transform: rotateY(180deg); -webkit-transform: rotateY(180deg); }
