@@ -1,4 +1,4 @@
-// ./js/scanner.js (2211_R436) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (2211_R437) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -645,7 +645,81 @@ function releaseWakeLock() {
 
 
 // MULTI-PASS FALLBACK CANVAS PHOTO SCANNER
-export async function scanPhotoWithFallback(file) {
+
+// ============================================================================
+// HEIC / HEIF IN-MEMORY AUTO-CONVERSION HELPER
+// ============================================================================
+
+export async function ensureDecodableImageFile(file) {
+  if (!file) return file;
+  const fileName = (file.name || '').toLowerCase();
+  const fileType = (file.type || '').toLowerCase();
+  const isHeic = fileName.endsWith('.heic') || fileName.endsWith('.heif') || fileType === 'image/heic' || fileType === 'image/heif';
+
+  if (!isHeic) return file;
+
+  // Step 1: Test if current browser engine can natively load this HEIC file
+  const canNativeLoad = await new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    let resolved = false;
+    img.onload = () => {
+      if (!resolved) {
+        resolved = true;
+        URL.revokeObjectURL(url);
+        resolve(true);
+      }
+    };
+    img.onerror = () => {
+      if (!resolved) {
+        resolved = true;
+        URL.revokeObjectURL(url);
+        resolve(false);
+      }
+    };
+    img.src = url;
+  });
+
+  if (canNativeLoad) return file;
+
+  // Step 2: In-memory conversion using heic2any
+  try {
+    let converter = (typeof window !== 'undefined' && typeof window.heic2any === 'function') ? window.heic2any : null;
+
+    if (!converter && typeof document !== 'undefined') {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = './js/vendor/heic2any.min.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      }).catch(() => {});
+      if (typeof window !== 'undefined' && typeof window.heic2any === 'function') {
+        converter = window.heic2any;
+      }
+    }
+
+    if (typeof converter === 'function') {
+      const convertedResult = await converter({
+        blob: file,
+        toType: 'image/jpeg',
+        quality: 0.92
+      });
+      const blob = Array.isArray(convertedResult) ? convertedResult[0] : convertedResult;
+      const targetName = file.name ? file.name.replace(/\.hei[cf]$/i, '.jpg') : 'converted_photo.jpg';
+      return new File([blob], targetName, { type: 'image/jpeg' });
+    }
+  } catch (conversionErr) {
+    console.warn('[Scanner] HEIC auto-conversion failed:', conversionErr);
+  }
+
+  return file;
+}
+
+export async function scanPhotoWithFallback(inputFile) {
+  if (!inputFile || !window.QrScanner) return '';
+
+  const file = await ensureDecodableImageFile(inputFile);
   if (!file || !window.QrScanner) return '';
 
   const extractText = (res) => {
@@ -904,5 +978,6 @@ if (typeof window !== 'undefined') {
   window.toggleTorch = toggleTorch;
   window.updateCameraControlUI = updateCameraControlUI;
   window.scanPhotoWithFallback = scanPhotoWithFallback;
+  window.ensureDecodableImageFile = ensureDecodableImageFile;
   window.handleClipboardPaste = handleClipboardPaste;
 }
