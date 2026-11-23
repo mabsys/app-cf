@@ -1,4 +1,4 @@
-// ./js/scanner.js (2211_R435) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (2211_R436) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -492,6 +492,22 @@ export function renderRecentPilotsList() {
 // 5. HARDWARE TOOLBAR CONTROLLERS (LENS SWITCHER & FLASHLIGHT)
 // ============================================================================
 
+
+export async function handleClipboardPaste() {
+  const input = document.getElementById('manual-url-input');
+  if (!input) return;
+  try {
+    if (navigator.clipboard && navigator.clipboard.readText) {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        input.value = text.trim();
+      }
+    }
+  } catch (err) {
+    console.warn('Clipboard permission denied:', err);
+  }
+}
+
 export async function cycleCameraLens() {
   if (!navigator.onLine) {
     if (typeof window.showToast === 'function') {
@@ -888,4 +904,5 @@ if (typeof window !== 'undefined') {
   window.toggleTorch = toggleTorch;
   window.updateCameraControlUI = updateCameraControlUI;
   window.scanPhotoWithFallback = scanPhotoWithFallback;
+  window.handleClipboardPaste = handleClipboardPaste;
 }
