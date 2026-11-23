@@ -1,4 +1,4 @@
-// ./js/scanner.js (1311_R428) fix 3 - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (1311_R428) fix 4 - 3-Tab Pilot Scan Hub Hardware & UI Controller
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -250,7 +250,11 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
         console.log('[Scanner] Phase 3: Switching to Ghost-Cancellation weights (Red=0.0, Green=0.85, Blue=0.15)');
         qrScanner.setGrayscaleWeights(0.0, 0.85, 0.15, true);
 
-
+        // Subtle Torch Suggestion if held in low-light for > 2.2 seconds
+        //const guidancePill = document.getElementById(customVideoElemId === 'profile-qr-video' ? 'profile-qr-guidance-pill' : 'qr-guidance-pill');
+        //if (guidancePill && !torchActive) {
+        //  guidancePill.innerHTML = '<span class="text-amber-300 font-bold flex items-center gap-1">💡 Low Light? Tap ⚡ Flashlight</span>';
+        //}
       }
     }, 1800);
 
@@ -644,6 +648,11 @@ export function toggleTorch() {
 export async function scanPhotoWithFallback(file) {
   if (!file || !window.QrScanner) return '';
 
+  const extractText = (res) => {
+    const t = (typeof res === 'object' ? (res.data || res.text) : res) || '';
+    return t ? t.trim() : '';
+  };
+
   // PASS 1: Standard Nimiq scan
   try {
     const res1 = await window.QrScanner.scanImage(file, {
@@ -660,6 +669,7 @@ export async function scanPhotoWithFallback(file) {
   }
 
   // PASS 2: Green Channel Canvas Isolation (Filters out cyan offset printing ghosting)
+  let img = null;
   try {
     const img = await window.QrScanner._loadImage(file);
     const canvas = document.createElement('canvas');
@@ -672,17 +682,40 @@ export async function scanPhotoWithFallback(file) {
     ctx.drawImage(img, 0, 0, width, height);
 
     const imgData = ctx.getImageData(0, 0, width, height);
+  let targetW = origW;
+  let targetH = origH;
+  const maxDim = Math.max(origW, origH);
     const data = imgData.data;
 
     for (let i = 0; i < data.length; i += 4) {
+    const scale = 1024 / maxDim;
+    targetW = Math.round(origW * scale);
       const g = data[i + 1]; // Green channel
       data[i]     = g; // R
       data[i + 1] = g; // G
+    targetW = Math.round(origW * scale);
       data[i + 2] = g; // B
     }
 
     ctx.putImageData(imgData, 0, 0);
+  const pad = Math.round(Math.max(targetW, targetH) * 0.15);
+  const paddedW = targetW + pad * 2;
+  const paddedH = targetH + pad * 2;
 
+  const createBasePaddedCanvas = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = paddedW;
+    canvas.height = paddedH;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, paddedW, paddedH);
+    ctx.drawImage(img, pad, pad, targetW, targetH);
+    return { canvas, ctx };
+  };
+
+  // PASS 2: Quiet Zone Padding & Multi-Scale Rescaling Pass
+  try {
+    const { canvas: canvas2 } = createBasePaddedCanvas();
     const res2 = await window.QrScanner.scanImage(canvas, {
       returnDetailedScanResult: true,
       alsoTryWithoutScanRegion: true
@@ -741,6 +774,124 @@ export async function scanPhotoWithFallback(file) {
     }
   } catch (err3) {
     console.warn('[Scanner] Photo scan Pass 3 (Binarization) failed:', err3);
+  }
+
+  // PASS 4: Multi-Angle Canvas Rotation Pass (90°, 180°, 270°)
+  const angles = [90, 180, 270];
+  for (const angle of angles) {
+    try {
+      const rotCanvas = document.createElement('canvas');
+      const is90or270 = angle === 90 || angle === 270;
+      const rotTargetW = is90or270 ? targetH : targetW;
+      const rotTargetH = is90or270 ? targetW : targetH;
+      const rotPaddedW = rotTargetW + pad * 2;
+      const rotPaddedH = rotTargetH + pad * 2;
+
+      rotCanvas.width = rotPaddedW;
+      rotCanvas.height = rotPaddedH;
+      const rotCtx = rotCanvas.getContext('2d');
+
+      rotCtx.fillStyle = '#FFFFFF';
+      rotCtx.fillRect(0, 0, rotPaddedW, rotPaddedH);
+
+      rotCtx.translate(rotPaddedW / 2, rotPaddedH / 2);
+      rotCtx.rotate((angle * Math.PI) / 180);
+      rotCtx.drawImage(img, -targetW / 2, -targetH / 2, targetW, targetH);
+
+      const resRot = await window.QrScanner.scanImage(rotCanvas, {
+        returnDetailedScanResult: true,
+        alsoTryWithoutScanRegion: true
+      });
+      const textRot = extractText(resRot);
+      if (textRot) {
+        console.log();
+        return textRot;
+      }
+    } catch (errRot) {
+      // Continue next angle
+    }
+  }
+
+  // PASS 5: Sharpening Convolution Filter & Local Block Adaptive Binarization (Blur & Glare/Shadows)
+  try {
+    const { canvas: canvas5, ctx: ctx5 } = createBasePaddedCanvas();
+    const imgData5 = ctx5.getImageData(0, 0, paddedW, paddedH);
+    const data5 = imgData5.data;
+
+    // 1. Sharpening Filter (3x3 Kernel: [0, -1, 0; -1, 5, -1; 0, -1, 0])
+    const sharpenedData = new Uint8ClampedArray(data5.length);
+    const width = paddedW;
+    const height = paddedH;
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const idx = (y * width + x) * 4;
+        if (x === 0 || x === width - 1 || y === 0 || y === height - 1) {
+          sharpenedData[idx]     = data5[idx];
+          sharpenedData[idx + 1] = data5[idx + 1];
+          sharpenedData[idx + 2] = data5[idx + 2];
+          sharpenedData[idx + 3] = data5[idx + 3];
+          continue;
+        }
+
+        const top    = ((y - 1) * width + x) * 4 + 1;
+        const bottom = ((y + 1) * width + x) * 4 + 1;
+        const left   = (y * width + (x - 1)) * 4 + 1;
+        const right  = (y * width + (x + 1)) * 4 + 1;
+        const center = idx + 1;
+
+        let gVal = data5[center] * 5 - data5[top] - data5[bottom] - data5[left] - data5[right];
+        gVal = Math.min(255, Math.max(0, gVal));
+
+        sharpenedData[idx]     = gVal;
+        sharpenedData[idx + 1] = gVal;
+        sharpenedData[idx + 2] = gVal;
+        sharpenedData[idx + 3] = 255;
+      }
+    }
+
+    // 2. Local Block-Based Adaptive Binarization (16x16 pixel blocks)
+    const blockSize = 16;
+    for (let by = 0; by < height; by += blockSize) {
+      for (let bx = 0; bx < width; bx += blockSize) {
+        let blockSum = 0;
+        let count = 0;
+        const bMaxY = Math.min(by + blockSize, height);
+        const bMaxX = Math.min(bx + blockSize, width);
+
+        for (let y = by; y < bMaxY; y++) {
+          for (let x = bx; x < bMaxX; x++) {
+            blockSum += sharpenedData[(y * width + x) * 4 + 1];
+            count++;
+          }
+        }
+
+        const blockAvg = count > 0 ? blockSum / count : 128;
+        for (let y = by; y < bMaxY; y++) {
+          for (let x = bx; x < bMaxX; x++) {
+            const pIdx = (y * width + x) * 4;
+            const val = sharpenedData[pIdx + 1] > blockAvg - 5 ? 255 : 0;
+            sharpenedData[pIdx]     = val;
+            sharpenedData[pIdx + 1] = val;
+            sharpenedData[pIdx + 2] = val;
+          }
+        }
+      }
+    }
+
+    ctx5.putImageData(new ImageData(sharpenedData, width, height), 0, 0);
+
+    const res5 = await window.QrScanner.scanImage(canvas5, {
+      returnDetailedScanResult: true,
+      alsoTryWithoutScanRegion: true
+    });
+    const text5 = extractText(res5);
+    if (text5) {
+      console.log('[Scanner] Photo scan succeeded on Pass 5 (Sharpening & Local Binarization)');
+      return text5;
+    }
+  } catch (err5) {
+    console.warn('[Scanner] Photo scan Pass 5 (Sharpening & Local Binarization) failed:', err5);
   }
 
   return '';
