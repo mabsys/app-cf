@@ -1,4 +1,4 @@
-// ./js/scanner.js (1311_R428) fix 4 - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (2211_R431) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -19,8 +19,6 @@ let currentZoomLevel = 1.0;
 
 // Session and Single-Decode Safeguards
 let scannerSessionId = 0;
-
-
 
 // IDLE TIMEOUT THRESHOLD: 60 Seconds
 const IDLE_TIMEOUT_MS = 60000;
@@ -61,9 +59,9 @@ function formatCameraLabel(camObj, index, total) {
 }
 
 export async function updateCameraControlUI() {
-  const cycleBtn = document.getElementById("camera-cycle-btn");
-  const cycleLabel = document.getElementById("camera-cycle-label");
-  const uploadBtn = document.getElementById("upload-qr-btn");
+  const cycleBtn = document.getElementById('camera-cycle-btn');
+  const cycleLabel = document.getElementById('camera-cycle-label');
+  const uploadBtn = document.getElementById('upload-qr-btn');
   const targetEl = cycleLabel || cycleBtn;
 
   if (!availableCameraDevices || availableCameraDevices.length === 0) {
@@ -84,12 +82,12 @@ export async function updateCameraControlUI() {
   if (numRearCams > 1) {
     // TIER 1: Multiple Physical Rear Lenses (e.g. iPhone Pro)
     if (cycleBtn) {
-      cycleBtn.classList.remove("hidden");
-      cycleBtn.classList.add("flex");
+      cycleBtn.classList.remove('hidden');
+      cycleBtn.classList.add('flex');
     }
     if (uploadBtn) {
-      uploadBtn.classList.remove("col-span-2");
-      uploadBtn.classList.add("col-span-1");
+      uploadBtn.classList.remove('col-span-2');
+      uploadBtn.classList.add('col-span-1');
     }
     if (targetEl) {
       const index = availableCameraDevices.findIndex(c => c.id === currentCameraDeviceId);
@@ -97,14 +95,14 @@ export async function updateCameraControlUI() {
       targetEl.innerText = formatCameraLabel(current, index >= 0 ? index : 0, numRearCams);
     }
   } else if (hasZoom && !isIPad) {
-    // TIER 2: Single Rear Camera with Hardware Zoom -> Digital Zoom Toggle (iPhone Single Lens)
+    // TIER 2: Single Rear Camera with Hardware Zoom -> Digital Zoom Toggle
     if (cycleBtn) {
-      cycleBtn.classList.remove("hidden");
-      cycleBtn.classList.add("flex");
+      cycleBtn.classList.remove('hidden');
+      cycleBtn.classList.add('flex');
     }
     if (uploadBtn) {
-      uploadBtn.classList.remove("col-span-2");
-      uploadBtn.classList.add("col-span-1");
+      uploadBtn.classList.remove('col-span-2');
+      uploadBtn.classList.add('col-span-1');
     }
     if (targetEl) {
       if (currentZoomLevel === 1.0) targetEl.innerText = 'Zoom 1.0x';
@@ -112,14 +110,14 @@ export async function updateCameraControlUI() {
       else targetEl.innerText = `Zoom ${currentZoomLevel.toFixed(1)}x`;
     }
   } else {
-    // TIER 3: Fixed Single Rear Lens / iPad -> Hide Cycle Btn & Stretch Upload Btn to Full Width
+    // TIER 3: Fixed Single Rear Lens / iPad -> Hide Cycle Btn & Stretch Upload Btn
     if (cycleBtn) {
-      cycleBtn.classList.add("hidden");
-      cycleBtn.classList.remove("flex");
+      cycleBtn.classList.add('hidden');
+      cycleBtn.classList.remove('flex');
     }
     if (uploadBtn) {
-      uploadBtn.classList.remove("col-span-1");
-      uploadBtn.classList.add("col-span-2");
+      uploadBtn.classList.remove('col-span-1');
+      uploadBtn.classList.add('col-span-2');
     }
   }
 }
@@ -128,33 +126,23 @@ export function updateCameraCycleButtonLabel() {
   updateCameraControlUI();
 }
 
-
-
 // ============================================================================
 // 2. TAB 1: LIVE CAMERA SCANNER & HARDWARE STREAM CONTROLLER
 // ============================================================================
 
-export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemId = "qr-video") {
-  if (!navigator.onLine) {
-    if (typeof window.showToast === "function") {
-      window.showToast("Camera scanning requires an active internet connection.", "warning");
-    }
-    stopScanner();
-    if (onErrorCallback) onErrorCallback("Camera scanner unavailable offline.");
-    return;
-  }
-  const errorMsg = document.getElementById("error-message");
-  if (errorMsg) errorMsg.innerText = "";
+export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemId = 'qr-video') {
+  const errorMsg = document.getElementById('error-message');
+  if (errorMsg) errorMsg.innerText = '';
 
   const videoElem = document.getElementById(customVideoElemId);
   if (!videoElem) {
-    if (onErrorCallback) onErrorCallback("Camera feed element not found.");
+    if (onErrorCallback) onErrorCallback('Camera feed element not found.');
     return;
   }
 
   // Hide paused overlay if visible
-  const pausedOverlay = document.getElementById("scanner-paused-overlay");
-  if (pausedOverlay) pausedOverlay.classList.add("hidden");
+  const pausedOverlay = document.getElementById('scanner-paused-overlay');
+  if (pausedOverlay) pausedOverlay.classList.add('hidden');
 
   // Maintain stream if scanner is already active and playing
   if (qrScanner && activeMediaStream && activeMediaStream.active && videoElem && videoElem.readyState >= 2 && !videoElem.paused) {
@@ -180,11 +168,12 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
     if (decodeHandled) return;
     if (currentSession !== scannerSessionId) return;
     decodeHandled = true;
-
     stopScanner();
+
     if (navigator.vibrate) {
       try { navigator.vibrate(100); } catch (e) {}
     }
+
     const callback = onDecodeCallback || window.processLicenseUrl;
     if (typeof callback === 'function') {
       callback(cleanScannedText);
@@ -195,8 +184,8 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
     qrScanner = new window.QrScanner(
       videoElem,
       (result) => {
-        const decodedText = (typeof result === 'object' ? (result.data || result.text) : result) || "";
-        const cleanScannedText = decodedText ? decodedText.trim() : "";
+        const decodedText = (typeof result === 'object' ? (result.data || result.text) : result) || '';
+        const cleanScannedText = decodedText ? decodedText.trim() : '';
         if (cleanScannedText) {
           handleQrSuccess(cleanScannedText);
         }
@@ -249,6 +238,12 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
       if (qrScanner && typeof qrScanner.setGrayscaleWeights === 'function' && currentSession === scannerSessionId) {
         console.log('[Scanner] Phase 3: Switching to Ghost-Cancellation weights (Red=0.0, Green=0.85, Blue=0.15)');
         qrScanner.setGrayscaleWeights(0.0, 0.85, 0.15, true);
+
+        // Subtle Torch Suggestion if held in low-light for > 2.2 seconds
+        const guidancePill = document.getElementById(customVideoElemId === 'profile-qr-video' ? 'profile-qr-guidance-pill' : 'qr-guidance-pill');
+        if (guidancePill && !torchActive) {
+          guidancePill.innerHTML = '<span class="text-amber-300 font-bold flex items-center gap-1">💡 Low Light? Tap ⚡ Flashlight</span>';
+        }
       }
     }, 1800);
 
@@ -266,13 +261,12 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
         if (stream) {
           activeMediaStream = stream;
           const track = stream.getVideoTracks()[0];
-          
           const isIPad = /iPad/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
           currentZoomLevel = isIPad ? 1.8 : 1.0;
 
-          const guidancePill = document.getElementById(customVideoElemId === "profile-qr-video" ? "profile-qr-guidance-pill" : "qr-guidance-pill");
+          const guidancePill = document.getElementById(customVideoElemId === 'profile-qr-video' ? 'profile-qr-guidance-pill' : 'qr-guidance-pill');
           if (videoElem) {
-            videoElem.style.transform = "none";
+            videoElem.style.transform = 'none';
           }
           if (guidancePill) {
             guidancePill.innerHTML = '<span>Place QR code within scan area</span><span class="text-[9px] text-slate-300 font-medium normal-case tracking-normal">Avoid glare & shadows</span>';
@@ -281,14 +275,17 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
           if (track && typeof track.getCapabilities === 'function' && typeof track.applyConstraints === 'function') {
             const caps = track.getCapabilities();
             const advancedConstraints = [];
+
             if (caps.focusMode && caps.focusMode.includes('macro')) {
               advancedConstraints.push({ focusMode: 'macro' });
             } else if (caps.focusMode && caps.focusMode.includes('continuous')) {
               advancedConstraints.push({ focusMode: 'continuous' });
             }
+
             if (caps.exposureMode && caps.exposureMode.includes('continuous')) {
               advancedConstraints.push({ exposureMode: 'continuous' });
             }
+
             if (caps.zoom) {
               const targetZoom = Math.min(caps.zoom.max, Math.max(caps.zoom.min, currentZoomLevel));
               advancedConstraints.push({ zoom: targetZoom });
@@ -297,22 +294,17 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
             if (advancedConstraints.length > 0) {
               track.applyConstraints({ advanced: advancedConstraints }).catch(() => {});
             }
-
-            if (typeof track.getSettings === 'function') {
-              const settings = track.getSettings();
-              console.log("[Scanner] Active Track Settings:", settings.width, "x", settings.height, "Focus:", settings.focusMode);
-            }
           }
 
-          const torchBtn = document.getElementById("torch-toggle-btn");
+          const torchBtn = document.getElementById('torch-toggle-btn');
           if (torchBtn) {
             const caps = (track && typeof track.getCapabilities === 'function') ? track.getCapabilities() : null;
             if (caps && caps.torch) {
-              torchBtn.classList.remove("hidden");
-              torchBtn.classList.add("flex");
+              torchBtn.classList.remove('hidden');
+              torchBtn.classList.add('flex');
             } else {
-              torchBtn.classList.add("hidden");
-              torchBtn.classList.remove("flex");
+              torchBtn.classList.add('hidden');
+              torchBtn.classList.remove('flex');
             }
           }
         }
@@ -323,20 +315,20 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
         availableCameraDevices = filterRearCameras(cameras || []);
         updateCameraCycleButtonLabel();
       }).catch(() => {});
+
     }).catch((err) => {
       if (currentSession !== scannerSessionId) return;
-      console.error("Camera start failed:", err);
-      if (onErrorCallback) onErrorCallback("Unable to access camera. Please verify permissions.");
+      console.error('Camera start failed:', err);
+      if (onErrorCallback) onErrorCallback('Unable to access camera. Please verify permissions.');
     });
   }
 }
 
 export function stopScanner() {
   scannerSessionId++;
-
-  const videoElem = document.getElementById("qr-video");
+  const videoElem = document.getElementById('qr-video');
   if (videoElem) {
-    videoElem.style.transform = "none";
+    videoElem.style.transform = 'none';
   }
 
   if (idleTimer) {
@@ -364,10 +356,10 @@ export function stopScanner() {
   }
 
   torchActive = false;
-  const torchBtn = document.getElementById("torch-toggle-btn");
+  const torchBtn = document.getElementById('torch-toggle-btn');
   if (torchBtn) {
-    torchBtn.classList.add("hidden");
-    torchBtn.classList.remove("flex");
+    torchBtn.classList.add('hidden');
+    torchBtn.classList.remove('flex');
   }
 
   releaseWakeLock();
@@ -395,29 +387,7 @@ export function switchScanHubTab(tabName) {
 
   let activeBtn = btnCamera;
 
-  if (tabName === 'camera' || tabName === 'manual') {
-    if (!navigator.onLine) {
-      if (typeof window.showToast === "function") {
-        const msg = tabName === 'camera'
-          ? "Camera scanning requires an active internet connection."
-          : "Manual URL entry requires an active internet connection.";
-        window.showToast(msg, "warning");
-      }
-      stopScanner();
-      switchScanHubTab('qrpass');
-      return;
-    }
-  }
-
   if (tabName === 'camera') {
-    if (!navigator.onLine) {
-      if (typeof window.showToast === "function") {
-        window.showToast("Camera scanning requires an active internet connection.", "warning");
-      }
-      stopScanner();
-      switchScanHubTab('qrpass');
-      return;
-    }
     activeBtn = btnCamera;
     if (tabCamera) {
       const wasHidden = tabCamera.classList.contains('hidden');
@@ -425,6 +395,7 @@ export function switchScanHubTab(tabName) {
       if (wasHidden && typeof animateTabContentEntrance === 'function') animateTabContentEntrance(tabCamera);
     }
     if (btnCamera) btnCamera.className = activeBtnClass;
+
     startScanner(
       (scannedUrl) => {
         if (typeof window.processLicenseUrl === 'function') {
@@ -432,7 +403,7 @@ export function switchScanHubTab(tabName) {
         }
       },
       (err) => {
-        const errorMsg = document.getElementById("error-message");
+        const errorMsg = document.getElementById('error-message');
         if (errorMsg) errorMsg.innerText = err;
       }
     );
@@ -444,6 +415,7 @@ export function switchScanHubTab(tabName) {
       if (wasHidden && typeof animateTabContentEntrance === 'function') animateTabContentEntrance(tabQrPass);
     }
     if (btnQrPass) btnQrPass.className = activeBtnClass;
+
     stopScanner();
     if (typeof window.renderMyQrPass === 'function') {
       window.renderMyQrPass();
@@ -458,6 +430,7 @@ export function switchScanHubTab(tabName) {
       if (wasHidden && typeof animateTabContentEntrance === 'function') animateTabContentEntrance(tabManual);
     }
     if (btnManual) btnManual.className = activeBtnClass;
+
     stopScanner();
     renderRecentPilotsList();
   }
@@ -482,8 +455,8 @@ export function renderMyQrPass() {
 // ============================================================================
 
 export function renderRecentPilotsList() {
-  const container = document.getElementById("recent-pilots-list");
-  const countTag = document.getElementById("recent-count-tag");
+  const container = document.getElementById('recent-pilots-list');
+  const countTag = document.getElementById('recent-count-tag');
   if (!container) return;
 
   const history = getScanHistory();
@@ -494,16 +467,16 @@ export function renderRecentPilotsList() {
     return;
   }
 
-  container.innerHTML = "";
+  container.innerHTML = '';
   history.slice(0, 5).forEach(item => {
-    const name = item.pilotName || "Verified Crew";
-    const licence = item.licenceNo || "ATPL(A)";
-    const time = item.timestamp || "Recent";
+    const name = item.pilotName || item.name || 'Verified Crew';
+    const licence = item.licenceNo || item.licenseNo || 'ATPL(A)';
+    const time = item.timestamp || 'Recent';
 
-    const div = document.createElement("div");
-    div.className = "py-3 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 px-2 rounded-xl transition-colors";
+    const div = document.createElement('div');
+    div.className = 'py-3 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 px-2 rounded-xl transition-colors';
     div.innerHTML = `
-      <div class="flex flex-col">
+      <div class="flex flex-col text-left">
         <span class="text-xs font-bold text-slate-800 dark:text-slate-200">${name}</span>
         <span class="text-[10px] text-slate-400 font-medium">${licence} • ${time}</span>
       </div>
@@ -516,39 +489,16 @@ export function renderRecentPilotsList() {
   });
 }
 
-export async function handleClipboardPaste() {
-  const input = document.getElementById("manual-url-input");
-  if (!input) return;
-
-  try {
-    if (navigator.clipboard && navigator.clipboard.readText) {
-      const text = await navigator.clipboard.readText();
-      if (text) {
-        input.value = text.trim();
-      }
-    }
-  } catch (err) {
-    console.warn("Clipboard permission denied:", err);
-    showToast("Clipboard permission denied by browser", "info");
-  }
-}
-
 // ============================================================================
-// 5. HARDWARE TOOLBAR CONTROLLERS (LENS SWITCHER & FLASHLIGHT)
+// 5. HARDWARE TOOLBAR CONTROLLERS (LENS SWITCHER, FLASHLIGHT, PHOTO SCANS)
 // ============================================================================
 
 export async function cycleCameraLens() {
-  if (!navigator.onLine) {
-    if (typeof window.showToast === "function") {
-      window.showToast("Camera functions require an active internet connection.", "warning");
-    }
-    return;
-  }
-  const cycleBtn = document.getElementById("camera-cycle-btn");
-  const cycleLabel = document.getElementById("camera-cycle-label");
+  const cycleBtn = document.getElementById('camera-cycle-btn');
+  const cycleLabel = document.getElementById('camera-cycle-label');
   const targetEl = cycleLabel || cycleBtn;
 
-  if (targetEl) targetEl.innerText = "Switching...";
+  if (targetEl) targetEl.innerText = 'Switching...';
 
   if (!availableCameraDevices || availableCameraDevices.length === 0) {
     try {
@@ -578,14 +528,14 @@ export async function cycleCameraLens() {
       updateCameraCycleButtonLabel();
       return;
     } catch (err) {
-      console.warn("Lens switch failed, attempting zoom/macro mode fallback:", err);
+      console.warn('Lens switch failed, attempting zoom/macro mode fallback:', err);
     }
   }
 
   // MODE B: Single Rear Camera Stream -> Cycle Macro/Zoom modes (1.0x -> 1.8x -> 2.5x)
   const isIPad = /iPad/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
   if (isIPad) {
-    // iPad strictly locked to default 1.8x zoom constraint
     currentZoomLevel = 1.8;
     return;
   }
@@ -599,12 +549,13 @@ export async function cycleCameraLens() {
   }
 
   try {
-    const videoElem = document.getElementById("qr-video");
+    const videoElem = document.getElementById('qr-video');
     if (videoElem && videoElem.srcObject) {
       const track = videoElem.srcObject.getVideoTracks()[0];
       if (track && track.getCapabilities) {
         const capabilities = track.getCapabilities();
         const advanced = [];
+
         if (capabilities.focusMode && capabilities.focusMode.includes('macro')) {
           advanced.push({ focusMode: 'macro' });
         }
@@ -612,6 +563,7 @@ export async function cycleCameraLens() {
           const targetZoom = Math.min(capabilities.zoom.max, Math.max(capabilities.zoom.min, currentZoomLevel));
           advanced.push({ zoom: targetZoom });
         }
+
         if (advanced.length > 0) {
           await track.applyConstraints({ advanced });
         }
@@ -623,13 +575,8 @@ export async function cycleCameraLens() {
 }
 
 export function toggleTorch() {
-  if (!navigator.onLine) {
-    if (typeof window.showToast === "function") {
-      window.showToast("Flashlight function requires an active internet connection.", "warning");
-    }
-    return;
-  }
   if (!qrScanner) return;
+
   torchActive = !torchActive;
   if (torchActive) {
     qrScanner.turnFlashOn().catch(() => { torchActive = false; });
@@ -870,17 +817,16 @@ export async function scanPhotoWithFallback(file) {
   return '';
 }
 
-
 // ============================================================================
-// 6. AUTO-TEARDOWN & POWER MANAGEMENT (60s IDLE TIMEOUT & WAKE LOCK)
+// 6. AUTO-TEARDOWN & POWER MANAGEMENT
 // ============================================================================
 
 function resetIdleTimer(onDecodeCallback, onErrorCallback) {
   if (idleTimer) clearTimeout(idleTimer);
   idleTimer = setTimeout(() => {
     stopScanner();
-    const pausedOverlay = document.getElementById("scanner-paused-overlay");
-    if (pausedOverlay) pausedOverlay.classList.remove("hidden");
+    const pausedOverlay = document.getElementById('scanner-paused-overlay');
+    if (pausedOverlay) pausedOverlay.classList.remove('hidden');
   }, IDLE_TIMEOUT_MS);
 }
 
@@ -894,10 +840,10 @@ async function requestWakeLock() {
 
 function releaseWakeLock() {
   try {
-  if (wakeLock) {
-    wakeLock.release().catch(() => {});
-    wakeLock = null;
-  }
+    if (wakeLock) {
+      wakeLock.release().catch(() => {});
+      wakeLock = null;
+    }
   } catch (e) {}
 }
 
