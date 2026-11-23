@@ -249,12 +249,6 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
       if (qrScanner && typeof qrScanner.setGrayscaleWeights === 'function' && currentSession === scannerSessionId) {
         console.log('[Scanner] Phase 3: Switching to Ghost-Cancellation weights (Red=0.0, Green=0.85, Blue=0.15)');
         qrScanner.setGrayscaleWeights(0.0, 0.85, 0.15, true);
-
-        // Subtle Torch Suggestion if held in low-light for > 2.2 seconds
-        //const guidancePill = document.getElementById(customVideoElemId === 'profile-qr-video' ? 'profile-qr-guidance-pill' : 'qr-guidance-pill');
-        //if (guidancePill && !torchActive) {
-        //  guidancePill.innerHTML = '<span class="text-amber-300 font-bold flex items-center gap-1">💡 Low Light? Tap ⚡ Flashlight</span>';
-        //}
       }
     }, 1800);
 
