@@ -10,6 +10,7 @@ let availableCameraDevices = [];
 let activeMediaStream = null;
 let torchActive = false;
 let idleTimer = null;
+let adaptiveWeightTimer = null;
 let wakeLock = null;
 let currentZoomLevel = 1.0;
 
@@ -221,6 +222,21 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
         preferredCamera: currentCameraDeviceId || 'environment'
       }
     );
+    // ADAPTIVE GRAYSCALE WEIGHTS PIPELINE:
+    // 1. Start with standard balanced weights (Red 25%, Green 65%, Blue 10%) for instant <50ms detection of normal QR codes under warm/cockpit lighting
+    if (qrScanner && typeof qrScanner.setGrayscaleWeights === 'function') {
+      qrScanner.setGrayscaleWeights(0.25, 0.65, 0.10, true);
+    }
+
+    // 2. Adaptive Fallback (1.2s Timeout): If no QR is decoded after 1.2s, auto-switch to Ghost-Cancellation weights (Red 0%, Green 85%, Blue 15%)
+    if (adaptiveWeightTimer) clearTimeout(adaptiveWeightTimer);
+    adaptiveWeightTimer = setTimeout(() => {
+      if (qrScanner && typeof qrScanner.setGrayscaleWeights === 'function' && currentSession === scannerSessionId) {
+        console.log('[Scanner] Adaptive fallback triggered: switching to Ghost-Cancellation weights (Red=0.0, Green=0.85, Blue=0.15)');
+        qrScanner.setGrayscaleWeights(0.0, 0.85, 0.15, true);
+      }
+    }, 1200);
+
 
     qrScanner.start().then(() => {
       if (currentSession !== scannerSessionId) {
@@ -312,6 +328,10 @@ export function stopScanner() {
   if (idleTimer) {
     clearTimeout(idleTimer);
     idleTimer = null;
+  }
+  if (adaptiveWeightTimer) {
+    clearTimeout(adaptiveWeightTimer);
+    adaptiveWeightTimer = null;
   }
 
   if (qrScanner) {
@@ -604,6 +624,104 @@ export function toggleTorch() {
   }
 }
 
+// MULTI-PASS FALLBACK CANVAS PHOTO SCANNER
+export async function scanPhotoWithFallback(file) {
+  if (!file || !window.QrScanner) return '';
+
+  // PASS 1: Standard Nimiq scan
+  try {
+    const res1 = await window.QrScanner.scanImage(file, {
+      returnDetailedScanResult: true,
+      alsoTryWithoutScanRegion: true
+    });
+    const text1 = (typeof res1 === 'object' ? res1.data : res1) || '';
+    if (text1 && text1.trim()) {
+      console.log('[Scanner] Photo scan succeeded on Pass 1 (Standard)');
+      return text1.trim();
+    }
+  } catch (err1) {
+    console.warn('[Scanner] Photo scan Pass 1 (Standard) failed:', err1);
+  }
+
+  // PASS 2: Green Channel Canvas Isolation (Filters out cyan offset printing ghosting)
+  try {
+    const img = await window.QrScanner._loadImage(file);
+    const canvas = document.createElement('canvas');
+    const width = img.naturalWidth || img.width || 640;
+    const height = img.naturalHeight || img.height || 640;
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const imgData = ctx.getImageData(0, 0, width, height);
+    const data = imgData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const g = data[i + 1]; // Green channel
+      data[i]     = g; // R
+      data[i + 1] = g; // G
+      data[i + 2] = g; // B
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+
+    const res2 = await window.QrScanner.scanImage(canvas, {
+      returnDetailedScanResult: true,
+      alsoTryWithoutScanRegion: true
+    });
+    const text2 = (typeof res2 === 'object' ? res2.data : res2) || '';
+    if (text2 && text2.trim()) {
+      console.log('[Scanner] Photo scan succeeded on Pass 2 (Green Channel Isolation)');
+      return text2.trim();
+    }
+  } catch (err2) {
+    console.warn('[Scanner] Photo scan Pass 2 (Green Channel) failed:', err2);
+  }
+
+  // PASS 3: High-Contrast Binarization Pass (Faded/low-contrast prints)
+  try {
+    const img = await window.QrScanner._loadImage(file);
+    const canvas = document.createElement('canvas');
+    const width = img.naturalWidth || img.width || 640;
+    const height = img.naturalHeight || img.height || 640;
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const imgData = ctx.getImageData(0, 0, width, height);
+    const data = imgData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const g = data[i + 1];
+      const bw = g > 120 ? 255 : 0; // High contrast threshold
+      data[i]     = bw;
+      data[i + 1] = bw;
+      data[i + 2] = bw;
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+
+    const res3 = await window.QrScanner.scanImage(canvas, {
+      returnDetailedScanResult: true,
+      alsoTryWithoutScanRegion: true
+    });
+    const text3 = (typeof res3 === 'object' ? res3.data : res3) || '';
+    if (text3 && text3.trim()) {
+      console.log('[Scanner] Photo scan succeeded on Pass 3 (High-Contrast Binarization)');
+      return text3.trim();
+    }
+  } catch (err3) {
+    console.warn('[Scanner] Photo scan Pass 3 (Binarization) failed:', err3);
+  }
+
+  return '';
+}
+
+
 // ============================================================================
 // 6. AUTO-TEARDOWN & POWER MANAGEMENT (60s IDLE TIMEOUT & WAKE LOCK)
 // ============================================================================
@@ -626,8 +744,21 @@ async function requestWakeLock() {
 }
 
 function releaseWakeLock() {
+  try {
   if (wakeLock) {
     wakeLock.release().catch(() => {});
     wakeLock = null;
-  }
+  }  
+  } catch (e) {}
+}
+
+if (typeof window !== 'undefined') {
+  window.startScanner = startScanner;
+  window.stopScanner = stopScanner;
+  window.switchScanHubTab = switchScanHubTab;
+  window.cycleCameraLens = cycleCameraLens;
+  window.toggleTorch = toggleTorch;
+  window.updateCameraControlUI = updateCameraControlUI;
+  window.scanPhotoWithFallback = scanPhotoWithFallback;
+
 }
