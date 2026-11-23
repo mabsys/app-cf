@@ -1,4 +1,4 @@
-// ./js/ui.js (1811_R445) - View Switching & UI Management
+// ./js/ui.js (2311_R449) - View Switching & UI Management
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -142,7 +142,7 @@ const themeSolidIcons = {
 };
 
 let currentThemeMode = localStorage.getItem("certifly_theme_mode") || localStorage.getItem("app_theme_mode") || "system";
-// OS level listener
+
 if (typeof window !== "undefined" && window.matchMedia) {
   const colorSchemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
   const handleColorSchemeChange = () => {
@@ -156,8 +156,6 @@ if (typeof window !== "undefined" && window.matchMedia) {
     colorSchemeQuery.addListener(handleColorSchemeChange);
   }
 }
-//
-
 
 export function applyThemeMode(mode = currentThemeMode) {
   currentThemeMode = mode;
@@ -184,12 +182,11 @@ export function applyThemeMode(mode = currentThemeMode) {
 
   const isDark = mode === "dark" || (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.classList.toggle("dark", isDark);
-  
+
   const metaTheme = document.querySelector('meta[name="theme-color"]');
   if (metaTheme) {
-    metaTheme.setAttribute("content", isDark ? "#0F172B" : "#F8FAFC");
+    metaTheme.setAttribute("content", "#0F172B");
   }
-
 }
 
 export function cycleThemeMode() {
@@ -663,7 +660,7 @@ export function updateNetworkStatus() {
   // 2. Pilot Scan Hub Controls
   applyOnlineState("tab-camera-btn", isOnline, "Camera scanning requires an active internet connection");
   applyOnlineState("tab-manual-btn", isOnline, "Manual URL entry requires an active internet connection");
-  applyOnlineState("upload-qr-btn", isOnline, "Photo QR scanning requires an active internet connection");
+  applyOnlineState("upload-qr-btn", true);
   applyOnlineState("submit-url-btn", isOnline, "Licence verification requires an active internet connection");
   applyOnlineState("camera-cycle-btn", isOnline, "Camera functions require an active internet connection");
   applyOnlineState("torch-toggle-btn", isOnline, "Flashlight function requires an active internet connection");
@@ -678,7 +675,7 @@ export function updateNetworkStatus() {
   // 4. My Credentials Pane Controls (Menu Drawer)
   applyOnlineState("profile-mode-qr-btn", isOnline, "Camera scanning requires an active internet connection");
   applyOnlineState("profile-mode-url-btn", isOnline, "URL paste requires an active internet connection");
-  applyOnlineState("profile-upload-qr-btn", isOnline, "Photo QR scanning requires an active internet connection");
+  applyOnlineState("profile-upload-qr-btn", true);
   applyOnlineState("profile-cycle-btn", isOnline, "Camera functions require an active internet connection");
   applyOnlineState("profile-torch-btn", isOnline, "Flashlight function requires an active internet connection");
   applyOnlineState("profile-stop-qr-btn", isOnline, "Camera functions require an active internet connection");
@@ -742,7 +739,7 @@ export function showView(viewId, defaultTab = null) {
   if (viewId === "history-view") {
     renderHistoryList();
     if (!navigator.onLine && !offlineHistoryToastShown) {
-      showToast("Offline Mode — Displaying stored scan history", "info", 3000);
+      showToast("Offline Mode - Displaying stored scan history", "info", 3000);
       offlineHistoryToastShown = true;
     }
   }
@@ -782,18 +779,6 @@ export function showScannerView() {
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
-
-// Add to js/ui.js
-
-export function showDashboardOverview() {
-  if (typeof stopScanner === 'function') stopScanner();
-  if (typeof switchResultTab === 'function') switchResultTab('overview');
-  if (typeof window.renderDashboardView === 'function') window.renderDashboardView();
-  
-  showView('dashboard-view', 'overview');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
 
 export function showLoading(msg = "Fetching digital licence...") {
   const loadingText = document.getElementById("loading-text");
@@ -923,7 +908,6 @@ if (typeof window !== 'undefined') {
   window.applyTextSize = applyTextSize;
   window.animateAccordionResize = animateAccordionResize;
   window.toggleProfileAccordionSection = toggleProfileAccordionSection;
-  window.showDashboardOverview = showDashboardOverview;
 }
 
 // Phase 3 Tools Controller
