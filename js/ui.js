@@ -142,6 +142,22 @@ const themeSolidIcons = {
 };
 
 let currentThemeMode = localStorage.getItem("certifly_theme_mode") || localStorage.getItem("app_theme_mode") || "system";
+// OS level listener
+if (typeof window !== "undefined" && window.matchMedia) {
+  const colorSchemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  const handleColorSchemeChange = () => {
+    if (currentThemeMode === "system") {
+      applyThemeMode("system");
+    }
+  };
+  if (typeof colorSchemeQuery.addEventListener === "function") {
+    colorSchemeQuery.addEventListener("change", handleColorSchemeChange);
+  } else if (typeof colorSchemeQuery.addListener === "function") {
+    colorSchemeQuery.addListener(handleColorSchemeChange);
+  }
+}
+//
+
 
 export function applyThemeMode(mode = currentThemeMode) {
   currentThemeMode = mode;
@@ -168,6 +184,12 @@ export function applyThemeMode(mode = currentThemeMode) {
 
   const isDark = mode === "dark" || (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.classList.toggle("dark", isDark);
+  
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  if (metaTheme) {
+    metaTheme.setAttribute("content", isDark ? "#0F172B" : "#F8FAFC");
+  }
+
 }
 
 export function cycleThemeMode() {
