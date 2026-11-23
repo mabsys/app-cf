@@ -1,4 +1,4 @@
-// ./js/scanner.js (2211_R437) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (2211_R438) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -682,18 +682,28 @@ export async function ensureDecodableImageFile(file) {
 
   if (canNativeLoad) return file;
 
+  const loadScript = (src) => new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+
   // Step 2: In-memory conversion using heic2any
   try {
     let converter = (typeof window !== 'undefined' && typeof window.heic2any === 'function') ? window.heic2any : null;
 
     if (!converter && typeof document !== 'undefined') {
-      await new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = './js/vendor/heic2any.min.js';
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-      }).catch(() => {});
+      try {
+        await loadScript('./js/vendor/heic2any.min.js');
+      } catch (localErr) {
+        try {
+          await loadScript('https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js');
+        } catch (cdnErr) {
+          console.warn('[Scanner] Unable to load heic2any from local vendor or CDN.');
+        }
+      }
       if (typeof window !== 'undefined' && typeof window.heic2any === 'function') {
         converter = window.heic2any;
       }
