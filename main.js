@@ -1,4 +1,4 @@
-// ./main.js (1911_R440) fix2 - CertiFly Application Shell & Orchestrator
+// ./main.js (1911_R440) - CertiFly Application Shell & Orchestrator
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -10,7 +10,7 @@ import { PROXY_URL, APP_VERSION } from './js/config.js';
 import { parseLicenseDOM } from './js/caamParser.js';
 import { parseAttestationText, validateAttestationContent, parseQualificationSlipText, validateQualificationSlipContent } from './js/parser.js';
 import { saveToHistory, renderHistoryList, getScanHistory, getProfileData, saveProfileData, clearProfileData, clearHistory, getThresholdDays, setThresholdDays, getHistoryLimit, setHistoryLimit, getFreshnessLimit, setFreshnessLimit, hasProfileData, getAttestationPdf, setAttestationPdf, removeAttestationPdf, getAttestationData, setAttestationData, clearAttestationData, getQualificationSlipPdf, setQualificationSlipPdf, removeQualificationSlipPdf, getQualificationSlipData, setQualificationSlipData, clearQualificationSlipData, getThemeMode, setThemeMode, getTextSize, setTextSize, clearAllAppData } from './js/storage.js';
-import { startScanner, stopScanner, switchScanHubTab, renderRecentPilotsList, cycleCameraLens, toggleTorch, handleClipboardPaste, scanPhotoWithFallback, ensureDecodableImageFile } from './js/scanner.js';
+import { startScanner, stopScanner, switchScanHubTab, renderRecentPilotsList, cycleCameraLens, toggleTorch, handleClipboardPaste } from './js/scanner.js';
 import { updateNetworkStatus, showScannerView, showLoading, showError, showView, initNavigationBars, closeMenu, applyThemeMode, applyTextSize, updateThresholdPills, updateHistoryLimitPills, updateFreshnessLimitPills, switchResultTab, openProfileMenu, openMenu, initToolsViewUI, dispatchActiveToolCalculation, switchActiveTool, toggleProfileAccordionSection } from './js/ui.js';
 import { initFestiveEngine, setFestiveEnabled } from './js/festiveEngine.js';
 import { renderResults, setupResultViewScrollBanner, setLastScannedUrl, getLastScannedUrl } from './js/views/results.js';
@@ -97,37 +97,25 @@ function initScanHubUI() {
       qrFileInput.click();
     });
     qrFileInput.addEventListener("change", async (e) => {
-      let file = e.target.files && e.target.files[0];
+      const file = e.target.files && e.target.files[0];
       if (!file) return;
 
       if (window.QrScanner) {
-         try {
-        showLoading("Processing QR code image...");
-        if (typeof ensureDecodableImageFile === "function") {
-          file = await ensureDecodableImageFile(file);
-        } else if (window.ensureDecodableImageFile) {
-          file = await window.ensureDecodableImageFile(file);
-        }
-        let decodedText = "";
-        if (typeof scanPhotoWithFallback === "function") {
-          decodedText = await scanPhotoWithFallback(file);
-        } else if (window.scanPhotoWithFallback) {
-          decodedText = await window.scanPhotoWithFallback(file);
-        } else if (window.QrScanner) {
+        try {
+          showLoading("Processing QR code image...");
           const result = await window.QrScanner.scanImage(file, { returnDetailedScanResult: true });
-          decodedText = (typeof result === 'object' ? result.data : result) || "";
-        }
+          const decodedText = (typeof result === 'object' ? result.data : result) || "";
 
-        if (decodedText && decodedText.trim()) {
-          processLicenseUrl(decodedText.trim());
-        } else {
-          showError("No valid QR code found in selected photo. Please ensure image is clear.");
+          if (decodedText.trim()) {
+            processLicenseUrl(decodedText.trim());
+          } else {
+            showError("No valid QR code found in selected photo.");
+          }
+        } catch (err) {
+          showError("Could not decode QR code from image. Please ensure image is clear.");
         }
-      } catch (err) {
-        showError("Could not decode QR code from image. Please ensure image is clear.");
-      } finally {
-        qrFileInput.value = "";
       }
+      qrFileInput.value = "";
     });
   }
 
@@ -536,3 +524,4 @@ function setupTab3ManualLayout() {
     console.warn("setupTab3ManualLayout error:", e);
   }
 }
+
