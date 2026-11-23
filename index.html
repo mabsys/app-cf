@@ -6,7 +6,7 @@
 <head>
     <!----------------------------------------------
 // CertiFly - Digital Licence Checker          //
-// Version: 2.0 (PWA), Release: (10.2026)      //
+// Version: 2.0 (PWA), Release: (11.2026)      //
 // Developed by: Capt. Mohd Sallehuddin Zaidy //
 ----------------------------------------------->
     <meta charset="UTF-8">
@@ -27,16 +27,15 @@
     <link rel="modulepreload" href="js/ui.js">
     <link rel="modulepreload" href="js/notifications.js">
     
-    <!-- UNCOMMENT THIS BLOCK ONCE DEV IS COMPLETE
-<script>
-if ('serviceWorker' in navigator) {
-window.addEventListener('load', () => {
-navigator.serviceWorker.register('sw.js')
-.then((reg) => console.log('CertiFly Service Worker registered successfully:', reg.scope))
-.catch((err) => console.error('Service Worker registration failed:', err));
-});
-}
-</script> -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+            .then((reg) => console.log('CertiFly Service Worker registered successfully:', reg.scope))
+            .catch((err) => console.error('Service Worker registration failed:', err));
+            });
+        }
+    </script> 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = {darkMode: "class"};</script>
     <script src="js/vendor/qr-scanner.umd.min.js"></script>
