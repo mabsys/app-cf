@@ -1,4 +1,4 @@
-// ./js/scanner.js (2211_R431) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (2211_R435) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -14,6 +14,7 @@ let torchActive = false;
 let idleTimer = null;
 let adaptiveWeightTimer = null;
 let adaptiveWeightTimerPhase2 = null;
+
 let wakeLock = null;
 let currentZoomLevel = 1.0;
 
@@ -36,29 +37,16 @@ function filterRearCameras(cameras) {
 }
 
 // Format camera device or macro/zoom level labels for clear user feedback
-function formatCameraLabel(camObj, index, total) {
-  if (!camObj && total <= 1) {
-    if (currentZoomLevel === 1.0) return 'Back 1.0x';
-    if (currentZoomLevel === 1.8) return 'Macro / Close-Up (1.8x)';
-    return `Back ${currentZoomLevel.toFixed(1)}x`;
-  }
-  const label = camObj ? (camObj.label || '').toLowerCase() : '';
-  if (label.includes('ultra') || label.includes('0.5x') || label.includes('wide-angle') || label.includes('macro')) {
-    return 'Macro Mode (0.5x)';
-  }
-  if (label.includes('telephoto') || label.includes('zoom') || label.includes('2x') || label.includes('3x')) {
-    return 'Telephoto 2.0x';
-  }
-  if (label.includes('back') || label.includes('rear') || label.includes('environment') || label.includes('wide')) {
-    return index === 0 ? 'Back 1.0x' : `Back Lens ${index + 1}`;
-  }
-  if (total > 1) {
-    return `Back Lens ${index + 1}`;
-  }
-  return `Back ${currentZoomLevel.toFixed(1)}x`;
+function formatCameraLabel(device, index, total) {
+  if (!device) return 'Switch Lens';
+  const label = (device.label || '').toLowerCase();
+  if (label.includes('telephoto') || label.includes('zoom')) return 'Telephoto Lens';
+  if (label.includes('ultra') || label.includes('wide')) return 'Ultra Wide Lens';
+  if (label.includes('main') || label.includes('wide') || label.includes('back')) return 'Main Lens';
+  return ;
 }
 
-export async function updateCameraControlUI() {
+export function updateCameraControlUI() {
   const cycleBtn = document.getElementById('camera-cycle-btn');
   const cycleLabel = document.getElementById('camera-cycle-label');
   const uploadBtn = document.getElementById('upload-qr-btn');
@@ -67,8 +55,10 @@ export async function updateCameraControlUI() {
   if (!availableCameraDevices || availableCameraDevices.length === 0) {
     try {
       if (window.QrScanner) {
-        const cameras = await window.QrScanner.listCameras(true);
-        availableCameraDevices = filterRearCameras(cameras || []);
+        window.QrScanner.listCameras(true).then(cameras => {
+          availableCameraDevices = filterRearCameras(cameras || []);
+          updateCameraControlUI();
+        }).catch(() => {});
       }
     } catch (e) {}
   }
@@ -80,7 +70,6 @@ export async function updateCameraControlUI() {
   const isIPad = /iPad/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
   if (numRearCams > 1) {
-    // TIER 1: Multiple Physical Rear Lenses (e.g. iPhone Pro)
     if (cycleBtn) {
       cycleBtn.classList.remove('hidden');
       cycleBtn.classList.add('flex');
@@ -95,7 +84,6 @@ export async function updateCameraControlUI() {
       targetEl.innerText = formatCameraLabel(current, index >= 0 ? index : 0, numRearCams);
     }
   } else if (hasZoom && !isIPad) {
-    // TIER 2: Single Rear Camera with Hardware Zoom -> Digital Zoom Toggle
     if (cycleBtn) {
       cycleBtn.classList.remove('hidden');
       cycleBtn.classList.add('flex');
@@ -105,12 +93,9 @@ export async function updateCameraControlUI() {
       uploadBtn.classList.add('col-span-1');
     }
     if (targetEl) {
-      if (currentZoomLevel === 1.0) targetEl.innerText = 'Zoom 1.0x';
-      else if (currentZoomLevel === 1.8) targetEl.innerText = 'Macro 1.8x';
-      else targetEl.innerText = `Zoom ${currentZoomLevel.toFixed(1)}x`;
+      if (currentZoomLevel === 1.0) targetEl.innerText = 'Zoom 1.0x'; else if (currentZoomLevel === 1.8) targetEl.innerText = 'Macro 1.8x'; else targetEl.innerText = `Zoom ${currentZoomLevel.toFixed(1)}x`;
     }
   } else {
-    // TIER 3: Fixed Single Rear Lens / iPad -> Hide Cycle Btn & Stretch Upload Btn
     if (cycleBtn) {
       cycleBtn.classList.add('hidden');
       cycleBtn.classList.remove('flex');
@@ -130,19 +115,27 @@ export function updateCameraCycleButtonLabel() {
 // 2. TAB 1: LIVE CAMERA SCANNER & HARDWARE STREAM CONTROLLER
 // ============================================================================
 
-export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemId = 'qr-video') {
-  const errorMsg = document.getElementById('error-message');
-  if (errorMsg) errorMsg.innerText = '';
+export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemId = "qr-video") {
+  if (!navigator.onLine) {
+    if (typeof window.showToast === "function") {
+      window.showToast("Camera scanning requires an active internet connection.", "warning");
+    }
+    stopScanner();
+    if (onErrorCallback) onErrorCallback("Camera scanner unavailable offline.");
+    return;
+  }
+  const errorMsg = document.getElementById("error-message");
+  if (errorMsg) errorMsg.innerText = "";
 
   const videoElem = document.getElementById(customVideoElemId);
   if (!videoElem) {
-    if (onErrorCallback) onErrorCallback('Camera feed element not found.');
+    if (onErrorCallback) onErrorCallback("Camera feed element not found.");
     return;
   }
 
   // Hide paused overlay if visible
-  const pausedOverlay = document.getElementById('scanner-paused-overlay');
-  if (pausedOverlay) pausedOverlay.classList.add('hidden');
+  const pausedOverlay = document.getElementById("scanner-paused-overlay");
+  if (pausedOverlay) pausedOverlay.classList.add("hidden");
 
   // Maintain stream if scanner is already active and playing
   if (qrScanner && activeMediaStream && activeMediaStream.active && videoElem && videoElem.readyState >= 2 && !videoElem.paused) {
@@ -164,16 +157,21 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
     qrScanner = null;
   }
 
+  if (adaptiveWeightTimer) clearTimeout(adaptiveWeightTimer);
+  if (adaptiveWeightTimerPhase2) clearTimeout(adaptiveWeightTimerPhase2);
+
   const handleQrSuccess = (cleanScannedText) => {
     if (decodeHandled) return;
     if (currentSession !== scannerSessionId) return;
     decodeHandled = true;
-    stopScanner();
 
+    if (adaptiveWeightTimer) clearTimeout(adaptiveWeightTimer);
+    if (adaptiveWeightTimerPhase2) clearTimeout(adaptiveWeightTimerPhase2);
+
+    stopScanner();
     if (navigator.vibrate) {
       try { navigator.vibrate(100); } catch (e) {}
     }
-
     const callback = onDecodeCallback || window.processLicenseUrl;
     if (typeof callback === 'function') {
       callback(cleanScannedText);
@@ -184,8 +182,8 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
     qrScanner = new window.QrScanner(
       videoElem,
       (result) => {
-        const decodedText = (typeof result === 'object' ? (result.data || result.text) : result) || '';
-        const cleanScannedText = decodedText ? decodedText.trim() : '';
+        const decodedText = (typeof result === 'object' ? (result.data || result.text) : result) || "";
+        const cleanScannedText = decodedText ? decodedText.trim() : "";
         if (cleanScannedText) {
           handleQrSuccess(cleanScannedText);
         }
@@ -217,7 +215,6 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
 
     // ADAPTIVE GRAYSCALE WEIGHTS PIPELINE FOR DIM / WARM / OFFSET LIGHTING:
     // Phase 1 (0.0s - 0.8s): Warm-Lighting Balanced Weights (Red 35%, Green 55%, Blue 10%)
-    // Maximizes light capture under dim/warm amber cockpit lighting for normal QR codes.
     if (qrScanner && typeof qrScanner.setGrayscaleWeights === 'function') {
       qrScanner.setGrayscaleWeights(0.35, 0.55, 0.10, true);
     }
@@ -233,17 +230,11 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
       }
     }, 800);
 
-    // Phase 3 (1.8s Timeout): Ghost-Cancellation Weights (Red 0%, Green 85%, Blue 15%) + Dim Light Flashlight Hint
+    // Phase 3 (1.8s Timeout): Ghost-Cancellation Weights (Red 0%, Green 85%, Blue 15%)
     adaptiveWeightTimerPhase2 = setTimeout(() => {
       if (qrScanner && typeof qrScanner.setGrayscaleWeights === 'function' && currentSession === scannerSessionId) {
         console.log('[Scanner] Phase 3: Switching to Ghost-Cancellation weights (Red=0.0, Green=0.85, Blue=0.15)');
         qrScanner.setGrayscaleWeights(0.0, 0.85, 0.15, true);
-
-        // Subtle Torch Suggestion if held in low-light for > 2.2 seconds
-        const guidancePill = document.getElementById(customVideoElemId === 'profile-qr-video' ? 'profile-qr-guidance-pill' : 'qr-guidance-pill');
-        if (guidancePill && !torchActive) {
-          guidancePill.innerHTML = '<span class="text-amber-300 font-bold flex items-center gap-1">💡 Low Light? Tap ⚡ Flashlight</span>';
-        }
       }
     }, 1800);
 
@@ -264,9 +255,9 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
           const isIPad = /iPad/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
           currentZoomLevel = isIPad ? 1.8 : 1.0;
 
-          const guidancePill = document.getElementById(customVideoElemId === 'profile-qr-video' ? 'profile-qr-guidance-pill' : 'qr-guidance-pill');
+          const guidancePill = document.getElementById(customVideoElemId === "profile-qr-video" ? "profile-qr-guidance-pill" : "qr-guidance-pill");
           if (videoElem) {
-            videoElem.style.transform = 'none';
+            videoElem.style.transform = "none";
           }
           if (guidancePill) {
             guidancePill.innerHTML = '<span>Place QR code within scan area</span><span class="text-[9px] text-slate-300 font-medium normal-case tracking-normal">Avoid glare & shadows</span>';
@@ -275,17 +266,17 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
           if (track && typeof track.getCapabilities === 'function' && typeof track.applyConstraints === 'function') {
             const caps = track.getCapabilities();
             const advancedConstraints = [];
-
             if (caps.focusMode && caps.focusMode.includes('macro')) {
               advancedConstraints.push({ focusMode: 'macro' });
             } else if (caps.focusMode && caps.focusMode.includes('continuous')) {
               advancedConstraints.push({ focusMode: 'continuous' });
             }
-
             if (caps.exposureMode && caps.exposureMode.includes('continuous')) {
               advancedConstraints.push({ exposureMode: 'continuous' });
             }
-
+            if (caps.whiteBalanceMode && caps.whiteBalanceMode.includes('continuous')) {
+              advancedConstraints.push({ whiteBalanceMode: 'continuous' });
+            }
             if (caps.zoom) {
               const targetZoom = Math.min(caps.zoom.max, Math.max(caps.zoom.min, currentZoomLevel));
               advancedConstraints.push({ zoom: targetZoom });
@@ -294,17 +285,22 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
             if (advancedConstraints.length > 0) {
               track.applyConstraints({ advanced: advancedConstraints }).catch(() => {});
             }
+
+            if (typeof track.getSettings === 'function') {
+              const settings = track.getSettings();
+              console.log("[Scanner] Active Track Settings:", settings.width, "x", settings.height, "Focus:", settings.focusMode);
+            }
           }
 
-          const torchBtn = document.getElementById('torch-toggle-btn');
+          const torchBtn = document.getElementById("torch-toggle-btn");
           if (torchBtn) {
             const caps = (track && typeof track.getCapabilities === 'function') ? track.getCapabilities() : null;
             if (caps && caps.torch) {
-              torchBtn.classList.remove('hidden');
-              torchBtn.classList.add('flex');
+              torchBtn.classList.remove("hidden");
+              torchBtn.classList.add("flex");
             } else {
-              torchBtn.classList.add('hidden');
-              torchBtn.classList.remove('flex');
+              torchBtn.classList.add("hidden");
+              torchBtn.classList.remove("flex");
             }
           }
         }
@@ -315,20 +311,20 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
         availableCameraDevices = filterRearCameras(cameras || []);
         updateCameraCycleButtonLabel();
       }).catch(() => {});
-
     }).catch((err) => {
       if (currentSession !== scannerSessionId) return;
-      console.error('Camera start failed:', err);
-      if (onErrorCallback) onErrorCallback('Unable to access camera. Please verify permissions.');
+      console.error("Camera start failed:", err);
+      if (onErrorCallback) onErrorCallback("Unable to access camera. Please verify permissions.");
     });
   }
 }
 
 export function stopScanner() {
   scannerSessionId++;
-  const videoElem = document.getElementById('qr-video');
+
+  const videoElem = document.getElementById("qr-video");
   if (videoElem) {
-    videoElem.style.transform = 'none';
+    videoElem.style.transform = "none";
   }
 
   if (idleTimer) {
@@ -338,6 +334,10 @@ export function stopScanner() {
   if (adaptiveWeightTimer) {
     clearTimeout(adaptiveWeightTimer);
     adaptiveWeightTimer = null;
+  }
+  if (adaptiveWeightTimerPhase2) {
+    clearTimeout(adaptiveWeightTimerPhase2);
+    adaptiveWeightTimerPhase2 = null;
   }
 
   if (qrScanner) {
@@ -356,10 +356,10 @@ export function stopScanner() {
   }
 
   torchActive = false;
-  const torchBtn = document.getElementById('torch-toggle-btn');
+  const torchBtn = document.getElementById("torch-toggle-btn");
   if (torchBtn) {
-    torchBtn.classList.add('hidden');
-    torchBtn.classList.remove('flex');
+    torchBtn.classList.add("hidden");
+    torchBtn.classList.remove("flex");
   }
 
   releaseWakeLock();
@@ -387,7 +387,30 @@ export function switchScanHubTab(tabName) {
 
   let activeBtn = btnCamera;
 
+  if (tabName === 'camera' || tabName === 'manual') {
+    if (!navigator.onLine) {
+      if (typeof window.showToast === 'function') {
+        const msg = tabName === 'camera'
+          ? 'Camera scanning requires an active internet connection.'
+          : 'Manual URL entry requires an active internet connection.';
+        window.showToast(msg, 'warning');
+      }
+      stopScanner();
+      switchScanHubTab('qrpass');
+      return;
+    }
+  }
+
   if (tabName === 'camera') {
+    if (!navigator.onLine) {
+      if (typeof window.showToast === 'function') {
+        window.showToast('Camera scanning requires an active internet connection.', 'warning');
+      }
+      stopScanner();
+      switchScanHubTab('qrpass');
+      return;
+    }
+
     activeBtn = btnCamera;
     if (tabCamera) {
       const wasHidden = tabCamera.classList.contains('hidden');
@@ -407,6 +430,7 @@ export function switchScanHubTab(tabName) {
         if (errorMsg) errorMsg.innerText = err;
       }
     );
+
   } else if (tabName === 'qrpass') {
     activeBtn = btnQrPass;
     if (tabQrPass) {
@@ -422,6 +446,7 @@ export function switchScanHubTab(tabName) {
     } else {
       renderMyQrPass();
     }
+
   } else if (tabName === 'manual') {
     activeBtn = btnManual;
     if (tabManual) {
@@ -461,39 +486,20 @@ export function renderRecentPilotsList() {
 
   const history = getScanHistory();
   if (countTag) countTag.innerText = history.length;
-
-  if (history.length === 0) {
-    container.innerHTML = '<div class="py-4 text-center text-xs text-slate-400 font-medium">No recently verified pilots</div>';
-    return;
-  }
-
-  container.innerHTML = '';
-  history.slice(0, 5).forEach(item => {
-    const name = item.pilotName || item.name || 'Verified Crew';
-    const licence = item.licenceNo || item.licenseNo || 'ATPL(A)';
-    const time = item.timestamp || 'Recent';
-
-    const div = document.createElement('div');
-    div.className = 'py-3 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 px-2 rounded-xl transition-colors';
-    div.innerHTML = `
-      <div class="flex flex-col text-left">
-        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">${name}</span>
-        <span class="text-[10px] text-slate-400 font-medium">${licence} • ${time}</span>
-      </div>
-      <span class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 uppercase">View</span>
-    `;
-    div.onclick = () => {
-      if (window.loadHistoricalRecord) window.loadHistoricalRecord(item.id);
-    };
-    container.appendChild(div);
-  });
 }
 
 // ============================================================================
-// 5. HARDWARE TOOLBAR CONTROLLERS (LENS SWITCHER, FLASHLIGHT, PHOTO SCANS)
+// 5. HARDWARE TOOLBAR CONTROLLERS (LENS SWITCHER & FLASHLIGHT)
 // ============================================================================
 
 export async function cycleCameraLens() {
+  if (!navigator.onLine) {
+    if (typeof window.showToast === 'function') {
+      window.showToast('Camera functions require an active internet connection.', 'warning');
+    }
+    return;
+  }
+
   const cycleBtn = document.getElementById('camera-cycle-btn');
   const cycleLabel = document.getElementById('camera-cycle-label');
   const targetEl = cycleLabel || cycleBtn;
@@ -509,7 +515,6 @@ export async function cycleCameraLens() {
     } catch (e) {}
   }
 
-  // MODE A: Multiple Rear Cameras Detected (Wide, Ultra Wide / Macro, Telephoto)
   if (availableCameraDevices && availableCameraDevices.length > 1) {
     const currentIndex = availableCameraDevices.findIndex(c => c.id === currentCameraDeviceId);
     const nextIndex = (currentIndex + 1) % availableCameraDevices.length;
@@ -532,7 +537,6 @@ export async function cycleCameraLens() {
     }
   }
 
-  // MODE B: Single Rear Camera Stream -> Cycle Macro/Zoom modes (1.0x -> 1.8x -> 2.5x)
   const isIPad = /iPad/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
   if (isIPad) {
@@ -575,6 +579,13 @@ export async function cycleCameraLens() {
 }
 
 export function toggleTorch() {
+  if (!navigator.onLine) {
+    if (typeof window.showToast === 'function') {
+      window.showToast('Flashlight function requires an active internet connection.', 'warning');
+    }
+    return;
+  }
+
   if (!qrScanner) return;
 
   torchActive = !torchActive;
@@ -585,7 +596,39 @@ export function toggleTorch() {
   }
 }
 
-// MULTI-PASS ENHANCED CANVAS PHOTO SCANNER (5-PASS ACCURACY PIPELINE)
+// ============================================================================
+// 6. AUTO-TEARDOWN & POWER MANAGEMENT (60s IDLE TIMEOUT & WAKE LOCK)
+// ============================================================================
+
+function resetIdleTimer(onDecodeCallback, onErrorCallback) {
+  if (idleTimer) clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => {
+    stopScanner();
+    const pausedOverlay = document.getElementById('scanner-paused-overlay');
+    if (pausedOverlay) pausedOverlay.classList.remove('hidden');
+  }, IDLE_TIMEOUT_MS);
+}
+
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator && !wakeLock) {
+      wakeLock = await navigator.wakeLock.request('screen');
+    }
+  } catch (e) {}
+}
+
+function releaseWakeLock() {
+  try {
+    if (wakeLock) {
+      wakeLock.release().catch(() => {});
+      wakeLock = null;
+    }
+  } catch (e) {}
+}
+
+
+
+// MULTI-PASS FALLBACK CANVAS PHOTO SCANNER
 export async function scanPhotoWithFallback(file) {
   if (!file || !window.QrScanner) return '';
 
@@ -594,50 +637,47 @@ export async function scanPhotoWithFallback(file) {
     return t ? t.trim() : '';
   };
 
-  // PASS 1: Standard Nimiq raw file scan
+  const scanRunner = window.QrScanner._originalScanImage || window.QrScanner.scanImage;
+
+  // PASS 1: Standard raw file scan
   try {
-    const res1 = await window.QrScanner.scanImage(file, {
+    const res1 = await scanRunner.call(window.QrScanner, file, {
       returnDetailedScanResult: true,
       alsoTryWithoutScanRegion: true
     });
     const text1 = extractText(res1);
     if (text1) {
-      console.log('[Scanner] Photo scan succeeded on Pass 1 (Standard Raw)');
+      console.log('[Scanner] Photo scan succeeded on Pass 1 (Standard)');
       return text1;
     }
   } catch (err1) {
-    console.warn('[Scanner] Photo scan Pass 1 (Standard Raw) failed:', err1);
+    console.warn('[Scanner] Photo scan Pass 1 (Standard) failed:', err1);
   }
 
-  // Load image object for canvas manipulation
   let img = null;
   try {
     img = await window.QrScanner._loadImage(file);
   } catch (imgErr) {
-    console.warn('[Scanner] Could not load image object for canvas processing:', imgErr);
+    console.warn('[Scanner] Unable to load image file:', imgErr);
     return '';
   }
 
   const origW = img.naturalWidth || img.width || 640;
   const origH = img.naturalHeight || img.height || 640;
+  const maxDim = Math.max(origW, origH);
 
-  // Calculate target dimensions (scale large photos > 1024px, upscale tiny photos < 300px)
   let targetW = origW;
   let targetH = origH;
-  const maxDim = Math.max(origW, origH);
-  const minDim = Math.min(origW, origH);
-
   if (maxDim > 1024) {
     const scale = 1024 / maxDim;
     targetW = Math.round(origW * scale);
     targetH = Math.round(origH * scale);
-  } else if (minDim < 300) {
-    const scale = 300 / minDim;
+  } else if (maxDim < 300 && maxDim > 0) {
+    const scale = 600 / maxDim;
     targetW = Math.round(origW * scale);
     targetH = Math.round(origH * scale);
   }
 
-  // Calculate 15% solid white quiet zone padding margin
   const pad = Math.round(Math.max(targetW, targetH) * 0.15);
   const paddedW = targetW + pad * 2;
   const paddedH = targetH + pad * 2;
@@ -653,23 +693,23 @@ export async function scanPhotoWithFallback(file) {
     return { canvas, ctx };
   };
 
-  // PASS 2: Quiet Zone Padding & Multi-Scale Rescaling Pass
+  // PASS 2: Quiet Zone Padding & Multi-Scale Scaling Pass
   try {
     const { canvas: canvas2 } = createBasePaddedCanvas();
-    const res2 = await window.QrScanner.scanImage(canvas2, {
+    const res2 = await scanRunner.call(window.QrScanner, canvas2, {
       returnDetailedScanResult: true,
       alsoTryWithoutScanRegion: true
     });
     const text2 = extractText(res2);
     if (text2) {
-      console.log('[Scanner] Photo scan succeeded on Pass 2 (Quiet Zone Padding & Scaling)');
+      console.log('[Scanner] Photo scan succeeded on Pass 2 (Quiet Zone Padding & Multi-Scale)');
       return text2;
     }
   } catch (err2) {
-    console.warn('[Scanner] Photo scan Pass 2 (Padded & Scaled) failed:', err2);
+    console.warn('[Scanner] Photo scan Pass 2 (Quiet Zone Padding) failed:', err2);
   }
 
-  // PASS 3: Green Channel Canvas Isolation + Padding (Filters cyan print offset ghosting)
+  // PASS 3: Green Channel Canvas Isolation Pass (Filters out cyan offset printing ghosting)
   try {
     const { canvas: canvas3, ctx: ctx3 } = createBasePaddedCanvas();
     const imgData3 = ctx3.getImageData(0, 0, paddedW, paddedH);
@@ -681,9 +721,10 @@ export async function scanPhotoWithFallback(file) {
       data3[i + 1] = g; // G
       data3[i + 2] = g; // B
     }
+
     ctx3.putImageData(imgData3, 0, 0);
 
-    const res3 = await window.QrScanner.scanImage(canvas3, {
+    const res3 = await scanRunner.call(window.QrScanner, canvas3, {
       returnDetailedScanResult: true,
       alsoTryWithoutScanRegion: true
     });
@@ -696,7 +737,7 @@ export async function scanPhotoWithFallback(file) {
     console.warn('[Scanner] Photo scan Pass 3 (Green Channel) failed:', err3);
   }
 
-  // PASS 4: Multi-Angle Canvas Rotation Pass (90°, 180°, 270°)
+  // PASS 4: Multi-Angle Canvas Rotation Pass (90 deg, 180 deg, 270 deg)
   const angles = [90, 180, 270];
   for (const angle of angles) {
     try {
@@ -718,13 +759,13 @@ export async function scanPhotoWithFallback(file) {
       rotCtx.rotate((angle * Math.PI) / 180);
       rotCtx.drawImage(img, -targetW / 2, -targetH / 2, targetW, targetH);
 
-      const resRot = await window.QrScanner.scanImage(rotCanvas, {
+      const resRot = await scanRunner.call(window.QrScanner, rotCanvas, {
         returnDetailedScanResult: true,
         alsoTryWithoutScanRegion: true
       });
       const textRot = extractText(resRot);
       if (textRot) {
-        console.log();
+        console.log('[Scanner] Photo scan succeeded on Pass 4 (Rotation ' + angle + ' deg)');
         return textRot;
       }
     } catch (errRot) {
@@ -801,7 +842,7 @@ export async function scanPhotoWithFallback(file) {
 
     ctx5.putImageData(new ImageData(sharpenedData, width, height), 0, 0);
 
-    const res5 = await window.QrScanner.scanImage(canvas5, {
+    const res5 = await scanRunner.call(window.QrScanner, canvas5, {
       returnDetailedScanResult: true,
       alsoTryWithoutScanRegion: true
     });
@@ -817,34 +858,26 @@ export async function scanPhotoWithFallback(file) {
   return '';
 }
 
-// ============================================================================
-// 6. AUTO-TEARDOWN & POWER MANAGEMENT
-// ============================================================================
-
-function resetIdleTimer(onDecodeCallback, onErrorCallback) {
-  if (idleTimer) clearTimeout(idleTimer);
-  idleTimer = setTimeout(() => {
-    stopScanner();
-    const pausedOverlay = document.getElementById('scanner-paused-overlay');
-    if (pausedOverlay) pausedOverlay.classList.remove('hidden');
-  }, IDLE_TIMEOUT_MS);
-}
-
-async function requestWakeLock() {
-  try {
-    if ('wakeLock' in navigator && !wakeLock) {
-      wakeLock = await navigator.wakeLock.request('screen');
+// Monkey-patch window.QrScanner.scanImage to enable fallback passes automatically
+if (typeof window !== 'undefined' && window.QrScanner && !window.QrScanner._originalScanImage) {
+  window.QrScanner._originalScanImage = window.QrScanner.scanImage;
+  window.QrScanner.scanImage = async function(a, b, c, d, f, h) {
+    try {
+      return await window.QrScanner._originalScanImage(a, b, c, d, f, h);
+    } catch (err) {
+      if (a && (a instanceof File || a instanceof Blob || a instanceof HTMLImageElement || a instanceof HTMLCanvasElement)) {
+        const fallbackText = await scanPhotoWithFallback(a);
+        if (fallbackText) {
+          const isDetailed = (b && typeof b === 'object' && b.returnDetailedScanResult) || h;
+          if (isDetailed) {
+            return { data: fallbackText, cornerPoints: [] };
+          }
+          return fallbackText;
+        }
+      }
+      throw err;
     }
-  } catch (e) {}
-}
-
-function releaseWakeLock() {
-  try {
-    if (wakeLock) {
-      wakeLock.release().catch(() => {});
-      wakeLock = null;
-    }
-  } catch (e) {}
+  };
 }
 
 if (typeof window !== 'undefined') {
