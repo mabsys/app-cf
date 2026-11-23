@@ -557,7 +557,7 @@ export async function renderDashboardResults(caamResults, mabResults = null) {
         lvoDaysTextEl.className = "text-[9px] font-bold text-rose-400 truncate";
       } else {
         lvoDaysTextEl.innerText = `${lvoDaysRemaining} Days Remaining`;
-        lvoDaysTextEl.className = "text-[9px] font-bold text-slate-400 truncate";
+        lvoDaysTextEl.className = "dyn-txt text-[9px] font-bold text-slate-400 truncate";
       }
     }
 
