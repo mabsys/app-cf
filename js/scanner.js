@@ -638,7 +638,7 @@ export function toggleTorch() {
   }
 }
 
-// MULTI-PASS FALLBACK CANVAS PHOTO SCANNER
+// MULTI-PASS ENHANCED CANVAS PHOTO SCANNER (5-PASS ACCURACY PIPELINE)
 export async function scanPhotoWithFallback(file) {
   if (!file || !window.QrScanner) return '';
 
@@ -647,51 +647,50 @@ export async function scanPhotoWithFallback(file) {
     return t ? t.trim() : '';
   };
 
-  // PASS 1: Standard Nimiq scan
+  // PASS 1: Standard Nimiq raw file scan
   try {
     const res1 = await window.QrScanner.scanImage(file, {
       returnDetailedScanResult: true,
       alsoTryWithoutScanRegion: true
     });
-    const text1 = (typeof res1 === 'object' ? res1.data : res1) || '';
-    if (text1 && text1.trim()) {
-      console.log('[Scanner] Photo scan succeeded on Pass 1 (Standard)');
-      return text1.trim();
+    const text1 = extractText(res1);
+    if (text1) {
+      console.log('[Scanner] Photo scan succeeded on Pass 1 (Standard Raw)');
+      return text1;
     }
   } catch (err1) {
-    console.warn('[Scanner] Photo scan Pass 1 (Standard) failed:', err1);
+    console.warn('[Scanner] Photo scan Pass 1 (Standard Raw) failed:', err1);
   }
 
-  // PASS 2: Green Channel Canvas Isolation (Filters out cyan offset printing ghosting)
+  // Load image object for canvas manipulation
   let img = null;
   try {
-    const img = await window.QrScanner._loadImage(file);
-    const canvas = document.createElement('canvas');
-    const width = img.naturalWidth || img.width || 640;
-    const height = img.naturalHeight || img.height || 640;
-    canvas.width = width;
-    canvas.height = height;
+    img = await window.QrScanner._loadImage(file);
+  } catch (imgErr) {
+    console.warn('[Scanner] Could not load image object for canvas processing:', imgErr);
+    return '';
+  }
 
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, width, height);
+  const origW = img.naturalWidth || img.width || 640;
+  const origH = img.naturalHeight || img.height || 640;
 
-    const imgData = ctx.getImageData(0, 0, width, height);
+  // Calculate target dimensions (scale large photos > 1024px, upscale tiny photos < 300px)
   let targetW = origW;
   let targetH = origH;
   const maxDim = Math.max(origW, origH);
-    const data = imgData.data;
+  const minDim = Math.min(origW, origH);
 
-    for (let i = 0; i < data.length; i += 4) {
+  if (maxDim > 1024) {
     const scale = 1024 / maxDim;
     targetW = Math.round(origW * scale);
-      const g = data[i + 1]; // Green channel
-      data[i]     = g; // R
-      data[i + 1] = g; // G
+    targetH = Math.round(origH * scale);
+  } else if (minDim < 300) {
+    const scale = 300 / minDim;
     targetW = Math.round(origW * scale);
-      data[i + 2] = g; // B
-    }
+    targetH = Math.round(origH * scale);
+  }
 
-    ctx.putImageData(imgData, 0, 0);
+  // Calculate 15% solid white quiet zone padding margin
   const pad = Math.round(Math.max(targetW, targetH) * 0.15);
   const paddedW = targetW + pad * 2;
   const paddedH = targetH + pad * 2;
@@ -710,64 +709,44 @@ export async function scanPhotoWithFallback(file) {
   // PASS 2: Quiet Zone Padding & Multi-Scale Rescaling Pass
   try {
     const { canvas: canvas2 } = createBasePaddedCanvas();
-    const res2 = await window.QrScanner.scanImage(canvas, {
+    const res2 = await window.QrScanner.scanImage(canvas2, {
       returnDetailedScanResult: true,
       alsoTryWithoutScanRegion: true
     });
-    const text2 = (typeof res2 === 'object' ? res2.data : res2) || '';
-    if (text2 && text2.trim()) {
-      console.log('[Scanner] Photo scan succeeded on Pass 2 (Green Channel Isolation)');
-      return text2.trim();
+    const text2 = extractText(res2);
+    if (text2) {
+      console.log('[Scanner] Photo scan succeeded on Pass 2 (Quiet Zone Padding & Scaling)');
+      return text2;
     }
   } catch (err2) {
-    console.warn('[Scanner] Photo scan Pass 2 (Green Channel) failed:', err2);
+    console.warn('[Scanner] Photo scan Pass 2 (Padded & Scaled) failed:', err2);
   }
 
-  // PASS 3: Adaptive Luminance & Dynamic Binarization Pass (Dimly-lit / Low-contrast photos)
+  // PASS 3: Green Channel Canvas Isolation + Padding (Filters cyan print offset ghosting)
   try {
-    const img = await window.QrScanner._loadImage(file);
-    const canvas = document.createElement('canvas');
-    const width = img.naturalWidth || img.width || 640;
-    const height = img.naturalHeight || img.height || 640;
-    canvas.width = width;
-    canvas.height = height;
+    const { canvas: canvas3, ctx: ctx3 } = createBasePaddedCanvas();
+    const imgData3 = ctx3.getImageData(0, 0, paddedW, paddedH);
+    const data3 = imgData3.data;
 
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, width, height);
-
-    const imgData = ctx.getImageData(0, 0, width, height);
-    const data = imgData.data;
-
-    // Calculate mean scene luminance to adapt to dark/dim photos
-    let totalLum = 0;
-    for (let i = 0; i < data.length; i += 4) {
-      totalLum += data[i + 1]; // Green channel sample
+    for (let i = 0; i < data3.length; i += 4) {
+      const g = data3[i + 1]; // Green channel
+      data3[i]     = g; // R
+      data3[i + 1] = g; // G
+      data3[i + 2] = g; // B
     }
-    const avgLum = totalLum / (data.length / 4);
-    // Clamp dynamic threshold between 50 (very dark cockpit photo) and 160 (bright photo)
-    const dynamicThreshold = Math.min(160, Math.max(50, avgLum));
+    ctx3.putImageData(imgData3, 0, 0);
 
-    for (let i = 0; i < data.length; i += 4) {
-      const g = data[i + 1];
-      const bw = g > dynamicThreshold ? 255 : 0; // Dynamic binarization
-      data[i]     = bw;
-      data[i + 1] = bw;
-      data[i + 2] = bw;
-    }
-
-    ctx.putImageData(imgData, 0, 0);
-
-    const res3 = await window.QrScanner.scanImage(canvas, {
+    const res3 = await window.QrScanner.scanImage(canvas3, {
       returnDetailedScanResult: true,
       alsoTryWithoutScanRegion: true
     });
-    const text3 = (typeof res3 === 'object' ? res3.data : res3) || '';
-    if (text3 && text3.trim()) {
-      console.log('[Scanner] Photo scan succeeded on Pass 3 (High-Contrast Binarization)');
-      return text3.trim();
+    const text3 = extractText(res3);
+    if (text3) {
+      console.log('[Scanner] Photo scan succeeded on Pass 3 (Green Channel Isolation)');
+      return text3;
     }
   } catch (err3) {
-    console.warn('[Scanner] Photo scan Pass 3 (Binarization) failed:', err3);
+    console.warn('[Scanner] Photo scan Pass 3 (Green Channel) failed:', err3);
   }
 
   // PASS 4: Multi-Angle Canvas Rotation Pass (90°, 180°, 270°)
@@ -890,6 +869,7 @@ export async function scanPhotoWithFallback(file) {
 
   return '';
 }
+
 
 // ============================================================================
 // 6. AUTO-TEARDOWN & POWER MANAGEMENT (60s IDLE TIMEOUT & WAKE LOCK)
