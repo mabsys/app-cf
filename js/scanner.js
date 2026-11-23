@@ -1,4 +1,6 @@
-// ./js/scanner.js (1311_R428) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (1311_R428) fix 3 - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// Developed by: Capt. Mohd Sallehuddin Zaidy
+// CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
 import { showToast } from './notifications.js';
 import { getProfileData, getScanHistory } from './storage.js';
@@ -11,6 +13,7 @@ let activeMediaStream = null;
 let torchActive = false;
 let idleTimer = null;
 let adaptiveWeightTimer = null;
+let adaptiveWeightTimerPhase2 = null;
 let wakeLock = null;
 let currentZoomLevel = 1.0;
 
@@ -222,21 +225,38 @@ export function startScanner(onDecodeCallback, onErrorCallback, customVideoElemI
         preferredCamera: currentCameraDeviceId || 'environment'
       }
     );
-    // ADAPTIVE GRAYSCALE WEIGHTS PIPELINE:
-    // 1. Start with standard balanced weights (Red 25%, Green 65%, Blue 10%) for instant <50ms detection of normal QR codes under warm/cockpit lighting
+
+    // ADAPTIVE GRAYSCALE WEIGHTS PIPELINE FOR DIM / WARM / OFFSET LIGHTING:
+    // Phase 1 (0.0s - 0.8s): Warm-Lighting Balanced Weights (Red 35%, Green 55%, Blue 10%)
+    // Maximizes light capture under dim/warm amber cockpit lighting for normal QR codes.
     if (qrScanner && typeof qrScanner.setGrayscaleWeights === 'function') {
-      qrScanner.setGrayscaleWeights(0.25, 0.65, 0.10, true);
+      qrScanner.setGrayscaleWeights(0.35, 0.55, 0.10, true);
     }
 
-    // 2. Adaptive Fallback (1.2s Timeout): If no QR is decoded after 1.2s, auto-switch to Ghost-Cancellation weights (Red 0%, Green 85%, Blue 15%)
     if (adaptiveWeightTimer) clearTimeout(adaptiveWeightTimer);
+    if (adaptiveWeightTimerPhase2) clearTimeout(adaptiveWeightTimerPhase2);
+
+    // Phase 2 (0.8s Timeout): Equalized Edge-Enhancement Weights (Red 15%, Green 75%, Blue 10%)
     adaptiveWeightTimer = setTimeout(() => {
       if (qrScanner && typeof qrScanner.setGrayscaleWeights === 'function' && currentSession === scannerSessionId) {
-        console.log('[Scanner] Adaptive fallback triggered: switching to Ghost-Cancellation weights (Red=0.0, Green=0.85, Blue=0.15)');
-        qrScanner.setGrayscaleWeights(0.0, 0.85, 0.15, true);
+        console.log('[Scanner] Phase 2: Switching to Equalized Edge-Enhancement weights (Red=0.15, Green=0.75, Blue=0.10)');
+        qrScanner.setGrayscaleWeights(0.15, 0.75, 0.10, true);
       }
-    }, 1200);
+    }, 800);
 
+    // Phase 3 (1.8s Timeout): Ghost-Cancellation Weights (Red 0%, Green 85%, Blue 15%) + Dim Light Flashlight Hint
+    adaptiveWeightTimerPhase2 = setTimeout(() => {
+      if (qrScanner && typeof qrScanner.setGrayscaleWeights === 'function' && currentSession === scannerSessionId) {
+        console.log('[Scanner] Phase 3: Switching to Ghost-Cancellation weights (Red=0.0, Green=0.85, Blue=0.15)');
+        qrScanner.setGrayscaleWeights(0.0, 0.85, 0.15, true);
+
+        // Subtle Torch Suggestion if held in low-light for > 2.2 seconds
+        const guidancePill = document.getElementById(customVideoElemId === 'profile-qr-video' ? 'profile-qr-guidance-pill' : 'qr-guidance-pill');
+        if (guidancePill && !torchActive) {
+          guidancePill.innerHTML = '<span class="text-amber-300 font-bold flex items-center gap-1">💡 Low Light? Tap ⚡ Flashlight</span>';
+        }
+      }
+    }, 1800);
 
     qrScanner.start().then(() => {
       if (currentSession !== scannerSessionId) {
@@ -680,7 +700,7 @@ export async function scanPhotoWithFallback(file) {
     console.warn('[Scanner] Photo scan Pass 2 (Green Channel) failed:', err2);
   }
 
-  // PASS 3: High-Contrast Binarization Pass (Faded/low-contrast prints)
+  // PASS 3: Adaptive Luminance & Dynamic Binarization Pass (Dimly-lit / Low-contrast photos)
   try {
     const img = await window.QrScanner._loadImage(file);
     const canvas = document.createElement('canvas');
@@ -695,9 +715,18 @@ export async function scanPhotoWithFallback(file) {
     const imgData = ctx.getImageData(0, 0, width, height);
     const data = imgData.data;
 
+    // Calculate mean scene luminance to adapt to dark/dim photos
+    let totalLum = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      totalLum += data[i + 1]; // Green channel sample
+    }
+    const avgLum = totalLum / (data.length / 4);
+    // Clamp dynamic threshold between 50 (very dark cockpit photo) and 160 (bright photo)
+    const dynamicThreshold = Math.min(160, Math.max(50, avgLum));
+
     for (let i = 0; i < data.length; i += 4) {
       const g = data[i + 1];
-      const bw = g > 120 ? 255 : 0; // High contrast threshold
+      const bw = g > dynamicThreshold ? 255 : 0; // Dynamic binarization
       data[i]     = bw;
       data[i + 1] = bw;
       data[i + 2] = bw;
@@ -720,7 +749,6 @@ export async function scanPhotoWithFallback(file) {
 
   return '';
 }
-
 
 // ============================================================================
 // 6. AUTO-TEARDOWN & POWER MANAGEMENT (60s IDLE TIMEOUT & WAKE LOCK)
@@ -748,7 +776,7 @@ function releaseWakeLock() {
   if (wakeLock) {
     wakeLock.release().catch(() => {});
     wakeLock = null;
-  }  
+  }
   } catch (e) {}
 }
 
@@ -760,5 +788,4 @@ if (typeof window !== 'undefined') {
   window.toggleTorch = toggleTorch;
   window.updateCameraControlUI = updateCameraControlUI;
   window.scanPhotoWithFallback = scanPhotoWithFallback;
-
 }
