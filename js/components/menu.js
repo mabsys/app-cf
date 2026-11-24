@@ -347,7 +347,7 @@ export const menuHTML = `
           <div class="h-24 w-24 bg-[url('/app-cf/assets/icons/icon-192.png')] bg-cover bg-center bg-no-repeat rounded-2xl"></div>
           <h4 class="relative text-sm font-bold text-slate-800 dark:text-slate-100 italic tracking-tight pt-2">CertiFly<span class="align-super text-[6px] font-bold absolute -top-0.5 -right-1.5 dark:text-white">™</span></h4>
           <p class="text-[10px] italic font-medium text-slate-500 dark:text-slate-400 mt-0.5 text-center">by pilot for pilot...</p>
-          <span class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-0.5 rounded-full mt-1.5">Version 2.0 (2611E)</span>
+          <span class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-0.5 rounded-full mt-1.5">Version 2.0 (2611)</span>
         </div>
 
         <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs flex flex-col gap-2">
