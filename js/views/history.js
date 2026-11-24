@@ -1,7 +1,8 @@
-// ./js/views/history.js (1811_R101) - CertiFly Scan History View & Controller Engine
+// ./js/views/history.js (2411_R102) - CertiFly Scan History View & Controller Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
+import { getLastScannedUrl } from './results.js';
 import { showToast, setTopBanner, showAlertModal, showConfirmDialog } from '../notifications.js';
 import { getScanHistory, saveToHistory, clearHistory, getHistoryLimit, setHistoryLimit, getThresholdDays, getFreshnessLimit } from '../storage.js';
 import { showView, updateHistoryLimitPills } from '../ui.js';
@@ -661,14 +662,16 @@ export function setupReverifyOnlineButton() {
       return;
     }
 
-    if (!lastScannedUrl) {
+    const currentScannedUrl = (typeof getLastScannedUrl === "function" ? getLastScannedUrl() : "") || (typeof window !== "undefined" && window.getLastScannedUrl ? window.getLastScannedUrl() : "");
+    if (!currentScannedUrl) {
       if (typeof showProfileToast === "function") {
         showProfileToast("No licence URL available for re-verification.");
       }
       return;
     }
 
-    await processLicenseUrl(lastScannedUrl);
+    const procFn = typeof processLicenseUrl === "function" ? processLicenseUrl : (typeof window !== "undefined" ? window.processLicenseUrl : null);
+    if (typeof procFn === "function") await procFn(currentScannedUrl);
 
     if (typeof showProfileToast === "function") {
       showProfileToast("Licence re-verified & updated!");
@@ -681,9 +684,10 @@ export function setupPinCardButton(caamResults) {
   const pinBtn = (resView ? resView.querySelector("#btn-toggle-pin") : null) || document.getElementById("btn-toggle-pin");
   if (!pinBtn || !caamResults) return;
 
+  const currentScannedUrl = (typeof getLastScannedUrl === "function" ? getLastScannedUrl() : "") || (typeof window !== "undefined" && window.getLastScannedUrl ? window.getLastScannedUrl() : "");
   const licNo = (caamResults.pilotDetails && caamResults.pilotDetails.licenseNo) || "";
   let scanHistory = getScanHistory() || [];
-  const matchIndex = scanHistory.findIndex(item => item && (String(item.id) === String(licNo) || item.url === lastScannedUrl));
+  const matchIndex = scanHistory.findIndex(item => item && (String(item.id) === String(licNo) || (currentScannedUrl && item.url === currentScannedUrl)));
   let isPinned = false;
 
   if (matchIndex !== -1) {
@@ -726,7 +730,7 @@ export function setupPinCardButton(caamResults) {
         name: (caamResults.pilotDetails && caamResults.pilotDetails.name) || "External Crew Member",
         licenseType: (caamResults.pilotDetails && caamResults.pilotDetails.licenseType) || "ATPL(A)",
         overallStatus: caamResults.overallStatus || "VALID",
-        url: lastScannedUrl || "",
+        url: currentScannedUrl || "",
         resultsData: caamResults,
         timestamp: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
         isPinned: isPinned,
