@@ -61,6 +61,7 @@ const ASSETS_TO_CACHE = [
   'js/vendor/qr-scanner.umd.min.js',
   'js/vendor/qr-scanner-worker.min.js',
   'js/vendor/qrcode.min.js',
+  'js/vendor/heic2any.min.js',
 
   // Static Assets, Icons & Guides
   'assets/icons/icon-192.png',
