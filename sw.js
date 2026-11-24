@@ -2,7 +2,7 @@
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
-const CACHE_NAME = 'cf-2.0.0';
+const CACHE_NAME = 'cf-2.0.1';
 
 // COMPLETE ASSET MANIFEST: Pre-caches app shell, engines, views, modals, and PDF guides for offline cockpit use
 const ASSETS_TO_CACHE = [
