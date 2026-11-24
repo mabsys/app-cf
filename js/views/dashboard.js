@@ -1369,9 +1369,9 @@ export async function setupDocumentViewers() {
         }
         if (blob) {
           if (typeof openPdfViewerModal === 'function') {
-            openPdfViewerModal(blob, 'MAB Company Attestation');
+            openPdfViewerModal(blob, 'e-Attestation');
           } else if (typeof window.openPdfViewerModal === 'function') {
-            window.openPdfViewerModal(blob, 'MAB Company Attestation');
+            window.openPdfViewerModal(blob, 'e-Attestation');
           } else {
             const blobUrl = (blob instanceof Blob) ? URL.createObjectURL(blob) : (typeof blob === 'string' ? blob : null);
             if (blobUrl) window.open(blobUrl, "_blank");
