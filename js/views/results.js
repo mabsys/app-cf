@@ -1,4 +1,4 @@
-// ./js/views/results.js (1811_R101) - CertiFly Single-Licence Inspection / Result View Engine
+// ./js/views/results.js (2411_R102) - CertiFly Single-Licence Inspection / Result View Engine
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -292,3 +292,9 @@ window.loadHistoricalRecord = function(id) {
   }
 };
 
+
+
+if (typeof window !== "undefined") {
+  window.setLastScannedUrl = setLastScannedUrl;
+  window.getLastScannedUrl = getLastScannedUrl;
+}
