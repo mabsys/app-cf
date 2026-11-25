@@ -345,7 +345,8 @@ export const menuHTML = `
         <!-- Brand Card with 14-Tap Trigger & Centered Tagline -->
         <div id="brand-card-about" class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs text-center flex flex-col items-center select-none" onclick="if(typeof handleBrandCardTap === 'function') handleBrandCardTap();">
           <div class="h-24 w-24 bg-[url('/app-cf/assets/icons/icon-192.png')] bg-cover bg-center bg-no-repeat rounded-2xl"></div>
-          <h4 class="relative text-sm font-bold text-slate-800 dark:text-slate-100 italic tracking-tight pt-2">CertiFly<span class="align-super text-[6px] font-bold absolute -top-0.5 -right-1.5 dark:text-white">™</span></h4>
+          <h4 class="relative text-sm font-bold text-slate-800 dark:text-slate-100 italic tracking-tight mt-2">CertiFly<span class="align-super absolute -top-0 -right-1.7"><svg xmlns="http://w3.org" viewBox="0 0 24 24" width="8" height="8" fill="currentColor">
+                    <path d="M1.946 9.315c-.522-.174-.527-.455.01-.634l19.087-6.362c.529-.176.832.12.684.638l-5.454 19.086c-.15.529-.455.547-.679.045L12 14l6-8-8 6-8.054-2.685z"></path></svg></span></h4>
           <p class="text-[10px] italic font-medium text-slate-500 dark:text-slate-400 mt-0.5 text-center">by pilot for pilot...</p>
           <span class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-0.5 rounded-full mt-1.5">Version 2.0 (2611)</span>
         </div>
