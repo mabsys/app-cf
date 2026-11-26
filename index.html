@@ -1163,6 +1163,17 @@
                                             </button>
                                             <input type="hidden" id="input-recurrent-conduct-date" value="">
                                         </div>
+                                        
+                                        <div>
+                                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Current Expiry Date (Optional)</label>
+                                            <button type="button" id="btn-recurrent-expiry-date-trigger" class="efb-date-trigger w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 text-left flex items-center justify-between cursor-pointer" onclick="openEfbDatePicker('input-recurrent-expiry-date', 'CURRENT EXPIRY DATE')">
+                                                <span id="input-recurrent-expiry-date-display" class="font-sans">Select Date</span>
+                                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                </svg>
+                                            </button>
+                                            <input type="hidden" id="input-recurrent-expiry-date" value="">
+                                        </div>
 
                                         <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">Tracks validity and lookback renewal windows across all recurrent training modules under OM-D Chapter 2 standards.</p>
                                     </div>
