@@ -243,7 +243,7 @@ export const menuHTML = `
       <div class="px-1 flex flex-col gap-2 pt-3 py-3">
         <button id="profile-save-btn" type="button" class="w-full p-3.5 bg-slate-600 hover:bg-slate-700 active:scale-[0.98] text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">Save Credentials</button>
 
-        <button id="profile-clear-btn" type="button" class="w-full p-3 bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
+        <button id="profile-clear-btn" type="button" class="w-full p-3.5 bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
           Clear Credentials
         </button>
       </div>
