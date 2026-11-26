@@ -1360,7 +1360,7 @@ export async function setupDocumentViewers() {
     const selAttFile = (typeof getSelectedAttestationFile === "function") ? getSelectedAttestationFile() : null;
     if (attBlob || selAttFile) {
       attestationBtn.disabled = false;
-      attestationBtn.className = "w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]";
+      attestationBtn.className = "w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]";
       attestationBtn.onclick = async () => {
         let blob = attBlob;
         if (!blob && selAttFile) blob = selAttFile;
@@ -1382,7 +1382,7 @@ export async function setupDocumentViewers() {
       };
     } else {
       attestationBtn.disabled = true;
-      attestationBtn.className = "w-full h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-extrabold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-not-allowed border border-slate-200 dark:border-slate-700/60";
+      attestationBtn.className = "w-full py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-extrabold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-not-allowed border border-slate-200 dark:border-slate-700/60";
       attestationBtn.onclick = null;
     }
   }
@@ -1392,7 +1392,7 @@ export async function setupDocumentViewers() {
     const selQsFile = (typeof getSelectedQsFile === "function") ? getSelectedQsFile() : null;
     if (qsBlob || selQsFile) {
       qsBtn.disabled = false;
-      qsBtn.className = "w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]";
+      qsBtn.className = "w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]";
       qsBtn.onclick = async () => {
         let blob = qsBlob;
         if (!blob && selQsFile) blob = selQsFile;
@@ -1414,7 +1414,7 @@ export async function setupDocumentViewers() {
       };
     } else {
       qsBtn.disabled = true;
-      qsBtn.className = "w-full h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-extrabold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-not-allowed border border-slate-200 dark:border-slate-700/60";
+      qsBtn.className = "w-full py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-extrabold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-not-allowed border border-slate-200 dark:border-slate-700/60";
       qsBtn.onclick = null;
     }
   }
