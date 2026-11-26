@@ -1,4 +1,4 @@
-// ./js/tools.js (1811_R439) - CertiFly Tools Module, Calculation Engines & Modular EFB Modal Integration
+// ./js/tools.js (2511_R440) - CertiFly Tools Module, Calculation Engines & Modular EFB Modal Integration
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -1010,7 +1010,10 @@ export function normalizeOutput(toolType, rawResult) {
     }
 
     case 'recurrent': {
-      statusTheme = 'emerald';
+      let statusTheme = 'emerald';
+      let statusBadge = 'VALID / CLEARED';
+      let statusClass = 'bg-emerald-600';
+
       const expiry = rawResult ? formatDateDDMMMYYYY(rawResult.newExpiryDate) : '31 DEC 2026';
       const courseName = rawResult ? (rawResult.name || toolsState.recurrentCourseName) : 'Line Check (LC)';
       const completionDateStr = rawResult && rawResult.completionDate ? formatDateDDMMMYYYY(rawResult.completionDate) : '15 DEC 2025';
@@ -1038,10 +1041,61 @@ export function normalizeOutput(toolType, rawResult) {
         ruleDisplay = 'Reset to EOM';
       }
 
-      const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? rawResult.notes : [];
+      const calcNotes = (rawResult && rawResult.notes && Array.isArray(rawResult.notes)) ? [...rawResult.notes] : [];
+
+      const rawCurrExp = rawResult ? rawResult.currentExpiryDate : null;
+      const rawComp = rawResult ? rawResult.completionDate : null;
+      const isPreserved = rawResult ? !!rawResult.anniversaryPreserved : false;
+
+      if (rawCurrExp && rawComp) {
+        const compD = new Date(rawComp);
+        const currD = new Date(rawCurrExp);
+        const diffDays = Math.ceil((compD - currD) / (1000 * 60 * 60 * 24));
+
+        if (diffDays > 365) {
+          statusTheme = 'rose';
+          statusBadge = 'INITIAL RE-ENTRY REQUIRED';
+          statusClass = 'bg-rose-600';
+          calcNotes.unshift(`Critical: Previous expiry passed > 12 months ago (${formatDateDDMMMYYYY(rawCurrExp)}). Standard recurrent renewal void; full initial qualification course required.`);
+          ruleDisplay = 'Initial Course Required';
+        } else if (diffDays > 0) {
+          statusTheme = 'rose';
+          statusBadge = 'QUALIFICATION LAPSED';
+          statusClass = 'bg-rose-600';
+          calcNotes.unshift(`Alert: Course completed ${diffDays} day(s) after previous expiry (${formatDateDDMMMYYYY(rawCurrExp)}). OM-D short refresher audit required.`);
+          ruleDisplay = `Lapsed (${diffDays}d Overdue)`;
+        } else if (!isPreserved) {
+          statusTheme = 'amber';
+          statusBadge = 'ANNIVERSARY RESET';
+          statusClass = 'bg-amber-600';
+          calcNotes.push('Early completion (> 3M prior to expiry). Anniversary reset from conduct date EOM.');
+          ruleDisplay = 'Reset (Early Conduct)';
+        } else {
+          calcNotes.push(`Anniversary preserved (+12M/24M/36M added to previous expiry date ${formatDateDDMMMYYYY(rawCurrExp)}).`);
+        }
+      } else if (rawCurrExp && !rawComp) {
+        const today = new Date();
+        const currD = new Date(rawCurrExp);
+        const daysRemaining = Math.ceil((currD - today) / (1000 * 60 * 60 * 24));
+
+        if (daysRemaining < 0) {
+          statusTheme = 'rose';
+          statusBadge = 'QUALIFICATION EXPIRED';
+          statusClass = 'bg-rose-600';
+          calcNotes.unshift(`Qualification expired on ${formatDateDDMMMYYYY(rawCurrExp)}. Recurrent retraining required before line flight.`);
+        } else if (daysRemaining <= 30) {
+          statusTheme = 'amber';
+          statusBadge = 'EXPIRING SOON (< 30 DAYS)';
+          statusClass = 'bg-amber-600';
+          calcNotes.push(`Warning: Qualification expires in ${daysRemaining} day(s) (${formatDateDDMMMYYYY(rawCurrExp)}). Roster recurrent training module before end of month.`);
+        }
+      }
+
       return {
         calculationNotes: calcNotes,
         statusTheme,
+        statusBadge,
+        statusClass,
         headlineTitle: 'RECURRENT EXPIRY DATE',
         headlineValue: expiry,
         targetClockLabel: 'Qualification Module:',
@@ -1585,11 +1639,11 @@ export function resetToolInputs(toolId) {
     if (expIn) expIn.value = '';
 
     const dobDisplay = document.getElementById('input-med-dob-display');
-    if (dobDisplay) dobDisplay.innerText = 'SELECT DOB';
+    if (dobDisplay) dobDisplay.innerText = 'Select DOB';
     const examDisplay = document.getElementById('input-med-exam-date-display');
-    if (examDisplay) examDisplay.innerText = 'SELECT DATE';
+    if (examDisplay) examDisplay.innerText = 'Select Date';
     const expiryDisplay = document.getElementById('input-med-current-expiry-display');
-    if (expiryDisplay) expiryDisplay.innerText = 'SELECT EXPIRY';
+    if (expiryDisplay) expiryDisplay.innerText = 'Select Expiry';
   } else if (key === 'ppc') {
     const cIn = document.getElementById('input-ppc-conduct-date');
     const eIn = document.getElementById('input-ppc-expiry-date');
@@ -1597,15 +1651,19 @@ export function resetToolInputs(toolId) {
     if (eIn) eIn.value = '';
 
     const cDisplay = document.getElementById('input-ppc-conduct-date-display');
-    if (cDisplay) cDisplay.innerText = 'SELECT DATE';
+    if (cDisplay) cDisplay.innerText = 'Select Date';
     const eDisplay = document.getElementById('input-ppc-expiry-date-display');
-    if (eDisplay) eDisplay.innerText = 'SELECT DATE';
+    if (eDisplay) eDisplay.innerText = 'Select Date';
   } else if (key === 'recurrent') {
     const cIn = document.getElementById('input-recurrent-conduct-date');
     if (cIn) cIn.value = '';
+    const eIn = document.getElementById('input-recurrent-expiry-date');
+    if (eIn) eIn.value = '';
 
     const cDisplay = document.getElementById('input-recurrent-conduct-date-display');
-    if (cDisplay) cDisplay.innerText = 'SELECT DATE';
+    if (cDisplay) cDisplay.innerText = 'Select Date';
+    const eDisplay = document.getElementById('input-recurrent-expiry-date-display');
+    if (eDisplay) eDisplay.innerText = 'Select Date';
     const lbl = document.getElementById('recurrent-selected-course-label');
     if (lbl) lbl.innerText = 'Line Check (LC)';
     toolsState.recurrentCourseKey = 'LINE_CHECK';
@@ -1634,7 +1692,7 @@ export function resetToolInputs(toolId) {
     if (capDisplay) capDisplay.innerText = 'PIC (Captain)';
 
     const flightDateDisplay = document.getElementById('input-recency-flight-date-display');
-    if (flightDateDisplay) flightDateDisplay.innerText = 'SELECT DATE';
+    if (flightDateDisplay) flightDateDisplay.innerText = 'Select Date';
 
     const l1Display = document.getElementById('input-recency-l1-date-display');
     if (l1Display) l1Display.innerText = 'Landing 1';
@@ -1646,7 +1704,7 @@ export function resetToolInputs(toolId) {
     if (l3Display) l3Display.innerText = 'Landing 3';
 
     const varDateDisplay = document.getElementById('input-recency-variant-date-display');
-    if (varDateDisplay) varDateDisplay.innerText = 'SELECT DATE';
+    if (varDateDisplay) varDateDisplay.innerText = 'Select Date';
 
     setRecencyMultiVariant(false);
   } else if (key === 'standby') {
