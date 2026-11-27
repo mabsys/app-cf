@@ -344,11 +344,11 @@ export const menuHTML = `
       <div class="flex flex-col gap-3.5 pb-3">
         <!-- Brand Card with 14-Tap Trigger & Centered Tagline -->
         <div id="brand-card-about" class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60 shadow-xs text-center flex flex-col items-center select-none" onclick="if(typeof handleBrandCardTap === 'function') handleBrandCardTap();">
-          <div class="flex flex-col-1 gap-3.5 justify-between w-full">      
+          <div class="flex flex-col-1 gap-4 justify-between w-full">      
             <div class="flex flex-col justify-between">
               <div class="flex-none h-24 w-24 bg-[url('/app-cf/assets/icons/icon-192.png')] bg-cover bg-center bg-no-repeat rounded-2xl"></div>
           
-          <p class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 mt-1">V2.0 (2611)</p>
+          <p class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 mt-2">V2.0 (2611)</p>
               
               </div>
             <div class="text-start">      
@@ -356,7 +356,8 @@ export const menuHTML = `
               <path d="M1.946 9.315c-.522-.174-.527-.455.01-.634l19.087-6.362c.529-.176.832.12.684.638l-5.454 19.086c-.15.529-.455.547-.679.045L12 14l6-8-8 6-8.054-2.685z"></path></svg></span>
               <span class="relative text-[10px] align-middle italic font-medium text-slate-500 dark:text-slate-400 text-start"></span>
               <span class="text-[10px] text-slate-600 dark:text-slate-400 pl-4">by pilots, for pilots..</span></h4>
-              <p class="text-[10px] text-slate-800 dark:text-slate-200">CertiFly is a supplementary tool intended to support operational efficiency and safety. It does not replace official records; crew members remain responsible for verifying all licence, qualification, and recency data through established cross-checking procedures.</p>
+              <p class="text-[10px] font-black text-slate-800 dark:text-slate-400 uppercase pt-1">DISCLAIMER</p>
+              <p class="text-[10px] text-slate-800 dark:text-slate-200">CertiFly is a supplementary tool designed to enhance safety and efficiency. Flight crew remain responsible for verifying all licence, qualification, and recency information against official records using established cross-checking procedures.</p>
             </div>    
           </div>
         </div>
