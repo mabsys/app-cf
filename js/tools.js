@@ -1,4 +1,4 @@
-// ./js/tools.js (2511_R440) - CertiFly Tools Module, Calculation Engines & Modular EFB Modal Integration
+// ./js/tools.js (2611_R441) - CertiFly Tools Module, Calculation Engines & Modular EFB Modal Integration
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -960,6 +960,7 @@ export function normalizeOutput(toolType, rawResult) {
 
     case 'ppc': {
       const isPreserved = rawResult ? !!rawResult.anniversaryPreserved : true;
+      const hasPriorExpiry = rawResult && (rawResult.previousLPCExpiry || rawResult.currentExpiryDate);
       const lapsedWarning = rawResult ? rawResult.lapsedLPCWarning : null;
       const expiryStr = rawResult && rawResult.newLPCExpiryDate ? formatDateDDMMMYYYY(rawResult.newLPCExpiryDate) : '31 JUL 2027';
 
@@ -981,6 +982,10 @@ export function normalizeOutput(toolType, rawResult) {
         statusTheme = 'rose';
         statusBadge = 'LAPSED (> 3 MONTHS)';
         statusClass = 'bg-rose-600';
+      } else if (!hasPriorExpiry) {
+        statusTheme = 'emerald';
+        statusBadge = 'INITIAL ISSUE / CLEARED';
+        statusClass = 'bg-emerald-600';
       } else if (!isPreserved) {
         statusTheme = 'amber';
         statusBadge = 'EXPIRY RESET';
@@ -1001,7 +1006,7 @@ export function normalizeOutput(toolType, rawResult) {
         targetClockLabel: 'NEXT OPC WINDOW (4–8 MONTHS)',
         targetClockValue: opcWindowStr,
         breakdownGrid: [
-          { label: 'REVALIDATION RULE', value: isPreserved ? 'Preserved (3M Window)' : 'Reset to EOM' },
+          { label: 'REVALIDATION RULE', value: !hasPriorExpiry ? 'Initial Issue (12M EOM)' : (isPreserved ? 'Preserved (3M Window)' : 'Reset to EOM') },
           { label: 'NEXT OPC TARGET', value: targetOpcStr },
           { label: 'OPERATING STATUS', value: lapsedWarning ? 'ATO Refresher Req.' : 'Qualified & Cleared' }
         ],
@@ -1639,11 +1644,11 @@ export function resetToolInputs(toolId) {
     if (expIn) expIn.value = '';
 
     const dobDisplay = document.getElementById('input-med-dob-display');
-    if (dobDisplay) dobDisplay.innerText = 'Select DOB';
+    if (dobDisplay) dobDisplay.innerText = 'SELECT DOB';
     const examDisplay = document.getElementById('input-med-exam-date-display');
-    if (examDisplay) examDisplay.innerText = 'Select Date';
+    if (examDisplay) examDisplay.innerText = 'SELECT DATE';
     const expiryDisplay = document.getElementById('input-med-current-expiry-display');
-    if (expiryDisplay) expiryDisplay.innerText = 'Select Expiry';
+    if (expiryDisplay) expiryDisplay.innerText = 'SELECT EXPIRY';
   } else if (key === 'ppc') {
     const cIn = document.getElementById('input-ppc-conduct-date');
     const eIn = document.getElementById('input-ppc-expiry-date');
@@ -1651,9 +1656,9 @@ export function resetToolInputs(toolId) {
     if (eIn) eIn.value = '';
 
     const cDisplay = document.getElementById('input-ppc-conduct-date-display');
-    if (cDisplay) cDisplay.innerText = 'Select Date';
+    if (cDisplay) cDisplay.innerText = 'SELECT DATE';
     const eDisplay = document.getElementById('input-ppc-expiry-date-display');
-    if (eDisplay) eDisplay.innerText = 'Select Date';
+    if (eDisplay) eDisplay.innerText = 'SELECT DATE';
   } else if (key === 'recurrent') {
     const cIn = document.getElementById('input-recurrent-conduct-date');
     if (cIn) cIn.value = '';
@@ -1661,9 +1666,9 @@ export function resetToolInputs(toolId) {
     if (eIn) eIn.value = '';
 
     const cDisplay = document.getElementById('input-recurrent-conduct-date-display');
-    if (cDisplay) cDisplay.innerText = 'Select Date';
+    if (cDisplay) cDisplay.innerText = 'SELECT DATE';
     const eDisplay = document.getElementById('input-recurrent-expiry-date-display');
-    if (eDisplay) eDisplay.innerText = 'Select Date';
+    if (eDisplay) eDisplay.innerText = 'SELECT DATE';
     const lbl = document.getElementById('recurrent-selected-course-label');
     if (lbl) lbl.innerText = 'Line Check (LC)';
     toolsState.recurrentCourseKey = 'LINE_CHECK';
@@ -1692,7 +1697,7 @@ export function resetToolInputs(toolId) {
     if (capDisplay) capDisplay.innerText = 'PIC (Captain)';
 
     const flightDateDisplay = document.getElementById('input-recency-flight-date-display');
-    if (flightDateDisplay) flightDateDisplay.innerText = 'Select Date';
+    if (flightDateDisplay) flightDateDisplay.innerText = 'SELECT DATE';
 
     const l1Display = document.getElementById('input-recency-l1-date-display');
     if (l1Display) l1Display.innerText = 'Landing 1';
@@ -1704,7 +1709,7 @@ export function resetToolInputs(toolId) {
     if (l3Display) l3Display.innerText = 'Landing 3';
 
     const varDateDisplay = document.getElementById('input-recency-variant-date-display');
-    if (varDateDisplay) varDateDisplay.innerText = 'Select Date';
+    if (varDateDisplay) varDateDisplay.innerText = 'SELECT DATE';
 
     setRecencyMultiVariant(false);
   } else if (key === 'standby') {
