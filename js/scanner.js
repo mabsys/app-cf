@@ -1,10 +1,22 @@
-// ./js/scanner.js (2811_R440) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (2811_R442) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
 import { showToast } from './notifications.js';
 import { getProfileData, getScanHistory } from './storage.js';
 import { animateTabBounce, animateTabContentEntrance } from './animations.js';
+
+// Global Canvas 2D Readback Optimization Patch
+if (typeof HTMLCanvasElement !== 'undefined' && !HTMLCanvasElement.prototype._willReadFrequentlyPatched) {
+  const origGetContext = HTMLCanvasElement.prototype.getContext;
+  HTMLCanvasElement.prototype.getContext = function(type, attributes) {
+    if (type === '2d') {
+      attributes = Object.assign({ willReadFrequently: true }, attributes || {});
+    }
+    return origGetContext.call(this, type, attributes);
+  };
+  HTMLCanvasElement.prototype._willReadFrequentlyPatched = true;
+}
 
 let qrScanner = null;
 let currentCameraDeviceId = null;
@@ -784,7 +796,7 @@ export async function scanPhotoWithFallback(inputFile) {
     const canvas = document.createElement('canvas');
     canvas.width = paddedW;
     canvas.height = paddedH;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, paddedW, paddedH);
     ctx.drawImage(img, pad, pad, targetW, targetH);
@@ -836,7 +848,7 @@ export async function scanPhotoWithFallback(inputFile) {
       });
       const chText = extractText(chRes);
       if (chText) {
-        console.log('[Scanner] Photo scan succeeded on Pass 7 (Rotation ' + angle + ' deg)');
+        console.log();
         return chText;
       }
     } catch (chErr) {}
@@ -939,7 +951,7 @@ export async function scanPhotoWithFallback(inputFile) {
 
     cropCanvas.width = cropW + pad * 2;
     cropCanvas.height = cropH + pad * 2;
-    const cropCtx = cropCanvas.getContext('2d');
+    const cropCtx = cropCanvas.getContext('2d', { willReadFrequently: true });
 
     cropCtx.fillStyle = '#FFFFFF';
     cropCtx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
@@ -969,7 +981,7 @@ export async function scanPhotoWithFallback(inputFile) {
 
       rotCanvas.width = rotPaddedW;
       rotCanvas.height = rotPaddedH;
-      const rotCtx = rotCanvas.getContext('2d');
+      const rotCtx = rotCanvas.getContext('2d', { willReadFrequently: true });
 
       rotCtx.fillStyle = '#FFFFFF';
       rotCtx.fillRect(0, 0, rotPaddedW, rotPaddedH);
@@ -984,7 +996,7 @@ export async function scanPhotoWithFallback(inputFile) {
       });
       const textRot = extractText(resRot);
       if (textRot) {
-        console.log('[Scanner] Photo scan succeeded on Pass 7 (Rotation ' + angle + ' deg)');
+        console.log();
         return textRot;
       }
     } catch (errRot) {}
