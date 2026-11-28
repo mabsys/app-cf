@@ -1,4 +1,4 @@
-// ./js/scanner.js (2811_R446) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (2811_R443) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -741,50 +741,17 @@ export async function ensureDecodableImageFile(file) {
 export async function ensureMobileSafeImageFile(inputFile, maxDimension = 1280) {
   if (!inputFile) return inputFile;
 
-  console.log(`[PhotoScan] Input file received: ${inputFile.name || 'unnamed'} (${inputFile.size || 0} bytes, type: ${inputFile.type || 'unknown'})`);
-
-  let file = inputFile;
-  try {
-    file = await ensureDecodableImageFile(inputFile);
-  } catch (heicErr) {
-    console.warn('[PhotoScan] ensureDecodableImageFile warning:', heicErr);
-  }
-  if (!file) return inputFile;
+  const file = await ensureDecodableImageFile(inputFile);
+  if (!file) return file;
 
   return new Promise((resolve) => {
-    let resolved = false;
-
-    const timeoutTimer = setTimeout(() => {
-      if (!resolved) {
-        resolved = true;
-        console.warn('[PhotoScan] ensureMobileSafeImageFile timed out after 3.5s, proceeding with file as-is.');
-        resolve(file);
-      }
-    }, 3500);
-
-    const safeResolve = (resultFile) => {
-      if (!resolved) {
-        resolved = true;
-        clearTimeout(timeoutTimer);
-        resolve(resultFile);
-      }
-    };
-
-    let url = null;
-    try {
-      url = URL.createObjectURL(file);
-    } catch (urlErr) {
-      console.warn('[PhotoScan] URL.createObjectURL failed:', urlErr);
-      safeResolve(file);
-      return;
-    }
-
+    const url = URL.createObjectURL(file);
     const img = new Image();
 
     const cleanup = () => {
-      if (url) {
-        try { URL.revokeObjectURL(url); } catch (e) {}
-      }
+      try {
+        URL.revokeObjectURL(url);
+      } catch (e) {}
       img.onload = null;
       img.onerror = null;
     };
@@ -794,11 +761,9 @@ export async function ensureMobileSafeImageFile(inputFile, maxDimension = 1280) 
       const origH = img.naturalHeight || img.height || 0;
       const maxDim = Math.max(origW, origH);
 
-      console.log(`[PhotoScan] Image loaded in memory: ${origW}x${origH} (maxDim=${maxDim})`);
-
       if (maxDim <= 0 || maxDim <= maxDimension) {
         cleanup();
-        safeResolve(file);
+        resolve(file);
         return;
       }
 
@@ -819,125 +784,61 @@ export async function ensureMobileSafeImageFile(inputFile, maxDimension = 1280) 
           cleanup();
           if (blob) {
             const fileName = (file.name || 'photo').replace(/\.[^/.]+$/, '') + '_safedownscale.jpg';
-            const downscaledFile = new File([blob], fileName, { type: 'image/jpeg' });
-            console.log(`[PhotoScan] Successfully downscaled image to ${targetW}x${targetH} (${blob.size} bytes)`);
-            safeResolve(downscaledFile);
+            resolve(new File([blob], fileName, { type: 'image/jpeg' }));
           } else {
-            safeResolve(file);
+            resolve(file);
           }
         }, 'image/jpeg', 0.92);
       } catch (err) {
-        console.warn('[PhotoScan] Mobile downscaling canvas failed, using file:', err);
+        console.warn('[Scanner] Mobile downscaling canvas failed, using original file:', err);
         cleanup();
-        safeResolve(file);
+        resolve(file);
       }
     };
 
     img.onerror = (err) => {
-      console.warn('[PhotoScan] Image load failed during downscaling, using file:', err);
+      console.warn('[Scanner] Mobile downscaling load failed, using original file:', err);
       cleanup();
-      safeResolve(file);
+      resolve(file);
     };
 
     img.src = url;
   });
 }
 
-// ============================================================================
-// DUAL-ENGINE CANVAS DECODER & 7-PASS PHOTO SCAN PIPELINE
-// ============================================================================
+export async function scanPhotoWithFallback(inputFile) {
+  if (!inputFile || !window.QrScanner) return '';
 
-/**
- * Safely loads any photo/image file into memory as a 2D HTML5 Canvas.
- * Handles HEIC conversion, mobile safe downscaling (max 1280px), and +15% quiet zone padding.
- */
-export async function loadPhotoToCanvas(inputFile, maxDimension = 1280) {
-  if (!inputFile) return null;
+  const file = await ensureMobileSafeImageFile(inputFile, 1280);
+  if (!file || !window.QrScanner) return '';
 
-  console.log(`[PhotoScan] Input file received: ${inputFile.name || 'unnamed'} (${inputFile.size || 0} bytes, type: ${inputFile.type || 'unknown'})`);
+  const extractText = (res) => {
+    const t = (typeof res === 'object' ? (res.data || res.text) : res) || '';
+    return t ? t.trim() : '';
+  };
 
-  let file = inputFile;
+  const scanRunner = window.QrScanner._originalScanImage || window.QrScanner.scanImage;
+
+  // PASS 1: Standard raw file scan
   try {
-    if (typeof ensureDecodableImageFile === 'function') {
-      file = await ensureDecodableImageFile(inputFile);
+    const res1 = await scanRunner.call(window.QrScanner, file, {
+      returnDetailedScanResult: true,
+      alsoTryWithoutScanRegion: true
+    });
+    const text1 = extractText(res1);
+    if (text1) {
+      console.log('[Scanner] Photo scan succeeded on Pass 1 (Standard)');
+      return text1;
     }
-  } catch (heicErr) {
-    console.warn('[PhotoScan] ensureDecodableImageFile warning:', heicErr);
+  } catch (err1) {}
+
+  let img = null;
+  try {
+    img = await window.QrScanner._loadImage(file);
+  } catch (imgErr) {
+    console.warn('[Scanner] Unable to load image file:', imgErr);
+    return '';
   }
-  if (!file) return null;
-
-  // Load image into an HTMLImageElement using ObjectURL or FileReader DataURL fallback
-  const img = await new Promise((resolve, reject) => {
-    let resolved = false;
-
-    const timeoutId = setTimeout(() => {
-      if (!resolved) {
-        resolved = true;
-        reject(new Error('Image load timed out after 5.0s'));
-      }
-    }, 5000);
-
-    const tempImg = new Image();
-    let objectUrl = null;
-
-    const cleanup = () => {
-      clearTimeout(timeoutId);
-      if (objectUrl) {
-        try { URL.revokeObjectURL(objectUrl); } catch (e) {}
-      }
-      tempImg.onload = null;
-      tempImg.onerror = null;
-    };
-
-    tempImg.onload = () => {
-      if (!resolved) {
-        resolved = true;
-        clearTimeout(timeoutId);
-        resolve(tempImg);
-      }
-    };
-
-    tempImg.onerror = (err) => {
-      cleanup();
-      // Fallback to FileReader DataURL if ObjectURL fails
-      if (!resolved && typeof FileReader !== 'undefined') {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const fallbackImg = new Image();
-          fallbackImg.onload = () => {
-            if (!resolved) {
-              resolved = true;
-              resolve(fallbackImg);
-            }
-          };
-          fallbackImg.onerror = (readErr) => {
-            if (!resolved) {
-              resolved = true;
-              reject(readErr);
-            }
-          };
-          fallbackImg.src = e.target.result;
-        };
-        reader.onerror = (frErr) => {
-          if (!resolved) {
-            resolved = true;
-            reject(frErr);
-          }
-        };
-        reader.readAsDataURL(file);
-      } else if (!resolved) {
-        resolved = true;
-        reject(err);
-      }
-    };
-
-    try {
-      objectUrl = URL.createObjectURL(file);
-      tempImg.src = objectUrl;
-    } catch (urlErr) {
-      tempImg.onerror(urlErr);
-    }
-  });
 
   const origW = img.naturalWidth || img.width || 640;
   const origH = img.naturalHeight || img.height || 640;
@@ -945,8 +846,8 @@ export async function loadPhotoToCanvas(inputFile, maxDimension = 1280) {
 
   let targetW = origW;
   let targetH = origH;
-  if (maxDim > maxDimension) {
-    const scale = maxDimension / maxDim;
+  if (maxDim > 1280) {
+    const scale = 1280 / maxDim;
     targetW = Math.round(origW * scale);
     targetH = Math.round(origH * scale);
   } else if (maxDim < 300 && maxDim > 0) {
@@ -959,204 +860,35 @@ export async function loadPhotoToCanvas(inputFile, maxDimension = 1280) {
   const paddedW = targetW + pad * 2;
   const paddedH = targetH + pad * 2;
 
-  const canvas = document.createElement('canvas');
-  canvas.width = paddedW;
-  canvas.height = paddedH;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(0, 0, paddedW, paddedH);
-  ctx.drawImage(img, pad, pad, targetW, targetH);
-
-  console.log(`[PhotoScan] Base Canvas prepared: ${paddedW}x${paddedH} (Image scaled to ${targetW}x${targetH}, pad=${pad})`);
-
-  return {
-    canvas,
-    ctx,
-    img,
-    origW,
-    origH,
-    targetW,
-    targetH,
-    paddedW,
-    paddedH,
-    pad
-  };
-}
-
-/**
- * Executes QR decoding on an HTMLCanvasElement using Native BarcodeDetector (Primary)
- * and QrScanner Web Worker (Fallback).
- */
-
-// Clean & Sanitize Scanned QR URLs
-export function sanitizeScannedUrl(rawText) {
-  if (!rawText || typeof rawText !== 'string') return '';
-  
-  let cleaned = rawText.trim();
-  
-  // 1. Remove zero-width spaces, BOMs, null bytes, and non-printable control characters
-  cleaned = cleaned.replace(/[\uFEFF\u200B\u200C\u200D\u0000-\u001F\u7F-\u009F]/g, '');
-
-  // 2. Fix HTML Entity Escapes in Query Parameters (&amp; -> &)
-  cleaned = cleaned.replace(/&amp;/gi, '&');
-
-  // 3. Strip quotes or enclosing whitespace
-  cleaned = cleaned.trim().replace(/^["']|["']$/g, '');
-
-  return cleaned;
-}
-
-// Validate CAAM eCLIPSE QR Code URL Structure
-export function isValidCaamUrl(urlStr) {
-  if (!urlStr || typeof urlStr !== 'string') return false;
-  let trimmed = sanitizeScannedUrl(urlStr);
-  if (!trimmed) return false;
-
-  if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
-    trimmed = "https://" + trimmed;
-  }
-
-  try {
-    const parsed = new URL(trimmed);
-    const host = parsed.hostname.toLowerCase();
-    const path = parsed.pathname.toLowerCase();
-
-    const isValidProtocol = parsed.protocol === "http:" || parsed.protocol === "https:";
-    const isCaamDomain = host.includes("caam.gov.my") || host.includes("eclipse.caam") || host === "eclipse.caam.gov.my";
-    const isValidEndpoint = path.endsWith("/elicensing/userprofileqr.do") || path.endsWith("/digitallicence/info.do");
-
-    if (!isValidProtocol || !isCaamDomain || !isValidEndpoint) return false;
-
-    const personId = parsed.searchParams.get("pid") || parsed.searchParams.get("personid") || parsed.searchParams.get("personId");
-    const key = parsed.searchParams.get("key");
-    const codekey = parsed.searchParams.get("codekey");
-
-    const isPersonIdValid = Boolean(personId && /^\d{10,}$/.test(personId.trim()));
-    const isKeyValid = Boolean(key && /^[a-fA-F0-9]{32}$/.test(key.trim()));
-    const isCodekeyValid = Boolean(codekey && /^\d{2}$/.test(codekey.trim()));
-
-    return isPersonIdValid && isKeyValid && isCodekeyValid;
-  } catch (e) {
-    return false;
-  }
-}
-
-
-async function scanSourceWithDualEngine(sourceCanvas, passName) {
-  if (!sourceCanvas) return '';
-
-  console.log(`[PhotoScan] Running ${passName}...`);
-
-  const validateAndSanitize = (raw) => {
-    const cleaned = sanitizeScannedUrl(raw);
-    if (!cleaned) return null;
-
-    if (isValidCaamUrl(cleaned)) {
-      return cleaned;
-    }
-
-    try {
-      if (cleaned.startsWith('http://') || cleaned.startsWith('https://')) {
-        return cleaned;
-      }
-    } catch (e) {}
-
-    return null;
+  const createBasePaddedCanvas = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = paddedW;
+    canvas.height = paddedH;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, paddedW, paddedH);
+    ctx.drawImage(img, pad, pad, targetW, targetH);
+    return { canvas, ctx };
   };
 
-  // Method 1: Native BarcodeDetector API (Hardware accelerated on iOS 17+ Safari, Android Chrome, Edge)
-  if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
-    try {
-      const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
-      const barcodes = await detector.detect(sourceCanvas);
-      if (barcodes && barcodes.length > 0) {
-        for (const b of barcodes) {
-          const raw = b.rawValue || b.data || '';
-          const valid = validateAndSanitize(raw);
-          if (valid) {
-            console.log(`[PhotoScan] SUCCESS via Native BarcodeDetector on ${passName}:`, valid);
-            return valid;
-          } else if (raw) {
-            console.warn(`[PhotoScan] BarcodeDetector found invalid/corrupted QR text on ${passName}:`, raw);
-          }
-        }
-      }
-    } catch (nativeErr) {
-      console.warn(`[PhotoScan] Native BarcodeDetector attempt on ${passName}:`, nativeErr.message || nativeErr);
-    }
-  }
-
-  // Method 2: QrScanner Web Worker Engine
-  if (typeof window !== 'undefined' && window.QrScanner) {
-    try {
-      const scanRunner = window.QrScanner._originalScanImage || window.QrScanner.scanImage;
-      const res = await scanRunner.call(window.QrScanner, sourceCanvas, {
-        returnDetailedScanResult: true,
-        alsoTryWithoutScanRegion: true
-      });
-      const rawText = (typeof res === 'object' ? (res.data || res.text) : res) || '';
-      const valid = validateAndSanitize(rawText);
-      if (valid) {
-        console.log(`[PhotoScan] SUCCESS via QrScanner Worker on ${passName}:`, valid);
-        return valid;
-      } else if (rawText) {
-        console.warn(`[PhotoScan] QrScanner Worker found invalid/corrupted QR text on ${passName}:`, rawText);
-      }
-    } catch (workerErr) {
-      console.warn(`[PhotoScan] QrScanner Worker attempt on ${passName}:`, workerErr.message || workerErr);
-    }
-  }
-
-  return '';
-}
-
-export async function scanPhotoWithFallback(inputFile) {
-  if (!inputFile) {
-    console.warn('[PhotoScan] Aborted: No input file provided.');
-    return '';
-  }
-
-  console.log('[PhotoScan] --- STARTING MULTI-PASS PHOTO SCAN ---');
-
-  let baseInfo = null;
+  // PASS 2: Quiet Zone Padding & Multi-Scale Scaling Pass
   try {
-    baseInfo = await loadPhotoToCanvas(inputFile, 1280);
-  } catch (loadErr) {
-    console.warn('[PhotoScan] Failed to load input photo to canvas:', loadErr);
-    return '';
-  }
-
-  if (!baseInfo || !baseInfo.canvas) {
-    console.warn('[PhotoScan] Aborted: Base canvas initialization failed.');
-    return '';
-  }
-
-  const { canvas: baseCanvas, img, origW, origH, targetW, targetH, paddedW, paddedH, pad } = baseInfo;
-
-  // PASS 1: Base Padded Canvas Scan
-  const text1 = await scanSourceWithDualEngine(baseCanvas, 'Pass 1 (Base Padded Canvas)');
-  if (text1) return text1;
-
-  // PASS 2: Quiet Zone White Margin Border Pass (+25% Extra Padding)
-  try {
-    const extraPad = Math.round(Math.max(targetW, targetH) * 0.25);
-    const p2W = targetW + extraPad * 2;
-    const p2H = targetH + extraPad * 2;
-    const canvas2 = document.createElement('canvas');
-    canvas2.width = p2W;
-    canvas2.height = p2H;
-    const ctx2 = canvas2.getContext('2d', { willReadFrequently: true });
-    ctx2.fillStyle = '#FFFFFF';
-    ctx2.fillRect(0, 0, p2W, p2H);
-    ctx2.drawImage(img, extraPad, extraPad, targetW, targetH);
-
-    const text2 = await scanSourceWithDualEngine(canvas2, 'Pass 2 (Quiet Zone Padding)');
-    if (text2) return text2;
-  } catch (err2) {
-    console.warn('[PhotoScan] Pass 2 error:', err2);
-  }
+    const { canvas: canvas2 } = createBasePaddedCanvas();
+    const res2 = await scanRunner.call(window.QrScanner, canvas2, {
+      returnDetailedScanResult: true,
+      alsoTryWithoutScanRegion: true
+    });
+    const text2 = extractText(res2);
+    if (text2) {
+      console.log('[Scanner] Photo scan succeeded on Pass 2 (Quiet Zone Padding)');
+      return text2;
+    }
+  } catch (err2) {}
 
   // PASS 3: Individual RGB Channel Isolation Pass (Blue, Red, Green)
+  // - Blue channel isolates cyan offset printing ghosting (FullSizeRender.HEIC)
+  // - Red channel isolates laminated plastic glare & blue card backgrounds (IMG_3340.heic)
+  // - Green channel isolates cyan/magenta printing artifacts
   const channels = [
     { name: 'Blue Channel (Offset Printing Fix)', colIdx: 2 },
     { name: 'Red Channel (Plastic Glare & Blue Card Contrast)', colIdx: 0 },
@@ -1165,14 +897,7 @@ export async function scanPhotoWithFallback(inputFile) {
 
   for (const ch of channels) {
     try {
-      const chCanvas = document.createElement('canvas');
-      chCanvas.width = paddedW;
-      chCanvas.height = paddedH;
-      const chCtx = chCanvas.getContext('2d', { willReadFrequently: true });
-      chCtx.fillStyle = '#FFFFFF';
-      chCtx.fillRect(0, 0, paddedW, paddedH);
-      chCtx.drawImage(img, pad, pad, targetW, targetH);
-
+      const { canvas: chCanvas, ctx: chCtx } = createBasePaddedCanvas();
       const imgData = chCtx.getImageData(0, 0, paddedW, paddedH);
       const data = imgData.data;
 
@@ -1185,23 +910,21 @@ export async function scanPhotoWithFallback(inputFile) {
 
       chCtx.putImageData(imgData, 0, 0);
 
-      const chText = await scanSourceWithDualEngine(chCanvas, `Pass 3 (${ch.name})`);
-      if (chText) return chText;
-    } catch (chErr) {
-      console.warn(`[PhotoScan] Pass 3 (${ch.name}) error:`, chErr);
-    }
+      const chRes = await scanRunner.call(window.QrScanner, chCanvas, {
+        returnDetailedScanResult: true,
+        alsoTryWithoutScanRegion: true
+      });
+      const chText = extractText(chRes);
+      if (chText) {
+        console.log('[Scanner] Photo scan succeeded on Pass 3 (' + ch.name + ')');
+        return chText;
+      }
+    } catch (chErr) {}
   }
 
   // PASS 4: Camera Viewfinder Overlay & Yellow Bracket Suppression (IMG_4233.PNG)
   try {
-    const canvas4 = document.createElement('canvas');
-    canvas4.width = paddedW;
-    canvas4.height = paddedH;
-    const ctx4 = canvas4.getContext('2d', { willReadFrequently: true });
-    ctx4.fillStyle = '#FFFFFF';
-    ctx4.fillRect(0, 0, paddedW, paddedH);
-    ctx4.drawImage(img, pad, pad, targetW, targetH);
-
+    const { canvas: canvas4, ctx: ctx4 } = createBasePaddedCanvas();
     const imgData4 = ctx4.getImageData(0, 0, paddedW, paddedH);
     const data4 = imgData4.data;
 
@@ -1220,22 +943,20 @@ export async function scanPhotoWithFallback(inputFile) {
 
     ctx4.putImageData(imgData4, 0, 0);
 
-    const text4 = await scanSourceWithDualEngine(canvas4, 'Pass 4 (Yellow Viewfinder Overlay Suppression)');
-    if (text4) return text4;
-  } catch (err4) {
-    console.warn('[PhotoScan] Pass 4 error:', err4);
-  }
+    const res4 = await scanRunner.call(window.QrScanner, canvas4, {
+      returnDetailedScanResult: true,
+      alsoTryWithoutScanRegion: true
+    });
+    const text4 = extractText(res4);
+    if (text4) {
+      console.log('[Scanner] Photo scan succeeded on Pass 4 (Yellow Camera Overlay Suppression)');
+      return text4;
+    }
+  } catch (err4) {}
 
-  // PASS 5: Adaptive Local Thresholding Pass (32x32 Block Binarization)
+  // PASS 5: Adaptive Local Thresholding Pass (QR_Code_Sign_doubled.jpg & IMG_4234.HEIC)
   try {
-    const canvas5 = document.createElement('canvas');
-    canvas5.width = paddedW;
-    canvas5.height = paddedH;
-    const ctx5 = canvas5.getContext('2d', { willReadFrequently: true });
-    ctx5.fillStyle = '#FFFFFF';
-    ctx5.fillRect(0, 0, paddedW, paddedH);
-    ctx5.drawImage(img, pad, pad, targetW, targetH);
-
+    const { canvas: canvas5, ctx: ctx5 } = createBasePaddedCanvas();
     const imgData5 = ctx5.getImageData(0, 0, paddedW, paddedH);
     const data5 = imgData5.data;
     const width = paddedW;
@@ -1277,13 +998,18 @@ export async function scanPhotoWithFallback(inputFile) {
 
     ctx5.putImageData(imgData5, 0, 0);
 
-    const text5 = await scanSourceWithDualEngine(canvas5, 'Pass 5 (32x32 Adaptive Local Thresholding)');
-    if (text5) return text5;
-  } catch (err5) {
-    console.warn('[PhotoScan] Pass 5 error:', err5);
-  }
+    const res5 = await scanRunner.call(window.QrScanner, canvas5, {
+      returnDetailedScanResult: true,
+      alsoTryWithoutScanRegion: true
+    });
+    const text5 = extractText(res5);
+    if (text5) {
+      console.log('[Scanner] Photo scan succeeded on Pass 5 (Adaptive Local Thresholding)');
+      return text5;
+    }
+  } catch (err5) {}
 
-  // PASS 6: Native High-DPI Sub-Region Auto-Crop Pass (1:1 Resolution Crop for 12MP/48MP Photos)
+  // PASS 6: Native High-DPI Sub-Region Auto-Crop Pass (IMG_4234.HEIC)
   try {
     const cropCanvas = document.createElement('canvas');
     const cropW = Math.round(origW * 0.45);
@@ -1299,11 +1025,16 @@ export async function scanPhotoWithFallback(inputFile) {
     cropCtx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
     cropCtx.drawImage(img, cropX, cropY, cropW, cropH, pad, pad, cropW, cropH);
 
-    const text6 = await scanSourceWithDualEngine(cropCanvas, 'Pass 6 (Native High-DPI Sub-Region Auto-Crop)');
-    if (text6) return text6;
-  } catch (err6) {
-    console.warn('[PhotoScan] Pass 6 error:', err6);
-  }
+    const res6 = await scanRunner.call(window.QrScanner, cropCanvas, {
+      returnDetailedScanResult: true,
+      alsoTryWithoutScanRegion: true
+    });
+    const text6 = extractText(res6);
+    if (text6) {
+      console.log('[Scanner] Photo scan succeeded on Pass 6 (Native High-DPI Sub-Region Auto-Crop)');
+      return text6;
+    }
+  } catch (err6) {}
 
   // PASS 7: Multi-Angle Canvas Rotation Pass (90 deg, 180 deg, 270 deg)
   const angles = [90, 180, 270];
@@ -1327,37 +1058,19 @@ export async function scanPhotoWithFallback(inputFile) {
       rotCtx.rotate((angle * Math.PI) / 180);
       rotCtx.drawImage(img, -targetW / 2, -targetH / 2, targetW, targetH);
 
-      const textRot = await scanSourceWithDualEngine(rotCanvas, `Pass 7 (Rotation ${angle} deg)`);
-      if (textRot) return textRot;
-    } catch (errRot) {
-      console.warn(`[PhotoScan] Pass 7 (Rotation ${angle} deg) error:`, errRot);
-    }
+      const resRot = await scanRunner.call(window.QrScanner, rotCanvas, {
+        returnDetailedScanResult: true,
+        alsoTryWithoutScanRegion: true
+      });
+      const textRot = extractText(resRot);
+      if (textRot) {
+        console.log('[Scanner] Photo scan succeeded on Pass 7 (Rotation ' + angle + ' deg)');
+        return textRot;
+      }
+    } catch (errRot) {}
   }
 
-  console.warn('[PhotoScan] Multi-pass fallback scan completed. No QR code detected across all 7 passes.');
   return '';
-}
-
-// Monkey-patch window.QrScanner.scanImage to enable fallback passes automatically
-if (typeof window !== 'undefined' && window.QrScanner && !window.QrScanner._originalScanImage) {
-  window.QrScanner._originalScanImage = window.QrScanner.scanImage;
-  window.QrScanner.scanImage = async function(a, b, c, d, f, h) {
-    try {
-      return await window.QrScanner._originalScanImage(a, b, c, d, f, h);
-    } catch (err) {
-      if (a && (a instanceof File || a instanceof Blob || a instanceof HTMLImageElement || a instanceof HTMLCanvasElement)) {
-        const fallbackText = await scanPhotoWithFallback(a);
-        if (fallbackText) {
-          const isDetailed = (b && typeof b === 'object' && b.returnDetailedScanResult) || h;
-          if (isDetailed) {
-            return { data: fallbackText, cornerPoints: [] };
-          }
-          return fallbackText;
-        }
-      }
-      throw err;
-    }
-  };
 }
 
 if (typeof window !== 'undefined') {
@@ -1367,24 +1080,8 @@ if (typeof window !== 'undefined') {
   window.cycleCameraLens = cycleCameraLens;
   window.toggleTorch = toggleTorch;
   window.updateCameraControlUI = updateCameraControlUI;
-  window.sanitizeScannedUrl = sanitizeScannedUrl;
-  window.isValidCaamUrl = isValidCaamUrl;
   window.scanPhotoWithFallback = scanPhotoWithFallback;
   window.ensureDecodableImageFile = ensureDecodableImageFile;
-  window.loadPhotoToCanvas = loadPhotoToCanvas;
+  window.ensureMobileSafeImageFile = ensureMobileSafeImageFile;
   window.handleClipboardPaste = handleClipboardPaste;
-  
-  // Global safety fallbacks for view switching & dashboard overview
-  if (typeof window.showDashboardOverview !== 'function') {
-    window.showDashboardOverview = function() {
-      if (typeof window.showView === 'function') {
-        window.showView('dashboard-view', 'overview');
-      } else if (typeof window.renderDashboardView === 'function') {
-        window.renderDashboardView();
-        if (typeof window.switchResultTab === 'function') {
-          window.switchResultTab('overview');
-        }
-      }
-    };
-  }
 }
