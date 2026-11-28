@@ -1,4 +1,4 @@
-// ./js/scanner.js (2211_R438) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (2811_R439) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -793,7 +793,7 @@ export async function scanPhotoWithFallback(inputFile) {
     return { canvas, ctx };
   };
 
-  // PASS 2: Quiet Zone Padding & Multi-Scale Scaling Pass
+  // PASS 2: Quiet Zone White Padding & Multi-Scale Scaling Pass
   try {
     const { canvas: canvas2 } = createBasePaddedCanvas();
     const res2 = await scanRunner.call(window.QrScanner, canvas2, {
@@ -873,14 +873,96 @@ export async function scanPhotoWithFallback(inputFile) {
     }
   }
 
-  // PASS 5: Sharpening Convolution Filter & Local Block Adaptive Binarization (Blur & Glare/Shadows)
+  // PASS 5: High-Frequency Density Search / Candidate QR Sub-Region Auto-Crop Pass (For 12MP/48MP High-Res Photos)
+  if (origW > 1200 || origH > 1200) {
+    try {
+      const gridCanvas = document.createElement('canvas');
+      const searchW = 640;
+      const searchH = Math.round((origH / origW) * 640);
+      gridCanvas.width = searchW;
+      gridCanvas.height = searchH;
+      const gridCtx = gridCanvas.getContext('2d');
+      gridCtx.drawImage(img, 0, 0, searchW, searchH);
+      const gridImgData = gridCtx.getImageData(0, 0, searchW, searchH);
+      const gridData = gridImgData.data;
+
+      // 8x8 Grid Cell Variance Analysis
+      const gridCols = 8;
+      const gridRows = 8;
+      const cellW = Math.floor(searchW / gridCols);
+      const cellH = Math.floor(searchH / gridRows);
+
+      let maxVariance = 0;
+      let bestCell = { x: 0, y: 0, w: searchW, h: searchH };
+
+      for (let r = 0; r < gridRows; r++) {
+        for (let c = 0; c < gridCols; c++) {
+          let sum = 0, sumSq = 0, count = 0;
+          const startX = c * cellW;
+          const startY = r * cellH;
+
+          for (let y = startY; y < startY + cellH; y += 2) {
+            for (let x = startX; x < startX + cellW; x += 2) {
+              const gVal = gridData[(y * searchW + x) * 4 + 1];
+              sum += gVal;
+              sumSq += gVal * gVal;
+              count++;
+            }
+          }
+
+          if (count > 0) {
+            const mean = sum / count;
+            const variance = (sumSq / count) - (mean * mean);
+            if (variance > maxVariance) {
+              maxVariance = variance;
+              bestCell = { x: startX, y: startY, w: cellW, h: cellH };
+            }
+          }
+        }
+      }
+
+      if (maxVariance > 300) {
+        // Map search grid coordinates back to full original resolution scale
+        const scaleX = origW / searchW;
+        const scaleY = origH / searchH;
+
+        // Add 30% padding around candidate bounding cell
+        const cropX = Math.max(0, Math.round((bestCell.x - cellW * 0.3) * scaleX));
+        const cropY = Math.max(0, Math.round((bestCell.y - cellH * 0.3) * scaleY));
+        const cropW = Math.min(origW - cropX, Math.round(cellW * 1.6 * scaleX));
+        const cropH = Math.min(origH - cropY, Math.round(cellH * 1.6 * scaleY));
+
+        const cropCanvas = document.createElement('canvas');
+        cropCanvas.width = cropW + 60; // Extra white margin
+        cropCanvas.height = cropH + 60;
+        const cropCtx = cropCanvas.getContext('2d');
+        cropCtx.fillStyle = '#FFFFFF';
+        cropCtx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
+        cropCtx.drawImage(img, cropX, cropY, cropW, cropH, 30, 30, cropW, cropH);
+
+        const resCrop = await scanRunner.call(window.QrScanner, cropCanvas, {
+          returnDetailedScanResult: true,
+          alsoTryWithoutScanRegion: true
+        });
+        const textCrop = extractText(resCrop);
+        if (textCrop) {
+          console.log('[Scanner] Photo scan succeeded on Pass 5 (High-Res Candidate Sub-Region Auto-Crop)');
+          return textCrop;
+        }
+      }
+    } catch (err5) {
+      console.warn('[Scanner] Photo scan Pass 5 (High-Res Candidate Sub-Region) failed:', err5);
+    }
+  }
+
+  // PASS 6: Sharpening Convolution Filter & Local Block Adaptive Binarization (Blur & Glare/Shadows)
   try {
-    const { canvas: canvas5, ctx: ctx5 } = createBasePaddedCanvas();
-    const imgData5 = ctx5.getImageData(0, 0, paddedW, paddedH);
-    const data5 = imgData5.data;
+    const { canvas: canvas6, ctx: ctx6 } = createBasePaddedCanvas();
+    const imgData6 = ctx6.getImageData(0, 0, paddedW, paddedH);
+    const data6 = imgData6.data;
 
     // 1. Sharpening Filter (3x3 Kernel: [0, -1, 0; -1, 5, -1; 0, -1, 0])
-    const sharpenedData = new Uint8ClampedArray(data5.length);
+    const sharpenedData = new Uint8ClampedArray(data6.length);
     const width = paddedW;
     const height = paddedH;
 
@@ -888,10 +970,10 @@ export async function scanPhotoWithFallback(inputFile) {
       for (let x = 0; x < width; x++) {
         const idx = (y * width + x) * 4;
         if (x === 0 || x === width - 1 || y === 0 || y === height - 1) {
-          sharpenedData[idx]     = data5[idx];
-          sharpenedData[idx + 1] = data5[idx + 1];
-          sharpenedData[idx + 2] = data5[idx + 2];
-          sharpenedData[idx + 3] = data5[idx + 3];
+          sharpenedData[idx]     = data6[idx];
+          sharpenedData[idx + 1] = data6[idx + 1];
+          sharpenedData[idx + 2] = data6[idx + 2];
+          sharpenedData[idx + 3] = data6[idx + 3];
           continue;
         }
 
@@ -901,7 +983,7 @@ export async function scanPhotoWithFallback(inputFile) {
         const right  = (y * width + (x + 1)) * 4 + 1;
         const center = idx + 1;
 
-        let gVal = data5[center] * 5 - data5[top] - data5[bottom] - data5[left] - data5[right];
+        let gVal = data6[center] * 5 - data6[top] - data6[bottom] - data6[left] - data6[right];
         gVal = Math.min(255, Math.max(0, gVal));
 
         sharpenedData[idx]     = gVal;
@@ -940,19 +1022,19 @@ export async function scanPhotoWithFallback(inputFile) {
       }
     }
 
-    ctx5.putImageData(new ImageData(sharpenedData, width, height), 0, 0);
+    ctx6.putImageData(new ImageData(sharpenedData, width, height), 0, 0);
 
-    const res5 = await scanRunner.call(window.QrScanner, canvas5, {
+    const res6 = await scanRunner.call(window.QrScanner, canvas6, {
       returnDetailedScanResult: true,
       alsoTryWithoutScanRegion: true
     });
-    const text5 = extractText(res5);
-    if (text5) {
-      console.log('[Scanner] Photo scan succeeded on Pass 5 (Sharpening & Local Binarization)');
-      return text5;
+    const text6 = extractText(res6);
+    if (text6) {
+      console.log('[Scanner] Photo scan succeeded on Pass 6 (Sharpening & Local Binarization)');
+      return text6;
     }
-  } catch (err5) {
-    console.warn('[Scanner] Photo scan Pass 5 (Sharpening & Local Binarization) failed:', err5);
+  } catch (err6) {
+    console.warn('[Scanner] Photo scan Pass 6 (Sharpening & Local Binarization) failed:', err6);
   }
 
   return '';
