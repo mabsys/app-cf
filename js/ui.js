@@ -899,6 +899,7 @@ export function openProfileMenu(targetSectionKey) {
 }
 
 if (typeof window !== 'undefined') {
+  window.showView = showView;
   window.showScannerView = showScannerView;
   window.switchResultTab = switchResultTab;
   window.openMenu = openMenu;
