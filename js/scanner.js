@@ -1,4 +1,4 @@
-// ./js/scanner.js (2811_R442) - 3-Tab Pilot Scan Hub Hardware & UI Controller
+// ./js/scanner.js (2811_R443) - 3-Tab Pilot Scan Hub Hardware & UI Controller
 // Developed by: Capt. Mohd Sallehuddin Zaidy
 // CertiFly PWA - Flight Crew Compliance & Validity Calculator Suite
 
@@ -738,10 +738,78 @@ export async function ensureDecodableImageFile(file) {
   return file;
 }
 
+export async function ensureMobileSafeImageFile(inputFile, maxDimension = 1280) {
+  if (!inputFile) return inputFile;
+
+  const file = await ensureDecodableImageFile(inputFile);
+  if (!file) return file;
+
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+
+    const cleanup = () => {
+      try {
+        URL.revokeObjectURL(url);
+      } catch (e) {}
+      img.onload = null;
+      img.onerror = null;
+    };
+
+    img.onload = () => {
+      const origW = img.naturalWidth || img.width || 0;
+      const origH = img.naturalHeight || img.height || 0;
+      const maxDim = Math.max(origW, origH);
+
+      if (maxDim <= 0 || maxDim <= maxDimension) {
+        cleanup();
+        resolve(file);
+        return;
+      }
+
+      const scale = maxDimension / maxDim;
+      const targetW = Math.round(origW * scale);
+      const targetH = Math.round(origH * scale);
+
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = targetW;
+        canvas.height = targetH;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, targetW, targetH);
+        ctx.drawImage(img, 0, 0, targetW, targetH);
+
+        canvas.toBlob((blob) => {
+          cleanup();
+          if (blob) {
+            const fileName = (file.name || 'photo').replace(/\.[^/.]+$/, '') + '_safedownscale.jpg';
+            resolve(new File([blob], fileName, { type: 'image/jpeg' }));
+          } else {
+            resolve(file);
+          }
+        }, 'image/jpeg', 0.92);
+      } catch (err) {
+        console.warn('[Scanner] Mobile downscaling canvas failed, using original file:', err);
+        cleanup();
+        resolve(file);
+      }
+    };
+
+    img.onerror = (err) => {
+      console.warn('[Scanner] Mobile downscaling load failed, using original file:', err);
+      cleanup();
+      resolve(file);
+    };
+
+    img.src = url;
+  });
+}
+
 export async function scanPhotoWithFallback(inputFile) {
   if (!inputFile || !window.QrScanner) return '';
 
-  const file = await ensureDecodableImageFile(inputFile);
+  const file = await ensureMobileSafeImageFile(inputFile, 1280);
   if (!file || !window.QrScanner) return '';
 
   const extractText = (res) => {
@@ -848,7 +916,7 @@ export async function scanPhotoWithFallback(inputFile) {
       });
       const chText = extractText(chRes);
       if (chText) {
-        console.log();
+        console.log('[Scanner] Photo scan succeeded on Pass 3 (' + ch.name + ')');
         return chText;
       }
     } catch (chErr) {}
@@ -996,7 +1064,7 @@ export async function scanPhotoWithFallback(inputFile) {
       });
       const textRot = extractText(resRot);
       if (textRot) {
-        console.log();
+        console.log('[Scanner] Photo scan succeeded on Pass 7 (Rotation ' + angle + ' deg)');
         return textRot;
       }
     } catch (errRot) {}
@@ -1014,5 +1082,6 @@ if (typeof window !== 'undefined') {
   window.updateCameraControlUI = updateCameraControlUI;
   window.scanPhotoWithFallback = scanPhotoWithFallback;
   window.ensureDecodableImageFile = ensureDecodableImageFile;
+  window.ensureMobileSafeImageFile = ensureMobileSafeImageFile;
   window.handleClipboardPaste = handleClipboardPaste;
 }
